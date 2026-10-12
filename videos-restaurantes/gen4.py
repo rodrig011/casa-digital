@@ -16,16 +16,24 @@ B, TOTAL = 0.017, 64.0
 SCENES = [("intro", 0, 8), ("home", 8, 16), ("menu", 16, 24), ("links", 24, 30), ("order", 30, 36),
           ("calm", 36, 40), ("leak", 40, 48), ("why", 48, 56), ("end", 56, 64)]
 
-# Each shot: list of (label, box) where box = (x, y, w, h) in fractions of the screenshot, or None.
-# 'pan' scrolls a tall screenshot from pan[0] to pan[1] (fraction of the overflow).
+# Marks per screenshot: (caption, (x, y, w, h)) with the box in fractions of the screenshot.
 MARKS = {
-    "shot1": [("Sin teléfono, dirección ni horario", (0.06, 0.55, 0.88, 0.2))],
-    "shot4": [("Un producto sin nombre, a Lps.0", (0.05, 0.22, 0.9, 0.12)), ("“Build Your Salad”, sin precio", (0.05, 0.45, 0.9, 0.12)),
-              ("Un set de putter de golf, en el menú del restaurante", (0.05, 0.68, 0.9, 0.12))],
-    "shot3": [("“Menú” no lleva a ningún lado", (0.08, 0.3, 0.6, 0.07)), ("“Reserva en” tampoco", (0.08, 0.45, 0.6, 0.07))],
-    "shot2": [("La última noticia es de la Navidad de 2021", (0.05, 0.35, 0.9, 0.3))],
-    "shot5": [("Cada pedido es un WhatsApp que alguien tiene que contestar", (0.06, 0.5, 0.88, 0.14))],
+    "inicio": [("Ni teléfono, ni dirección, ni horario", (0.02, 0.14, 0.96, 0.37))],
+    "anos": [("Dice “más de 20 años”. Desde 1993 ya son 33.", (0.20, 0.088, 0.59, 0.068))],
+    "eventos": [("El título se sale de la pantalla", (0.42, 0.298, 0.47, 0.048))],
+    "disfruta": [("Una foto encimada sobre otra", (0.585, 0.383, 0.39, 0.175)), ("Y media pantalla en blanco", (0.03, 0.645, 0.94, 0.32))],
+    "menu-nav": [("“Visión y Misión”: (Pronto)", (0.4, 0.67, 0.47, 0.037))],
+    "noticias": [("La última noticia: la Navidad de 2021", (0.2, 0.652, 0.6, 0.054))],
+    "menu-rest": [("Un producto sin nombre, a Lps.0", (0.05, 0.25, 0.9, 0.1)), ("Un set de putter de golf, en el menú", (0.05, 0.55, 0.9, 0.1))],
+    "domicilio": [("Para pedir: un link de WhatsApp y esperar", (0.06, 0.5, 0.88, 0.14))],
 }
+# Screenshots shown in each scene, with the song second each mark lands on (downbeats / half bars).
+SEQ = {
+    "home": [("inicio", [14])],
+    "menu": [("anos", [19]), ("eventos", [20.5]), ("disfruta", [22, 23])],
+    "links": [("menu-nav", [27]), ("noticias", [29])],
+}
+PID = lambda n: "s_" + n.replace("-", "_")
 SCR_X, SCR_Y, SCR_W, SCR_H = 884, 104, 402, 872   # phone screen at rest, in scene px
 
 
@@ -48,6 +56,25 @@ def shot_phone(name, pid, proj):
     caps = "".join(f'<div class="cap" id="{pid}-cap{i}"><i></i><span>{words(label)}</span></div>' for i, (label, _) in enumerate(MARKS[name]))
     return (f'<div class="zoomer" id="{pid}-z"><div class="ph-stage audit"><div class="iph" id="{pid}"><div class="iph-scr"><div class="island"></div>'
             f'<div class="pan">{img}{boxes}</div></div></div></div></div><div class="caps">{caps}</div>')
+
+
+def seq_html(sc, proj):
+    return "".join(shot_phone(n, PID(n), proj) for n, _ in SEQ[sc])
+
+
+def seq_js(sc, headline):
+    """First screenshot enters on the scene start; later ones cross-fade in already zoomed."""
+    start = next(a for i, a, b in SCENES if i == sc)
+    out, prev = [], None
+    for n, beats in SEQ[sc]:
+        bs = "[" + ", ".join(f"at({b})" for b in beats) + "]"
+        if prev is None:
+            out.append(f'audit("{PID(n)}", at({start}), {bs});')
+            out.append(f'out("{headline}", at({beats[0]}) - 1.1, .6);')
+        else:
+            out.append(f'swap("{PID(prev[0])}", {len(prev[1])}, "{PID(n)}", {bs});')
+        prev = (n, beats)
+    return "\n".join(out)
 
 
 def zoom_plan(pid, name):
@@ -87,6 +114,15 @@ EXTRA_CSS = r'''
 .wy{display:flex;gap:22px;align-items:center;font-size:40px;font-weight:500;letter-spacing:-.02em;}
 .wy i{flex:none;width:52px;height:52px;border-radius:50%;background:#111113;color:#FFD60A;font-style:normal;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .wa-small{margin-top:46px;display:inline-flex;align-self:flex-start;background:#25D366;color:#fff;font-weight:600;font-size:30px;padding:16px 30px;border-radius:40px;}
+.qcard{position:absolute;left:1000px;top:250px;width:820px;background:#fff;border-radius:40px;padding:44px 48px;box-shadow:0 40px 100px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.05);}
+.qc-k{font-size:22px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#86868B;margin-bottom:10px;}
+.qrow{position:relative;display:flex;align-items:baseline;gap:20px;padding:30px 0 46px;border-bottom:1.5px solid #EEE;font-size:30px;}
+.qrow span{flex:1;font-family:Georgia,serif;color:#333;}.qrow .noname{color:#B0B0B5;font-style:italic;}
+.qrow b{font-weight:500;color:#555;font-family:Georgia,serif;}
+.qrow em{position:absolute;left:0;bottom:10px;font-style:normal;font-size:20px;font-weight:600;color:#FF3B30;}
+#chat2{left:1060px;top:260px;width:720px;height:560px;}
+.tk{font-style:normal;font-size:22px;color:#8696A0;margin-left:10px;}
+.wait{align-self:center;margin-top:30px;background:rgba(255,255,255,.85);border-radius:16px;padding:12px 22px;font-size:24px;color:#54656F;}
 '''
 
 
@@ -126,7 +162,7 @@ def build(r):
                  '<span>Nuevo pedido pagado con tarjeta ✓</span></div><i>ahora</i></div>')
     leaks = [("Busca el horario o el teléfono", "No aparece en la página. Llama a otro lugar."),
              ("Abre el menú para pedir", "Ve precios vacíos y un putter de golf. Desconfía."),
-             ("Quiere reservar la terraza", "El botón no lleva a ningún lado."),
+             ("Busca promociones o novedades", "La última noticia es de la Navidad de 2021."),
              ("Pide a domicilio a las 9 pm", "Escribe al WhatsApp y espera a que alguien conteste.")]
     leaks_html = "".join(f'<div class="lk" id="lk{i}"><div class="lk-n">{i + 1}</div><div><b>{a}</b><span>{b}</span></div></div>'
                          for i, (a, b) in enumerate(leaks))
@@ -145,7 +181,7 @@ def build(r):
           </div>'''),
         scene("home", f'''
           <div class="wash w4"></div>
-          {shot_phone("shot1", "pa", proj)}
+          {seq_html("home", proj)}
           <div class="left narrow">
             <div class="grp" id="hg1">
               <div class="h1" id="h1">{words("Más de 30 años")}</div>
@@ -158,27 +194,38 @@ def build(r):
           </div>'''),
         scene("menu", f'''
           <div class="wash w3"></div>
-          {shot_phone("shot4", "pm", proj)}
+          {seq_html("menu", proj)}
           <div class="left narrow">
-            <div class="h1" id="m1">{words("Un cliente")}</div>
-            <div class="h1" id="m2">{words("abre el menú")}</div>
-            <div class="h1" id="m3">{words("y encuentra")} {hl("esto.")}</div>
+            <div class="h1" id="m1">{words("Al bajar,")}</div>
+            <div class="h1" id="m2">{words("la página")}</div>
+            <div class="h1" id="m3">{words("se ve")} {hl("olvidada.")}</div>
           </div>'''),
         scene("links", f'''
           <div class="wash w4"></div>
-          {shot_phone("shot3", "pl1", proj)}{shot_phone("shot2", "pl2", proj)}
+          {seq_html("links", proj)}
           <div class="left narrow">
-            <div class="h1" id="l1">{words("Botones que")}</div>
-            <div class="h1" id="l2">{words("no llevan a")}</div>
-            <div class="h1" id="l3">{hl("ningún lado.")}</div>
+            <div class="h1" id="l1">{words("Una página")}</div>
+            <div class="h1" id="l2">{words("que se quedó")}</div>
+            <div class="h1" id="l3">{words("en")} {hl("2021.")}</div>
           </div>'''),
         scene("order", f'''
           <div class="wash w5"></div>
-          {shot_phone("shot5", "po", proj)}
+          <div class="qcard" id="qc">
+            <div class="qc-k">Copiado de su menú en línea</div>
+            <div class="qrow" id="qr0"><span>Build Your Salad</span><b>Lps.</b><em>sin precio</em></div>
+            <div class="qrow" id="qr1"><span class="noname">(sin nombre)</span><b>Lps.0</b><em>sin nombre</em></div>
+            <div class="qrow" id="qr2"><span>ACE EXECUTIVE PUTTER SET WITH WOODEN CASE</span><b>Lps.1445.00</b><em>un putter de golf</em></div>
+          </div>
+          <div class="chat" id="chat2">
+            <div class="ch-head"><div class="ch-av" style="background:{hero}">C</div><div><b>Café Honoré · Pedidos</b><span>WhatsApp</span></div></div>
+            <div class="ch-body">
+              <div class="bub out" id="cb1">Quiero Hacer un pedido <i class="tk">✓✓</i></div>
+              <div class="wait" id="cb2">Costo de envío según zona</div>
+            </div>
+          </div>
           <div class="left narrow">
-            <div class="h1" id="d1">{words("Cada pedido")}</div>
-            <div class="h1" id="d2">{words("espera a que")}</div>
-            <div class="h1" id="d3">{words("alguien")} {hl("conteste.")}</div>
+            <div class="grp" id="og1"><div class="h1" id="d1">{words("Y en su menú")}</div><div class="h1" id="d2">{hl("en línea…")}</div></div>
+            <div class="grp" id="og2"><div class="h1" id="d3">{words("Para pedir,")}</div><div class="h1" id="d4">{words("un")} {hl("WhatsApp.")}</div><div class="h2 gray" id="d5">{words("Y esperar a que alguien conteste.")}</div></div>
           </div>'''),
         scene("calm", f'''
           <div class="wash w6"></div>
@@ -228,8 +275,10 @@ def build(r):
            .replace("$italface", '@font-face{font-family:"DisplayI";src:url("assets/fonts/display-italic.woff2") format("woff2");font-style:italic;}' if f.get("italicFile") else "")
            .replace("$ital", '"DisplayI"' if f.get("italicFile") else '"Display"')
            .replace("$introsizepx", str(r.get("introSize3", 150)) + "px")) + EXTRA_CSS
-    zp = {pid: zoom_plan(pid, n) for pid, n in (("pa", "shot1"), ("pm", "shot4"), ("pl1", "shot3"), ("pl2", "shot2"), ("po", "shot5"))}
-    js = JS.replace("$zp", json.dumps(zp))
+    zp = {PID(n): zoom_plan(PID(n), n) for sc in SEQ for n, _ in SEQ[sc]}
+    js = (JS.replace("$zp", json.dumps(zp)).replace("$seq_home", seq_js("home", "#hg2"))
+          .replace("$seq_menu", seq_js("menu", "#m1, #m2, #m3")).replace("$seq_links", seq_js("links", "#l1, #l2, #l3"))
+)
     html = (gen3.HTML.replace("$title", f"Casa Digital x {r['name']} · auditoría").replace("$css", css).replace("$body", body)
             .replace("$js", js).replace("$total", str(TOTAL)))
     open(os.path.join(proj, "index.html"), "w").write(html)
@@ -257,18 +306,28 @@ function float(sel, t, d) { tl.fromTo(sel, { y: 0 }, { y: -26, duration: d, ease
 
 // phone with a real screenshot: enters, pans, then each mark draws and its chip pops on a beat
 const ZP = $zp;
-function audit(pid, t0, beats) {
-  tl.fromTo("#" + pid, { y: 700, rotationY: -18, rotationX: 8, opacity: 0 }, { y: 0, rotationY: -6, rotationX: 2, opacity: 1, duration: 1.8, ease: SOFT }, t0);
+function marks(pid, beats, preset) {
   beats.forEach((b, i) => {
     const z = ZP[pid][i];
-    if (i === 0) tl.to("#" + pid, { rotationY: 0, rotationX: 0, duration: 1.1, ease: "power3.inOut" }, b - 1.1);
-    tl.to("#" + pid + "-z", { x: z.x, y: z.y, scale: z.s, duration: 1.1, ease: "power3.inOut" }, b - 1.1);
+    const d = i > 0 ? Math.min(1.1, (b - beats[i - 1]) * .6) : 1.1;
+    if (!(preset && i === 0)) tl.to("#" + pid + "-z", { x: z.x, y: z.y, scale: z.s, duration: d, ease: "power3.inOut" }, b - d);
     tl.fromTo("#" + pid + "-mk" + i, { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: .45, ease: "back.out(2)" }, b);
     if (i > 0) tl.to("#" + pid + "-cap" + (i - 1), { opacity: 0, y: -20, duration: .3, ease: "power2.in" }, b - .3);
     if (i > 0) tl.to("#" + pid + "-mk" + (i - 1), { opacity: .35, duration: .3 }, b - .6);
     tl.fromTo("#" + pid + "-cap" + i, { opacity: 0, y: 40, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: .7, ease: SOFT }, b);
-    tl.fromTo("#" + pid + "-cap" + i + " .w", { opacity: 0 }, { opacity: 1, duration: .4, stagger: .03 }, b);
   });
+}
+function audit(pid, t0, beats) {
+  tl.fromTo("#" + pid, { y: 700, rotationY: -18, rotationX: 8, opacity: 0 }, { y: 0, rotationY: -6, rotationX: 2, opacity: 1, duration: 1.8, ease: SOFT }, t0);
+  tl.to("#" + pid, { rotationY: 0, rotationX: 0, duration: 1.1, ease: "power3.inOut" }, beats[0] - 1.1);
+  marks(pid, beats, false);
+}
+function swap(prev, nprev, pid, beats) {
+  const b0 = beats[0], z = ZP[pid][0];
+  tl.to("#" + prev + "-z, #" + prev + "-cap" + (nprev - 1), { opacity: 0, filter: "blur(16px)", duration: .5, ease: "power2.in" }, b0 - .8);
+  tl.set("#" + pid + "-z", { x: z.x, y: z.y, scale: z.s }, b0 - .8);
+  tl.fromTo("#" + pid + "-z", { opacity: 0, filter: "blur(16px)" }, { opacity: 1, filter: "blur(0px)", duration: .6, ease: SOFT }, b0 - .5);
+  marks(pid, beats, true);
 }
 
 // 1 · intro
@@ -280,35 +339,38 @@ tl.fromTo("#iname", { opacity: 0, scale: 1.08, filter: "blur(24px)" }, { opacity
 
 // 2 · home page
 rise("#h1 .w", at(8)); rise("#h2 .w", at(8.5));
-audit("pa", at(8), [at(14)]);
-out("#hg2", at(14) - 1.1, .6);
+$seq_home
 out("#hg1", at(11) - .7);
 rise("#h3 .w", at(11)); rise("#h4 .w", at(11.5));
 swipe("#h4 .hlbg", at(12.2));
 
 // 3 · menu errors
-rise("#m1 .w", at(16)); rise("#m2 .w", at(16.6)); rise("#m3 .w", at(17.2));
-swipe("#m3 .hlbg", at(18));
-audit("pm", at(16), [at(18.5), at(20), at(22)]);
-out("#m1, #m2, #m3", at(18.5) - 1.1, .6);
+rise("#m1 .w", at(16)); rise("#m2 .w", at(16.4)); rise("#m3 .w", at(16.8));
+swipe("#m3 .hlbg", at(17.4));
+$seq_menu
 
 // 4 · dead links + 2021 news
-rise("#l1 .w", at(24)); rise("#l2 .w", at(24.4)); rise("#l3 .w", at(24.8));
-swipe("#l3 .hlbg", at(25.6));
-audit("pl1", at(24), [at(26), at(27)]);
-out("#l1, #l2, #l3", at(26) - 1.1, .6);
-tl.to("#pl1-z, #pl1-cap1", { opacity: 0, filter: "blur(16px)", duration: .5, ease: "power2.in" }, at(28) - .5);
-tl.set("#pl2-z", { x: ZP.pl2[0].x, y: ZP.pl2[0].y, scale: ZP.pl2[0].s }, at(28) - .5);
-tl.fromTo("#pl2-z", { opacity: 0, filter: "blur(16px)" }, { opacity: 1, filter: "blur(0px)", duration: .6, ease: SOFT }, at(28) - .3);
-tl.set("#pl2", { opacity: 1 }, at(28) - .5);
-tl.fromTo("#pl2-mk0", { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: .45, ease: "back.out(2)" }, at(28.5));
+rise("#l1 .w", at(24)); rise("#l2 .w", at(24.3)); rise("#l3 .w", at(24.6));
+swipe("#l3 .hlbg", at(25));
+$seq_links
 tl.fromTo("#pl2-cap0", { opacity: 0, y: 40, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: .7, ease: SOFT }, at(28.5));
 
 // 5 · manual WhatsApp orders
-rise("#d1 .w", at(30)); rise("#d2 .w", at(30.4)); rise("#d3 .w", at(30.8));
-swipe("#d3 .hlbg", at(31.6));
-audit("po", at(30), [at(32.5)]);
-out("#d1, #d2, #d3", at(32.5) - 1.1, .6);
+rise("#d1 .w", at(30)); rise("#d2 .w", at(30.4));
+swipe("#d2 .hlbg", at(31));
+tl.fromTo("#qc", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 1.2, ease: SOFT }, at(30));
+[30.5, 31, 31.5].forEach((t, i) => {
+  rise("#qr" + i, at(t), { y: 24, blur: 6, d: .8 });
+  tl.fromTo("#qr" + i + " em", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .5, ease: "back.out(2)" }, at(t) + .5);
+});
+out("#og1", at(33) - .7);
+tl.to("#qc", { opacity: 0, x: -80, filter: "blur(12px)", duration: .6, ease: "power2.in" }, at(33) - .6);
+rise("#d3 .w", at(33)); rise("#d4 .w", at(33.4));
+swipe("#d4 .hlbg", at(34));
+rise("#d5 .w", at(34.5), { st: .04 });
+tl.fromTo("#chat2", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 1.2, ease: SOFT }, at(33));
+rise("#cb1", at(33.5), { y: 20, blur: 4, d: .6 });
+rise("#cb2", at(34.5), { y: 20, blur: 4, d: .8 });
 
 // 6 · break
 rise("#k1 .w", at(36), { d: 1.6, st: .14 });
