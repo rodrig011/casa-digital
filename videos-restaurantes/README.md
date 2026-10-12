@@ -14,3 +14,11 @@ python3 gen.py            # o: python3 gen.py el-patio
 cd videos/el-patio && hyperframes render . -o ../el-patio.mp4 -q high
 python3 brand.py
 ```
+
+## v2 (estilo Apple)
+
+`gen2.py` hace la versión de 64 s: fondo negro, texto que entra con desenfoque, iPhone en 3D, estelas de luz al inicio y logo de Clientia Tech redibujado en vector (`clientia-mark.svg`) que se dibuja en la pausa del tema (0:56) y se llena en el golpe de 0:58. Necesita además `npm i @fontsource/inter-tight`.
+
+```bash
+python3 gen2.py && cd videos2/el-patio && hyperframes render . -o ../el-patio.mp4 -q high
+```
