@@ -22,3 +22,7 @@ python3 brand.py
 ```bash
 python3 gen2.py && cd videos2/el-patio && hyperframes render . -o ../el-patio.mp4 -q high
 ```
+
+## v3 (estilo lanzamiento de producto, horizontal)
+
+`gen3.py` (usa helpers de `gen2.py`): 1920×1080, fondo claro, titular grande a la izquierda con resaltador amarillo, interfaz animada a la derecha (reseñas, Google, iPhone, chat de WhatsApp, pagos) y el mismo outro de Clientia Tech.
