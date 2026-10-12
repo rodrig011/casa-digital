@@ -82,17 +82,17 @@ Los platos que aparecen en el video (Jamón de Parma, Quesos franceses, Ensalada
 
 **Primer contacto** (por teléfono al fijo, o por WhatsApp a los números de pedidos pidiendo hablar con gerencia):
 
-> Buenas tardes. Mi nombre es Rodrigo, de Casa Digital, una línea de Clientia Tech. Revisamos la página de Café Honoré y vimos que hoy los pedidos a domicilio se toman a mano por WhatsApp y que el menú en línea tiene precios vacíos y productos repetidos. Le preparamos un video corto con una propuesta para renovar la página y automatizar pedidos, pagos, reservas y la tienda gourmet. ¿Me podría compartir el contacto de quien ve la parte digital o la gerencia para enviárselo?
+> Buenas tardes, ¿hablo con Café Honoré? Mi nombre es Rodrigo Herrera. Soy hondureño y estudio ingeniería en Estados Unidos. Con lo que he aprendido en mis estudios quiero ayudar a restaurantes y negocios locales de mi país a vender más con herramientas digitales, y para eso empecé Casa Digital, una línea de Clientia Tech. Me llamó la atención Café Honoré, que lleva desde 1993 en Palmira y tiene muy buenas reseñas. Revisé su página y vi que hay mucho que se puede automatizar: hoy los pedidos a domicilio se toman a mano por WhatsApp y el menú en línea necesita una actualización. Les preparé un video corto con una propuesta para renovar la página y automatizar pedidos, pagos, reservas y la tienda gourmet. Me encantaría poder presentarles la propuesta. ¿Me podría compartir el contacto del dueño o de quien ve la parte digital para enviársela?
 
 **Mensaje con el video** (a gerencia):
 
-> Hola, buen día. Soy Rodrigo, de Casa Digital (Clientia Tech). Le comparto este video con una propuesta para Café Honoré. Ya tienen una página con mucho contenido, y la idea es renovarla para que trabaje sola: pedidos a domicilio con carrito y pago con tarjeta en lugar de WhatsApp manual, un menú limpio que cambian desde el celular, la tienda gourmet y las canastas en línea, y reservas para el salón privado y la terraza. Cero comisión nuestra por pedido y se conserva su dominio.
+> Hola, buen día. Soy Rodrigo Herrera, de Casa Digital (Clientia Tech). Como le comenté, soy hondureño, estudio ingeniería en Estados Unidos y quiero poner lo que he aprendido al servicio de los negocios de mi país. Le comparto este video con una propuesta para Café Honoré. Ya tienen una página con mucho contenido, y la idea es renovarla para que trabaje sola: pedidos a domicilio con carrito y pago con tarjeta en lugar de WhatsApp manual, un menú limpio que cambian desde el celular, la tienda gourmet y las canastas en línea, y reservas para el salón privado y la terraza. Cero comisión nuestra por pedido y se conserva su dominio.
 >
 > Si le interesa, le muestro en 15 minutos cómo quedaría con su menú real. ¿Le queda bien esta semana?
 
 **Seguimiento a los 3 días si no responden:**
 
-> Hola, le escribo de nuevo de Casa Digital. Solo quería saber si pudo ver el video que le hicimos a Café Honoré. Si prefiere, se lo explico en una llamada corta. Gracias.
+> Hola, soy Rodrigo Herrera, de Casa Digital. Solo quería saber si pudo ver el video que le hicimos a Café Honoré. Si prefiere, se lo explico en una llamada corta. Gracias.
 
 Nuestro WhatsApp para respuestas: **+1 (765) 543-4251**
 

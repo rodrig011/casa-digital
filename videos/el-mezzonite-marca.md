@@ -72,17 +72,17 @@ Los platos que aparecen en el video (Filete mignon, Ravioli de ricotta, Sangría
 
 **Primer contacto por teléfono o mensaje directo en Facebook/Instagram:**
 
-> Buenas tardes, ¿hablo con El Mezzonite? Mi nombre es Rodrigo, de Casa Digital, una línea de Clientia Tech. Le preparé al restaurante un video corto con una idea: su propia página con menú, pedidos pagados en línea y reservas, sin comisión por pedido. Tienen 275 reseñas en Google y muy buena calificación, pero al buscarlos salen directorios y no una página suya. ¿Me podría compartir el WhatsApp del dueño o de quien ve el marketing para enviárselo?
+> Buenas tardes, ¿hablo con El Mezzonite? Mi nombre es Rodrigo Herrera. Soy hondureño y estudio ingeniería en Estados Unidos. Con lo que he aprendido en mis estudios quiero ayudar a restaurantes y negocios locales de mi país a vender más con herramientas digitales, y para eso empecé Casa Digital, una línea de Clientia Tech. Me llamó la atención El Mezzonite: tienen 275 reseñas en Google y muy buena calificación, pero cuando uno los busca salen directorios y no una página propia. Les preparé un video corto con una idea de cómo se vería la suya, con menú, pedidos pagados en línea y reservas, sin comisión por pedido. Me encantaría poder presentarles la propuesta. ¿Me podría compartir el contacto del dueño o de quien ve la parte digital para enviársela?
 
 **Mensaje de WhatsApp con el video** (cuando den el número del dueño):
 
-> Hola, buen día. Soy Rodrigo, de Casa Digital (Clientia Tech). Les hice este video corto con una propuesta para El Mezzonite: su propia casa digital, con menú que cambian desde el celular, pedidos y pagos con tarjeta directo a su cuenta, y reservas por WhatsApp. Cero comisión nuestra por pedido y lista en 14 días.
+> Hola, buen día. Soy Rodrigo Herrera, de Casa Digital (Clientia Tech). Como le comenté, soy hondureño, estudio ingeniería en Estados Unidos y quiero poner lo que he aprendido al servicio de los negocios de mi país. Les hice este video corto con una propuesta para El Mezzonite: su propia casa digital, con menú que cambian desde el celular, pedidos y pagos con tarjeta directo a su cuenta, y reservas por WhatsApp. Cero comisión nuestra por pedido y lista en 14 días.
 
 Estamos tomando solo 5 restaurantes con precio de fundador. Si le interesa, le muestro en 15 minutos cómo se vería con su menú real. ¿Le queda bien esta semana?
 
 **Seguimiento a los 3 días si no responden:**
 
-> Hola, le escribo de nuevo de Casa Digital. Solo quería saber si pudo ver el video que le hicimos a El Mezzonite. Si prefiere, se lo explico en una llamada corta. Gracias.
+> Hola, soy Rodrigo Herrera, de Casa Digital. Solo quería saber si pudo ver el video que le hicimos a El Mezzonite. Si prefiere, se lo explico en una llamada corta. Gracias.
 
 Nuestro WhatsApp para respuestas: **+1 (765) 543-4251**
 
