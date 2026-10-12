@@ -72,7 +72,7 @@ Los platos que aparecen en el video (Parrillada, Pollo a la parrilla, Mariscos, 
 
 **Primer contacto por teléfono o mensaje directo en Facebook/Instagram:**
 
-> Buenas tardes, ¿hablo con Chedrani? Mi nombre es Rodrigo, de Casa Digital, una línea de Clientia Tech. Le preparé al restaurante un video de 40 segundos con una idea: su propia página con menú, pedidos pagados en línea y reservas, sin comisión por pedido. Tienen 2,335 reseñas en Google y muy buena calificación, pero al buscarlos salen directorios y no una página suya. ¿Me podría compartir el WhatsApp del dueño o de quien ve el marketing para enviárselo?
+> Buenas tardes, ¿hablo con Chedrani? Mi nombre es Rodrigo, de Casa Digital, una línea de Clientia Tech. Le preparé al restaurante un video corto con una idea: su propia página con menú, pedidos pagados en línea y reservas, sin comisión por pedido. Tienen 2,335 reseñas en Google y muy buena calificación, pero al buscarlos salen directorios y no una página suya. ¿Me podría compartir el WhatsApp del dueño o de quien ve el marketing para enviárselo?
 
 **Mensaje de WhatsApp con el video** (cuando den el número del dueño):
 

@@ -111,6 +111,26 @@ def build(r):
               <div class="h1" id="r4">{words("ya te")} {hl("ama.")}</div>
             </div>
           </div>'''),
+        (scene("search", f'''
+          <div class="browser" id="brw">
+            <div class="br-bar"><i></i><i></i><i></i><div class="br-url">{r["existingSite"]["url"]}</div></div>
+            <div class="br-body old">
+              <div class="old-nav"><span>Inicio</span><span>Café Honoré</span><span>Menú</span><span>Reserva en</span><span>Contáctanos</span></div>
+              <div class="old-row" id="res0"><span>Alitas de Pollo Búfalo</span><b>Lps.</b></div>
+              <div class="old-row" id="res1"><span>undefined-6</span><b>Lps.0</b></div>
+              <div class="old-row" id="res2"><span>Set de putter de golf</span><b>Lps.</b></div>
+              <div class="old-row dim"><span>Últimas noticias · octubre 2021</span><b></b></div>
+              <div class="flag" id="fl0" style="top:150px">Precios vacíos</div>
+              <div class="flag" id="fl1" style="top:300px">Productos de tienda en el menú</div>
+              <div class="flag" id="nochip" style="top:450px">Pedidos solo por WhatsApp a mano</div>
+            </div>
+          </div>
+          <div class="left">
+            <div class="h1" id="s1">{words("Ya tienes página,")}</div>
+            <div class="h1" id="s2">{words("pero se quedó en")}</div>
+            <div class="h1" id="s3">{hl(r["existingSite"]["since"] + ".")}</div>
+            <div class="h2 gray" id="s4">{words("Menú con errores y pedidos a mano.")}</div>
+          </div>''') if r.get("existingSite") else
         scene("search", f'''
           <div class="browser" id="brw">
             <div class="br-bar"><i></i><i></i><i></i><div class="br-url">google.com</div></div>
@@ -125,14 +145,14 @@ def build(r):
             <div class="h1" id="s2">{words("y encuentran")}</div>
             <div class="h1" id="s3">{hl("directorios.")}</div>
             <div class="h2 gray" id="s4">{words("No tu página.")}</div>
-          </div>'''),
+          </div>''')),
         scene("site", f'''
           <div class="wash w4"></div>
           <div class="ph-stage">{phone(site_html, "ph1")}</div>
           <div class="left">
             <div class="grp" id="sg1">
               <div class="eyebrow" id="t0">Presentamos</div>
-              <div class="h1" id="t1">{words("tu")} {hl("casa digital.")}</div>
+              <div class="h1" id="t1">{words("tu nueva" if r.get("existingSite") else "tu")} {hl("casa digital.")}</div>
             </div>
             <div class="grp" id="sg2">
               <div class="h1" id="t2">{words("Un menú que")}</div>
@@ -205,8 +225,8 @@ def build(r):
     css = (CSS.replace("$heroB", "rgb(%d,%d,%d)" % tuple(int(v * .22) for v in hexrgb(hero))).replace("$hero", hero).replace("$acc", acc).replace("$pri", pri)
            .replace("$washA", rgba(hero, .16)).replace("$washB", rgba(acc, .22)).replace("$sitebg", c["bg"]).replace("$siteink", c["ink"])
            .replace("$dweight", str(f["displayWeight"])).replace("$dcase", f.get("displayCase", "none")).replace("$dtrack", f["displayTracking"])
-           .replace("$ital", '"DisplayI"' if f.get("italicFile") else '"Display"')
            .replace("$italface", '@font-face{font-family:"DisplayI";src:url("assets/fonts/display-italic.woff2") format("woff2");font-style:italic;}' if f.get("italicFile") else "")
+           .replace("$ital", '"DisplayI"' if f.get("italicFile") else '"Display"')
            .replace("$introsizepx", str(r.get("introSize3", 150)) + "px"))
     js = JS.replace("$reviews", str(reviews_n))
     html = (HTML.replace("$title", f"Casa Digital x {r['name']}").replace("$css", css).replace("$body", body)
@@ -300,6 +320,10 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#FBFAF7;}
 .res-u{font-size:22px;color:#188038;}
 .res-t{font-size:32px;color:#1A0DAB;margin-top:4px;}
 .sk2{height:12px;width:80%;border-radius:6px;background:#EEE;margin-top:12px;}
+.old{padding-top:30px;}.old-nav{display:flex;gap:26px;font-size:20px;color:#555;padding-bottom:22px;border-bottom:1px solid #eee;margin-bottom:10px;font-family:Georgia,serif;}
+.old-row{display:flex;justify-content:space-between;font-size:28px;padding:26px 0;border-bottom:1px solid #eee;font-family:Georgia,serif;color:#333;}
+.old-row b{color:#999;font-weight:400;}.old-row.dim{color:#aaa;font-size:22px;}
+.flag{position:absolute;right:30px;background:#FF3B30;color:#fff;font-weight:600;font-size:24px;padding:12px 24px;border-radius:30px;box-shadow:0 12px 30px rgba(255,59,48,.35);}
 .nochip{position:absolute;right:48px;top:150px;background:#FF3B30;color:#fff;font-weight:600;font-size:28px;padding:16px 30px;border-radius:40px;box-shadow:0 14px 34px rgba(255,59,48,.35);}
 .ph-stage{position:absolute;left:1080px;top:0;width:760px;height:1080px;perspective:2400px;}
 .iph{position:absolute;left:170px;top:90px;width:430px;height:900px;border-radius:78px;padding:14px;background:linear-gradient(145deg,#E8E8ED,#B9B9C0 40%,#F5F5F7 70%,#C7C7CC);box-shadow:0 60px 120px rgba(0,0,0,.22),inset 0 0 0 2px rgba(255,255,255,.7);transform-style:preserve-3d;}
@@ -429,6 +453,11 @@ rise("#s2 .w", at(17));
 rise("#s3 .w", at(18));
 swipe("#s3 .hlbg", at(18.6));
 tl.to("#res0, #res1, #res2", { opacity: .35, duration: .8 }, at(20));
+if (document.getElementById("fl0")) {
+  tl.to("#res0, #res1, #res2", { opacity: 1, duration: .01 }, at(20));
+  tl.fromTo("#fl0", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .6, ease: "back.out(2)" }, at(18));
+  tl.fromTo("#fl1", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .6, ease: "back.out(2)" }, at(19));
+}
 tl.fromTo("#nochip", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .6, ease: "back.out(2)" }, at(20));
 rise("#s4 .w", at(20));
 

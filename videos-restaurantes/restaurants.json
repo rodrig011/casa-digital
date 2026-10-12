@@ -95,8 +95,8 @@
     "rating": "4.5",
     "reviews": "773",
     "found": [
+      "honorelifestyle.com",
       "facebook.com/cafehonore",
-      "wanderlog.com",
       "tripadvisor.com"
     ],
     "dishes": [
@@ -105,7 +105,7 @@
       "Ensaladas frescas",
       "Sopas de la casa"
     ],
-    "domain": "cafehonore.hn",
+    "domain": "honorelifestyle.com",
     "fonts": {
       "display": "Cormorant Garamond",
       "displayFile": "cormorant-garamond-latin-600-normal.woff2",
@@ -120,6 +120,10 @@
       "primary": "#1E3A5F",
       "accent": "#C9A44C",
       "deep": "#7A1F2B"
+    },
+    "existingSite": {
+      "url": "honorelifestyle.com/cafe-honore",
+      "since": "2021"
     }
   },
   {
