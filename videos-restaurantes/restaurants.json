@@ -1,0 +1,209 @@
+[
+  {
+    "slug": "el-patio",
+    "name": "El Patio",
+    "nameLines": [
+      "El",
+      "Patio"
+    ],
+    "city": "Tegucigalpa",
+    "zone": "Bulevar Morazán",
+    "kind": "Cocina hondureña tradicional",
+    "tagline": "Sabor catracho, con patio y música en vivo.",
+    "rating": "4.3",
+    "reviews": "4,642",
+    "found": [
+      "wanderlog.com",
+      "tripadvisor.com",
+      "Fotos de clientes"
+    ],
+    "dishes": [
+      "Baleada especial",
+      "Pinchos al carbón",
+      "Anafre con queso fundido",
+      "Plato típico"
+    ],
+    "domain": "elpatio.hn",
+    "fonts": {
+      "display": "Archivo Black",
+      "displayFile": "archivo-black-latin-400-normal.woff2",
+      "displayWeight": 400,
+      "displayCase": "uppercase",
+      "displayTracking": "-0.02em"
+    },
+    "colors": {
+      "bg": "#F6EBDD",
+      "ink": "#1C1410",
+      "primary": "#B5472B",
+      "accent": "#F2C14E",
+      "deep": "#1F4D3A"
+    }
+  },
+  {
+    "slug": "rojo-verde-y-ajo",
+    "name": "Rojo, Verde y Ajo",
+    "nameLines": [
+      "Rojo,",
+      "Verde",
+      "y Ajo"
+    ],
+    "city": "Tegucigalpa",
+    "zone": "Paseo República de Argentina",
+    "kind": "Cocina de autor de temporada",
+    "tagline": "Cocina de temporada, en tres colores.",
+    "rating": "4.5",
+    "reviews": "272",
+    "found": [
+      "wanderlog.com",
+      "revistaestilo.net",
+      "tripadvisor.com"
+    ],
+    "dishes": [
+      "Ceviche de vieiras",
+      "Filete al vermut",
+      "Sopa de caracol",
+      "Medallones al coñac"
+    ],
+    "domain": "rojoverdeyajo.hn",
+    "fonts": {
+      "display": "Fraunces",
+      "displayFile": "fraunces-latin-600-normal.woff2",
+      "displayWeight": 600,
+      "displayCase": "none",
+      "displayTracking": "-0.03em",
+      "italicFile": "fraunces-latin-400-italic.woff2"
+    },
+    "colors": {
+      "bg": "#F3EEE3",
+      "ink": "#1A1A1A",
+      "primary": "#B3261E",
+      "accent": "#5E7D4E",
+      "deep": "#2E3B2A"
+    }
+  },
+  {
+    "slug": "cafe-honore",
+    "name": "Café Honoré",
+    "nameLines": [
+      "Café",
+      "Honoré"
+    ],
+    "city": "Tegucigalpa",
+    "zone": "Colonia Palmira",
+    "kind": "Café, deli y panadería desde 1993",
+    "tagline": "Desde 1993, una esquina de Europa en Palmira.",
+    "rating": "4.5",
+    "reviews": "773",
+    "found": [
+      "facebook.com/cafehonore",
+      "wanderlog.com",
+      "tripadvisor.com"
+    ],
+    "dishes": [
+      "Jamón de Parma",
+      "Quesos franceses",
+      "Ensaladas frescas",
+      "Sopas de la casa"
+    ],
+    "domain": "cafehonore.hn",
+    "fonts": {
+      "display": "Cormorant Garamond",
+      "displayFile": "cormorant-garamond-latin-600-normal.woff2",
+      "displayWeight": 600,
+      "displayCase": "none",
+      "displayTracking": "-0.01em",
+      "italicFile": "cormorant-garamond-latin-500-italic.woff2"
+    },
+    "colors": {
+      "bg": "#FBF7EF",
+      "ink": "#1B2433",
+      "primary": "#1E3A5F",
+      "accent": "#C9A44C",
+      "deep": "#7A1F2B"
+    }
+  },
+  {
+    "slug": "chedrani",
+    "name": "Chedrani",
+    "nameLines": [
+      "Chedrani"
+    ],
+    "city": "San Pedro Sula",
+    "zone": "15 Avenida NO",
+    "kind": "Bar & grill, parrilla y mariscos",
+    "tagline": "Brasa, terraza y amigos en San Pedro.",
+    "rating": "4.3",
+    "reviews": "2,335",
+    "found": [
+      "facebook.com/restaurantechedrani",
+      "wanderlog.com",
+      "tripadvisor.com"
+    ],
+    "dishes": [
+      "Parrillada",
+      "Pollo a la parrilla",
+      "Mariscos",
+      "Especialidades de la casa"
+    ],
+    "domain": "chedrani.hn",
+    "fonts": {
+      "display": "Bebas Neue",
+      "displayFile": "bebas-neue-latin-400-normal.woff2",
+      "displayWeight": 400,
+      "displayCase": "uppercase",
+      "displayTracking": "0.01em"
+    },
+    "colors": {
+      "bg": "#151515",
+      "ink": "#F5F1E8",
+      "primary": "#E4572E",
+      "accent": "#F3A712",
+      "deep": "#2A2A2A"
+    },
+    "dark": true,
+    "heroSize": 280
+  },
+  {
+    "slug": "el-mezzonite",
+    "name": "El Mezzonite",
+    "nameLines": [
+      "El",
+      "Mezzonite"
+    ],
+    "city": "San Pedro Sula",
+    "zone": "Bistro & Deli",
+    "kind": "Bistro de alta cocina",
+    "tagline": "Para las noches que se celebran.",
+    "rating": "4.5",
+    "reviews": "275",
+    "found": [
+      "facebook.com/elmezzonite",
+      "wanderlog.com",
+      "tripadvisor.com"
+    ],
+    "dishes": [
+      "Filete mignon",
+      "Ravioli de ricotta",
+      "Sangría de la casa",
+      "Postres del chef"
+    ],
+    "domain": "elmezzonite.hn",
+    "fonts": {
+      "display": "DM Serif Display",
+      "displayFile": "dm-serif-display-latin-400-normal.woff2",
+      "displayWeight": 400,
+      "displayCase": "none",
+      "displayTracking": "-0.02em",
+      "italicFile": "dm-serif-display-latin-400-italic.woff2"
+    },
+    "colors": {
+      "bg": "#0E0E10",
+      "ink": "#F5F1EA",
+      "primary": "#D8C3A5",
+      "accent": "#8C2F45",
+      "deep": "#1C1A1D"
+    },
+    "dark": true,
+    "heroSize": 190
+  }
+]
