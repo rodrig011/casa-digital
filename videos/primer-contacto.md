@@ -4,7 +4,7 @@
 
 Cada restaurante tiene dos versiones: un **WhatsApp** corto, para leerlo en el celular, y un **correo** más largo que cuenta la historia completa. Las dos hablan del restaurante primero y de nosotros después.
 
-Antes de enviar: cambiá "[nombre]" por el nombre del dueño o gerente si lo conseguís. Si no, dejá "Hola," solo.
+Antes de enviar: cambia "[nombre]" por el nombre del dueño o gerente si lo consigues. Si no, deja "Hola," solo.
 
 Nuestro WhatsApp para respuestas: **+1 (765) 543-4251**
 
