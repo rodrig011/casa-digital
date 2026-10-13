@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""Steel Works · video de propuesta, estilo lanzamiento de producto (HyperFrames, 1920x1080).
+"""Steel Works · video de propuesta, estilo película de producto de Apple (HyperFrames, 1920x1080).
 
-Fondos cálidos y suaves (crema, durazno, rosa) ligados al naranja de la marca, titulares grandes alineados
-a la izquierda con una palabra resaltada por un marcador que entra de izquierda a derecha, y tarjetas tipo
-notificación de iOS que aparecen con resorte. Cada frase entra desenfocada y se asienta. Muestra la página
+Fondo claro, tipografía grande y limpia, cada frase entra desenfocada y se asienta. Muestra la página
 nueva dentro de un MacBook y el asistente de WhatsApp dentro de un iPhone: primero cómo está hoy su
 página, luego cómo puede verse. Cierra con el outro de Clientia Tech.
 
-Música: "Sports Rocker" de Taelimb (130 BPM), recortada para que el primer tiempo caiga en 0:00.017.
-Un compás = 1.846 s y el golpe fuerte entra en el compás 4, así que toda escena empieza en
-T(n) = 0.017 + 1.846n. Requisitos junto al script: musica-rocker.mp3, capturas/
+Música: "Clean Cut" (120 BPM). Un compás = 2 s y el primer golpe fuerte cae en 0:08.017, así que
+toda escena empieza en T(n) = 0.017 + 2n. Requisitos junto al script: musica-clean.mp3, capturas/
 (sitio-web.jpg y sitio-movil.jpg, la página completa), ../fotos y deps/node_modules con gsap@3.14.2
 y @fontsource/inter-tight.
 
@@ -29,8 +26,6 @@ T = lambda n: round(0.017 + BAR * n, 3)
 SCENES = [("intro", 0, 4), ("claim", 4, 7), ("hoy", 7, 13), ("mac", 13, 20), ("bot", 20, 25),
           ("both", 25, 28), ("offer", 28, 31), ("cta", 31, 34), ("end", 34, 38)]
 TOTAL = T(38)
-# warm soft backdrop per scene, all drawn from the brand ember #E8732C
-BG = {"claim": "pink", "hoy": "cream", "mac": "peach", "bot": "pink", "both": "cream", "offer": "peach", "cta": "pink"}
 
 # where each view of the site starts in the full-page capture (css px at 1440 wide), and its caption
 STOPS = [(0, "Su lema y sus trabajos, en la portada."), (2100, "Sus piezas, con precio y existencia."),
@@ -68,16 +63,8 @@ ALERTS = [("Nueva cotización", "Carlos Mejía · Portón forjado, 4 × 2.5 m<br
           ("Taller", "Iglesia Bethel pasó a instalación.<br>El cliente ya recibió el aviso.")]
 
 
-def words(text, cls="w", hl=None):
-    """one span per word; the word starting with `hl` gets a highlighter block that wipes in behind it"""
-    return " ".join(f'<span class="{cls} hl"><i class="mk"></i>{w}</span>' if hl and w.startswith(hl) else f'<span class="{cls}">{w}</span>'
-                    for w in text.split())
-
-
-def note(nid, icon, app, title, line, when="ahora", cls=""):
-    """an iOS-style notification card: app icon, app name and time, bold title, one line"""
-    return (f'<div class="note {cls}" id="{nid}"><div class="ni"><img src="assets/{icon}"></div><div class="nt">'
-            f'<span>{app}<em>{when}</em></span><b>{title}</b><i>{line}</i></div></div>')
+def words(text, cls="w"):
+    return " ".join(f'<span class="{cls}">{w}</span>' for w in text.split())
 
 
 def build():
@@ -101,7 +88,6 @@ def build():
 
     def scene(sid, inner, cls=""):
         s, e = next((a, b) for i, a, b in SCENES if i == sid)
-        cls = (cls + " " + BG.get(sid, "")).strip()
         return (f'<section id="{sid}" class="clip scene {cls}" data-start="{T(s)}" data-duration="{round(T(e) - T(s), 3)}" '
                 f'data-track-index="0"><div class="cam" id="cam-{sid}">{inner}</div></section>')
 
@@ -115,13 +101,12 @@ def build():
     hoy = "".join(f'<div class="hrow" id="hr{i}"><i>{i % 3 + 1}</i><b>{t}</b></div>' for i, t in enumerate(HOY))
     tiles = "".join(f'<div class="tile"><img src="assets/{p}.jpg"><span>{n}</span><b>{pr}</b><em>Añadir al carrito</em></div>'
                     for p, n, pr in SHOP)
-    caps = "".join(note(f"mc{i}", "simbolo-blanco.svg", f"Steel Works · {a}", b, c, cls=f"chip c{i}") for i, (a, b, c) in enumerate(CHIPS))
+    caps = "".join(f'<div class="chip c{i}" id="mc{i}"><span>{a}</span><b>{b}</b><i>{c}</i></div>' for i, (a, b, c) in enumerate(CHIPS))
     chat = "".join(f'<div class="bub {s}" id="cb{i}">{h}<time>9:41</time></div>' for i, (s, h) in enumerate(CHAT))
     wa = (f'<div class="wa"><div class="wa-top"><div class="av"><img src="assets/simbolo.svg"></div><div><b>Steel Works</b><span>en línea</span></div></div>'
           f'<div class="wa-body"><div class="wa-scroll" id="wsc">{chat}</div></div></div>')
     shutil.copy(os.path.join(HERE, "..", "logo", "simbolo", "steelworks-logo-simbolo-naranja.svg"), os.path.join(A, "simbolo.svg"))
-    shutil.copy(os.path.join(HERE, "..", "logo", "simbolo", "steelworks-logo-simbolo-blanco.svg"), os.path.join(A, "simbolo-blanco.svg"))
-    alerts = "".join(note(f"al{i}", "simbolo-blanco.svg", "Steel Works", a, b, f"9:4{2 + i}", "al") for i, (a, b) in enumerate(ALERTS))
+    alerts = "".join(f'<div class="bub in al" id="al{i}"><b>{a}</b><br>{b}<time>9:4{2 + i}</time></div>' for i, (a, b) in enumerate(ALERTS))
     owner = (f'<div class="wa"><div class="wa-top"><div class="av"><img src="assets/simbolo.svg"></div><div><b>Asistente Steel Works</b><span>avisos para el dueño</span></div></div>'
              f'<div class="wa-body"><div class="wa-scroll">{alerts}</div></div></div>')
     offer = "".join(f'<div class="of" id="of{i}"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(OFFER))
@@ -129,15 +114,15 @@ def build():
 
     body = "\n".join([
         scene("intro", f'''
-          <div class="center left">
+          <div class="center">
             <div class="kick" id="ik">{words("Casa Digital presenta")}</div>
             <div class="h1" id="it">{words("Para Steel Works.")}</div>
             <div class="sub" id="is">{words("Más de 40 años de experiencia.")}</div>
           </div>''', "dark"),
         scene("claim", f'''
-          <div class="center left">
+          <div class="center">
             <div class="h1" id="c1">{words("Su trabajo es de primera.")}</div>
-            <div class="h1 grey" id="c2">{words("Su página también debería serlo.", hl="serlo")}</div>
+            <div class="h1 grey" id="c2">{words("Su página también debería serlo.")}</div>
           </div>'''),
         scene("hoy", f'''
           <div class="hoy-l"><div class="h1" id="hh">Hoy.</div><div class="sub" id="hs">{words("Lo que ve un cliente en su página.")}</div>
@@ -152,26 +137,26 @@ def build():
               <div class="gres form"><span>steelworkshn.com/contacto</span><b>Contacto</b><p class="err">Direcciones y teléfonos, sin horario de atención.</p></div>
               <i class="pin" id="pn3" style="left:62px;top:184px">1</i><i class="pin" id="pn4" style="left:62px;top:334px">2</i><i class="pin" id="pn5" style="left:62px;top:483px">3</i></div></div>'''),
         scene("mac", f'''
-          <div class="mtitle" id="mt">{words("Así puede verse.", hl="verse")}</div>
+          <div class="mtitle" id="mt">{words("Así puede verse.")}</div>
           {mac("m1", "sitio-web.jpg")}
           {caps}'''),
         scene("bot", f'''
           <div class="bot-l">
-            <div class="h2" id="bh">{words("Un asistente que cotiza por ustedes.", hl="cotiza")}</div>
-            <div class="sub" id="bs">{words("Medida, estilo, precio y cita. A cualquier hora, por WhatsApp.").replace("cita.</span> ", "cita.</span><br>")}</div>
+            <div class="h2" id="bh">{words("Un asistente que cotiza por ustedes.")}</div>
+            <div class="sub" id="bs">{words("Medida, estilo, precio y cita. A cualquier hora, por WhatsApp.")}</div>
             <div class="bote" id="bn">Precios de ejemplo para esta propuesta.</div>
           </div>
           {phone("p1", wa)}'''),
         scene("both", f'''
-          <div class="btitle" id="bt">{words("Y usted lo ve todo.", hl="todo")}</div>
+          <div class="btitle" id="bt">{words("Y usted lo ve todo.")}</div>
           {mac("m2", "panel-web.jpg")}
           {phone("p2", owner)}'''),
         scene("offer", f'''
           <div class="otitle" id="ot">{words("Lo que construimos para Steel Works.")}</div>
           <div class="offers">{offer}</div>'''),
         scene("cta", f'''
-          <div class="center left">
-            <div class="h1" id="k1">{words("La demo ya está lista.", hl="lista")}</div>
+          <div class="center">
+            <div class="h1" id="k1">{words("La demo ya está lista.")}</div>
             <div class="h1 grey" id="k2">{words("Se la mostramos en 15 minutos.")}</div>
             <div class="wa-num" id="k3">WhatsApp {WHATSAPP}</div>
             <div class="sig" id="k4">Rodrigo Herrera · Casa Digital</div>
@@ -230,26 +215,20 @@ CSS = r'''
 @font-face{font-family:"IT";src:url("assets/fonts/it-600.woff2") format("woff2");font-weight:600;}
 @font-face{font-family:"IT";src:url("assets/fonts/it-700.woff2") format("woff2");font-weight:700;}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:1920px;height:1080px;overflow:hidden;background:#FBF4EC;}
-#root{position:relative;width:1920px;height:1080px;background:#FBF4EC;color:#221A15;font-family:"IT",sans-serif;-webkit-font-smoothing:antialiased;}
-.scene{position:absolute;inset:0;overflow:hidden;background:#FBF4EC;}
-.scene.cream{background:radial-gradient(1400px 900px at 78% 18%,#FFFAF4 0%,rgba(255,250,244,0) 70%),#FBF4EC;}
-.scene.peach{background:radial-gradient(1400px 900px at 22% 12%,#FDEEE2 0%,rgba(253,238,226,0) 70%),#FBE3D3;}
-.scene.pink{background:radial-gradient(1400px 900px at 80% 85%,#FFF1EC 0%,rgba(255,241,236,0) 70%),#FBE6E2;}
-.scene.dark{background:radial-gradient(1100px 760px at 50% 110%,rgba(232,115,44,.20) 0%,rgba(232,115,44,0) 70%),#120D0A;color:#FBF4EC;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#0F1011;}
+#root{position:relative;width:1920px;height:1080px;background:#0F1011;color:#F2F0EC;font-family:"IT",sans-serif;-webkit-font-smoothing:antialiased;}
+.scene{position:absolute;inset:0;overflow:hidden;background:#0F1011 radial-gradient(1400px 700px at 50% 118%,rgba(232,115,44,.16),rgba(232,115,44,0) 70%);}
+.scene.dark{background:#000;color:#F5F5F7;}
 .scene.black{background:#000;color:#F5F5F7;}
 .cam{position:absolute;inset:0;transform-origin:50% 50%;}
 .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 160px;}
-.center.left{align-items:flex-start;text-align:left;padding:0 150px 40px 190px;}
 .w{display:inline-block;}
-.hl{position:relative;isolation:isolate;color:#221A15;}
-.hl .mk{position:absolute;left:-.1em;right:-.12em;top:.1em;bottom:.0em;z-index:-1;border-radius:.14em;background:#FFD66B;transform-origin:0 50%;}
-.kick{font:500 34px/1.2 "IT";color:#A8968A;margin-bottom:26px;}
-.h1{font:700 108px/1.06 "IT";letter-spacing:-.04em;}
-.h1.grey{color:#A08C80;margin-top:8px;}
-.h2{font:700 84px/1.06 "IT";letter-spacing:-.04em;}
-.sub{margin-top:30px;font:400 40px/1.3 "IT";color:#7A6A60;letter-spacing:-.01em;}
-.dark .sub{color:#A8968A;}
+.kick{font:500 34px/1.2 "IT";color:#8A8F94;margin-bottom:26px;}
+.h1{font:600 112px/1.04 "IT";letter-spacing:-.035em;}
+.h1.grey{color:#7D8287;margin-top:8px;}
+.h2{font:600 84px/1.04 "IT";letter-spacing:-.035em;}
+.sub{margin-top:30px;font:400 40px/1.3 "IT";color:#9AA0A6;letter-spacing:-.01em;}
+.dark .sub{color:#86868B;}
 /* hoy */
 .hoy-l{position:absolute;left:130px;top:170px;width:640px;}
 .hoy-l .h1{font-size:140px;}
@@ -258,8 +237,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#FBF4EC;}
 .hrow{position:absolute;left:0;right:0;display:flex;gap:22px;align-items:flex-start;}
 .hrow:nth-child(3n+1){top:0}.hrow:nth-child(3n+2){top:130px}.hrow:nth-child(3n){top:260px}
 .hrow i,.pin{flex:none;width:44px;height:44px;border-radius:50%;background:#FF3B30;color:#fff;font:600 22px/44px "IT";text-align:center;font-style:normal;}
-.hrow b{font:500 33px/1.25 "IT";color:#221A15;letter-spacing:-.012em;}
-.old{position:absolute;right:120px;top:170px;width:980px;height:740px;border-radius:22px;background:#FFFFFF;overflow:hidden;box-shadow:0 2px 6px rgba(120,60,20,.05),0 40px 90px rgba(120,60,20,.13);}
+.hrow b{font:500 33px/1.25 "IT";color:#ECE9E4;letter-spacing:-.012em;}
+.old{position:absolute;right:120px;top:170px;width:980px;height:740px;border-radius:22px;background:#FFFFFF;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.55);}
 .obar{height:52px;background:#ECECEE;display:flex;align-items:center;gap:10px;padding:0 22px;}
 .obar i{width:14px;height:14px;border-radius:50%;background:#D1D1D6;}
 .obar span{margin:0 auto;font:500 20px "IT";color:#86868B;}
@@ -281,27 +260,21 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#FBF4EC;}
 .gres p.err{color:#C0392B;}
 /* MacBook */
 .mac{position:absolute;left:50%;width:1240px;margin-left:-620px;transform-origin:50% 100%;}
-.lid{position:relative;background:#0B0B0C;border-radius:26px 26px 0 0;padding:20px 20px 26px;box-shadow:inset 0 0 0 2px #2C2C2E;}
+.lid{position:relative;background:#050506;border-radius:26px 26px 0 0;padding:20px 20px 26px;box-shadow:inset 0 0 0 2px #3A3A3D,0 60px 120px rgba(0,0,0,.6);}
 .cam-dot{position:absolute;left:50%;top:7px;width:7px;height:7px;margin-left:-3px;border-radius:50%;background:#2C2C2E;}
 .scr{position:relative;width:1200px;height:750px;overflow:hidden;border-radius:6px;background:#141516;}
 .scr .page{position:absolute;left:0;top:0;width:1200px;height:auto;display:block;}
 .base{position:relative;height:30px;margin:0 -90px;background:linear-gradient(#E3E3E8,#B9B9BF 70%,#9E9EA4);border-radius:0 0 24px 24px;}
 .base i{position:absolute;left:50%;top:0;width:220px;height:12px;margin-left:-110px;background:#C7C7CC;border-radius:0 0 12px 12px;}
 #m1{top:150px;}
-.mtitle{position:absolute;left:340px;right:0;top:34px;text-align:left;font:700 72px/1.06 "IT";letter-spacing:-.04em;}
-/* iOS-style notification card */
-.note{display:flex;gap:18px;align-items:flex-start;padding:20px 26px 22px 20px;border-radius:22px;background:#fff;box-shadow:0 1px 2px rgba(120,60,20,.06),0 12px 28px rgba(120,60,20,.10),0 34px 70px rgba(120,60,20,.12);}
-.note .ni{flex:none;width:62px;height:62px;border-radius:15px;background:linear-gradient(160deg,#F08A48,#E8732C 55%,#D9621D);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);}
-.note .ni img{width:40px;height:40px;}
-.note .nt{min-width:0;flex:1;}
-.note span{display:flex;justify-content:space-between;gap:30px;font:500 18px "IT";color:#9A8B82;}
-.note span em{font-style:normal;}
-.note b{display:block;margin-top:4px;font:700 32px/1.12 "IT";letter-spacing:-.025em;color:#221A15;}
-.note i{display:block;margin-top:5px;font:400 22px/1.3 "IT";font-style:normal;color:#6F625A;}
-.chip{position:absolute;z-index:5;opacity:0;min-width:470px;}
-.chip.c0{left:1270px;top:250px;}.chip.c1{left:130px;top:560px;}.chip.c2{left:1290px;top:520px;}.chip.c3{left:120px;top:780px;}
+.mtitle{position:absolute;left:0;right:0;top:40px;text-align:center;font:600 72px/1 "IT";letter-spacing:-.035em;}
+.chip{position:absolute;z-index:5;opacity:0;padding:22px 28px;border-radius:22px;background:rgba(30,32,34,.86);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 0 0 1px rgba(255,255,255,.10) inset,0 30px 70px rgba(0,0,0,.5);}
+.chip span{display:block;font:600 18px "IT";color:#FF6A13;letter-spacing:.02em;text-transform:uppercase;}
+.chip b{display:block;margin-top:6px;font:600 38px/1.1 "IT";letter-spacing:-.025em;color:#F2F0EC;}
+.chip i{display:block;margin-top:6px;font:400 22px "IT";font-style:normal;color:#9AA0A6;}
+.chip.c0{left:1270px;top:250px;}.chip.c1{left:150px;top:560px;}.chip.c2{left:1300px;top:520px;}.chip.c3{left:130px;top:780px;}
 /* iPhone */
-.phone{position:absolute;width:430px;height:900px;border-radius:72px;background:#0B0B0C;padding:14px;box-shadow:inset 0 0 0 2px #3A3A3C,0 50px 100px rgba(120,60,20,.22);}
+.phone{position:absolute;width:430px;height:900px;border-radius:72px;background:#0B0B0C;padding:14px;box-shadow:inset 0 0 0 2px #3A3A3C,0 50px 100px rgba(0,0,0,.6);}
 .pscr{width:100%;height:100%;border-radius:58px;overflow:hidden;position:relative;background:#fff;}
 .pscr .page{position:absolute;left:0;top:0;width:402px;height:auto;}
 .island{position:absolute;left:50%;top:30px;width:126px;height:36px;margin-left:-63px;border-radius:20px;background:#000;}
@@ -317,32 +290,25 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#FBF4EC;}
 .wa-scroll{position:absolute;left:0;right:0;top:0;padding:18px 16px;display:flex;flex-direction:column;gap:12px;}
 .bub{max-width:86%;padding:12px 14px 8px;border-radius:16px;font:400 21px/1.35 "IT";color:#111B21;background:#fff;align-self:flex-start;opacity:0;box-shadow:0 1px 1px rgba(0,0,0,.08);}
 .bub.out{background:#D9FDD3;align-self:flex-end;}
-.note.al{opacity:0;align-self:stretch;margin:0 -4px;padding:14px 16px 16px 14px;gap:12px;border-radius:22px;}
-.note.al .ni{width:42px;height:42px;border-radius:11px;}
-.note.al .ni img{width:27px;height:27px;}
-.note.al span{font-size:14px;gap:10px;}
-.note.al b{font-size:20px;line-height:1.2;letter-spacing:-.01em;margin-top:2px;}
-.note.al i{font-size:17px;line-height:1.35;margin-top:3px;}
-.bote{margin-top:40px;font:400 24px "IT";color:#9A8B82;}
+.bub.al b{font-weight:600;color:#C2561B;}
+.bote{margin-top:40px;font:400 24px "IT";color:#7D8287;}
 .bub time{display:block;text-align:right;font-size:14px;color:#8696A0;margin-top:2px;}
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
 .gal figure{margin:0;}
 .gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block;}
 .gal b{display:block;font:500 15px "IT";margin-top:4px;}
 /* both */
-.btitle{position:absolute;left:110px;right:0;top:60px;text-align:left;font:700 72px/1.06 "IT";letter-spacing:-.04em;}
+.btitle{position:absolute;left:0;right:0;top:60px;text-align:center;font:600 72px/1 "IT";letter-spacing:-.035em;}
 #m2{top:250px;margin-left:-860px;transform:scale(.78);transform-origin:0 0;}
 #p2{left:1300px;top:200px;transform:scale(.86);transform-origin:0 0;}
 /* offer */
-.otitle{position:absolute;left:150px;top:130px;font:700 84px/1.06 "IT";letter-spacing:-.04em;}
-.offers{position:absolute;left:150px;right:150px;top:330px;display:grid;grid-template-columns:1fr 1fr;gap:36px 40px;}
-.of{position:relative;padding:38px 44px 42px 128px;border-radius:30px;background:#fff;box-shadow:0 1px 2px rgba(120,60,20,.06),0 18px 44px rgba(120,60,20,.10);}
-.of::before{content:"";position:absolute;left:40px;top:40px;width:62px;height:62px;border-radius:15px;background:url("assets/simbolo-blanco.svg") center/40px no-repeat,linear-gradient(160deg,#F08A48,#E8732C 55%,#D9621D);}
-.of b{display:block;font:700 48px/1.1 "IT";letter-spacing:-.03em;}
-.of span{display:block;margin-top:12px;font:400 31px/1.35 "IT";color:#6F625A;text-wrap:balance;}
+.otitle{position:absolute;left:150px;top:150px;font:600 84px/1.04 "IT";letter-spacing:-.035em;}
+.offers{position:absolute;left:150px;right:150px;top:390px;display:grid;grid-template-columns:1fr 1fr;gap:80px 120px;}
+.of b{display:block;font:600 52px/1.1 "IT";letter-spacing:-.03em;}
+.of span{display:block;margin-top:14px;font:400 34px/1.35 "IT";color:#9AA0A6;}
 /* cta */
-.wa-num{margin-top:70px;display:inline-block;padding:24px 40px;border-radius:999px;background:#fff;font:700 60px/1 "IT";letter-spacing:-.02em;color:#221A15;box-shadow:0 1px 2px rgba(120,60,20,.06),0 18px 44px rgba(120,60,20,.12);}
-.sig{margin-top:30px;font:400 32px "IT";color:#9A8B82;}
+.wa-num{margin-top:70px;font:600 64px/1 "IT";letter-spacing:-.02em;color:#F2F0EC;}
+.sig{margin-top:26px;font:400 32px "IT";color:#7D8287;}
 /* end */
 .endglow{position:absolute;width:1300px;height:1300px;left:310px;top:-110px;border-radius:50%;background:radial-gradient(closest-side,rgba(90,130,255,.30),rgba(0,0,0,0));}
 .ribwrap{position:absolute;left:420px;top:-420px;width:1080px;height:1920px;transform:rotate(90deg);}
@@ -367,14 +333,6 @@ function rise(sel, t, o) {
   tl.fromTo(sel, { opacity: 0, y: o.y || 40, filter: "blur(" + (o.blur || 18) + "px)" },
     { opacity: 1, y: 0, filter: "blur(0px)", duration: o.d || 1.4, ease: SOFT, stagger: o.st || 0.07 }, t);
 }
-// highlighter: the block wipes in from the left behind the key word once it has landed
-function mark(sel, t) { tl.fromTo(sel + " .mk", { scaleX: 0, scaleY: 1, skewX: 0, rotation: -1 }, { scaleX: 1, scaleY: 1, skewX: 0, rotation: -1, duration: .75, ease: "power3.out" }, t); }
-// notification cards pop in on a spring with a little overshoot
-function pop(sel, t, o) {
-  o = o || {};
-  tl.fromTo(sel, { opacity: 0, y: o.y || 30, scale: o.s || .82, transformOrigin: o.origin || "50% 50%" },
-    { opacity: 1, y: 0, scale: 1, duration: o.d || .8, ease: "back.out(" + (o.k || 1.9) + ")", stagger: o.st || 0 }, t);
-}
 function out(sel, t, d) { tl.to(sel, { opacity: 0, filter: "blur(14px)", duration: d || .6, ease: "power2.in" }, t); }
 const SC = $SCENES;
 SC.forEach(([id, s, e]) => tl.fromTo("#cam-" + id, { scale: 1.0 }, { scale: 1.025, duration: e - s, ease: "none" }, s));
@@ -388,7 +346,6 @@ out("#cam-intro .center", T(4) - .6);
 // 2 · the claim
 rise("#c1 .w", T(4), { st: .08 });
 rise("#c2 .w", T(5), { st: .08 });
-mark("#c2", T(5) + .75);
 out("#cam-claim .center", T(7) - .6);
 
 // 3 · today: their site as a customer sees it
@@ -409,15 +366,15 @@ out("#cam-hoy", T(13) - .6);
 const PX = 1200 / 1440;  // css px of the capture -> px on the MacBook screen
 const STOPS = $STOPS;
 rise("#mt .w", T(13), { st: .08 });
-mark("#mt", T(13) + .6);
 tl.fromTo("#m1", { opacity: 0, y: 220, rotationX: 28, transformPerspective: 2200 }, { opacity: 1, y: 0, rotationX: 0, duration: 2.4, ease: SOFT }, T(13) + .2);
 STOPS.forEach((y, i) => {
   const t = T(14 + i * 1.5);
-  if (i) tl.to("#m1-pg", { y: -y * PX, duration: 1.6, ease: "power3.inOut" }, t - .6);
+  // a soft dissolve between views, never a fast scroll through the page
+  if (i) { tl.to("#m1-pg", { opacity: 0, duration: .45, ease: "power2.in" }, t - .7); tl.set("#m1-pg", { y: -y * PX }, t - .25); tl.to("#m1-pg", { opacity: 1, duration: .7, ease: "power2.out" }, t - .25); }
   const side = i % 2 ? -1 : 1;  // chips alternate sides; the laptop turns a few degrees toward each one
   tl.to("#m1", { rotationY: i ? -side * 4 : 0, duration: 1.6, ease: "power3.inOut" }, t - .6);
   if (!i) return;  // the front page already carries its own glass cards
-  pop("#mc" + i, t - .1, { origin: (side > 0 ? "0%" : "100%") + " 50%" });
+  tl.fromTo("#mc" + i, { opacity: 0, x: side * 60, y: 10, scale: .96, filter: "blur(12px)" }, { opacity: 1, x: 0, y: 0, scale: 1, filter: "blur(0px)", duration: 1.1, ease: SOFT }, t - .1);
   tl.to("#mc" + i, { y: -8, duration: 2, ease: "sine.inOut" }, t + 1);
   if (i < STOPS.length - 1) tl.to("#mc" + i, { opacity: 0, x: side * 30, filter: "blur(8px)", duration: .5, ease: "power2.in" }, T(14 + (i + 1) * 1.5) - .7);
 });
@@ -425,7 +382,6 @@ out("#cam-mac", T(20) - .6);
 
 // 5 · the assistant in an iPhone
 rise("#bh .w", T(20), { st: .07 });
-mark("#bh", T(20) + .8);
 rise("#bs .w", T(20.5), { st: .04 });
 rise("#bn", T(22), { y: 16, blur: 8, d: 1 });
 tl.fromTo("#p1", { opacity: 0, y: 160, rotationY: -16, transformPerspective: 2200 }, { opacity: 1, y: 0, rotationY: -4, duration: 2, ease: SOFT }, T(20) + .2);
@@ -441,23 +397,21 @@ out("#cam-bot", T(25) - .6);
 
 // 6 · the owner's side: the panel on the laptop, the alerts on his phone
 rise("#bt .w", T(25), { st: .08 });
-mark("#bt", T(25) + .6);
 tl.fromTo("#m2", { opacity: 0, x: -120 }, { opacity: 1, x: 0, duration: 1.8, ease: SOFT }, T(25) + .2);
 tl.fromTo("#p2", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 1.8, ease: SOFT }, T(25) + .35);
 tl.to("#m2-pg", { y: -200 * PX, duration: 4, ease: "power2.inOut" }, T(26));
-[0, 1, 2].forEach(i => pop("#al" + i, T(25.6) + i * 1.1, { y: -24, s: .85, origin: "50% 0%" }));
+[0, 1, 2].forEach(i => tl.fromTo("#al" + i, { opacity: 0, y: 24, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: .6, ease: "back.out(1.4)" }, T(25.6) + i * 1.1));
 out("#cam-both", T(28) - .6);
 
 // 7 · what we build
 rise("#ot .w", T(28), { st: .06 });
-[0, 1, 2, 3].forEach(i => pop("#of" + i, T(28.5) + i * .35, { y: 40, s: .9, k: 1.6, d: .9 }));
+[0, 1, 2, 3].forEach(i => rise("#of" + i, T(28.5) + i * .35, { y: 30, d: 1.2 }));
 out("#cam-offer", T(31) - .6);
 
 // 8 · CTA
 rise("#k1 .w", T(31), { st: .08 });
-mark("#k1", T(31) + .7);
 rise("#k2 .w", T(31.75), { st: .08 });
-pop("#k3", T(32.5), { origin: "0% 50%", k: 1.6 });
+rise("#k3", T(32.5), { d: 1.2 });
 rise("#k4", T(32.5) + .4, { d: 1.2 });
 
 // 9 · Clientia Tech: outline draws, locks on the next bar
