@@ -59,12 +59,16 @@
       const cols = Math.max(3, Math.round((x1 - x0) / ((yb - yt) / 4))), cw = (x1 - x0) / cols;
       const rows = Math.max(3, Math.round((yb - yt) / cw)), rh = (yb - yt) / rows;
       for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
-        const cx = x0 + cw * (i + .5), cy = yt + rh * (j + .5), r = Math.min(cw, rh) * .42;
-        // quatrefoil cut
-        out.push(P(`M${f(cx)} ${f(cy - r)} Q${f(cx + r)} ${f(cy - r)} ${f(cx + r)} ${f(cy)} Q${f(cx + r)} ${f(cy + r)} ${f(cx)} ${f(cy + r)} Q${f(cx - r)} ${f(cy + r)} ${f(cx - r)} ${f(cy)} Q${f(cx - r)} ${f(cy - r)} ${f(cx)} ${f(cy - r)} Z`, sw * .9));
-        out.push(P(`M${f(cx - r * .35)} ${f(cy)} L${f(cx + r * .35)} ${f(cy)} M${f(cx)} ${f(cy - r * .35)} L${f(cx)} ${f(cy + r * .35)}`, sw * .7));
+        // calado: a ring per cell that touches its neighbours, with an eight-petal rosette cut inside
+        const cx = x0 + cw * (i + .5), cy = yt + rh * (j + .5), R = Math.min(cw, rh) * .5, r = R * .78;
+        out.push(`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(R * .97)}" stroke-width="${f(sw * .8)}" class="ring"/>`);
+        for (let k = 0; k < 8; k++) {
+          const a = k * Math.PI / 4, tip = [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+          const c1 = [cx + Math.cos(a - .42) * r * .62, cy + Math.sin(a - .42) * r * .62], c2 = [cx + Math.cos(a + .42) * r * .62, cy + Math.sin(a + .42) * r * .62];
+          out.push(P(`M${f(cx + Math.cos(a) * r * .2)} ${f(cy + Math.sin(a) * r * .2)} Q${f(c1[0])} ${f(c1[1])} ${f(tip[0])} ${f(tip[1])} Q${f(c2[0])} ${f(c2[1])} ${f(cx + Math.cos(a) * r * .2)} ${f(cy + Math.sin(a) * r * .2)}`, sw * .6, 'class="petal"'));
+        }
+        out.push(`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .16)}" stroke-width="${f(sw * .7)}"/>`);
       }
-      for (let i = 1; i < cols; i++) out.push(P(`M${f(x0 + cw * i)} ${yt} L${f(x0 + cw * i)} ${yb}`, sw * .6, 'opacity=".5"'));
     } else {
       // forjado clásico: arched top rail, bars with lance tips, scroll band and rings
       const peak = m + H * .02;
