@@ -1,8 +1,13 @@
 /* Steel Works · asistente de WhatsApp (motor de conversación).
  * El mismo archivo corre en el navegador (demo) y en Node (server.js).
- * handle(state, text) -> { state, messages: [{ text, buttons?, card?, list? }] }
- * Los precios y códigos son los publicados en steelworkshn.com (oct. 2026, IVA incluido).
- * Existencias por sucursal, horario y números de pedido son datos de ejemplo para la demo. */
+ * handle(state, text) -> { state, messages: [{ text, buttons?, gallery?, image? }] }
+ *
+ * La idea: que nadie que escribe a cotizar se quede sin respuesta. El bot pregunta qué le
+ * interesa, pide medidas, deja escoger el estilo con fotos de trabajos reales, da un precio
+ * estimado y agenda la visita para medir o una llamada. La ficha completa le llega a la sucursal.
+ *
+ * TARIFAS son de ejemplo para la demo: Steel Works pone las suyas. Los precios de piezas
+ * son los publicados en steelworkshn.com (oct. 2026, IVA incluido). */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.SteelBot = factory();
@@ -45,28 +50,39 @@
   };
   const HORARIO = "Lunes a viernes 8:00 a. m. a 5:00 p. m., sábado 8:00 a. m. a 12:00 m. (ejemplo, por confirmar)";
 
-  const MENU = ["Buscar una pieza", "Cotizar fabricación", "Pedido rápido de taller", "Enviar foto de un diseño", "Estado de mi pedido", "Sucursales y horario", "Hablar con un asesor"];
-  const TIPOS = ["Portón", "Balcón", "Barandal", "Puerta", "Verja", "Otro"];
-  const ESTILOS = ["Liso, moderno", "Forjado clásico", "Diseño CNC"];
+  // Qué se puede cotizar. unidad "m2": ancho × alto; "ml": metros lineales de baranda.
+  const TIPOS = {
+    porton:  { label: "Portón", unidad: "m2", ejemplo: "3 x 2.2", tipico: [3, 2.2], uno: "un portón típico" },
+    puerta:  { label: "Puerta", unidad: "m2", ejemplo: "1 x 2.1", tipico: [1, 2.1], uno: "una puerta típica" },
+    ventana: { label: "Protección de ventanas", unidad: "m2", ejemplo: "1.5 x 1.2", tipico: [1.5, 1.2], cuantas: true, uno: "la protección de una ventana típica" },
+    baranda: { label: "Baranda o balcón", unidad: "ml", ejemplo: "6 metros", tipico: [6], uno: "una baranda típica" },
+  };
+  const MENU = ["Portón", "Puerta", "Protección de ventanas", "Baranda o balcón", "Piezas para herrería", "Hablar con una persona"];
+
+  // Estilos con foto de trabajos reales de Steel Works (las claves son archivos de fotos/).
+  const ESTILOS = [
+    { key: "moderno", label: "Moderno", foto: "obra-puerta-arco", sub: "Líneas rectas, perfil negro" },
+    { key: "forjado", label: "Forjado clásico", foto: "obra-cerco", sub: "Barrotes con lanzas y volutas" },
+    { key: "cnc", label: "Calado CNC", foto: "obra-puerta-cnc", sub: "Lámina cortada con diseño" },
+  ];
+
+  // Tarifas de ejemplo en lempiras (fabricación, pintura e instalación en TGU o SPS).
+  const TARIFAS = {
+    porton:  { moderno: [3200, 4200], forjado: [4200, 5800], cnc: [5200, 7200] },   // por m²
+    puerta:  { moderno: [3600, 4800], forjado: [4600, 6200], cnc: [5600, 7800] },   // por m²
+    ventana: { moderno: [1600, 2400], forjado: [2200, 3200], cnc: [2800, 4000] },   // por m²
+    baranda: { moderno: [2200, 3000], forjado: [3000, 4400], cnc: [3800, 5400] },   // por metro lineal
+  };
+  const MOTOR = [16000, 26000];
 
   const L = n => "L " + n.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const L0 = n => "L " + Math.round(n).toLocaleString("es-HN");
+  const r100 = n => Math.round(n / 100) * 100;
   const norm = s => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const codeKey = s => norm(s).replace(/[^a-z0-9]/g, "");
 
-  function fresh() { return { step: "menu", cart: [], data: {}, seq: 1047 }; }
+  function fresh() { return { step: "inicio", data: {}, seq: 2214 }; }
 
-  function find(q) {
-    const k = codeKey(q);
-    if (!k) return [];
-    const exact = CATALOGO.filter(p => codeKey(p.code) === k);
-    if (exact.length) return exact;
-    const byCode = CATALOGO.filter(p => codeKey(p.code).includes(k) && k.length >= 3);
-    if (byCode.length) return byCode;
-    const words = norm(q).split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/(es|s)$/, ""));
-    return CATALOGO.filter(p => words.every(w => norm(p.name + " " + p.cat).includes(w)));
-  }
-
-  // match a reply against the buttons we offered: by number, emoji number or label
+  // match a reply against the buttons we offered: by number or label
   function pick(text, options) {
     const t = norm(text).replace(/[^\w\s]/g, "").trim();
     const n = parseInt(t, 10);
@@ -74,180 +90,250 @@
     return options.find(o => norm(o) === norm(text)) || options.find(o => t.length > 2 && norm(o).startsWith(t)) || null;
   }
 
-  const card = p => ({ title: p.name, sub: p.cat + " · código " + p.code, price: L(p.price), stock: p.stock });
-  const menuMsg = (pre) => ({ text: (pre ? pre + "\n\n" : "") + "¿En qué te ayudo?", buttons: MENU });
-  const cartTotal = c => c.reduce((s, i) => s + i.qty * i.p.price, 0);
-  const cartText = c => c.map(i => `• ${i.qty} × ${i.p.code}  ${L(i.qty * i.p.price)}`).join("\n") + `\n*Total: ${L(cartTotal(c))}* (IVA incluido)`;
+  // what the person wants, from their own words
+  function tipoDe(t) {
+    if (/porton|portones|porto/.test(t)) return "porton";
+    if (/ventana|proteccion|balcon(es)? de ventana/.test(t)) return "ventana";
+    if (/baranda|barandal|pasamano|balcon|escalera|terraza|verja|cerco|muro/.test(t)) return "baranda";
+    if (/puerta/.test(t)) return "puerta";
+    return null;
+  }
+  const quierePersona = t => /persona|asesor|humano|alguien|llamen|llamar|hablar con/.test(t);
+  const quierePiezas = t => /pieza|adorno|llamador|tubo|lanza|remate|voluta|hoja|flor|herreri|taller|soy herrero/.test(t);
 
-  function handle(state, input) {
+  // "3 x 2.2", "3 por 2", "3 metros de ancho y 2 de alto", "300 x 220" (cm), "6 metros"
+  const CONTADOS = /(\d+)\s*(ventanas?|puertas?|portones|protecciones)/;
+  const cuantasDe = t => { const m = t.match(CONTADOS); return m ? +m[1] : 0; };
+  function medidas(text) {
+    const nums = (norm(text).replace(CONTADOS, "").replace(/(\d),(\d)/g, "$1.$2").match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(n => n > 0);
+    const cm = n => (n > 20 ? n / 100 : n);
+    return nums.slice(0, 2).map(cm);
+  }
+  const fmt = n => String(Math.round(n * 100) / 100);
+
+  function estilo(text) {
+    const t = norm(text);
+    const n = parseInt(t, 10);
+    if (n >= 1 && n <= ESTILOS.length && String(n) === t) return ESTILOS[n - 1];
+    if (/moderno|liso|recto|sencillo|minimal/.test(t)) return ESTILOS[0];
+    if (/forja|clasic|lanza|voluta|colonial/.test(t)) return ESTILOS[1];
+    if (/cnc|calad|lamina|laser|diseno|dibujo/.test(t)) return ESTILOS[2];
+    return null;
+  }
+
+  function estimado(d) {
+    const tar = TARIFAS[d.tipo][d.estilo];
+    const cant = TIPOS[d.tipo].unidad === "ml" ? d.med[0] : d.med[0] * d.med[1] * (d.cuantas || 1);
+    let lo = tar[0] * cant, hi = tar[1] * cant;
+    if (d.motor) { lo += MOTOR[0]; hi += MOTOR[1]; }
+    return [r100(lo), r100(hi), cant];
+  }
+
+  // next three working days, for the visit
+  function dias(now) {
+    const n = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    const out = []; const d = new Date(now || Date.now());
+    while (out.length < 3) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) out.push(n[d.getDay()][0].toUpperCase() + n[d.getDay()].slice(1) + " " + d.getDate()); }
+    return out;
+  }
+  const FRANJAS = ["8 a 10 a. m.", "10 a 12 m.", "2 a 4 p. m."];
+  const LLAMADA = ["Hoy en la tarde", "Mañana en la mañana", "Mañana en la tarde"];
+
+  const menuMsg = pre => ({ text: (pre ? pre + "\n\n" : "") + "¿Qué te gustaría cotizar?", buttons: MENU });
+
+  function resumen(d) {
+    const T = TIPOS[d.tipo], E = ESTILOS.find(e => e.key === d.estilo);
+    const med = d.med ? (T.unidad === "ml" ? `${fmt(d.med[0])} m de largo` : `${fmt(d.med[0])} × ${fmt(d.med[1])} m${d.cuantas > 1 ? ` (${d.cuantas} iguales)` : ""}`) : "por medir";
+    return [`${T.label}${d.motor ? " con motor" : ""}`, `Medidas: ${med}`, E ? `Estilo: ${E.label}` : null, d.ciudad ? `Lugar: ${d.ciudad}` : null].filter(Boolean).join("\n");
+  }
+
+  function handle(state, input, now) {
     const s = state ? JSON.parse(JSON.stringify(state)) : fresh();
     const text = (input || "").toString();
     const t = norm(text);
     const out = [];
     const offered = s.offer || [];
     s.offer = null;
-    const say = (m) => { m = typeof m === "string" ? { text: m } : m; if (m.buttons) s.offer = m.buttons; out.push(m); };
-    const go = (step) => { s.step = step; };
+    const say = m => { m = typeof m === "string" ? { text: m } : m; if (m.buttons) s.offer = m.buttons; out.push(m); };
+    const go = step => { s.step = step; };
+    let d = s.data;
+    const reset = o => { s.data = d = o || {}; };
 
-    if (!state || ["hola", "menu", "menú", "inicio", "0", "buenas", "buenos dias", "buenas tardes"].includes(t)) {
-      go("menu");
-      if (!state || !["menu", "menú", "inicio", "0"].includes(t)) say("¡Hola! 👋 Soy el asistente de *Steel Works*. Todo en hierro, con envíos a toda Honduras.");
+    const askMedidas = () => {
+      const T = TIPOS[d.tipo];
+      go("medidas");
+      say({ text: T.unidad === "ml"
+        ? "¿Cuántos metros de largo tiene, más o menos? Por ejemplo: 6 metros."
+        : `¿Cuánto mide el espacio, más o menos? Ancho por alto en metros, por ejemplo: ${T.ejemplo}.`,
+        buttons: ["No sé las medidas"] });
+    };
+    const askEstilo = () => {
+      go("estilo");
+      say({ text: "¿Qué estilo te gusta? Estos son trabajos nuestros:", gallery: ESTILOS.map(e => ({ foto: e.foto, title: e.label, sub: e.sub })), buttons: ESTILOS.map(e => e.label).concat("📷 Tengo una foto") });
+    };
+    const askCiudad = () => { go("ciudad"); say({ text: "¿En qué ciudad sería la instalación?", buttons: ["Tegucigalpa", "San Pedro Sula", "Otra ciudad"] }); };
+    const askSiguiente = () => { go("siguiente"); say({ text: "¿Cómo seguimos?", buttons: ["Agendar visita para medir", "Que me llamen", "Escribirle a un asesor"] }); };
+
+    const saludo = !state || /^(hola|buenas|buenos dias|buenas tardes|buenas noches|menu|inicio|0)$/.test(t);
+    if (saludo) {
+      reset(); go("inicio");
+      if (!/^(menu|inicio|0)$/.test(t)) say("¡Hola! 👋 Soy el asistente de *Steel Works*. Te ayudo a cotizar portones, puertas, protecciones y barandas, a cualquier hora.");
       say(menuMsg());
       return { state: s, messages: out };
     }
 
     switch (s.step) {
-      case "menu": {
+      case "inicio": {
         const o = pick(text, MENU);
-        if (o === MENU[0]) { go("buscar"); say("Escríbeme el *código* de la pieza (por ejemplo 120-1048) o lo que buscas (por ejemplo «llamador»)."); }
-        else if (o === MENU[1]) { go("fab_tipo"); s.data = {}; say({ text: "Con gusto cotizamos tu proyecto. ¿Qué necesitas fabricar?", buttons: TIPOS }); }
-        else if (o === MENU[2]) { go("rapido"); say("Pega tu lista con un código y una cantidad por línea, así:\n\n120-1048 x 20\n130-1024 x 50\n401-1801A x 4\n\nTe devuelvo el total y qué hay en existencia."); }
-        else if (o === MENU[3]) { go("foto"); say({ text: "Mándame la foto o el dibujo del diseño que tienes en mente. Si tienes medidas, escríbelas con la foto.", buttons: ["📷 Enviar foto de ejemplo"] }); }
-        else if (o === MENU[4]) { go("estado"); say("Escríbeme tu número de pedido (por ejemplo SW-1046)."); }
-        else if (o === MENU[5]) {
-          say(Object.values(SUCURSALES).map(b => `📍 *${b.nombre}*\n${b.dir}\nTel. ${b.tel.join(" · ")}`).join("\n\n") + `\n\n🕗 ${HORARIO}`);
-          say({ text: "¿Algo más?", buttons: ["Menú", "Hablar con un asesor"] }); go("post");
+        const tipo = o ? Object.keys(TIPOS).find(k => TIPOS[k].label === o) : tipoDe(t);
+        if (o === "Hablar con una persona" || (!tipo && quierePersona(t))) { reset(); go("asesor"); say({ text: "Claro. ¿Con qué sucursal te comunico?", buttons: ["Tegucigalpa", "San Pedro Sula"] }); break; }
+        if (o === "Piezas para herrería" || (!tipo && quierePiezas(t))) {
+          reset(); go("piezas");
+          const desde = c => L(Math.min(...CATALOGO.filter(p => p.cat === c && p.stock).map(p => p.price)));
+          say({ text: `Tenemos más de 750 piezas: adornos de barra desde ${desde("Adornos de barra")}, llamadores de acero inoxidable desde ${desde("Llamadores")}, tubos forjados, paneles CNC y más.\n\nMándame una foto de la pieza o dime para qué trabajo es, y un asesor te confirma precio y existencia.`, buttons: ["📷 Enviar foto de la pieza", "Hablar con un asesor"] });
+          break;
         }
-        else if (o === MENU[6]) { go("asesor"); say({ text: "¿Con qué sucursal te comunico?", buttons: ["Tegucigalpa", "San Pedro Sula"] }); }
-        else {
-          const hits = find(text);
-          if (hits.length) { go("buscar"); return handle(s, text); }
-          say(menuMsg("No te entendí bien. Responde con el número o toca una opción."));
+        if (!tipo) { say(menuMsg("Disculpa, no te entendí bien. Puedes tocar una opción o escribirme con tus palabras, por ejemplo «un portón de 3 metros».")); break; }
+        reset({ tipo });
+        // if they already wrote the measures ("portón de 4 x 2.5"), keep them and skip ahead
+        const m = o ? [] : medidas(text), cuantas = o ? 0 : cuantasDe(t);
+        if (cuantas > 1) d.cuantas = cuantas;
+        if (TIPOS[tipo].unidad === "ml" ? m.length >= 1 : m.length >= 2) {
+          d.med = m.slice(0, TIPOS[tipo].unidad === "ml" ? 1 : 2);
+          say(`Perfecto: ${TIPOS[tipo].label.toLowerCase()}, ${resumen(d).split("\n")[1].replace("Medidas: ", "")}.`);
+          if (tipo === "porton") { go("motor"); say({ text: "¿Lo quieres con motor eléctrico?", buttons: ["Sí, con motor", "No, manual", "Todavía no sé"] }); }
+          else if (TIPOS[tipo].cuantas && !d.cuantas) { go("cuantas"); say({ text: "¿Cuántas ventanas son de ese tamaño?", buttons: ["1", "2", "3", "4", "5 o más"] }); }
+          else askEstilo();
+          break;
         }
+        say(`Perfecto, ${TIPOS[tipo].label.toLowerCase()}.`);
+        askMedidas();
         break;
       }
 
-      case "buscar": {
-        const hits = find(text);
-        if (!hits.length) { say({ text: `No encontré «${text}». Prueba con el código que aparece en el catálogo, o te paso con un asesor.`, buttons: ["Buscar otra", "Hablar con un asesor", "Menú"] }); go("post"); break; }
-        if (hits.length === 1) {
-          const p = hits[0]; s.data.p = p.code;
-          say({ card: card(p), text: p.stock ? "✅ Disponible. ¿Cuántas unidades quieres?" : "⏳ Agotado por ahora. Te aviso por aquí apenas vuelva a entrar." , buttons: p.stock ? ["1", "10", "50"] : ["Avisarme cuando llegue", "Buscar otra", "Menú"] });
-          go(p.stock ? "cantidad" : "agotado");
-        } else {
-          say({ text: `Encontré ${hits.length} piezas. Toca una:`, list: hits.slice(0, 8).map(p => ({ id: p.code, title: p.code, sub: `${p.name.replace(" " + p.code, "")} · ${L(p.price)}${p.stock ? "" : " · agotado"}` })) });
+      case "medidas": {
+        const T = TIPOS[d.tipo];
+        if (/no se|no las|ni idea|no tengo/.test(t) || pick(text, ["No sé las medidas"])) {
+          d.med = null; d.sinMedidas = true;
+          const ref = { ...d, med: T.tipico, estilo: "moderno" };
+          const [lo] = estimado(ref);
+          const [, hi] = estimado({ ...ref, estilo: "cnc" });
+          say(`No hay problema, para eso vamos a medir sin costo. Para que tengas una idea: ${T.uno} de ${T.unidad === "ml" ? T.tipico[0] + " metros" : T.tipico.join(" × ") + " m"} anda entre *${L0(lo)}* y *${L0(hi)}*, según el estilo.`);
+          askCiudad();
+          break;
         }
+        const m = medidas(text);
+        if (T.unidad === "ml" ? !m.length : m.length < 2) {
+          say({ text: T.unidad === "ml" ? "No logré leer los metros. Escríbeme solo el número, por ejemplo: 6." : `No logré leer las medidas. Escríbelas así: ${T.ejemplo} (ancho por alto). Si no las tienes, no pasa nada, te visitamos para medir.`, buttons: ["No sé las medidas"] });
+          break;
+        }
+        d.med = m.slice(0, T.unidad === "ml" ? 1 : 2);
+        if (T.cuantas && !d.cuantas) { go("cuantas"); say({ text: "¿Cuántas ventanas son de ese tamaño?", buttons: ["1", "2", "3", "4", "5 o más"] }); break; }
+        if (d.tipo === "porton") { go("motor"); say({ text: "¿Lo quieres con motor eléctrico?", buttons: ["Sí, con motor", "No, manual", "Todavía no sé"] }); break; }
+        askEstilo();
         break;
       }
 
-      case "cantidad": {
-        const qty = parseInt(t.replace(/[^0-9]/g, ""), 10);
-        if (!qty) { say("Escríbeme solo el número de unidades, por ejemplo 12."); break; }
-        const p = CATALOGO.find(x => x.code === s.data.p);
-        const line = s.cart.find(i => i.p.code === p.code);
-        if (line) line.qty += qty; else s.cart.push({ p, qty });
-        say({ text: `Agregué ${qty} × ${p.code} a tu pedido.\n\n${cartText(s.cart)}`, buttons: ["Agregar otra pieza", "Finalizar pedido", "Menú"] });
-        go("carrito");
+      case "cuantas": {
+        const n = parseInt(t.replace(/[^0-9]/g, ""), 10);
+        if (!n) { say({ text: "Escríbeme solo el número, por ejemplo 3.", buttons: ["1", "2", "3", "4", "5 o más"] }); break; }
+        if (/mas/.test(t)) { go("cuantas_n"); say("¿Cuántas en total?"); break; }
+        d.cuantas = n; askEstilo();
+        break;
+      }
+      case "cuantas_n": {
+        const n = parseInt(t.replace(/[^0-9]/g, ""), 10);
+        if (!n) { say("Escríbeme solo el número, por ejemplo 6."); break; }
+        d.cuantas = n; askEstilo();
         break;
       }
 
-      case "agotado": {
-        if (pick(text, ["Avisarme cuando llegue"])) { say({ text: `Listo. Te escribo aquí cuando entre el ${s.data.p}. 🔔`, buttons: ["Buscar otra", "Menú"] }); go("post"); }
-        else { go("post"); s.offer = offered; return handle(s, text); }
+      case "motor": {
+        d.motor = /^si|motor|1/.test(t) && !/^no/.test(t);
+        askEstilo();
         break;
       }
 
-      case "carrito": {
-        const o = pick(text, ["Agregar otra pieza", "Finalizar pedido", "Menú"]);
-        if (o === "Agregar otra pieza") { go("buscar"); say("Dale. ¿Qué código o pieza buscas?"); }
-        else if (o === "Finalizar pedido") { go("entrega"); say({ text: "¿Cómo lo quieres recibir?", buttons: ["Retiro en Tegucigalpa", "Retiro en San Pedro Sula", "Envío a mi ciudad"] }); }
-        else { go("menu"); say(menuMsg()); }
+      case "estilo": {
+        if (/foto/.test(t)) { say({ image: true, text: "" }); d.foto = true; d.estilo = "cnc"; say("¡Qué bonito! 📷 Se parece a nuestro calado CNC. Con esa foto el taller lo cotiza igual."); askCiudad(); break; }
+        const e = estilo(text);
+        if (!e) { say({ text: "Toca uno de los estilos, o mándame una foto de uno que te guste.", buttons: ESTILOS.map(x => x.label).concat("📷 Tengo una foto") }); break; }
+        d.estilo = e.key;
+        askCiudad();
         break;
-      }
-
-      case "rapido": {
-        const lines = text.split(/\n|,|;/).map(x => x.trim()).filter(Boolean);
-        const ok = [], miss = [], out_ = [];
-        lines.forEach(ln => {
-          const m = ln.match(/^([A-Za-z0-9-]+)\s*[x×*]?\s*(\d+)?$/i);
-          if (!m) { miss.push(ln); return; }
-          const p = CATALOGO.find(x => codeKey(x.code) === codeKey(m[1]));
-          if (!p) miss.push(m[1]); else if (!p.stock) out_.push(p.code); else ok.push({ p, qty: parseInt(m[2] || "1", 10) });
-        });
-        if (!ok.length && !out_.length) { say("No reconocí ningún código. Usa una línea por pieza, por ejemplo: 120-1048 x 20"); break; }
-        ok.forEach(i => { const l = s.cart.find(c => c.p.code === i.p.code); if (l) l.qty += i.qty; else s.cart.push(i); });
-        let msg = ok.length ? `Listo, armé tu pedido:\n\n${cartText(s.cart)}` : "";
-        if (out_.length) msg += `\n\n⏳ Agotados: ${out_.join(", ")}. Te aviso cuando entren.`;
-        if (miss.length) msg += `\n\n❓ No encontré: ${miss.join(", ")}.`;
-        say({ text: msg.trim(), buttons: ok.length ? ["Finalizar pedido", "Agregar otra pieza", "Menú"] : ["Menú"] });
-        go(ok.length ? "carrito" : "post");
-        break;
-      }
-
-      case "entrega": {
-        const o = pick(text, ["Retiro en Tegucigalpa", "Retiro en San Pedro Sula", "Envío a mi ciudad"]);
-        if (!o) { say({ text: "Toca una opción:", buttons: ["Retiro en Tegucigalpa", "Retiro en San Pedro Sula", "Envío a mi ciudad"] }); break; }
-        if (o === "Envío a mi ciudad") { go("ciudad"); say("¿A qué ciudad y dirección lo enviamos?"); break; }
-        s.data.entrega = o;
-        return handle(Object.assign(s, { step: "confirmar" }), "");
       }
 
       case "ciudad": {
-        s.data.entrega = "Envío a " + text;
-        return handle(Object.assign(s, { step: "confirmar" }), "");
+        if (/otra/.test(t) && text.length < 14) { go("ciudad_n"); say("¿En qué ciudad?"); break; }
+        d.ciudad = pick(text, ["Tegucigalpa", "San Pedro Sula"]) || text.trim();
+        return handle(Object.assign(s, { step: "cotizar" }), "", now);
       }
+      case "ciudad_n": { d.ciudad = text.trim(); return handle(Object.assign(s, { step: "cotizar" }), "", now); }
 
-      case "confirmar": {
-        const n = "SW-" + (++s.seq);
-        say({ text: `🧾 *Pedido ${n}*\n\n${cartText(s.cart)}\n\n🚚 ${s.data.entrega}\n\nTe dejo el enlace de pago con tarjeta. También puedes pagar por transferencia o al retirar.`, pay: { amount: L(cartTotal(s.cart)), ref: n } });
-        say({ text: "Un asesor confirma existencias y te avisa por aquí cuando esté listo. ¡Gracias por comprar en Steel Works! 🔩", buttons: ["Menú"] });
-        s.last = { n, total: cartTotal(s.cart), entrega: s.data.entrega };
-        s.cart = []; go("post");
+      case "cotizar": {
+        d.sucursal = /pedro|sps|choloma|villanueva|progreso|puerto cortes|la lima|tela|ceiba|santa barbara|copan/.test(norm(d.ciudad)) ? "SPS" : "TGU";
+        const lejos = !/tegucigalpa|comayaguela|tgu|san pedro|sps/.test(norm(d.ciudad));
+        if (d.med && d.estilo) {
+          const [lo, hi] = estimado(d);
+          d.rango = [lo, hi];
+          say({ text: `📐 *Tu cotización inicial*\n\n${resumen(d)}\n\n💰 Precio estimado: *${L0(lo)} a ${L0(hi)}*\nIncluye fabricación, pintura e instalación${lejos ? ". Fuera de Tegucigalpa y San Pedro Sula se suma el traslado" : ""}.\n\nEl precio final lo confirma el taller cuando mide, sin costo.` });
+        } else {
+          say({ text: `📐 *Tu solicitud*\n\n${resumen(d)}\n\nCon la visita para medir te damos el precio exacto, sin costo.` });
+        }
+        askSiguiente();
         break;
       }
 
-      case "fab_tipo": {
-        const o = pick(text, TIPOS) || (t.length > 2 ? text : null);
-        if (!o) { say({ text: "Toca una opción:", buttons: TIPOS }); break; }
-        s.data.tipo = o; go("fab_medidas");
-        say(`Perfecto, ${o.toLowerCase()}. ¿Qué medidas tiene el espacio? Escribe ancho × alto en metros, por ejemplo: 3 x 2.2`);
+      case "siguiente": {
+        const o = pick(text, offered.length ? offered : ["Agendar visita para medir", "Que me llamen", "Escribirle a un asesor"]) || (/visita|medir|agend/.test(t) ? "Agendar visita para medir" : /llam/.test(t) ? "Que me llamen" : /asesor|persona/.test(t) ? "Escribirle a un asesor" : null);
+        if (o === "Agendar visita para medir") { go("dia"); s.dias = dias(now); say({ text: "¿Qué día te queda bien?", buttons: s.dias }); }
+        else if (o === "Que me llamen") { go("hora_llamada"); say({ text: "¿Cuándo te llamamos?", buttons: LLAMADA }); }
+        else if (o === "Escribirle a un asesor") { d.cita = "Le escribe un asesor por este chat"; go("nombre"); say("Va. ¿A nombre de quién dejo la cotización?"); }
+        else askSiguiente();
         break;
       }
 
-      case "fab_medidas": {
-        const m = text.replace(",", ".").match(/(\d+(?:\.\d+)?)\s*(?:m)?\s*[x×por*]+\s*(\d+(?:\.\d+)?)/i);
-        if (!m && t.includes("no se")) s.data.med = "Por medir en visita";
-        else if (!m) { say("No logré leer las medidas. Escríbelas así: 3 x 2.2 (ancho por alto, en metros). Si no las tienes, escribe «no sé» y te visitamos para medir."); break; }
-        else { s.data.med = `${m[1]} m × ${m[2]} m`; s.data.m2 = (+m[1] * +m[2]).toFixed(1); }
-        go("fab_estilo"); say({ text: "¿Qué estilo te gusta?", buttons: ESTILOS });
+      case "dia": {
+        const o = pick(text, s.dias || dias(now)) || text.trim();
+        d.dia = o; go("franja");
+        say({ text: `${o}. ¿A qué hora?`, buttons: FRANJAS });
+        break;
+      }
+      case "franja": {
+        const o = pick(text, FRANJAS) || text.trim();
+        d.cita = `Visita para medir: ${d.dia}, ${o}`;
+        go("nombre"); say("¿A nombre de quién la agendo?");
+        break;
+      }
+      case "hora_llamada": {
+        const o = pick(text, LLAMADA) || text.trim();
+        d.cita = `Llamada: ${o.toLowerCase()}`;
+        go("nombre"); say("¿A nombre de quién?");
         break;
       }
 
-      case "fab_estilo": {
-        const o = pick(text, ESTILOS);
-        if (!o) { say({ text: "Toca una opción:", buttons: ESTILOS }); break; }
-        s.data.estilo = o; go("fab_ciudad");
-        say({ text: "¿En qué ciudad es la instalación?", buttons: ["Tegucigalpa", "San Pedro Sula", "Otra ciudad"] });
+      case "nombre": {
+        d.nombre = text.trim().replace(/^(soy|me llamo|a nombre de)\s+/i, "").replace(/^\w/, c => c.toUpperCase());
+        const b = SUCURSALES[d.sucursal || "TGU"];
+        const n = "COT-" + (++s.seq);
+        s.lead = { n, nombre: d.nombre, resumen: resumen(d).replace(/\n/g, " · "), rango: d.rango || null, cita: d.cita, sucursal: b.nombre };
+        say({ text: `✅ *Listo, ${d.nombre.split(" ")[0]}.*\n\n${d.cita}\nCotización ${n}\n\nLe pasé tu ficha a la sucursal de *${b.nombre}* con ${[d.med && "las medidas", d.estilo && "el estilo", d.foto && "tu foto", d.rango && "el precio estimado"].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " y $1") || "lo que hablamos"}. Te confirman por aquí mismo.\n\nSi necesitas algo antes: ${b.tel[0]}` });
+        say({ text: "¿Te ayudo con algo más?", buttons: ["Cotizar otra cosa", "Sucursales y horario"] });
+        go("post");
         break;
       }
 
-      case "fab_ciudad": {
-        s.data.ciudad = text; go("fab_foto");
-        say({ text: "Último paso: si tienes una foto del lugar o de un diseño que te guste, mándala. Ayuda a cotizar más rápido.", buttons: ["📷 Enviar foto de ejemplo", "Sin foto"] });
+      case "piezas": {
+        if (/foto/.test(t)) { say({ image: true, text: "" }); }
+        if (/asesor|persona/.test(t)) { go("asesor"); say({ text: "¿Con qué sucursal te comunico?", buttons: ["Tegucigalpa", "San Pedro Sula"] }); break; }
+        say({ text: "Recibido. Un asesor de bodega lo revisa y te escribe con precio y existencia. Si se nos agotó, te avisamos apenas vuelva a entrar. 🔔\n\n¿De qué sucursal te queda mejor retirar, o te la enviamos?", buttons: ["Tegucigalpa", "San Pedro Sula", "Envío a mi ciudad"] });
+        go("piezas_entrega");
         break;
       }
-
-      case "fab_foto": {
-        const foto = !t.includes("sin foto");
-        const n = "COT-" + (2200 + s.seq % 100);
-        if (foto) say({ image: true, text: "" });
-        say({ text: `📐 *Solicitud ${n}*\n\nTipo: ${s.data.tipo}\nMedidas: ${s.data.med}${s.data.m2 ? ` (${s.data.m2} m²)` : ""}\nEstilo: ${s.data.estilo}\nCiudad: ${s.data.ciudad}\nFoto: ${foto ? "sí ✅" : "no"}\n\nYa la pasé al taller de fabricación. Un asesor te escribe con el precio y, si hace falta, agenda una visita para medir.` });
-        say({ text: "¿Te ayudo con algo más?", buttons: ["Menú"] });
-        s.lastCot = n; go("post");
-        break;
-      }
-
-      case "foto": {
-        say({ image: true, text: "" });
-        say({ text: "¡Recibida! 📷 La revisa un asesor de fabricación. Para cotizar mejor, ¿qué es y qué medidas tiene?", buttons: TIPOS });
-        s.data = {}; go("fab_tipo");
-        break;
-      }
-
-      case "estado": {
-        const k = t.replace(/[^0-9]/g, "");
-        if (!k) { say("Escríbeme el número, por ejemplo SW-1046."); break; }
-        say({ text: `📦 *Pedido SW-${k}* (ejemplo)\n\n✅ Recibido\n✅ Pagado\n✅ Preparado en bodega TGU\n🚚 En camino con la empresa de envíos\n⬜ Entregado\n\nGuía: CAEX 88412 · llega mañana.`, buttons: ["Menú", "Hablar con un asesor"] });
+      case "piezas_entrega": {
+        const o = pick(text, offered) || text.trim();
+        s.lead = { n: "PZ-" + (++s.seq), nombre: "Cliente de piezas", resumen: "Piezas para herrería · foto enviada", rango: null, cita: o, sucursal: /pedro/i.test(o) ? "San Pedro Sula" : "Tegucigalpa" };
+        say({ text: `Anotado: ${o}. Te escriben por aquí en horario de tienda.`, buttons: ["Cotizar otra cosa"] });
         go("post");
         break;
       }
@@ -255,30 +341,35 @@
       case "asesor": {
         const o = pick(text, ["Tegucigalpa", "San Pedro Sula"]) || "Tegucigalpa";
         const b = SUCURSALES[o === "Tegucigalpa" ? "TGU" : "SPS"];
-        say({ text: `Listo, le pasé la conversación a un asesor de *${b.nombre}* con todo lo que hablamos. Te escribe por aquí mismo en horario de tienda. 🙌\n\nSi es urgente: ${b.tel[0]}`, buttons: ["Menú"] });
+        say({ text: `Listo, le pasé la conversación a un asesor de *${b.nombre}* con todo lo que hablamos. Te escribe por aquí mismo en horario de tienda. 🙌\n\nSi es urgente: ${b.tel[0]}`, buttons: ["Cotizar otra cosa"] });
         s.handoff = b.nombre; go("post");
         break;
       }
 
-      default: { // "post": short follow-up menus
+      default: { // "post"
         const o = pick(text, offered);
-        if (o === "Buscar otra") { go("buscar"); say("¿Qué código o pieza buscas?"); }
-        else if (o === "Hablar con un asesor") { go("asesor"); say({ text: "¿Con qué sucursal te comunico?", buttons: ["Tegucigalpa", "San Pedro Sula"] }); }
-        else { go("menu"); return handle(s, text); }
+        if (o === "Sucursales y horario" || /sucursal|horario|direccion|donde/.test(t)) {
+          say(Object.values(SUCURSALES).map(b => `📍 *${b.nombre}*\n${b.dir}\nTel. ${b.tel.join(" · ")}`).join("\n\n") + `\n\n🕗 ${HORARIO}`);
+          say({ text: "¿Algo más?", buttons: ["Cotizar otra cosa"] });
+          break;
+        }
+        reset(); go("inicio");
+        if (o === "Cotizar otra cosa" || !t) { say(menuMsg()); break; }
+        return handle(s, text, now);
       }
     }
     return { state: s, messages: out };
   }
 
-  // plain-text rendering for channels without buttons (Twilio sandbox, SMS)
+  // plain-text rendering for channels without buttons (Twilio, SMS)
   function toText(m) {
     let s = m.text || "";
-    if (m.card) s = `*${m.card.title}*\n${m.card.sub}\n${m.card.price}\n\n` + s;
-    if (m.list) s += "\n" + m.list.map(i => `• ${i.title}: ${i.sub}`).join("\n");
-    if (m.buttons) s += "\n\n" + m.buttons.map((b, i) => `${i + 1}. ${b}`).join("\n");
-    if (m.pay) s += `\n\n💳 Pagar ${m.pay.amount}: https://pagos.steelworkshn.com/${m.pay.ref}`;
+    if (m.gallery) s += "\n\n" + m.gallery.map((g, i) => `${i + 1}. ${g.title}: ${g.sub}`).join("\n");
+    const rest = m.buttons ? m.buttons.slice(m.gallery ? m.gallery.length : 0) : [];
+    const k = m.gallery ? m.gallery.length : 0;
+    if (rest.length) s += (k ? "\n" : "\n\n") + rest.map((b, i) => `${k + i + 1}. ${b}`).join("\n");
     return s.trim();
   }
 
-  return { handle, toText, fresh, CATALOGO, SUCURSALES, MENU, L };
+  return { handle, toText, fresh, CATALOGO, SUCURSALES, ESTILOS, TARIFAS, MENU, L };
 });

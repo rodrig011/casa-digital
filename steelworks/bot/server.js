@@ -20,6 +20,7 @@ http.createServer((req, res) => {
       const r = handle(sessions.get(from), text);
       sessions.set(from, r.state);
       if (r.state.handoff) console.log(`[asesor ${r.state.handoff}] ${from} pidió hablar con una persona`);
+      if (r.state.lead && r.state.lead !== (sessions.prev || {})[from]) console.log(`[ficha ${r.state.lead.sucursal}] ${from}`, r.state.lead);
       const msgs = r.messages.map(toText).filter(Boolean).map(m => `<Message>${xml(m)}</Message>`).join("");
       res.writeHead(200, { "Content-Type": "text/xml" });
       res.end(`<?xml version="1.0" encoding="UTF-8"?><Response>${msgs}</Response>`);

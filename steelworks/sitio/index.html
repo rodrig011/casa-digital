@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Steel Works Honduras</title>
-<meta name="description" content="Hierro forjado, diseños CNC y fabricación a la medida en Tegucigalpa y San Pedro Sula. Busca por código, cotiza por WhatsApp y recibe en toda Honduras.">
+<meta name="description" content="Hierro forjado, diseños CNC y fabricación a la medida en Tegucigalpa y San Pedro Sula. Cotiza tu portón por WhatsApp con precio estimado al momento y visita para medir sin costo.">
 <style>
 /* Layout: forge (dark, warm iron) alternates with galvanized (cool light steel); the catalog is a working tool, the hero is a drawing being forged. */
 @font-face{font-family:"Shoulders";src:url("fonts/big-shoulders-display-latin-800-normal.woff2") format("woff2");font-weight:800;font-display:swap;}
@@ -84,7 +84,10 @@ header.nav .wrap{display:flex;align-items:center;gap:28px;padding-block:14px;}
 /* code search strip */
 .finder{background:var(--plate);border-bottom:1px solid var(--rule);}
 .finder .wrap{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;padding-block:22px;}
-.finder label{font:800 26px/1 var(--display);text-transform:uppercase;}
+.finder .flabel{font:800 26px/1 var(--display);text-transform:uppercase;}
+.qchips{display:flex;gap:10px;flex-wrap:wrap;}
+.qchip{background:var(--forge);border:1px solid var(--rule);border-radius:var(--r);padding:12px 18px;font:600 15px var(--body);color:inherit;cursor:pointer;}
+.qchip:hover,.qchip:focus-visible{border-color:var(--ember);color:var(--heat);}
 .searchbox{display:flex;align-items:center;gap:12px;background:var(--forge);border:1px solid var(--rule);border-radius:var(--r);padding:0 16px;}
 .searchbox input{flex:1;min-width:0;background:none;border:0;outline:none;padding:15px 0;font:500 18px var(--mono);}
 .searchbox kbd{font:500 12px var(--mono);color:var(--steel);border:1px solid var(--rule);border-radius:4px;padding:2px 6px;}
@@ -162,6 +165,9 @@ section{padding-block:clamp(64px,8vw,112px);}
 .ficha div{background:var(--plate);padding:12px 14px;min-width:0;}
 .ficha span{display:block;font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--steel);}
 .ficha b{font:500 15px var(--mono);overflow-wrap:anywhere;}
+.ficha .est{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.ficha .est b{font:800 30px/1 var(--display);color:var(--heat);}
+.ficha .est small{flex-basis:100%;color:var(--steel);font-size:13px;}
 .blueprint .ctas{margin-top:22px;}
 
 /* talleres */
@@ -172,6 +178,11 @@ section{padding-block:clamp(64px,8vw,112px);}
 .perk b{display:block;font-size:17px;}
 .perk span{color:var(--ink2);font-size:15px;}
 .quick{background:var(--galv2);border:1px solid var(--grule);border-radius:var(--r);padding:24px;}
+.quick .ph{background:#E6E6E6;border-radius:4px;aspect-ratio:16/9;display:grid;place-items:center;margin-bottom:14px;}
+.quick .ph img{height:86%;object-fit:contain;mix-blend-mode:multiply;}
+.quick .q{border-radius:8px;padding:10px 14px;font-size:15px;line-height:1.45;margin:8px 0;max-width:88%;}
+.quick .q.out{background:#D9FDD3;margin-left:auto;}
+.quick .q.in{background:#fff;border:1px solid var(--grule);}
 .quick textarea{width:100%;min-height:160px;resize:vertical;border:1px solid var(--grule);border-radius:4px;background:#fff;color:var(--ink);padding:14px;font:500 15px/1.7 var(--mono);}
 .quick .res{margin-top:14px;font:500 14px/1.7 var(--mono);}
 .quick .res .bad{color:#9A3B12;}
@@ -242,6 +253,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
 .bub.in{background:#202C33;align-self:flex-start;border-top-left-radius:0;}
 .bub.out{background:#005C4B;align-self:flex-end;border-top-right-radius:0;}
 .bub time{display:block;text-align:right;font-size:11px;color:rgba(233,237,239,.55);margin-top:2px;}
+.bub .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 2px;white-space:normal;}
+.bub .gal figure{margin:0;}
+.bub .gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:4px;display:block;}
+.bub .gal figcaption{font-size:12px;line-height:1.25;margin-top:4px;color:#E9EDEF;}
+.bub .gal figcaption small{display:block;color:#8696A0;font-size:11px;}
 .bub .pc{display:grid;grid-template-columns:56px 1fr;gap:10px;background:rgba(0,0,0,.25);border-radius:6px;padding:8px;margin-bottom:6px;}
 .bub .pc .ph{background:#E9ECEE;border-radius:4px;display:grid;place-items:center;color:#30353A;aspect-ratio:1;}
 .bub .pc .ph svg{width:80%;}
@@ -321,8 +337,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
     <h1 style="margin-top:18px">Todo,<br><em>en hierro.</em></h1>
     <p class="lede">Más de 700 piezas forjadas listas para tu taller, diseños cortados en CNC y portones, balcones y barandales hechos a la medida. Cotiza en minutos por WhatsApp.</p>
     <div class="ctas">
-      <a class="btn hot" href="#buscar">Buscar pieza por código</a>
-      <a class="btn ghost" href="#fabricacion">Cotizar un portón</a>
+      <a class="btn hot" href="#chat" id="herocta">Cotizar por WhatsApp</a>
+      <a class="btn ghost" href="#fabricacion">Calcular mi portón</a>
     </div>
     <div class="facts">
       <div><b class="num">750+</b>piezas en catálogo</div>
@@ -333,37 +349,36 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   <div class="forge-art" id="heroArt"><div class="tag">Portón forjado clásico · 3.60 × 2.40 m</div></div>
 </div></div>
 
-<div class="finder" id="buscar"><div class="wrap">
-  <label for="q">¿Tienes el código?</label>
-  <div class="searchbox"><input id="q" type="search" placeholder="120-1048, llamador, tubo forjado…" autocomplete="off"><kbd>Enter</kbd></div>
-  <div class="hits" id="hits"></div>
+<div class="finder" id="cotiza"><div class="wrap">
+  <span class="flabel">¿Qué quieres cotizar?</span>
+  <div class="qchips" id="qchips"></div>
 </div></div>
 
 <section class="galv" id="lineas"><div class="wrap">
   <div class="head"><div><div class="eyebrow">Líneas de producto</div><h2 style="margin-top:12px">Lo que trabajamos</h2></div>
-  <p class="lede">Ordenado como lo piden los herreros: por familia y por código.</p></div>
+  <p class="lede">Desde la pieza suelta para el herrero hasta el portón terminado e instalado.</p></div>
   <div class="cats" id="cats"></div>
 </div></section>
 
 <section class="galv" id="catalogo" style="padding-top:0"><div class="wrap">
   <div class="head"><div><div class="eyebrow">Catálogo en línea</div><h2 style="margin-top:12px">Precio y existencia, al momento</h2></div>
-  <p class="lede">Precios en lempiras con IVA incluido. Agrega piezas a tu pedido y envíalo por WhatsApp o págalo en línea.</p></div>
+  <p class="lede">Precios en lempiras con IVA incluido. ¿No ves la pieza que buscas? Mándanos una foto por WhatsApp y te la buscamos en bodega.</p></div>
   <div class="chips" id="chips"></div>
   <div class="grid" id="grid"></div>
-  <div class="more"><span><span id="count"></span> <button class="chip" type="button" id="showall">Ver todas</button></span><span>Piezas, precios y fotos del catálogo actual de Steel Works.</span></div>
+  <div class="more"><span id="count"></span><span>Piezas, precios y fotos del catálogo actual de Steel Works.</span></div>
 </div></section>
 
 <section class="fab" id="fabricacion"><div class="wrap">
   <div>
     <div class="eyebrow">Fabricación a la medida</div>
-    <h2 style="margin-top:12px">Diseña tu portón y recíbelo cotizado</h2>
-    <p class="lede" style="margin-top:16px">Elige el tipo, las medidas y el estilo. Te mostramos el boceto al instante y el taller recibe la ficha completa por WhatsApp.</p>
+    <h2 style="margin-top:12px">Pon las medidas y mira el precio</h2>
+    <p class="lede" style="margin-top:16px">Elige qué necesitas, las medidas y el estilo. Ves un precio estimado al momento y, si te gusta, agendamos la visita para medir sin costo.</p>
     <div class="form">
       <div class="fld"><span>Tipo</span><div class="seg" id="ftipo"></div></div>
       <div class="fld"><span>Medidas del espacio</span>
         <div class="dims">
-          <label>Ancho <input id="fw" type="number" min="0.6" max="12" step="0.1" value="3.6"><em>m</em></label>
-          <label>Alto <input id="fh" type="number" min="0.6" max="6" step="0.1" value="2.4"><em>m</em></label>
+          <label><span id="lw">Ancho</span> <input id="fw" type="number" min="0.6" max="12" step="0.1" value="3.6"><em>m</em></label>
+          <label id="lhwrap">Alto <input id="fh" type="number" min="0.6" max="6" step="0.1" value="2.4"><em>m</em></label>
         </div></div>
       <div class="fld"><span>Estilo</span><div class="seg" id="festilo"></div></div>
       <div class="fld"><span>Ciudad de instalación</span><div class="seg" id="fciudad"></div></div>
@@ -376,10 +391,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
       <div><span>Área</span><b id="xa" class="num"></b></div>
       <div><span>Estilo</span><b id="xs"></b></div>
       <div><span>Ciudad</span><b id="xc"></b></div>
+      <div class="est"><span>Precio estimado</span><b id="xp" class="num"></b><small>Incluye fabricación, pintura e instalación. Tarifa de ejemplo: el precio final lo confirma el taller al medir.</small></div>
     </div>
     <div class="ctas">
-      <button class="btn wa" id="fsend" type="button">Pedir precio por WhatsApp</button>
-      <span style="color:var(--steel);font-size:14px;align-self:center">Respuesta del taller con precio y visita para medir.</span>
+      <button class="btn wa" id="fsend" type="button">Agendar visita por WhatsApp</button>
+      <span style="color:var(--steel);font-size:14px;align-self:center">Escoges día y hora, y el taller recibe tu ficha.</span>
     </div>
   </div>
 </div></section>
@@ -388,23 +404,19 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   <div>
     <div class="eyebrow">Para herreros y constructoras</div>
     <h2 style="margin-top:12px">Cuenta de taller</h2>
-    <p class="lede" style="margin-top:16px">Si compras cada semana, no deberías buscar pieza por pieza. Pega tu lista de códigos y el pedido se arma solo.</p>
+    <p class="lede" style="margin-top:16px">Si compras cada semana, no deberías llamar por cada pieza. Mándanos la foto de la pieza o tu lista como la escribes en el taller, y te confirmamos precio y existencia.</p>
     <div class="perks">
-      <div class="perk"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h32M8 24h32M8 36h20"/><path d="M34 32l4 4 6-8"/></svg><div><b>Pedido rápido por lista</b><span>Una línea por código y cantidad. Total con IVA y existencias al instante.</span></div></div>
+      <div class="perk"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h32M8 24h32M8 36h20"/><path d="M34 32l4 4 6-8"/></svg><div><b>Pide con una foto</b><span>«20 de estas para un balcón»: te respondemos con precio, existencia y dónde retirarlas.</span></div></div>
       <div class="perk"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 38l12-12 8 8 16-18"/><path d="M32 16h10v10"/></svg><div><b>Precio por volumen</b><span>Escala de descuento para talleres registrados, visible al iniciar sesión.</span></div></div>
       <div class="perk"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M24 14v10l7 5"/></svg><div><b>Repetir el pedido de la semana pasada</b><span>Historial de compras y un botón para volver a pedirlo.</span></div></div>
       <div class="perk"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 40V18l14-10 14 10v22"/><path d="M18 40V28h12v12"/></svg><div><b>Crédito y factura para empresas</b><span>Constructoras con RTN reciben factura y pueden pagar a 30 días.</span></div></div>
     </div>
   </div>
   <div class="quick">
-    <div class="eyebrow" style="margin-bottom:12px">Pruébalo</div>
-    <label for="qlist" style="font-weight:600;display:block;margin-bottom:10px">Tu lista de la semana</label>
-    <textarea id="qlist" spellcheck="false">120-1048 x 20
-130-1024 x 50
-401-1801A x 4
-110-702 x 6</textarea>
-    <div class="res" id="qres"></div>
-    <div class="bar"><b class="num" id="qtot"></b><button type="button" id="qadd">Agregar todo al pedido</button></div>
+    <div class="eyebrow" style="margin-bottom:12px">Así se pide</div>
+    <div class="ph" id="qphoto"></div>
+    <p class="q out">Necesito 20 de estas para un balcón. ¿Hay en Tegucigalpa?</p>
+    <p class="q in">Sí hay. Son <b class="num">L 81.47</b> cada una con IVA, <b class="num">L 1,629.40</b> las 20. ¿Te las apartamos para retirar o te las enviamos?</p>
   </div>
 </div></section>
 
@@ -423,7 +435,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   <div class="head"><div><div class="eyebrow">Preguntas frecuentes</div><h2 style="margin-top:12px">Antes de pedir</h2></div></div>
   <div class="faq">
     <details open><summary>¿Envían a toda Honduras?</summary><p>Sí. Despachamos desde Tegucigalpa y San Pedro Sula por empresa de envíos. Al cerrar tu pedido ves el costo y el tiempo estimado para tu ciudad.</p></details>
-    <details><summary>¿Qué significa el código de cada pieza?</summary><p>Es el número con el que la pieza aparece en el catálogo impreso y en la bodega, por ejemplo 120-1048. Si ya lo conoces, escríbelo en el buscador o mándalo por WhatsApp y te damos precio y existencia.</p></details>
+    <details><summary>¿Cuánto cuesta un portón?</summary><p>Depende de las medidas y del estilo. En el cotizador de esta página o por WhatsApp ves un precio estimado al momento, y la visita para medir y darte el precio final es sin costo.</p></details>
     <details><summary>¿Cómo puedo pagar?</summary><p>Con tarjeta en línea, por transferencia o al retirar en tienda. Las empresas con cuenta de taller pueden pagar a crédito.</p></details>
     <details><summary>¿Fabrican a la medida?</summary><p>Sí. Portones, balcones, barandales, puertas y verjas. Usa el cotizador de esta página o mándanos una foto del diseño y las medidas.</p></details>
     <details><summary>¿Una pieza agotada vuelve a entrar?</summary><p>Toca «Avísame» en la pieza y te escribimos por WhatsApp apenas vuelva a la bodega.</p></details>
@@ -470,12 +482,18 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   const foto = k => (window.FOTOS && window.FOTOS[k]) || "../fotos/" + k + ".jpg";
   const OWN = ["110-702", "110-705", "110-721", "120-1016", "120-1048", "222-1650", "222-2650", "222-2950"];
   const thumbOf = p => OWN.includes(p.code) ? foto("p-" + p.code) : null;
-  const tile = p => `<span class="tile">${p.code}</span>`;  // pieces we have no photo of yet: no invented drawing
+  const nombre = p => p.name.replace(" " + p.code, "").replace("INOX", "de acero inoxidable");
   const img = (src, alt, cls) => `<img src="${src}" alt="${esc(alt)}"${cls ? ` class="${cls}"` : ""} loading="lazy">`;
 
   // logo: a forged C-scroll on a bar
   $("#logo-scroll").setAttribute("d", Hierro.cscroll(24, 8, 30, 1, 1.2));
   $("#chatav").innerHTML = $(".brand svg").outerHTML;
+  $("#qphoto").innerHTML = img(foto("p-120-1048"), "Adorno de barra forjado");
+
+  // what do you want to quote: straight into the WhatsApp assistant
+  $("#qchips").innerHTML = ["Portón", "Puerta", "Protección de ventanas", "Baranda o balcón", "Piezas para herrería"].map(t => `<button class="qchip" type="button">${t}</button>`).join("");
+  $("#qchips").addEventListener("click", e => { const b = e.target.closest(".qchip"); if (b) openChat(["hola", b.textContent]); });
+  $("#herocta").onclick = e => { e.preventDefault(); openChat(); };
 
   // hero drawing forged on load
   const art = $("#heroArt");
@@ -494,47 +512,30 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   $("#cats").innerHTML = LINES.map(([t, d, c, s], i) => `<a class="cat" href="#catalogo" data-line="${i}">${s}<h3>${t}</h3><p>${d}</p><span class="cnt">${c}</span></a>`).join("");
 
   // catalog
-  const CATS = ["Todo", ...new Set(CATALOGO.map(p => p.cat))];
+  const FOTO = CATALOGO.filter(thumbOf);
+  const CATS = ["Todo", ...new Set(FOTO.map(p => p.cat))];
   let cat = "Todo";
   const chips = $("#chips");
   chips.innerHTML = CATS.map(c => `<button class="chip" type="button" aria-pressed="${c === cat}">${c}</button>`).join("");
   chips.addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.textContent; chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b)); draw(); });
   function card(p) {
-    return `<article class="prod"><div class="ph">${thumbOf(p) ? img(thumbOf(p), p.name) : tile(p)}</div><div class="bd">
-      <span class="code">${p.code}</span><h4>${esc(p.name.replace(" " + p.code, ""))}</h4>
+    return `<article class="prod"><div class="ph">${img(thumbOf(p), nombre(p))}</div><div class="bd">
+      <h4>${esc(nombre(p))}</h4>
       <div class="row"><span class="price num">${L(p.price).replace("L ", "L&nbsp;")}</span><span class="st ${p.stock ? "ok" : "no"}">${p.stock ? "Disponible" : "Agotado"}</span></div>
-      <div class="add">${p.stock ? `<input type="number" min="1" value="1" aria-label="Cantidad de ${p.code}" id="q-${p.code}"><button type="button" data-add="${p.code}">Agregar</button>` : `<button type="button" class="notify" data-notify="${p.code}">Avísame cuando llegue</button>`}</div>
+      <div class="add">${p.stock ? `<input type="number" min="1" value="1" aria-label="Cantidad" id="q-${p.code}"><button type="button" data-add="${p.code}">Agregar</button>` : `<button type="button" class="notify" data-notify="${p.code}">Avísame cuando llegue</button>`}</div>
     </div></article>`;
   }
-  let all = false;
   function draw() {
-    const list = CATALOGO.filter(p => cat === "Todo" || p.cat === cat).sort((x, y) => !!thumbOf(y) - !!thumbOf(x));
-    $("#grid").innerHTML = (all || cat !== "Todo" ? list : list.slice(0, 12)).map(card).join("");
-    $("#showall").hidden = all || cat !== "Todo";
-    $("#count").textContent = `${list.length} piezas · ${list.filter(p => p.stock).length} disponibles`;
+    const list = FOTO.filter(p => cat === "Todo" || p.cat === cat);
+    $("#grid").innerHTML = list.map(card).join("");
+    $("#count").textContent = `${list.length} piezas de muestra · ${list.filter(p => p.stock).length} disponibles`;
   }
   draw();
-  $("#showall").onclick = () => { all = true; draw(); };
   $("#grid").addEventListener("click", e => {
     const a = e.target.closest("[data-add]"), n = e.target.closest("[data-notify]");
     if (a) { const q = +document.getElementById("q-" + a.dataset.add).value || 1; addCart(a.dataset.add, q); a.textContent = "✓ Agregado"; setTimeout(() => a.textContent = "Agregar", 1400); }
     if (n) { n.textContent = "✓ Te avisamos por WhatsApp"; n.disabled = true; }
   });
-
-  // code finder
-  function search(q) {
-    const k = q.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (!k) return [];
-    return CATALOGO.filter(p => p.code.toLowerCase().replace(/[^a-z0-9]/g, "").includes(k) || p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "").includes(k)).slice(0, 6);
-  }
-  function showHits() {
-    const h = search($("#q").value);
-    $("#hits").innerHTML = h.map(p => `<button class="hit" type="button" data-add="${p.code}"><span class="code">${p.code}</span><span>${esc(p.name.replace(" " + p.code, ""))}</span><b class="num">${L(p.price)}</b><span class="st ${p.stock ? "ok" : "no"}" style="background:none;padding:0;color:${p.stock ? "var(--ok)" : "var(--out)"}">${p.stock ? "disponible" : "agotado"}</span></button>`).join("") ||
-      ($("#q").value ? `<span style="color:var(--steel)">Sin resultados. Escríbenos el código por WhatsApp y lo buscamos en bodega.</span>` : "");
-  }
-  $("#q").addEventListener("input", showHits);
-  $("#q").value = "120-10"; showHits();
-  $("#hits").addEventListener("click", e => { const b = e.target.closest("[data-add]"); if (b && !b.querySelector(".st").textContent.includes("agotado")) { addCart(b.dataset.add, 1); b.style.borderColor = "var(--ok)"; } });
 
   // cart
   const cart = new Map();
@@ -543,7 +544,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   function renderCart() {
     let n = 0; cart.forEach(q => n += q);
     $("#cartn").textContent = n;
-    $("#lines").innerHTML = [...cart].map(([c, q]) => { const p = CATALOGO.find(x => x.code === c); return `<div class="ln"><span><span class="code">${c}</span><br><span style="color:var(--steel)">${q} × ${L(p.price)}</span></span><b class="num">${L(q * p.price)}</b><button type="button" data-rm="${c}" aria-label="Quitar ${c}">×</button></div>`; }).join("") || `<p style="color:var(--steel)">Tu pedido está vacío. Agrega piezas desde el catálogo o pega tu lista en Cuenta de taller.</p>`;
+    $("#lines").innerHTML = [...cart].map(([c, q]) => { const p = CATALOGO.find(x => x.code === c); return `<div class="ln"><span>${esc(nombre(p))}<br><span style="color:var(--steel)">${q} × ${L(p.price)}</span></span><b class="num">${L(q * p.price)}</b><button type="button" data-rm="${c}" aria-label="Quitar">×</button></div>`; }).join("") || `<p style="color:var(--steel)">Tu pedido está vacío. Agrega piezas desde el catálogo.</p>`;
     $("#dtot").textContent = L(total());
   }
   renderCart();
@@ -553,43 +554,38 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   $("#dclose").onclick = $("#scrim").onclick = () => openDrawer(false);
   $("#dsend").onclick = () => {
     if (!cart.size) return;
-    const list = [...cart].map(([c, q]) => `${c} x ${q}`).join("\n");
-    openDrawer(false); openChat(["hola", "3", list]);
+    const list = [...cart].map(([c, q]) => `${q} × ${nombre(CATALOGO.find(p => p.code === c))}`).join("\n");
+    openDrawer(false); openChat(["hola", "Piezas para herrería", list]);
   };
   $("#dpay").onclick = () => { if (!cart.size) return; $("#dpay").textContent = "Demo: aquí abre la pasarela de pago"; };
 
   // fabrication configurator
-  const TIPOS = ["Portón", "Balcón", "Barandal", "Puerta", "Verja"], ESTILOS = ["Forjado clásico", "Liso, moderno", "Diseño CNC"], CIUDADES = ["Tegucigalpa", "San Pedro Sula", "Otra ciudad"];
+  const TIPOS = { "Portón": "porton", "Puerta": "puerta", "Ventanas": "ventana", "Baranda": "baranda" };
+  const ESTILOS = SteelBot.ESTILOS.map(e => e.label), CIUDADES = ["Tegucigalpa", "San Pedro Sula", "Otra ciudad"];
   const st = { tipo: "Portón", estilo: "Forjado clásico", ciudad: "Tegucigalpa" };
+  const L0 = n => "L " + (Math.round(n / 100) * 100).toLocaleString("es-HN");
   function seg(el, opts, key) {
     el.innerHTML = opts.map(o => `<button type="button" aria-pressed="${st[key] === o}">${o}</button>`).join("");
     el.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; st[key] = b.textContent; el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); bp(); });
   }
-  seg($("#ftipo"), TIPOS, "tipo"); seg($("#festilo"), ESTILOS, "estilo"); seg($("#fciudad"), CIUDADES, "ciudad");
+  seg($("#ftipo"), Object.keys(TIPOS), "tipo"); seg($("#festilo"), ESTILOS, "estilo"); seg($("#fciudad"), CIUDADES, "ciudad");
   function bp() {
     const w = Math.min(12, Math.max(.6, +$("#fw").value || 3)), h = Math.min(6, Math.max(.6, +$("#fh").value || 2));
-    const style = st.estilo.startsWith("Liso") ? "liso" : st.estilo.startsWith("Diseño") ? "cnc" : "forjado";
-    $("#bpArt").innerHTML = st.tipo === "Balcón" || st.tipo === "Barandal" ? Hierro.balcony(w * 100, h * 100) : Hierro.gate(w * 100, h * 100, style);
+    const ek = SteelBot.ESTILOS.find(e => e.label === st.estilo).key, tk = TIPOS[st.tipo];
+    const style = ek === "moderno" ? "liso" : ek;
+    $("#bpArt").innerHTML = tk === "baranda" ? Hierro.balcony(w * 100, h * 100) : Hierro.gate(w * 100, h * 100, style);
+    const [lo, hi] = SteelBot.TARIFAS[tk][ek], cant = tk === "baranda" ? w : w * h;
+    $("#xp").textContent = `${L0(lo * cant)} a ${L0(hi * cant)}`;
+    $("#lw").textContent = tk === "baranda" ? "Largo" : "Ancho";
     $("#dimw").textContent = w.toFixed(2) + " m"; $("#dimh").textContent = h.toFixed(2) + " m";
     $("#xt").textContent = st.tipo; $("#xa").textContent = (w * h).toFixed(2) + " m²"; $("#xs").textContent = st.estilo; $("#xc").textContent = st.ciudad;
   }
   $("#fw").oninput = $("#fh").oninput = bp; bp();
-  $("#fsend").onclick = () => openChat(["hola", "2", st.tipo, `${$("#fw").value} x ${$("#fh").value}`, st.estilo, st.ciudad]);
-
-  // quick order for workshops
-  function parseList() {
-    const ok = [], bad = [];
-    $("#qlist").value.split("\n").map(x => x.trim()).filter(Boolean).forEach(ln => {
-      const m = ln.match(/^([A-Za-z0-9-]+)\s*[x×*]?\s*(\d+)?$/);
-      const p = m && CATALOGO.find(x => x.code.toLowerCase() === m[1].toLowerCase());
-      if (!p) bad.push(`${esc(ln)}: código no encontrado`); else if (!p.stock) bad.push(`${p.code}: agotado, te avisamos`); else ok.push([p, +(m[2] || 1)]);
-    });
-    $("#qres").innerHTML = ok.map(([p, q]) => `✓ ${p.code} · ${q} × ${L(p.price)} = ${L(p.price * q)}`).join("<br>") + (bad.length ? "<br>" + bad.map(b => `<span class="bad">✕ ${b}</span>`).join("<br>") : "");
-    $("#qtot").textContent = L(ok.reduce((s, [p, q]) => s + p.price * q, 0));
-    return ok;
-  }
-  $("#qlist").oninput = parseList; parseList();
-  $("#qadd").onclick = () => { parseList().forEach(([p, q]) => addCart(p.code, q)); openDrawer(true); };
+  $("#fsend").onclick = () => {
+    const tk = TIPOS[st.tipo], label = SteelBot.MENU[Object.values(TIPOS).indexOf(tk)];
+    openChat(["hola", label, tk === "baranda" ? `${$("#fw").value} metros` : `${$("#fw").value} x ${$("#fh").value}`]
+      .concat(tk === "porton" ? ["No, manual"] : tk === "ventana" ? ["1"] : [], [st.estilo, st.ciudad]));
+  };
 
   // works
   const WORKS = [["Puerta principal", "Panel calado y vidrio", "obra-puerta-cnc"], ["Cerco de jardín", "Barrotes con remates en punta", "obra-cerco"], ["Protección de ventana", "Marco trenzado", "obra-ventana"], ["Puerta de hierro y vidrio", "Arco con cuadrícula", "obra-puerta-arco"]]
@@ -611,13 +607,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
   function bubble(html, who, cls) { msgs.querySelectorAll(".opts").forEach(o => o.remove()); const d = document.createElement("div"); d.className = "bub " + who + (cls ? " " + cls : ""); d.innerHTML = html + `<time>${now()}</time>`; msgs.appendChild(d); msgs.scrollTop = 1e6; }
   function render(m) {
     if (m.image) return bubble(`<div class="ph">${img(foto("detalle-calado"), "Foto del diseño enviada por el cliente")}</div>`, "out", "img");
-    let h = "";
-    if (m.card) { const p = CATALOGO.find(x => m.card.title.endsWith(x.code)); h += `<div class="pc"><div class="ph">${thumbOf(p) ? img(thumbOf(p), p.name) : ""}</div><div><b>${esc(m.card.title)}</b><small>${esc(m.card.sub)}</small><i class="num">${m.card.price}</i></div></div>`; }
-    h += fmt(m.text || "");
-    if (m.list) h += "<br>" + m.list.map(i => `<br>▸ <b>${i.title}</b> ${esc(i.sub)}`).join("");
-    if (m.pay) h += `<div class="pay"><div><span>Pago seguro con tarjeta (demo)</span><br><b>Pagar ${m.pay.amount}</b></div><span>${m.pay.ref}</span></div>`;
+    let h = fmt(m.text || "");
+    if (m.gallery) h += `<div class="gal">${m.gallery.map(g => `<figure>${img(foto(g.foto), g.title)}<figcaption>${esc(g.title)}<small>${esc(g.sub)}</small></figcaption></figure>`).join("")}</div>`;
     bubble(h, "in");
-    const opts = m.buttons || (m.list && m.list.map(i => i.title));
+    const opts = m.buttons;
     if (opts) { const o = document.createElement("div"); o.className = "opts"; o.innerHTML = opts.map(b => `<button type="button">${esc(b)}</button>`).join(""); msgs.appendChild(o); msgs.scrollTop = 1e6; }
   }
   let queue = Promise.resolve();
