@@ -1,46 +1,65 @@
 #!/usr/bin/env python3
 """Steel Works · video de propuesta (HyperFrames, 1920x1080).
 
-Estilo "forja": fondo negro de taller, texto que entra al rojo vivo y se enfría a acero,
-chispas en cada golpe, placas metálicas estampadas para los hallazgos. Cierra con el outro
-de Clientia Tech (logo redibujado + estelas de luz) de los videos anteriores.
+Cuenta la página nueva con su mismo lenguaje: el lema de la empresa, «Todo… en hierro», con
+fotos de sus trabajos reales pasando entre las dos palabras; luego cómo cotiza el cliente por
+WhatsApp, un verbo por paso (Mide, Elige, Cotiza, Agenda, Forja); la tabla de precios que
+cambia con la medida; las piezas por su nombre, sin códigos. Fondo de taller, texto que sale
+al rojo vivo y se enfría a acero, chispas en cada golpe. Cierra con el outro de Clientia Tech.
 
 Música: "Still Buggin" (194 BPM). Un compás de 8 tiempos = 2.474 s; toda escena empieza en
-una línea de compás K(n). Requisitos junto al script: musica.mp3, capturas/*.png y
-deps/node_modules con gsap@3.14.2 y @fontsource/{big-shoulders-display,archivo,jetbrains-mono,inter-tight}.
+una línea de compás K(n). Requisitos junto al script: musica.mp3, capturas/*.jpg, ../fotos y
+deps/node_modules con gsap@3.14.2 y @fontsource/{big-shoulders-display,archivo,inter-tight}.
 
     python3 gen.py && cd build && hyperframes render . -o ../steelworks-propuesta.mp4 -q high
 """
-import json, os, shutil, random
+import json, math, os, random, shutil
 from outro import ribbons
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+FOTOS = os.path.join(HERE, "..", "fotos")
 DEPS = os.environ.get("DEPS", os.path.join(HERE, "deps", "node_modules"))
 OUT = os.path.join(HERE, "build")
 WHATSAPP = "+1 (765) 543-4251"
 MARK = json.load(open(os.path.join(HERE, "clientia-mark.json")))
 P0, BAR = 0.0012, 8 * 0.3092783
 K = lambda k: round(P0 + BAR * k, 3)
-SCENES = [("intro", 0, 3), ("hook", 3, 6), ("audit", 6, 11), ("thesis", 11, 13), ("site", 13, 19),
-          ("bot", 19, 25), ("flow", 25, 29), ("offer", 29, 32), ("cta", 32, 34), ("end", 34, 37)]
+SCENES = [("intro", 0, 3), ("hook", 3, 6), ("lema", 6, 10), ("verbs", 10, 20), ("price", 20, 24),
+          ("pieces", 24, 27), ("site", 27, 30), ("offer", 30, 32), ("cta", 32, 34), ("end", 34, 37)]
 TOTAL = K(37)
 
-FINDINGS = [
-    ("Enlaces que no llevan a nada", "FQA  →  #\nEnvíos  →  #", "«Preguntas» y «Envíos» del menú no abren nada."),
-    ("Teléfonos que no marcan", "tel:TGU:(504)3265-8800", "Desde el celular, tocar el número da error."),
-    ("Texto técnico en pantalla", ".path{fill:none;stroke:#333…}", "Estilos del tema aparecen como texto."),
-    ("Un error a la vista", "error: Content is protected !!", "El aviso del plugin se ve en la página."),
-    ("Google no sabe qué venden", "Just another WordPress site", "Es la descripción que leen los buscadores."),
-    ("Para cotizar, hay que llamar", "Contacto  →  sin respuesta", "Sin precios de referencia ni horario."),
+# the same rates the bot and the page use (bot/engine.js TARIFAS, portón, por m²)
+TARIFAS = [("Moderno", 3200, 4200), ("Forjado clásico", 4200, 5800), ("Calado CNC", 5200, 7200)]
+REEL = [("obra-puerta-cnc", "50% 38%"), ("obra-cerco", "50% 62%"), ("obra-ventana", "50% 50%"), ("obra-puerta-arco", "50% 55%")]
+VERBS = [  # verb, photo, what it means, chat (side, html)
+    ("Mide.", "obra-ventana", "El cliente escribe con sus palabras.",
+     [("out", "cuánto me sale un portón de 4 por 2.5"), ("in", "Perfecto: portón, 4 × 2.5 m.<br>¿Lo quieres con motor eléctrico?")]),
+    ("Elige.", "obra-puerta-cnc", "Escoge el estilo viendo trabajos reales.",
+     [("in", "¿Qué estilo te gusta? Estos son trabajos nuestros:"
+             '<div class="gal"><figure><img src="assets/obra-puerta-arco.jpg"><b>Moderno</b></figure>'
+             '<figure><img src="assets/obra-cerco.jpg"><b>Forjado</b></figure>'
+             '<figure><img src="assets/obra-puerta-cnc.jpg"><b>Calado CNC</b></figure></div>'), ("out", "Forjado clásico")]),
+    ("Cotiza.", "obra-puerta-arco", "Recibe un precio inicial al momento.",
+     [("in", "Precio estimado: <b>L 42,000 a L 58,000</b><br>Incluye fabricación, pintura e instalación.<br>El precio final lo confirma el taller al medir.")]),
+    ("Agenda.", "obra-cerco", "Deja la visita para medir agendada.",
+     [("out", "Agendar visita para medir"), ("in", "Listo, Carlos. Visita para medir: jueves, de 8 a 10 a. m.<br>Tu ficha ya la tiene la sucursal.")]),
+    ("Forja.", None, "Y el taller recibe la ficha completa.", []),
 ]
+PIECES = [("Remates de poste", "p-110-702"), ("esferas", "p-110-721"), ("adornos de barra", "p-120-1016"),
+          ("barras con volutas", "cat-barras-forjadas"), ("bases de poste", "cat-adorno-barra"), ("cruces caladas", "cat-cnc-cruz"),
+          ("volutas y flores", "panel-volutas"), ("llamadores", "cat-llamadores"), ("jaladores", "p-222-2650")]
+OFFER = [("Asistente de WhatsApp", "Cotiza a cualquier hora: medidas, estilo con fotos, precio inicial y cita."),
+         ("Página nueva", "Su lema, sus trabajos y una tabla de precios que cambia con la medida."),
+         ("Ficha a la sucursal", "Cada cliente llega con lo que pidió, su medida y su cita."),
+         ("Reporte semanal", "Cuántos cotizaron, cuántas visitas y cuántas ventas.")]
 
 
 def words(text, cls="w"):
     return " ".join(f'<span class="{cls}">{w}</span>' for w in text.split())
 
 
-def bubble(bid, side, html):
-    return f'<div class="bub {side}" id="{bid}">{html}<time>9:41</time></div>'
+def L0(n):
+    return "L " + f"{round(n / 100) * 100:,}"
 
 
 def build():
@@ -52,15 +71,18 @@ def build():
     shutil.copy(os.path.join(DEPS, "gsap", "dist", "gsap.min.js"), os.path.join(A, "gsap.min.js"))
     fs = os.path.join(DEPS, "@fontsource")
     for src, dst in [("big-shoulders-display/files/big-shoulders-display-latin-800-normal.woff2", "bsd-800"),
-                     ("big-shoulders-display/files/big-shoulders-display-latin-600-normal.woff2", "bsd-600"),
-                     ("jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2", "jbm-500")] + \
-            [(f"archivo/files/archivo-latin-{w}-normal.woff2", f"ar-{w}") for w in (400, 500, 600, 700)] + \
+                     ("big-shoulders-display/files/big-shoulders-display-latin-600-normal.woff2", "bsd-600")] + \
+            [(f"archivo/files/archivo-latin-{w}-normal.woff2", f"ar-{w}") for w in (400, 500, 700)] + \
             [(f"inter-tight/files/inter-tight-latin-{w}-normal.woff2", f"it-{w}") for w in (300, 600)]:
         shutil.copy(os.path.join(fs, src), os.path.join(A, "fonts", dst + ".woff2"))
     for f in os.listdir(os.path.join(HERE, "capturas")):
         shutil.copy(os.path.join(HERE, "capturas", f), os.path.join(A, f))
-    for f in ("obra-puerta-arco", "obra-cerco", "obra-puerta-cnc"):  # real Steel Works work shown in the chat
-        shutil.copy(os.path.join(HERE, "..", "fotos", f + ".jpg"), os.path.join(A, f + ".jpg"))
+    for f in os.listdir(FOTOS):  # Steel Works' own photos, and their pieces cut out
+        if f.endswith(".jpg"):
+            shutil.copy(os.path.join(FOTOS, f), os.path.join(A, f))
+    for f in os.listdir(os.path.join(FOTOS, "recortes")):
+        shutil.copy(os.path.join(FOTOS, "recortes", f), os.path.join(A, "r-" + f))
+    shutil.copy(os.path.join(HERE, "..", "logo", "simbolo", "steelworks-logo-simbolo-naranja.svg"), os.path.join(A, "simbolo.svg"))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
                "media": {"autoProxy": True}}, open(os.path.join(OUT, "hyperframes.json"), "w"), indent=2)
@@ -71,8 +93,7 @@ def build():
         return (f'<section id="{sid}" class="clip scene {cls}" data-start="{K(s)}" data-duration="{round(K(e) - K(s), 3)}" '
                 f'data-track-index="0"><div class="cam" id="cam-{sid}">{inner}</div></section>')
 
-    # hand-forged C-scroll for the intro (same geometry as the website's logo)
-    import math
+    # hand-forged C-scroll for the intro (same geometry as the logo)
     def spiral(cx, cy, r, turns, end, s):
         return [(cx + r * (0.1 + 0.9 * t) * math.cos(end + s * (1 - t) * turns * 2 * math.pi),
                  cy + r * (0.1 + 0.9 * t) * math.sin(end + s * (1 - t) * turns * 2 * math.pi)) for t in [i / 80 for i in range(81)]]
@@ -83,43 +104,32 @@ def build():
         return "M" + " L".join(f"{a:.1f} {b:.1f}" for a, b in top + bot)
     scroll_paths = "".join(f'<path class="fp" d="{cscroll(300 + sd * 8, 40, 520, sd)}"/>' for sd in (-1, 1)) + '<path class="fp" d="M300 600 L300 0"/>'
 
-    plates = "".join(f'''<div class="plate" id="pl{i}"><div class="stamp">{i + 1:02d}</div><div class="pt">{t}</div>
-        <pre class="snip">{s}</pre><div class="pc">{c}</div></div>''' for i, (t, s, c) in enumerate(FINDINGS))
+    reel = "".join(f'<div class="frame"><img src="assets/{f}.jpg" style="object-position:{pos}"></div>' for f, pos in REEL)
 
-    chat = "".join([
-        bubble("c0", "out", "Buenas, ¿cuánto me sale un portón de 4 por 2.5?"),
-        bubble("c1", "in", "Con gusto. ¿Qué estilo te gusta? Estos son trabajos nuestros:"
-               '<div class="gal"><figure><img src="assets/obra-puerta-arco.jpg"><b>Moderno</b></figure>'
-               '<figure><img src="assets/obra-cerco.jpg"><b>Forjado</b></figure>'
-               '<figure><img src="assets/obra-puerta-cnc.jpg"><b>Calado CNC</b></figure></div>'),
-        bubble("c2", "out", "El forjado, con lanzas"),
-        bubble("c3", "in", '¿En qué ciudad sería la instalación?<div class="opts"><span>Tegucigalpa</span><span>San Pedro Sula</span></div>'),
-        bubble("c4", "out", "Tegucigalpa"),
-        bubble("c5", "in", '📐 <b>Tu cotización inicial</b><br>Portón 4 × 2.5 m · forjado clásico<br>Precio estimado: <b class="hotnum">L 42,000 a L 58,000</b><br>El precio final lo confirma el taller al medir, sin costo.'),
-        bubble("c6", "out", "Agendar visita para medir, el jueves en la mañana"),
-        bubble("c7", "in", '✅ <b>Listo, Carlos.</b><br>Visita para medir: jueves 15, 8 a 10 a. m.<br>Tu ficha ya la tiene la sucursal de Tegucigalpa.'),
-    ])
+    verbs = []
+    for i, (v, foto, say, chat) in enumerate(VERBS):
+        pic = (f'<div class="vpic" id="vp{i}"><img src="assets/{foto}.jpg"></div>' if foto else
+               '<div class="vtrio" id="vp4">' + "".join(f'<img src="assets/r-{p}.png">' for p in ("p-110-702", "p-120-1016", "p-110-721")) + '</div>')
+        bubs = "".join(f'<div class="bub {side}" id="vb{i}{j}">{html}<time>9:41</time></div>' for j, (side, html) in enumerate(chat))
+        verbs.append(f'''<div class="vgroup{' light' if not foto else ''}" id="vg{i}">
+            <div class="vword" id="vw{i}">{v}</div>
+            <div class="vsay" id="vs{i}">{say}</div>
+            {pic}<div class="vchat">{bubs}</div></div>''')
 
-    flow_right = [("Qué necesita", "Portón, puerta, protección o baranda"), ("Medidas y estilo", "Con fotos de trabajos reales"),
-                  ("Precio estimado", "Con las tarifas de Steel Works"), ("Visita o llamada", "El día y la hora que escoja")]
-    flow_nodes = "".join(f'<div class="fn r" id="fr{i}" style="top:{150 + i * 170}px"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(flow_right))
-    flow_lines = "".join(f'<path class="fl" id="fl{i}" d="M 905 540 C 1040 540, 1040 {195 + i * 170}, 1160 {195 + i * 170}"/>' for i in range(4))
-    flow_lines += '<path class="fl" id="fl4" d="M 560 540 L 655 540"/>' + "".join(
-        f'<path class="fl" id="fo{i}" d="M 1520 {195 + i * 170} C 1600 {195 + i * 170}, 1600 540, 1660 540"/>' for i in range(4))
+    rows = "".join(f'<div class="prow" id="pr{i}"><span class="pk">Portón</span><span class="ps">{n}</span>'
+                   f'<span class="pv" id="pv{i}">{L0(lo * 6.6)} a {L0(hi * 6.6)}</span></div>' for i, (n, lo, hi) in enumerate(TARIFAS))
 
-    offer = [("Asistente de WhatsApp", "Cotiza 24/7: medidas, estilo con fotos, precio estimado y cita."),
-             ("Sitio nuevo", "Cotizador con precio estimado y catálogo con fotos reales."),
-             ("Cuenta de taller", "El herrero pide con una foto, con precio por volumen."),
-             ("Reporte semanal", "Cuántos cotizaron, cuántas visitas y cuántas ventas.")]
-    offer_html = "".join(f'<div class="of" id="of{i}"><div class="stamp">{i + 1:02d}</div><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(offer))
+    pieces = "".join(f'<span class="pn" id="pn{i}">{n}<i class="fr"><img src="assets/r-{f}.png"></i>{"," if i < len(PIECES) - 1 else "…"}</span> '
+                     for i, (n, f) in enumerate(PIECES))
 
+    offer_html = "".join(f'<div class="of" id="of{i}"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(OFFER))
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
 
     # sparks: deterministic bursts (seeded) + ambient embers
     rnd = random.Random(7)
-    BURSTS = [("b0", K(2) + .05, 960, 700, 34), ("b1", K(3), 960, 560, 26), ("b2", K(6), 420, 300, 20),
-              ("b3", K(13), 960, 900, 26), ("b4", K(19), 1500, 900, 24), ("b5", K(25), 780, 540, 24),
-              ("b6", K(29), 960, 980, 26), ("b7", K(32), 960, 640, 30)]
+    BURSTS = [("b0", K(2) + .05, 960, 700, 34), ("b1", K(3), 960, 560, 26), ("b2", K(6), 960, 540, 26),
+              ("b3", K(10), 420, 560, 22), ("b4", K(18), 420, 560, 26), ("b5", K(20), 960, 900, 22),
+              ("b6", K(24), 960, 980, 22), ("b7", K(32), 960, 640, 30)]
     sparks, spark_js = [], []
     for bid, t, x, y, n in BURSTS:
         for j in range(n):
@@ -132,7 +142,7 @@ def build():
             sparks.append(f'<i class="spk" id="{sid}" style="left:{x}px;top:{y}px;width:{sz}px;height:{sz}px"></i>')
             spark_js.append(f'spark("#{sid}",{t:.3f},{dx:.0f},{dy:.0f},{dur:.2f});')
     embers = []
-    for j in range(40):
+    for j in range(36):
         x, y = rnd.uniform(0, 1920), rnd.uniform(500, 1180)
         t0 = rnd.uniform(0, TOTAL - 12)
         embers.append((f"em{j}", x, y, t0, rnd.uniform(7, 12), rnd.uniform(-120, 120), rnd.uniform(2, 4)))
@@ -144,74 +154,43 @@ def build():
           <div class="heatglow" id="ig"></div>
           <svg class="forge" id="forge" viewBox="0 0 600 600" fill="none" stroke-linecap="round" stroke-linejoin="round">{scroll_paths}</svg>
           <div class="center intro">
-            <div class="kick" id="ik">{words("Casa Digital presenta")}</div>
-            <div class="sub" id="is">{words("una propuesta para")}</div>
+            <div class="pre" id="ik">{words("Casa Digital presenta una propuesta para")}</div>
             <div class="mega hot" id="iname">Steel Works</div>
           </div>'''),
         scene("hook", '''
           <div class="center">
             <div class="mega2 hot" id="h1">«¿Cuánto me sale un portón?»</div>
-            <div class="line" id="h2">Esa pregunta llega a cualquier hora.</div>
-            <div class="line dim" id="h3">Cada una es un cliente que <em class="redhot">ya quiere comprar</em>.</div>
+            <div class="line" id="h2">Esa pregunta les llega a cualquier hora.</div>
+            <div class="line dim" id="h3">Cada una es un cliente que ya quiere comprar.</div>
           </div>'''),
-        scene("audit", f'''
-          <div class="aud-l">
-            <div class="kick">{words("Diagnóstico")}</div>
-            <div class="h2" id="ah">{words("Visitamos steelworkshn.com como un cliente.")}</div>
-            <div class="counter"><b id="acount">0</b><span>problemas que le cuestan ventas</span></div>
-          </div>
-          <div class="plates">{plates}</div>'''),
-        scene("thesis", '''
-          <div class="center">
-            <div class="line big" id="t1">Que nadie se quede esperando.</div>
-            <div class="line big hot" id="t2">Medidas, estilo, precio y cita.</div>
-            <div class="line dim" id="t3">En la misma conversación.</div>
-          </div>'''),
-        scene("site", f'''
-          <div class="kick sitek" id="sk">{words("La nueva steelworkshn.com")}</div>
+        scene("lema", f'''
+          <div class="half ha" id="la">Todo,</div>
+          <div class="reel" id="lreel"><div class="track" id="ltrack">{reel}</div></div>
+          <div class="half hb" id="lb">en hierro.</div>
+          <div class="lsub" id="lsub">Su propio lema, con sus trabajos reales.</div>'''),
+        scene("verbs", "".join(verbs)),
+        scene("price", f'''
+          <div class="ph2" id="ph">Tu medida, tu precio inicial.</div>
+          <div class="size" id="psize"><span class="pl">Ancho</span><b id="pw">3.0</b><span class="px">×</span><span class="pl">Alto</span><b id="phh">2.2</b><span class="pl">metros</span></div>
+          <div class="prows">{rows}</div>
+          <div class="pnote" id="pnote">Las mismas tarifas en la página y en WhatsApp. El precio final se confirma al medir.</div>'''),
+        scene("pieces", f'''
+          <div class="pieces" id="pcs"><span class="pn lead" id="pnl">Piezas sueltas:</span> {pieces}</div>
+          <div class="pnote2" id="pn2">Sin códigos. El herrero pide por el nombre o con una foto.</div>''', "light"),
+        scene("site", '''
           <div class="browser" id="br"><div class="bbar"><i></i><i></i><i></i><span>steelworkshn.com</span></div>
-            <div class="bview">
-              <img id="sh0" src="assets/web-hero.png"><img id="sh1" src="assets/web-lineas.png"><img id="sh2" src="assets/web-fabricacion.png"><img id="sh3" src="assets/web-taller.png">
-            </div></div>
-          <div class="iph site-ph" id="sph"><div class="iph-scr"><img src="assets/movil-hero.png"></div><div class="island"></div></div>
-          <div class="caps2">
-            <div class="cap2" id="sc0"><b>Todo, en hierro.</b><span>Una portada que se siente como su taller.</span></div>
-            <div class="cap2" id="sc1"><b>Lo que trabajan, con sus fotos</b><span>Desde la pieza suelta hasta el portón instalado.</span></div>
-            <div class="cap2" id="sc2"><b>Pon las medidas, mira el precio</b><span>Boceto y precio estimado al instante.</span></div>
-            <div class="cap2" id="sc3"><b>Cuenta de taller</b><span>El herrero pide con una foto de la pieza.</span></div>
-          </div>'''),
-        scene("bot", f'''
-          <div class="bot-l">
-            <div class="kick">{words("Asistente de WhatsApp")}</div>
-            <div class="h2" id="bh">{words("Cotiza a cualquier hora, con sus fotos.")}</div>
-            <div class="steps">
-              <div class="stp" id="bs0"><i>1</i>Entiende lo que pide el cliente</div>
-              <div class="stp" id="bs1"><i>2</i>Muestra estilos con fotos reales</div>
-              <div class="stp" id="bs2"><i>3</i>Da un precio estimado</div>
-              <div class="stp" id="bs3"><i>4</i>Agenda la visita para medir</div>
-            </div>
-          </div>
-          <div class="iph bot-ph" id="bph"><div class="iph-scr wa">
-            <div class="wa-top"><div class="av">SW</div><div><b>Steel Works</b><span>en línea</span></div></div>
-            <div class="wa-body"><div class="wa-scroll" id="wsc">{chat}</div></div>
-          </div><div class="island"></div></div>'''),
-        scene("flow", f'''
-          <div class="kick flowk">{words("Cómo funciona")}</div>
-          <svg class="flines" viewBox="0 0 1920 1080">{flow_lines}</svg>
-          <div class="fn l" id="fc"><b>El cliente escribe</b><span>a cualquier hora, desde cualquier ciudad</span></div>
-          <div class="fn mid" id="fm"><div class="ring"></div><b>Asistente<br>Steel Works</b><span>con sus fotos y tarifas</span></div>
-          {flow_nodes}
-          <div class="fn end" id="fe"><b>Sucursal<br>TGU · SPS</b><span>recibe la ficha y la cita</span></div>
-          <div class="flow-note" id="fnote">{words("Ningún cliente que pregunta se queda sin respuesta, y ventas recibe la cita ya agendada.")}</div>'''),
+            <div class="bview"><img id="sh0" src="assets/web-hero.jpg"><img id="sh1" src="assets/web-verbos.jpg"><img id="sh2" src="assets/web-precios.jpg"><img id="sh3" src="assets/web-piezas.jpg"></div></div>
+          <div class="iph" id="sph"><div class="iph-scr"><img src="assets/movil-chat.jpg"></div></div>
+          <div class="scap" id="scap">La página nueva, con el asistente adentro.</div>'''),
         scene("offer", f'''
-          <div class="kick offk">{words("Lo que construimos para Steel Works")}</div>
+          <div class="offh" id="offh">Lo que construimos para Steel Works</div>
           <div class="offers">{offer_html}</div>'''),
         scene("cta", f'''
           <div class="heatglow" id="cg"></div>
           <div class="center">
             <div class="line big" id="k1">La demo ya está lista.</div>
             <div class="mega2 hot" id="k2">Se la mostramos en 15 minutos.</div>
-            <div class="wa-pill" id="k3"><span>WhatsApp</span>{WHATSAPP}</div>
+            <div class="wa-num" id="k3">WhatsApp {WHATSAPP}</div>
             <div class="sig" id="k4">Rodrigo Herrera · Casa Digital</div>
           </div>'''),
         scene("end", f'''
@@ -236,9 +215,10 @@ def build():
     fx = (f'<div class="fx clip" data-start="0" data-duration="{TOTAL}" data-track-index="2">{ember_html}{"".join(sparks)}'
           f'<div class="flash" id="flash"></div></div>')
 
-    scenes_js = json.dumps([[i, K(a), K(b)] for i, a, b in SCENES])
-    js = (JS.replace("$SCENES", scenes_js).replace("$SPARKS", "\n".join(spark_js)).replace("$EMBERS", ember_js)
-          .replace("$TOTAL", str(TOTAL)))
+    price_js = json.dumps([[lo, hi] for _, lo, hi in TARIFAS])
+    js = (JS.replace("$SCENES", json.dumps([[i, K(a), K(b)] for i, a, b in SCENES])).replace("$SPARKS", "\n".join(spark_js))
+          .replace("$EMBERS", ember_js).replace("$TOTAL", str(TOTAL)).replace("$PRICES", price_js)
+          .replace("$NVERBS", str(len(VERBS))).replace("$NPIECES", str(len(PIECES))))
     html = (HTML.replace("$body", body + "\n" + fx).replace("$css", CSS).replace("$js", js)
             .replace("$total", str(TOTAL)).replace("$title", "Casa Digital x Steel Works"))
     open(os.path.join(OUT, "index.html"), "w").write(html)
@@ -270,125 +250,96 @@ CSS = r'''
 @font-face{font-family:"BSD";src:url("assets/fonts/bsd-600.woff2") format("woff2");font-weight:600;}
 @font-face{font-family:"AR";src:url("assets/fonts/ar-400.woff2") format("woff2");font-weight:400;}
 @font-face{font-family:"AR";src:url("assets/fonts/ar-500.woff2") format("woff2");font-weight:500;}
-@font-face{font-family:"AR";src:url("assets/fonts/ar-600.woff2") format("woff2");font-weight:600;}
 @font-face{font-family:"AR";src:url("assets/fonts/ar-700.woff2") format("woff2");font-weight:700;}
-@font-face{font-family:"JBM";src:url("assets/fonts/jbm-500.woff2") format("woff2");font-weight:500;}
 @font-face{font-family:"IT";src:url("assets/fonts/it-300.woff2") format("woff2");font-weight:300;}
 @font-face{font-family:"IT";src:url("assets/fonts/it-600.woff2") format("woff2");font-weight:600;}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
-#root{position:relative;width:1920px;height:1080px;background:#070708;color:#EEEBE6;font-family:"AR",sans-serif;-webkit-font-smoothing:antialiased;}
-.scene{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 110%,#1E1611 0%,#0B0B0C 55%,#070708 100%);}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#0B0C0D;}
+#root{position:relative;width:1920px;height:1080px;background:#0B0C0D;color:#E8EBED;font-family:"AR",sans-serif;-webkit-font-smoothing:antialiased;}
+.scene{position:absolute;inset:0;overflow:hidden;background:#131415;}
+.scene.light{background:#E7E5E1;color:#17191B;}
 .cam{position:absolute;inset:0;transform-origin:50% 50%;}
 .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 160px;}
 .w{display:inline-block;}
-.kick{font:600 26px/1 "AR";letter-spacing:.24em;text-transform:uppercase;color:#E8732C;}
-.sub{margin-top:26px;font:400 44px/1.2 "AR";color:#9DA4AA;}
-.mega{margin-top:18px;font:800 230px/.9 "BSD";text-transform:uppercase;letter-spacing:.01em;}
-.mega2{font:800 150px/.95 "BSD";text-transform:uppercase;max-width:1600px;}
-.line{margin-top:30px;font:500 64px/1.15 "AR";letter-spacing:-.01em;}
-.line.big{font:800 120px/1 "BSD";text-transform:uppercase;margin-top:14px;}
-.line.dim{color:#9DA4AA;}
-.redhot{font-style:normal;color:#FF8A3D;text-shadow:0 0 30px rgba(255,110,30,.7);}
-.h2{margin-top:26px;font:800 96px/.95 "BSD";text-transform:uppercase;}
-.hot{color:#EEEBE6;}
-.heatglow{position:absolute;left:460px;top:240px;width:1000px;height:1000px;border-radius:50%;background:radial-gradient(closest-side,rgba(232,115,44,.35),rgba(232,115,44,0));}
-.forge{position:absolute;left:740px;top:70px;width:440px;height:440px;opacity:.9;}
+.pre{font:500 44px/1.2 "AR";color:#A7AEB4;}
+.mega{font:800 230px/.9 "BSD";text-transform:uppercase;}
+.mega2{font:800 140px/.95 "BSD";text-transform:uppercase;max-width:1640px;}
+.line{margin-top:34px;font:500 60px/1.15 "AR";letter-spacing:-.01em;}
+.line.big{font:800 110px/1 "BSD";text-transform:uppercase;margin:0 0 14px;}
+.line.dim{color:#A7AEB4;margin-top:16px;}
+.hot{color:#E8EBED;}
+.heatglow{position:absolute;left:460px;top:240px;width:1000px;height:1000px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,19,.30),rgba(255,106,19,0));}
+.forge{position:absolute;left:740px;top:60px;width:440px;height:440px;opacity:.9;}
 .forge .fp{stroke:#FFC46B;stroke-width:10;}
-.intro .kick{margin-top:500px;}
-.intro .mega{position:absolute;left:0;right:0;top:420px;margin:0;}
-/* audit */
-.aud-l{position:absolute;left:110px;top:150px;width:640px;}
-#audit .h2{font-size:84px;}
-.counter{margin-top:60px;display:flex;align-items:baseline;gap:22px;}
-.counter b{font:800 220px/1 "BSD";color:#FF8A3D;text-shadow:0 0 40px rgba(255,110,30,.45);}
-.counter span{font:500 34px/1.2 "AR";color:#9DA4AA;max-width:300px;}
-.plates{position:absolute;left:800px;top:100px;width:1020px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-.plate{position:relative;height:276px;border-radius:10px;padding:24px 30px 20px 96px;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,rgba(0,0,0,0) 1px 4px),linear-gradient(180deg,#2B2E31,#1A1C1E);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 30px 60px rgba(0,0,0,.45);}
-.plate::before,.plate::after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8A9097,#2A2D30);top:16px;right:16px;}
-.plate::after{top:auto;bottom:16px;}
-.stamp{position:absolute;left:24px;top:22px;font:800 54px/1 "BSD";color:#FF8A3D;}
-.pt{font:700 29px/1.1 "AR";}
-.snip{margin-top:12px;font:500 20px/1.4 "JBM";color:#FFC46B;background:rgba(0,0,0,.35);border-radius:6px;padding:10px 14px;white-space:pre-wrap;}
-.pc{margin-top:10px;font:400 21px/1.3 "AR";color:#9DA4AA;}
-/* site */
-.sitek{position:absolute;left:120px;top:76px;}
-.browser{position:absolute;left:120px;top:130px;width:1300px;height:854px;border-radius:16px;overflow:hidden;background:#141516;box-shadow:0 60px 120px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);}
-.bbar{height:42px;background:#232527;display:flex;align-items:center;gap:9px;padding:0 18px;}
-.bbar i{width:13px;height:13px;border-radius:50%;background:#4A4D50;}
-.bbar span{margin-left:auto;margin-right:auto;font:500 18px "AR";color:#9DA4AA;background:#141516;border-radius:8px;padding:5px 120px;}
-.bview{position:relative;height:812px;overflow:hidden;}
-.bview img{position:absolute;left:0;top:0;width:1300px;height:auto;}
-.iph{position:absolute;border-radius:62px;background:#0A0A0B;padding:14px;box-shadow:0 0 0 2px #3A3D40,0 60px 120px rgba(0,0,0,.6);}
-.iph-scr{width:100%;height:100%;border-radius:48px;overflow:hidden;position:relative;background:#000;}
-.iph-scr img{width:100%;height:auto;display:block;}
-.island{position:absolute;left:50%;top:26px;width:120px;height:34px;margin-left:-60px;border-radius:20px;background:#000;}
-.site-ph{left:1470px;top:180px;width:360px;height:760px;}
-.caps2{position:absolute;left:1470px;top:960px;width:400px;height:100px;}
-.cap2{position:absolute;left:0;top:0;width:430px;}
-.cap2 b{display:block;font:700 28px/1.15 "AR";}
-.cap2 span{display:block;margin-top:6px;font:400 22px/1.3 "AR";color:#9DA4AA;}
-#site .caps2{left:120px;top:1000px;width:1300px;}
-#site .cap2{width:1300px;display:flex;gap:16px;align-items:baseline;}
-#site .cap2 span{margin:0;}
-/* bot */
-.bot-l{position:absolute;left:140px;top:200px;width:820px;}
-.steps{margin-top:56px;display:flex;flex-direction:column;gap:22px;}
-.stp{display:flex;align-items:center;gap:22px;font:500 38px/1.2 "AR";color:#6B7177;}
-.stp i{font-style:normal;width:58px;height:58px;border-radius:50%;border:2px solid #3A3D40;display:flex;align-items:center;justify-content:center;font:800 30px "BSD";}
-.stp.on{color:#EEEBE6;}
-.stp.on i{border-color:#FF8A3D;color:#FF8A3D;box-shadow:0 0 24px rgba(255,110,30,.5);}
-.bot-ph{left:1180px;top:60px;width:480px;height:960px;}
-.wa{background:#0B141A;display:flex;flex-direction:column;}
-.wa-top{height:150px;background:#1F2C34;display:flex;align-items:flex-end;gap:16px;padding:0 26px 20px;}
-.wa-top .av{width:56px;height:56px;border-radius:50%;background:#141516;color:#E8732C;display:flex;align-items:center;justify-content:center;font:800 24px "BSD";}
-.wa-top b{display:block;font:600 26px "AR";}
-.wa-top span{font:400 18px "AR";color:#8696A0;}
-.wa-body{flex:1;position:relative;overflow:hidden;}
-.wa-scroll{position:absolute;left:0;right:0;top:0;padding:18px 16px;display:flex;flex-direction:column;gap:12px;}
-.bub{max-width:84%;padding:12px 14px 8px;border-radius:14px;font:400 21px/1.35 "AR";color:#E9EDEF;}
-.bub.in{background:#202C33;align-self:flex-start;border-top-left-radius:0;}
-.bub.out{background:#005C4B;align-self:flex-end;border-top-right-radius:0;}
-.bub time{display:block;text-align:right;font-size:14px;color:rgba(233,237,239,.5);margin-top:2px;}
-.bub .mono{font:500 19px/1.5 "JBM";}
-.opts{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
-.opts span{background:rgba(255,255,255,.06);border-radius:8px;padding:8px;text-align:center;color:#53BDEB;font-size:19px;}
-.pay{margin-top:10px;background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:17px;color:#8696A0;}
-.pay b{color:#53BDEB;font-size:19px;}
-.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.intro .pre{position:absolute;left:0;right:0;top:600px;}
+.intro .mega{position:absolute;left:0;right:0;top:400px;}
+/* lema: Todo, [their work] en hierro. */
+.half{position:absolute;top:540px;transform:translateY(-50%);font:800 150px/.9 "BSD";text-transform:uppercase;white-space:nowrap;z-index:2;}
+.ha{left:64px;}
+.hb{right:64px;}
+.reel{position:absolute;left:624px;top:0;width:672px;height:1080px;overflow:hidden;}
+.track{position:absolute;left:0;top:0;width:672px;display:flex;flex-direction:column;gap:294px;}
+.frame{width:672px;height:378px;border-radius:4px;overflow:hidden;flex:none;}
+.frame img{width:100%;height:100%;object-fit:cover;}
+.lsub{position:absolute;left:64px;bottom:64px;font:500 34px/1.3 "AR";color:#A7AEB4;}
+/* verbs */
+.vgroup{position:absolute;inset:0;opacity:0;}
+.vgroup.light{background:#E7E5E1;color:#17191B;}
+.vword{position:absolute;left:96px;top:300px;font:800 300px/.85 "BSD";text-transform:uppercase;}
+.vsay{position:absolute;left:104px;top:600px;width:760px;font:500 46px/1.25 "AR";color:#A7AEB4;}
+.light .vsay{color:#4D5359;}
+.vpic{position:absolute;right:96px;top:90px;width:680px;height:900px;border-radius:4px;overflow:hidden;}
+.vpic img{width:100%;height:100%;object-fit:cover;}
+.vtrio{position:absolute;right:120px;top:180px;width:760px;height:720px;display:flex;align-items:flex-end;justify-content:space-between;}
+.vtrio img{width:30%;height:auto;}
+.vtrio img:nth-child(2){width:18%;}
+.vchat{position:absolute;right:560px;bottom:120px;width:560px;display:flex;flex-direction:column;gap:14px;}
+.bub{max-width:100%;padding:16px 20px 10px;border-radius:4px;font:400 28px/1.35 "AR";color:#E9EDEF;background:#202C33;align-self:flex-start;opacity:0;}
+.bub.out{background:#005C4B;align-self:flex-end;}
+.bub time{display:block;text-align:right;font-size:18px;color:rgba(233,237,239,.55);margin-top:4px;}
+.bub b{color:#FFFFFF;}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
 .gal figure{margin:0;}
-.gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;display:block;}
-.gal b{display:block;font:600 16px "AR";margin-top:4px;}
-.hotnum{color:#FFB25B;}
-/* flow */
-.flowk{position:absolute;left:120px;top:90px;}
-.flines{position:absolute;inset:0;width:1920px;height:1080px;}
-.fl{fill:none;stroke:#FF8A3D;stroke-width:3;filter:drop-shadow(0 0 8px rgba(255,110,30,.7));}
-.fn{position:absolute;border-radius:14px;padding:24px 28px;background:linear-gradient(180deg,#2B2E31,#1A1C1E);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 60px rgba(0,0,0,.5);}
-.fn b{display:block;font:700 30px/1.1 "AR";}
-.fn span{display:block;margin-top:8px;font:400 21px/1.3 "AR";color:#9DA4AA;}
-.fn.l{left:120px;top:470px;width:440px;}
-.fn.mid{left:655px;top:410px;width:250px;height:260px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
-.fn.mid b{font:800 40px/1 "BSD";text-transform:uppercase;color:#FFC46B;}
-.fn.mid .ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(255,138,61,.6);}
-.fn.r{left:1160px;width:360px;padding:18px 24px;}
-.fn.end{left:1660px;top:450px;width:200px;height:180px;display:flex;flex-direction:column;justify-content:center;}
-.fn.end b{font:800 40px/1 "BSD";text-transform:uppercase;}
-.flow-note{position:absolute;left:120px;bottom:70px;width:1100px;font:500 32px/1.3 "AR";color:#9DA4AA;}
+.gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:4px;display:block;}
+.gal b{display:block;font:500 20px "AR";margin-top:6px;}
+/* price */
+.ph2{position:absolute;left:96px;top:120px;font:800 120px/.95 "BSD";text-transform:uppercase;}
+.size{position:absolute;left:100px;top:330px;display:flex;align-items:baseline;gap:22px;}
+.size .pl{font:500 30px "AR";color:#A7AEB4;}
+.size b{font:800 120px/1 "BSD";color:#E8EBED;min-width:170px;font-variant-numeric:tabular-nums;}
+.size .px{font:800 70px "BSD";color:#A7AEB4;}
+.prows{position:absolute;left:100px;right:100px;top:560px;}
+.prow{display:grid;grid-template-columns:300px 1fr auto;align-items:baseline;padding:24px 0;font:500 40px/1 "AR";}
+.prow .pk{color:#A7AEB4;}
+.prow .pv{font:800 76px/1 "BSD";font-variant-numeric:tabular-nums;}
+.pnote{position:absolute;left:100px;bottom:70px;font:500 30px "AR";color:#A7AEB4;}
+/* pieces */
+.pieces{position:absolute;left:96px;right:96px;top:150px;font:800 104px/1.12 "BSD";text-transform:uppercase;color:#4D5359;}
+.pn{display:inline-block;}
+.pn.lead{color:#17191B;}
+.fr{display:inline-block;height:.82em;width:.9em;margin:0 .04em 0 .14em;vertical-align:-.06em;}
+.fr img{width:100%;height:100%;object-fit:contain;}
+.pnote2{position:absolute;left:100px;bottom:80px;font:500 40px "AR";color:#17191B;}
+/* site */
+.browser{position:absolute;left:96px;top:110px;width:1300px;height:860px;border-radius:4px;overflow:hidden;background:#1D1F21;}
+.bbar{height:44px;background:#26292C;display:flex;align-items:center;gap:9px;padding:0 18px;}
+.bbar i{width:13px;height:13px;border-radius:50%;background:#4A4D50;}
+.bbar span{margin-left:auto;margin-right:auto;font:500 19px "AR";color:#A7AEB4;}
+.bview{position:relative;height:816px;overflow:hidden;}
+.bview img{position:absolute;left:0;top:0;width:1300px;height:auto;}
+.iph{position:absolute;left:1470px;top:150px;width:370px;height:780px;border-radius:56px;background:#050505;padding:12px;}
+.iph-scr{width:100%;height:100%;border-radius:44px;overflow:hidden;}
+.iph-scr img{width:100%;height:auto;display:block;}
+.scap{position:absolute;left:100px;bottom:40px;font:500 32px "AR";color:#A7AEB4;}
 /* offer */
-.offk{position:absolute;left:120px;top:120px;}
-.offers{position:absolute;left:120px;top:200px;width:1680px;display:grid;grid-template-columns:1fr 1fr;gap:28px;}
-.of{position:relative;height:330px;border-radius:12px;padding:44px 48px 40px 150px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,rgba(0,0,0,0) 1px 4px),linear-gradient(180deg,#2B2E31,#1A1C1E);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 60px rgba(0,0,0,.45);}
-.of .stamp{left:46px;top:40px;font-size:80px;}
-.of b{display:block;font:800 66px/.95 "BSD";text-transform:uppercase;}
-.of span{display:block;margin-top:20px;font:400 30px/1.35 "AR";color:#9DA4AA;max-width:600px;}
+.offh{position:absolute;left:96px;top:110px;font:800 100px/.95 "BSD";text-transform:uppercase;}
+.offers{position:absolute;left:96px;right:96px;top:330px;display:grid;grid-template-columns:1fr 1fr;gap:70px 90px;}
+.of b{display:block;font:800 74px/.95 "BSD";text-transform:uppercase;}
+.of span{display:block;margin-top:18px;font:400 34px/1.35 "AR";color:#A7AEB4;max-width:760px;}
 /* cta */
-.wa-pill{margin-top:60px;padding:30px 70px;border-radius:999px;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16);font:600 70px/1 "AR";letter-spacing:-.01em;}
-.wa-pill span{display:block;font:500 26px "AR";color:#30D158;margin-bottom:12px;}
-.sig{margin-top:40px;font:500 30px "AR";color:#9DA4AA;}
-#cta .mega2{font-size:120px;margin-top:20px;}
+.wa-num{margin-top:64px;font:600 78px/1 "AR";letter-spacing:-.01em;color:#FF6A13;}
+.sig{margin-top:40px;font:500 32px "AR";color:#A7AEB4;}
+#cta .mega2{font-size:120px;}
 /* end */
 #end{background:#000;}
 .endglow{position:absolute;width:1300px;height:1300px;left:310px;top:-110px;border-radius:50%;background:radial-gradient(closest-side,rgba(90,130,255,.30),rgba(0,0,0,0));}
@@ -407,8 +358,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 .fx{position:absolute;inset:0;pointer-events:none;z-index:40;}
 .spk{position:absolute;border-radius:50%;background:#FFD08A;box-shadow:0 0 10px 3px rgba(255,140,40,.85);opacity:0;}
 .ember{position:absolute;border-radius:50%;background:#FF9A4A;box-shadow:0 0 8px 2px rgba(255,120,40,.6);opacity:0;}
-.flash{position:absolute;inset:0;background:radial-gradient(60% 60% at 50% 60%,rgba(255,200,140,.55),rgba(255,140,60,0));opacity:0;}
-.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.6) 100%);z-index:50;}
+.flash{position:absolute;inset:0;background:radial-gradient(60% 60% at 50% 60%,rgba(255,200,140,.5),rgba(255,140,60,0));opacity:0;}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 50%,rgba(0,0,0,0) 60%,rgba(0,0,0,.45) 100%);z-index:50;}
 '''
 
 JS = r'''
@@ -423,15 +374,14 @@ function rise(sel, t, o) {
 // metal out of the fire: glowing orange, then cools to steel white
 function forge(sel, t, o) {
   o = o || {};
+  const cold = o.cold || "#E8EBED";
   tl.fromTo(sel, { opacity: 0, scale: o.s || 1.06, color: "#FFE2B0", textShadow: "0 0 40px rgba(255,130,40,1), 0 0 90px rgba(255,90,20,.8)", filter: "blur(14px)" },
     { opacity: 1, scale: 1, filter: "blur(0px)", duration: .9, ease: "power3.out" }, t);
   tl.to(sel, { color: "#FF9A4A", textShadow: "0 0 26px rgba(255,110,30,.8), 0 0 60px rgba(255,80,20,.4)", duration: .7, ease: "sine.out" }, t + .5);
-  tl.to(sel, { color: "#EEEBE6", textShadow: "0 0 0px rgba(255,110,30,0), 0 0 0px rgba(255,80,20,0)", duration: o.cool || 2.4, ease: "power2.inOut" }, t + 1.3);
+  tl.to(sel, { color: cold, textShadow: "0 0 0px rgba(255,110,30,0), 0 0 0px rgba(255,80,20,0)", duration: o.cool || 2.2, ease: "power2.inOut" }, t + 1.3);
 }
 function out(sel, t, d) { tl.to(sel, { opacity: 0, filter: "blur(12px)", duration: d || .7, ease: "power2.in" }, t); }
-function hit(t, a) { // hammer strike: warm flash + small camera jolt
-  tl.fromTo("#flash", { opacity: a || .55 }, { opacity: 0, duration: .9, ease: "expo.out" }, t);
-}
+function hit(t, a) { tl.fromTo("#flash", { opacity: a || .5 }, { opacity: 0, duration: .9, ease: "expo.out" }, t); }
 function shake(sel, t) { tl.fromTo(sel, { x: 0, y: 0 }, { keyframes: [{ x: 9, y: -6, duration: .05 }, { x: -7, y: 5, duration: .06 }, { x: 4, y: -2, duration: .07 }, { x: 0, y: 0, duration: .1 }], ease: "none" }, t); }
 function spark(sel, t, dx, dy, d) {
   tl.set(sel, { x: 0, y: 0, opacity: 1 }, t);
@@ -442,13 +392,13 @@ function spark(sel, t, dx, dy, d) {
 }
 function ember(sel, t, d, dx) {
   tl.fromTo(sel, { x: 0, y: 0, opacity: 0 }, { x: dx, y: -620, duration: d, ease: "none" }, t);
-  tl.to(sel, { opacity: .85, duration: d * .2 }, t);
+  tl.to(sel, { opacity: .8, duration: d * .2 }, t);
   tl.to(sel, { opacity: 0, duration: d * .4 }, t + d * .6);
 }
 const SC = $SCENES;
-SC.forEach(([id, s, e]) => tl.fromTo("#cam-" + id, { scale: 1.0 }, { scale: 1.035, duration: e - s, ease: "none" }, s));
+SC.forEach(([id, s, e]) => tl.fromTo("#cam-" + id, { scale: 1.0 }, { scale: 1.03, duration: e - s, ease: "none" }, s));
 
-// 1 · intro: an iron scroll forged out of the dark
+// 1 · intro: an iron scroll forged out of the dark, then the name
 const fps = document.querySelectorAll("#forge .fp");
 fps.forEach(p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
 tl.fromTo("#ig", { opacity: 0, scale: .5 }, { opacity: 1, scale: 1, duration: 4, ease: "sine.out" }, 0);
@@ -456,9 +406,8 @@ tl.to("#forge .fp", { strokeDashoffset: 0, duration: 3.4, ease: "power2.inOut", 
 tl.fromTo("#forge", { filter: "drop-shadow(0 0 30px rgba(255,140,40,1))" }, { filter: "drop-shadow(0 0 0px rgba(255,140,40,0))", duration: 3, ease: "power2.inOut" }, K(2));
 tl.to("#forge .fp", { stroke: "#6E767D", duration: 3, ease: "power2.inOut" }, K(2));
 tl.to("#forge", { y: 150, scale: 1.9, opacity: .16, duration: 2.6, ease: "power2.inOut" }, K(2) - .4);
-rise("#ik .w", K(1), { st: .12, d: 1.4 });
-rise("#is .w", K(1.5), { st: .1, d: 1.3 });
-out("#ik, #is", K(2) - .5, .5);
+rise("#ik .w", K(1), { st: .1, d: 1.4 });
+out("#ik", K(2) - .5, .5);
 forge("#iname", K(2), { s: 1.12, cool: 1.1 });
 hit(K(2), .7); shake("#cam-intro", K(2));
 out("#cam-intro .center", K(3) - .6, .6);
@@ -468,87 +417,64 @@ forge("#h1", K(3));
 hit(K(3), .4);
 rise("#h2", K(4), { d: 1.2 });
 rise("#h3", K(5) - .4, { d: 1.2 });
-tl.fromTo(".redhot", { textShadow: "0 0 0px rgba(255,110,30,0)" }, { textShadow: "0 0 34px rgba(255,110,30,.9)", duration: .5, yoyo: true, repeat: 3 }, K(5) + .8);
 
-// 3 · audit: plates are stamped in, one every 3/4 bar
-rise("#audit .kick .w", K(6), {});
-rise("#ah .w", K(6) + .2, { st: .07 });
-rise(".counter", K(6) + .8, { d: 1 });
-const cnt = { v: 0 }, cEl = document.getElementById("acount");
-[0, 1, 2, 3, 4, 5].forEach(i => {
-  const t = K(6.75 + i * .7);
-  tl.fromTo("#pl" + i, { opacity: 0, scale: 1.12, y: -30, filter: "blur(10px) brightness(2.2)" }, { opacity: 1, scale: 1, y: 0, filter: "blur(0px) brightness(1)", duration: .55, ease: "power4.out" }, t);
-  tl.fromTo("#pl" + i + " .stamp", { textShadow: "0 0 30px rgba(255,140,40,1)" }, { textShadow: "0 0 0px rgba(255,140,40,0)", duration: 1.6 }, t);
-  tl.to(cnt, { v: i + 1, duration: .3, onUpdate: () => { cEl.textContent = Math.round(cnt.v); } }, t);
-  hit(t, .22);
-});
-tl.to("#audit .plates", { y: -20, duration: 4, ease: "sine.inOut" }, K(9.5));
-out("#cam-audit", K(11) - .5, .5);
+// 3 · lema: the two words hold while their work passes between them, one photo per bar
+forge("#la", K(6)); forge("#lb", K(6) + .15);
+hit(K(6), .45);
+tl.fromTo("#lreel", { clipPath: "inset(50% 0 50% 0)" }, { clipPath: "inset(0% 0 0% 0)", duration: 1.4, ease: "power3.inOut" }, K(6) + .3);
+const STEP = 378 + 294, Y0 = 540 - 189;
+tl.set("#ltrack", { y: Y0 }, 0);
+[1, 2, 3].forEach(i => tl.to("#ltrack", { y: Y0 - i * STEP, duration: 1.1, ease: "power3.inOut" }, K(6 + i) - .55));
+rise("#lsub", K(7), { d: 1.2, y: 24 });
+out("#cam-lema", K(10) - .5, .5);
 
-// 4 · thesis
-rise("#t1", K(11), { d: 1.3 });
-forge("#t2", K(11.5));
-rise("#t3", K(12.25), { d: 1.2 });
+// 4 · verbs: one step per two bars
+for (let i = 0; i < $NVERBS; i++) {
+  const t = K(10 + i * 2), g = "#vg" + i;
+  tl.set(g, { opacity: 1 }, t);
+  forge("#vw" + i, t, { cold: i === 4 ? "#17191B" : "#E8EBED", s: 1.08 });
+  hit(t, i === 4 ? .2 : .35);
+  rise("#vs" + i, t + .6, { d: 1.1, y: 30 });
+  tl.fromTo("#vp" + i, { opacity: 0, x: 80, clipPath: "inset(0 0 0 100%)" }, { opacity: 1, x: 0, clipPath: "inset(0 0 0 0%)", duration: 1.3, ease: "power3.out" }, t + .15);
+  tl.fromTo("#vp" + i + " img", { scale: 1.12 }, { scale: 1, duration: 5, ease: "power2.out" }, t + .15);
+  document.querySelectorAll(g + " .bub").forEach((b, j) =>
+    tl.fromTo(b, { opacity: 0, y: 30, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .5, ease: "back.out(1.6)" }, t + BAR * (.5 + j * .5)));
+  if (i < $NVERBS - 1) out(g, K(12 + i * 2) - .4, .4);
+}
+out("#cam-verbs", K(20) - .45, .45);
 
-// 5 · new site in a browser, scrolls through four views
-rise("#sk .w", K(13), {});
-tl.fromTo("#br", { opacity: 0, y: 140, rotationX: 14, scale: .94 }, { opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 1.8, ease: SOFT }, K(13));
-hit(K(13), .3);
-["#sh1", "#sh2", "#sh3"].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .9, ease: "power3.out" }, K(14.5 + i * 1.25)));
-tl.fromTo("#sh0", { y: 0 }, { y: -40, duration: 3.5, ease: "none" }, K(13));
-["#sc0", "#sc1", "#sc2", "#sc3"].forEach((s, i) => {
-  rise(s, K(13.4 + i * 1.25) + (i ? .3 : 0), { d: .9, y: 24, blur: 8 });
-  if (i < 3) out(s, K(14.5 + i * 1.25) - .1, .4);
-});
-tl.fromTo("#sph", { opacity: 0, x: 260, rotation: 6 }, { opacity: 1, x: 0, rotation: 0, duration: 1.6, ease: SOFT }, K(17.2));
-tl.to("#br", { x: -40, scale: .97, duration: 1.6, ease: "power2.inOut" }, K(17.2));
-out("#cam-site", K(19) - .5, .5);
+// 5 · price: the size changes, the three prices follow
+const PR = $PRICES, fmt = n => "L " + (Math.round(n / 100) * 100).toLocaleString("en-US");
+rise("#ph", K(20), { d: 1.2 });
+rise("#psize", K(20) + .4, { d: 1.1 });
+[0, 1, 2].forEach(i => rise("#pr" + i, K(20.5) + i * .15, { d: 1, y: 30 }));
+rise("#pnote", K(21), { d: 1, y: 20 });
+const dim = { w: 3, h: 2.2 }, pw = document.getElementById("pw"), ph = document.getElementById("phh");
+const pvs = [0, 1, 2].map(i => document.getElementById("pv" + i));
+function paint() {
+  pw.textContent = dim.w.toFixed(1); ph.textContent = dim.h.toFixed(1);
+  PR.forEach(([lo, hi], i) => pvs[i].textContent = fmt(lo * dim.w * dim.h) + " a " + fmt(hi * dim.w * dim.h));
+}
+tl.to(dim, { w: 4, h: 2.5, duration: 2.2, ease: "power2.inOut", onUpdate: paint }, K(22));
+tl.fromTo(".pv", { color: "#E8EBED" }, { color: "#FF6A13", duration: .3, yoyo: true, repeat: 1 }, K(22) + 2.2);
+out("#cam-price", K(24) - .5, .5);
 
-// 6 · WhatsApp assistant, one message per half bar
-rise("#bot .kick .w", K(19), {});
-rise("#bh .w", K(19) + .2, { st: .07 });
-tl.fromTo("#bph", { opacity: 0, y: 200, rotationY: -18 }, { opacity: 1, y: 0, rotationY: -6, duration: 1.8, ease: SOFT }, K(19));
-tl.to("#bph", { rotationY: 4, duration: 12, ease: "sine.inOut" }, K(19) + 1.8);
-const CH = [19.5, 20, 20.75, 21.5, 22.25, 23, 23.75, 24.25];
-CH.forEach((b, i) => tl.fromTo("#c" + i, { opacity: 0, y: 30, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .45, ease: "back.out(1.6)" }, K(b)));
-tl.set(".bub", { opacity: 0 }, 0);
-// scroll the chat up as it fills (measured once)
-const wsc = document.getElementById("wsc"), body = wsc.parentNode;
-const bubs = [...wsc.children];
-CH.forEach((b, i) => {
-  const bottom = bubs[i].offsetTop + bubs[i].offsetHeight + 24, shift = Math.max(0, bottom - body.clientHeight);
-  if (shift > 0) tl.to(wsc, { y: -shift, duration: .5, ease: "power2.out" }, K(b) - .1);
-});
-[[19.5, 0], [20, 1], [23, 2], [24.25, 3]].forEach(([b, i]) => {
-  tl.to("#bs" + i, { color: "#EEEBE6", duration: .4 }, K(b) + .2);
-  tl.to("#bs" + i + " i", { borderColor: "#FF8A3D", color: "#FF8A3D", boxShadow: "0 0 24px rgba(255,110,30,.5)", duration: .4 }, K(b) + .2);
-});
-out("#cam-bot", K(25) - .5, .5);
+// 6 · pieces, by name
+rise("#pnl", K(24), { d: 1, y: 30 });
+for (let i = 0; i < $NPIECES; i++) rise("#pn" + i, K(24.25) + i * .28, { d: 1, y: 30, blur: 10 });
+rise("#pn2", K(26) - .3, { d: 1, y: 20 });
+out("#cam-pieces", K(27) - .5, .5);
 
-// 7 · how it works: heat runs through the lines
-rise("#flow .kick .w", K(25), {});
-rise("#fc", K(25) + .2, { d: 1 });
-const fls = document.querySelectorAll(".fl");
-fls.forEach(p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
-tl.to("#fl4", { strokeDashoffset: 0, duration: .6, ease: "power2.inOut" }, K(25.5));
-tl.fromTo("#fm", { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .9, ease: "back.out(1.5)" }, K(25.75));
-hit(K(25.75), .25);
-tl.fromTo("#fm .ring", { scale: 1, opacity: 1 }, { scale: 1.25, opacity: 0, duration: 1.4, repeat: 4, ease: "power2.out" }, K(26));
-[0, 1, 2, 3].forEach(i => {
-  tl.to("#fl" + i, { strokeDashoffset: 0, duration: .6, ease: "power2.inOut" }, K(26.25 + i * .4));
-  tl.fromTo("#fr" + i, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .7, ease: SOFT }, K(26.25 + i * .4) + .4);
-  tl.to("#fo" + i, { strokeDashoffset: 0, duration: .5, ease: "power2.inOut" }, K(27.9) + i * .1);
-});
-tl.fromTo("#fe", { opacity: 0, scale: .85 }, { opacity: 1, scale: 1, duration: .9, ease: SOFT }, K(28.1));
-rise("#fnote .w", K(28.1) + .2, { st: .04, d: 1 });
-out("#cam-flow", K(29) - .5, .5);
+// 7 · the new site in a browser, one view per half bar
+tl.fromTo("#br", { opacity: 0, y: 120, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 1.6, ease: SOFT }, K(27));
+["#sh1", "#sh2", "#sh3"].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .8, ease: "power3.out" }, K(27.75 + i * .6)));
+tl.fromTo("#sph", { opacity: 0, x: 220, rotation: 5 }, { opacity: 1, x: 0, rotation: 0, duration: 1.5, ease: SOFT }, K(28));
+rise("#scap", K(27.5), { d: 1, y: 20 });
+out("#cam-site", K(30) - .5, .5);
 
 // 8 · offer
-rise("#offer .kick .w", K(29), {});
-[0, 1, 2, 3].forEach(i => {
-  tl.fromTo("#of" + i, { opacity: 0, y: 60, filter: "blur(12px) brightness(1.8)" }, { opacity: 1, y: 0, filter: "blur(0px) brightness(1)", duration: 1, ease: SOFT }, K(29.25 + i * .6));
-  tl.fromTo("#of" + i + " .stamp", { textShadow: "0 0 30px rgba(255,140,40,1)" }, { textShadow: "0 0 0px rgba(255,140,40,0)", duration: 1.6 }, K(29.25 + i * .6));
-});
+rise("#offh", K(30), { d: 1.1 });
+[0, 1, 2, 3].forEach(i => rise("#of" + i, K(30.25) + i * .35, { d: 1.1, y: 40 }));
 out("#cam-offer", K(32) - .5, .5);
 
 // 9 · CTA
@@ -556,7 +482,7 @@ tl.fromTo("#cg", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, duration: 
 rise("#k1", K(32), { d: 1.1 });
 forge("#k2", K(32) + .6);
 hit(K(32), .45);
-tl.fromTo("#k3", { opacity: 0, y: 60, scale: .95, filter: "blur(12px)" }, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.2, ease: SOFT }, K(33));
+rise("#k3", K(33), { d: 1.2, y: 40 });
 rise("#k4", K(33) + .5, { d: 1 });
 
 // 10 · Clientia Tech: outline draws, locks on the next bar
@@ -583,10 +509,12 @@ rise("#lby", E1 + .5, { d: 1.2 });
 rise(".lt", E1 + .7, { d: 1.2, st: .035, y: 40, blur: 12 });
 tl.to("#end .center, #eglow", { opacity: 0, duration: 1.4, ease: "power2.in" }, $TOTAL - 1.6);
 
-// sparks and embers
+// sparks and embers (none over the light pieces scene)
 $SPARKS
 $EMBERS
 tl.set(".fx", { opacity: 1 }, 0);
+tl.to(".fx", { opacity: 0, duration: .3 }, K(24) - .3);
+tl.to(".fx", { opacity: 1, duration: .3 }, K(27));
 tl.to(".fx .ember", { opacity: 0, duration: .4 }, K(34));
 
 window.__timelines = window.__timelines || {};
