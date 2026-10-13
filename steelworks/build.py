@@ -5,7 +5,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # real photos (fotos/*.jpg) go in as data URIs; the page reads them through window.FOTOS
 FOTOS = {os.path.basename(f)[:-4]: "data:image/jpeg;base64," + base64.b64encode(open(f, "rb").read()).decode()
          for f in sorted(glob.glob(os.path.join(HERE, "fotos", "*.jpg")))}
+FOTOS.update({"r-" + os.path.basename(f)[:-4]: "data:image/png;base64," + base64.b64encode(open(f, "rb").read()).decode()
+              for f in sorted(glob.glob(os.path.join(HERE, "fotos", "recortes", "*.png")))})
 def fotos(html):
+    html = re.sub(r"\.\./logo/([\w/-]+)\.svg", lambda m: "data:image/svg+xml;base64," + base64.b64encode(open(os.path.join(HERE, "logo", m.group(1) + ".svg"), "rb").read()).decode(), html)
+    html = re.sub(r"\.\./fotos/recortes/([\w-]+)\.png", lambda m: FOTOS["r-" + m.group(1)], html)
     html = re.sub(r"\.\./fotos/([\w-]+)\.jpg", lambda m: FOTOS[m.group(1)], html)
     return html.replace("window.FOTOS = window.FOTOS || null;", "window.FOTOS = " + json.dumps(FOTOS) + ";")
 src = open(os.path.join(HERE, "sitio", "index.html"), encoding="utf-8").read()
