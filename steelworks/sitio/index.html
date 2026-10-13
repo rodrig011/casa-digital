@@ -592,12 +592,12 @@ body.in-cfg .fab{opacity:0;pointer-events:none;}
 
   // product lines: the real families of their online store
   const LINES = [
-    ["Hierro forjado", "Adornos de barra y poste, paneles, volutas, flores, medallones, bisagras y tubos.", "23 familias", "panel-volutas", "", "Todo"],
-    ["Diseños CNC", "Paneles, arte, curvas, flores, flechas e imágenes cortadas en lámina.", "6 familias", "cat-cnc-cruz", "", "Todo"],
-    ["Fabricación", "Portones, puertas, balcones, barandales, verjas, cortinas y cajas fuertes.", "9 líneas", "obra-puerta-cnc", "cover", null],
-    ["Accesorios", "Llamadores de acero inoxidable, rodillos, resortes y piezas de cortina.", "4 familias", "cat-llamadores", "", "Llamadores"],
+    ["Hierro forjado", "Adornos de barra y poste, paneles, volutas, flores, medallones, bisagras y tubos.", "Ver piezas", "panel-volutas", "", "Todo"],
+    ["Diseños CNC", "Paneles, arte, curvas, flores, flechas e imágenes cortadas en lámina.", "Ver piezas", "cat-cnc-cruz", "", "Todo"],
+    ["Fabricación", "Portones, puertas, balcones, barandales, verjas, cortinas y cajas fuertes.", "Cotizar", "obra-puerta-cnc", "cover", null],
+    ["Accesorios", "Llamadores de acero inoxidable, rodillos, resortes y piezas de cortina.", "Ver piezas", "cat-llamadores", "", "Llamadores"],
   ];
-  $("#lines").innerHTML = LINES.map(([t, d, c, k, cls, f], i) => `<a class="line rvi" href="${f ? "#piezas" : "#disena"}" data-line="${i}"><div class="ph ${cls}"><img src="${foto(k)}" alt="${t}" loading="lazy"></div><div class="bd"><h3>${t}</h3><p>${d}</p><span class="cnt">${c}</span></div></a>`).join("");
+  $("#lines").innerHTML = LINES.map(([t, d, c, k, cls, f], i) => `<a class="line rvi" href="${f ? "#piezas" : "#disena"}" data-line="${i}"><div class="ph ${cls}"><img src="${foto(k)}" alt="${t}" loading="lazy"></div><div class="bd"><h3>${t}</h3><p>${d}</p><span class="cnt">${c} →</span></div></a>`).join("");
   $("#lines").addEventListener("click", e => { const a = e.target.closest(".line"); if (a && LINES[a.dataset.line][5]) setCat(LINES[a.dataset.line][5]); });
 
   // catalog: their real photos, names and prices as listed on steelworkshn.com (13 Oct 2026)
