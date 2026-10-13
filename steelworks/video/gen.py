@@ -7,8 +7,9 @@ notificación de iOS que aparecen con resorte. Cada frase entra desenfocada y se
 nueva dentro de un MacBook y el asistente de WhatsApp dentro de un iPhone: primero cómo está hoy su
 página, luego cómo puede verse. Cierra con el outro de Clientia Tech.
 
-Música: "Clean Cut" (120 BPM). Un compás = 2 s y el primer golpe fuerte cae en 0:08.017, así que
-toda escena empieza en T(n) = 0.017 + 2n. Requisitos junto al script: musica-clean.mp3, capturas/
+Música: "Sports Rocker" de Taelimb (130 BPM), recortada para que el primer tiempo caiga en 0:00.017.
+Un compás = 1.846 s y el golpe fuerte entra en el compás 4, así que toda escena empieza en
+T(n) = 0.017 + 1.846n. Requisitos junto al script: musica-rocker.mp3, capturas/
 (sitio-web.jpg y sitio-movil.jpg, la página completa), ../fotos y deps/node_modules con gsap@3.14.2
 y @fontsource/inter-tight.
 
@@ -23,7 +24,8 @@ DEPS = os.environ.get("DEPS", os.path.join(HERE, "deps", "node_modules"))
 OUT = os.path.join(HERE, "build")
 WHATSAPP = "+1 (765) 543-4251"
 MARK = json.load(open(os.path.join(HERE, "clientia-mark.json")))
-T = lambda n: round(0.017 + 2 * n, 3)
+BAR = 4 * 60 / 130  # 130 BPM, one bar = 1.846 s
+T = lambda n: round(0.017 + BAR * n, 3)
 SCENES = [("intro", 0, 4), ("claim", 4, 7), ("hoy", 7, 13), ("mac", 13, 20), ("bot", 20, 25),
           ("both", 25, 28), ("offer", 28, 31), ("cta", 31, 34), ("end", 34, 38)]
 TOTAL = T(38)
@@ -83,7 +85,7 @@ def build():
         shutil.rmtree(OUT)
     A = os.path.join(OUT, "assets")
     os.makedirs(os.path.join(A, "fonts"))
-    shutil.copy(os.path.join(HERE, "musica-clean.mp3"), os.path.join(A, "musica.mp3"))
+    shutil.copy(os.path.join(HERE, "musica-rocker.mp3"), os.path.join(A, "musica.mp3"))
     shutil.copy(os.path.join(DEPS, "gsap", "dist", "gsap.min.js"), os.path.join(A, "gsap.min.js"))
     for w in (300, 400, 500, 600, 700):
         shutil.copy(os.path.join(DEPS, "@fontsource", "inter-tight", "files", f"inter-tight-latin-{w}-normal.woff2"),
