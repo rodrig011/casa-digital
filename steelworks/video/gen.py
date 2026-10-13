@@ -196,7 +196,7 @@ def build():
           </div>''', "black"),
     ])
 
-    js = (JS.replace("$SCENES", json.dumps([[i, T(a), T(b)] for i, a, b in SCENES])).replace("$TOTAL", str(TOTAL))
+    js = (JS.replace("$SCENES", json.dumps([[i, T(a), T(b)] for i, a, b in SCENES])).replace("$TOTAL", str(TOTAL)).replace("$BAR", str(BAR))
           .replace("$STOPS", json.dumps([y for y, _ in STOPS])).replace("$NCHAT", str(len(CHAT))))
     html = (HTML.replace("$body", body).replace("$css", CSS).replace("$js", js)
             .replace("$total", str(TOTAL)).replace("$title", "Casa Digital x Steel Works"))
@@ -360,7 +360,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#FBF4EC;}
 
 JS = r'''
 const tl = gsap.timeline({ paused: true });
-const T = n => +(0.017 + 2 * n).toFixed(3);
+const T = n => +(0.017 + $BAR * n).toFixed(3);
 const SOFT = "expo.out";
 function rise(sel, t, o) {
   o = o || {};
