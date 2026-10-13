@@ -1,0 +1,372 @@
+<title>Propuesta Steel Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a proposal that reads top to bottom; galvanized-steel paper with forge-dark bands for the demos. */
+:root{
+  --paper:#E4E7E9; --sheet:#F1F2F3; --ink:#16181A; --ink2:#555B61; --rule:rgba(22,24,26,.12);
+  --forge:#131415; --plate:#1E2022; --iron:#EEEBE6; --steel:#9AA1A7; --frule:rgba(238,235,230,.1);
+  --ember:#C85A1C; --heat:#FFB860; --hot:#E8732C; --ok:#2E9E63; --bad:#B4421A;
+  --display:"Big Shoulders Display","Oswald",Impact,sans-serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:clamp(16px,4vw,40px);}
+h1,h2,h3{font-family:var(--display);font-weight:800;text-transform:uppercase;line-height:.92;margin:0;text-wrap:balance;letter-spacing:.005em;}
+h2{font-size:clamp(40px,6vw,72px);}
+h3{font-size:30px;}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--ember);}
+.lede{font-size:18px;color:var(--ink2);max-width:62ch;margin:16px 0 0;}
+section{padding-block:clamp(56px,7vw,96px);border-top:1px solid var(--rule);}
+.dark{background:var(--forge);color:var(--iron);border-top:0;}
+.dark .lede{color:var(--steel);}
+.dark .eyebrow{color:var(--hot);}
+.mono{font-family:var(--mono);}
+.num{font-variant-numeric:tabular-nums;}
+
+/* cover */
+.cover{padding-block:clamp(40px,6vw,80px) clamp(48px,6vw,80px);background:var(--forge);color:var(--iron);position:relative;overflow:hidden;}
+.cover::after{content:"";position:absolute;right:-10%;bottom:-50%;width:70%;height:120%;background:radial-gradient(closest-side,rgba(232,115,44,.22),rgba(232,115,44,0));pointer-events:none;}
+.byline{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--steel);}
+.byline b{color:var(--iron);}
+.cover-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:40px;align-items:end;margin-top:48px;position:relative;z-index:1;}
+.cover h1{font-size:clamp(48px,7vw,92px);}
+.cover h1 em{font-style:normal;color:var(--heat);}
+.cover .lede{color:var(--steel);}
+.summary{display:grid;gap:12px;}
+.summary div{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start;background:var(--plate);border:1px solid var(--frule);border-radius:6px;padding:14px 16px;}
+.summary b{font:800 22px/1 var(--display);color:var(--heat);}
+.summary span{font-size:15px;}
+
+/* findings */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}
+.good{display:grid;gap:10px;margin-top:24px;}
+.good div{display:flex;gap:12px;align-items:baseline;font-size:16px;}
+.good div::before{content:"✓";color:var(--ok);font-weight:700;}
+.finds{display:grid;gap:10px;}
+.find{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:grid;grid-template-columns:44px 1fr;gap:4px 14px;}
+.find .n{font:800 30px/1 var(--display);color:var(--bad);grid-row:span 3;}
+.find b{font-size:16px;}
+.find code{font:500 13px/1.5 var(--mono);background:var(--forge);color:var(--heat);border-radius:4px;padding:4px 8px;justify-self:start;overflow-wrap:anywhere;}
+.find span{font-size:14px;color:var(--ink2);}
+
+/* site shots */
+.shots{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-top:40px;}
+.shot{margin:0;background:var(--plate);border:1px solid var(--frule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
+.shot img{display:block;width:100%;height:auto;}
+.shot figcaption{padding:14px 16px;font-size:14px;color:var(--steel);}
+.shot figcaption b{display:block;color:var(--iron);font-size:15px;}
+.shot.w3{grid-column:span 3;}
+.shot.w4{grid-column:span 4;}
+.shot.w2{grid-column:span 2;}
+.note{margin-top:20px;font-size:14px;color:var(--steel);}
+
+/* bot demo */
+.demo{display:grid;grid-template-columns:400px 1fr;gap:40px;align-items:start;margin-top:40px;}
+.phone{background:#000;border-radius:44px;padding:12px;box-shadow:0 0 0 2px #34373A,0 30px 80px rgba(0,0,0,.5);max-width:100%;}
+.screen{border-radius:34px;overflow:hidden;height:680px;display:flex;flex-direction:column;background:#0B141A;}
+.wa-top{display:flex;align-items:center;gap:12px;background:#1F2C34;padding:40px 16px 12px;}
+.wa-top .av{width:38px;height:38px;border-radius:50%;background:var(--forge);color:var(--hot);display:grid;place-items:center;font:800 15px var(--display);}
+.wa-top b{display:block;font-size:15px;color:#E9EDEF;}
+.wa-top span{font-size:12px;color:#8696A0;}
+.msgs{flex:1;overflow:auto;padding:12px 10px;display:flex;flex-direction:column;gap:6px;}
+.bub{max-width:86%;padding:8px 10px 5px;border-radius:8px;font-size:14px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;color:#E9EDEF;}
+.bub.in{background:#202C33;align-self:flex-start;border-top-left-radius:0;}
+.bub.out{background:#005C4B;align-self:flex-end;border-top-right-radius:0;}
+.bub time{display:block;text-align:right;font-size:11px;color:rgba(233,237,239,.5);}
+.bub .pc{display:grid;grid-template-columns:52px 1fr;gap:10px;background:rgba(0,0,0,.25);border-radius:6px;padding:8px;margin-bottom:6px;}
+.bub .pc .ph{background:#E9ECEE;border-radius:4px;display:grid;place-items:center;color:#30353A;aspect-ratio:1;}
+.bub .pc .ph svg{width:80%;}
+.bub .pc b{display:block;}
+.bub .pc small{display:block;color:#8696A0;}
+.bub .pc i{font-style:normal;font-weight:700;color:var(--heat);}
+.bub .pay{margin-top:8px;background:rgba(0,0,0,.25);border-radius:6px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+.bub .pay span{font-size:12px;color:#8696A0;}
+.bub .pay b{color:#53BDEB;}
+.bub.img{padding:4px;}
+.bub.img .ph{width:200px;max-width:100%;aspect-ratio:4/3;background:#2A3942;border-radius:6px;display:grid;place-items:center;color:#AEBAC1;}
+.bub.img .ph svg{width:70%;}
+.opts{display:flex;flex-direction:column;gap:4px;align-self:flex-start;width:86%;}
+.opts button{background:#202C33;border:0;border-radius:8px;color:#53BDEB;padding:9px;font:inherit;font-size:14px;cursor:pointer;}
+.opts button:hover{background:#2A3942;}
+.typing{align-self:flex-start;background:#202C33;border-radius:8px;padding:8px 12px;color:#8696A0;font-size:13px;}
+.compose{display:flex;gap:8px;padding:10px 10px 22px;background:#1F2C34;}
+.compose textarea{flex:1;min-width:0;background:#2A3942;border:0;border-radius:20px;padding:10px 14px;color:#E9EDEF;outline:none;resize:none;height:42px;font:inherit;font-size:14px;}
+.compose button{width:42px;height:42px;border-radius:50%;border:0;background:#00A884;color:#fff;cursor:pointer;}
+.side{display:grid;gap:24px;min-width:0;}
+.tries{display:flex;flex-wrap:wrap;gap:8px;}
+.tries button{border:1px solid var(--frule);background:var(--plate);color:var(--iron);border-radius:999px;padding:9px 14px;font:500 14px var(--body);cursor:pointer;}
+.tries button:hover{border-color:var(--hot);}
+.tries button.reset{color:var(--steel);}
+.panel{background:var(--plate);border:1px solid var(--frule);border-radius:8px;padding:20px;}
+.panel h3{font-size:24px;color:var(--iron);}
+.log{margin-top:14px;display:grid;gap:8px;font-size:14px;max-height:260px;overflow:auto;}
+.log div{display:grid;grid-template-columns:auto 1fr;gap:10px;border-left:2px solid var(--hot);padding:4px 0 4px 12px;}
+.log time{font:500 12px var(--mono);color:var(--steel);}
+.log .empty{border:0;padding:0;color:var(--steel);display:block;}
+.menu{display:grid;gap:0;margin-top:14px;}
+.menu div{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--frule);font-size:14px;}
+.menu div:first-child{border-top:0;}
+.menu b{font:800 20px/1.1 var(--display);color:var(--heat);}
+.menu strong{display:block;color:var(--iron);font-size:15px;}
+.menu span{color:var(--steel);}
+
+/* how it works */
+.flow{display:grid;grid-template-columns:1fr auto 1.3fr auto 1fr;gap:0;align-items:center;margin-top:40px;}
+.node{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:18px;}
+.node b{display:block;font:800 24px/1 var(--display);text-transform:uppercase;}
+.node span{display:block;margin-top:6px;font-size:14px;color:var(--ink2);}
+.node.core{background:var(--forge);color:var(--iron);border:0;}
+.node.core b{color:var(--heat);}
+.node.core span{color:var(--steel);}
+.node ul{margin:12px 0 0;padding-left:18px;font-size:14px;color:var(--steel);}
+.arrow{width:48px;height:2px;background:var(--ember);position:relative;margin:0 6px;}
+.arrow::after{content:"";position:absolute;right:-1px;top:-5px;border:6px solid transparent;border-left:8px solid var(--ember);border-right:0;}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;}
+.rule{border-top:2px solid var(--ink);padding-top:14px;}
+.rule b{display:block;font-size:16px;}
+.rule span{font-size:14px;color:var(--ink2);}
+
+/* help */
+.help{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:40px;}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:24px;display:grid;gap:8px;align-content:start;}
+.card .tag{font:500 12px var(--mono);color:var(--ember);}
+.card h3{font-size:34px;}
+.card p{margin:0;color:var(--ink2);font-size:15px;}
+.card ul{margin:4px 0 0;padding-left:18px;font-size:15px;}
+.extras{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.extras span{border:1px solid var(--rule);border-radius:999px;padding:7px 12px;font-size:14px;background:var(--sheet);}
+
+/* plan */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px;}
+.phase{border-top:3px solid var(--hot);background:var(--plate);border-radius:0 0 8px 8px;padding:22px;}
+.phase .wk{font:500 13px var(--mono);color:var(--heat);}
+.phase h3{margin-top:8px;font-size:30px;}
+.phase ul{margin:12px 0 0;padding-left:18px;color:var(--steel);font-size:15px;}
+.cta{margin-top:48px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;background:var(--plate);border:1px solid var(--frule);border-radius:8px;padding:28px;}
+.cta h3{font-size:clamp(32px,4vw,48px);}
+.wa{font:600 24px var(--body);user-select:all;}
+.wa small{display:block;font-size:13px;color:#30D158;font-weight:500;}
+footer{background:var(--forge);color:var(--steel);font-size:14px;border-top:1px solid var(--frule);}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:28px;}
+
+@media (max-width:900px){
+  .cover-grid,.two,.demo{grid-template-columns:1fr;}
+  .shots{grid-template-columns:1fr 1fr;}
+  .shot.w3,.shot.w4{grid-column:1/-1;}
+  .shot.w2{grid-column:span 1;}
+  .flow{grid-template-columns:1fr;gap:10px;}
+  .arrow{width:2px;height:28px;margin:0 auto;}
+  .arrow::after{right:-5px;top:auto;bottom:-1px;border:6px solid transparent;border-top:8px solid var(--ember);border-bottom:0;}
+  .rules,.phases,.help{grid-template-columns:1fr;}
+  .phone{max-width:400px;margin:0 auto;}
+}
+@media (max-width:480px){ .screen{height:600px;} }
+@media (prefers-reduced-motion:reduce){ *{scroll-behavior:auto!important;} }
+</style>
+
+<div class="cover"><div class="wrap">
+  <div class="byline"><span><b>Casa Digital</b> by Clientia Tech · Propuesta</span><span>Para Steel Works Honduras · octubre 2026</span></div>
+  <div class="cover-grid">
+    <div>
+      <div class="eyebrow">Sitio nuevo y asistente de WhatsApp</div>
+      <h1 style="margin-top:16px">Que pedir hierro sea <em>tan fácil</em> como escribir un código</h1>
+      <p class="lede">Steel Works ya tiene lo más difícil: más de 750 piezas con código y precio publicados, dos sucursales y envíos a todo el país. Lo que falta es que el cliente pueda pedir sin llamar y sin esperar.</p>
+    </div>
+    <div class="summary">
+      <div><b>1</b><span>Un sitio nuevo con buscador por código, existencias y pedido en línea.</span></div>
+      <div><b>2</b><span>Un asistente de WhatsApp que arma pedidos, cotiza fabricación y pasa a un asesor.</span></div>
+      <div><b>3</b><span>Una cuenta de taller para herreros y constructoras que compran cada semana.</span></div>
+    </div>
+  </div>
+</div></div>
+
+<section id="diagnostico"><div class="wrap two">
+  <div>
+    <div class="eyebrow">Diagnóstico de steelworkshn.com</div>
+    <h2 style="margin-top:12px">Lo que vio un cliente</h2>
+    <p class="lede">Recorrimos el sitio el 13 de octubre de 2026 como lo haría un herrero de La Ceiba buscando una pieza. La base es buena:</p>
+    <div class="good">
+      <div>Catálogo grande en línea, ordenado en 7 líneas y 44 familias.</div>
+      <div>Precios en lempiras con IVA incluido y piezas marcadas como agotadas.</div>
+      <div>Direcciones y teléfonos de Tegucigalpa y San Pedro Sula.</div>
+      <div>Mensaje claro de envíos a toda Honduras.</div>
+    </div>
+  </div>
+  <div class="finds">
+    <div class="find"><span class="n">01</span><b>Enlaces del menú que no abren nada</b><code>FQA → #   Envíos → #   Haz clic aquí → #</code><span>Las preguntas frecuentes, la página de envíos y el botón de «Enviar un mensaje» están vacíos.</span></div>
+    <div class="find"><span class="n">02</span><b>Teléfonos del encabezado mal escritos</b><code>tel:TGU:(504)3265-8800</code><span>En el celular, tocar el número no inicia la llamada.</span></div>
+    <div class="find"><span class="n">03</span><b>Código del tema visible en las tarjetas</b><code>.path{fill:none;stroke:#333…}</code><span>Aparece como texto junto a los productos y el carrito.</span></div>
+    <div class="find"><span class="n">04</span><b>Mensaje de error a la vista</b><code>error: Content is protected !!</code><span>El aviso del plugin de protección se muestra en la página.</span></div>
+    <div class="find"><span class="n">05</span><b>Google no sabe qué venden</b><code>Just another WordPress site</code><span>Es la descripción por defecto que leen los buscadores y WhatsApp al compartir el enlace.</span></div>
+    <div class="find"><span class="n">06</span><b>Comprar al por mayor es lento</b><code>25 páginas · 30 piezas por página</code><span>No hay WhatsApp, ni horario, ni forma de pedir una lista de códigos de una vez. Las agotadas no tienen «avísame».</span></div>
+  </div>
+</div></section>
+
+<section class="dark" id="sitio"><div class="wrap">
+  <div class="eyebrow">Demo 1 · La nueva página</div>
+  <h2 style="margin-top:12px">Todo, en hierro</h2>
+  <p class="lede">Hecha para cómo compra su cliente: por código, desde el celular y con prisa. Usa 29 piezas reales de su catálogo con su precio y estado.</p>
+  <div class="shots">
+    <figure class="shot w4"><img src="{{IMG:web-hero}}" alt="Portada de la nueva página: Todo, en hierro, con un portón forjado dibujado y un asistente de WhatsApp abierto"><figcaption><b>Portada</b>El portón se dibuja al rojo vivo y se enfría a acero al abrir la página.</figcaption></figure>
+    <figure class="shot w2"><img src="{{IMG:movil-hero}}" alt="La portada en un celular"><figcaption><b>Primero el celular</b>Botón de WhatsApp siempre a mano.</figcaption></figure>
+    <figure class="shot w3"><img src="{{IMG:web-catalogo}}" alt="Catálogo con filtros por familia, precio con IVA y estado de cada pieza"><figcaption><b>Catálogo con precio y existencia</b>Filtro por familia, cantidad y «avísame» en las agotadas.</figcaption></figure>
+    <figure class="shot w3"><img src="{{IMG:web-fabricacion}}" alt="Cotizador de portones con boceto que cambia según las medidas"><figcaption><b>Cotizador de fabricación</b>El boceto cambia con el tipo, las medidas y el estilo.</figcaption></figure>
+    <figure class="shot w4"><img src="{{IMG:web-taller}}" alt="Cuenta de taller con pedido rápido por lista de códigos"><figcaption><b>Cuenta de taller</b>El herrero pega su lista de códigos y el pedido se arma con el total.</figcaption></figure>
+    <figure class="shot w2"><img src="{{IMG:movil-catalogo}}" alt="Catálogo en el celular a dos columnas"><figcaption><b>Catálogo en el celular</b>Dos columnas, precio grande.</figcaption></figure>
+  </div>
+  <p class="note">Las miniaturas de producto son dibujos temporales. En la versión final van las fotos reales de cada pieza. El sitio completo e interactivo va adjunto como archivo.</p>
+</div></section>
+
+<section class="dark" id="bot" style="border-top:1px solid var(--frule)"><div class="wrap">
+  <div class="eyebrow">Demo 2 · Asistente de WhatsApp</div>
+  <h2 style="margin-top:12px">Pruébelo aquí mismo</h2>
+  <p class="lede">Este chat usa el mismo motor que correría en el WhatsApp de Steel Works, con los códigos y precios reales del catálogo. Escriba un código, pegue una lista o pida un portón.</p>
+  <div class="demo">
+    <div class="phone"><div class="screen">
+      <div class="wa-top"><div class="av">SW</div><div><b>Steel Works</b><span>en línea</span></div></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <form class="compose" id="chatf"><textarea id="chatin" rows="1" placeholder="Escribe un mensaje" aria-label="Mensaje"></textarea><button type="submit" aria-label="Enviar">➤</button></form>
+    </div></div>
+    <div class="side">
+      <div>
+        <div class="eyebrow" style="margin-bottom:12px">Pruebas rápidas</div>
+        <div class="tries" id="tries">
+          <button type="button" data-run="hola|1|120-1048|25|Finalizar pedido|Retiro en San Pedro Sula">Buscar una pieza y pedirla</button>
+          <button type="button" data-run="hola|3|120-1048 x 20&#10;130-1024 x 50&#10;110-702 x 6">Pedido de taller por lista</button>
+          <button type="button" data-run="hola|2|Portón|3.6 x 2.4|Forjado clásico|Tegucigalpa|📷 Enviar foto de ejemplo">Cotizar un portón</button>
+          <button type="button" data-run="hola|1|222-1950|Avisarme cuando llegue">Pieza agotada</button>
+          <button type="button" class="reset" data-run="hola">Empezar de cero</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Lo que pasa detrás</h3>
+        <div class="log" id="log"><span class="empty">Cada pedido, cotización o traspaso aparece aquí, como lo vería la sucursal.</span></div>
+      </div>
+      <div class="panel">
+        <h3>El menú del asistente</h3>
+        <div class="menu">
+          <div><b>1</b><p style="margin:0"><strong>Buscar una pieza</strong><span>Por código o por nombre. Responde precio con IVA y si hay existencia.</span></p></div>
+          <div><b>2</b><p style="margin:0"><strong>Cotizar fabricación</strong><span>Tipo, medidas, estilo, ciudad y foto. La ficha llega completa al taller.</span></p></div>
+          <div><b>3</b><p style="margin:0"><strong>Pedido rápido de taller</strong><span>Una lista de códigos y cantidades se convierte en un pedido con total.</span></p></div>
+          <div><b>4</b><p style="margin:0"><strong>Enviar foto de un diseño</strong><span>El cliente manda la foto y un asesor la revisa.</span></p></div>
+          <div><b>5</b><p style="margin:0"><strong>Estado de mi pedido</strong><span>Recibido, pagado, preparado, en camino, entregado.</span></p></div>
+          <div><b>6</b><p style="margin:0"><strong>Sucursales y horario</strong><span>Direcciones y teléfonos de TGU y SPS.</span></p></div>
+          <div><b>7</b><p style="margin:0"><strong>Hablar con un asesor</strong><span>Pasa la conversación con todo el contexto a la sucursal elegida.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="como"><div class="wrap">
+  <div class="eyebrow">Cómo va a funcionar</div>
+  <h2 style="margin-top:12px">El asistente hace lo repetitivo, el equipo lo importante</h2>
+  <p class="lede">Hoy, cada precio que se da por teléfono o WhatsApp lo busca una persona. Con el asistente, esas consultas se responden solas y el equipo de ventas recibe solo pedidos listos y casos que sí necesitan a alguien.</p>
+  <div class="flow">
+    <div class="node"><b>Cliente</b><span>Escribe al WhatsApp de Steel Works o compra en la página, a cualquier hora.</span></div>
+    <div class="arrow" aria-hidden="true"></div>
+    <div class="node core"><b>Asistente Steel Works</b><span>Conectado al mismo catálogo de la página.</span>
+      <ul><li>Precio y existencia por código</li><li>Arma el pedido y manda el enlace de pago</li><li>Llena la ficha de fabricación</li><li>Guarda avisos de piezas agotadas</li></ul></div>
+    <div class="arrow" aria-hidden="true"></div>
+    <div class="node"><b>Sucursal TGU o SPS</b><span>Recibe el pedido pagado o la ficha completa y confirma por el mismo chat.</span></div>
+  </div>
+  <div class="rules">
+    <div class="rule"><b>Siempre hay una persona a un toque</b><span>«Hablar con un asesor» funciona en cualquier momento y le pasa al asesor toda la conversación.</span></div>
+    <div class="rule"><b>Un solo catálogo</b><span>Cuando cambian un precio o una existencia en el panel, cambia en la página y en el WhatsApp a la vez.</span></div>
+    <div class="rule"><b>Número oficial de WhatsApp Business</b><span>Corre sobre la API oficial de WhatsApp, con el nombre y logo verificados de Steel Works.</span></div>
+  </div>
+</div></section>
+
+<section id="ayuda"><div class="wrap">
+  <div class="eyebrow">En qué podemos ayudar</div>
+  <h2 style="margin-top:12px">Lo que construimos y mantenemos</h2>
+  <div class="help">
+    <div class="card"><span class="tag">Página</span><h3>Sitio nuevo con catálogo vivo</h3><p>Pasamos el catálogo actual a la nueva página con sus códigos, familias y precios, y corregimos los seis problemas del diagnóstico.</p><ul><li>Buscador por código</li><li>Pedido en línea con retiro o envío</li><li>Cotizador de fabricación con boceto</li></ul></div>
+    <div class="card"><span class="tag">WhatsApp</span><h3>Asistente 24/7</h3><p>El menú de arriba, en el número oficial de Steel Works, con traspaso a asesores de cada sucursal.</p><ul><li>Pedidos y cotizaciones fuera de horario</li><li>Avisos de reingreso de piezas</li><li>Estado del pedido sin llamar</li></ul></div>
+    <div class="card"><span class="tag">Mayoristas</span><h3>Cuenta de taller</h3><p>Para los herreros y constructoras que compran cada semana: pedido por lista, precio por volumen, historial y repetir compra.</p></div>
+    <div class="card"><span class="tag">Cobros</span><h3>Pagos en línea</h3><p>Pago con tarjeta por medio de una pasarela local, directo a la cuenta de Steel Works, más transferencia o pago al retirar.</p></div>
+  </div>
+  <div class="extras"><span>Perfil de Google de ambas sucursales</span><span>Fotos de producto</span><span>Reporte semanal de lo más pedido</span><span>Piezas agotadas más buscadas</span><span>Capacitación al equipo</span></div>
+</div></section>
+
+<section class="dark" id="plan"><div class="wrap">
+  <div class="eyebrow">Plan de trabajo</div>
+  <h2 style="margin-top:12px">En marcha en cuatro semanas</h2>
+  <div class="phases">
+    <div class="phase"><span class="wk">Semanas 1 y 2</span><h3>Página y catálogo</h3><ul><li>Importamos las 750+ piezas</li><li>Fotos y textos de cada línea</li><li>Panel para cambiar precios y existencias</li></ul></div>
+    <div class="phase"><span class="wk">Semana 3</span><h3>Asistente de WhatsApp</h3><ul><li>Alta del número en WhatsApp Business</li><li>Menú, flujos y traspaso a asesores</li><li>Pruebas con el equipo de TGU y SPS</li></ul></div>
+    <div class="phase"><span class="wk">Semana 4</span><h3>Pagos y talleres</h3><ul><li>Pasarela de pago con tarjeta</li><li>Cuentas de taller con los primeros clientes</li><li>Lanzamiento y seguimiento</li></ul></div>
+  </div>
+  <div class="cta">
+    <div><div class="eyebrow">Próximo paso</div><h3 style="margin-top:10px">Se la mostramos en 15 minutos</h3><p class="lede" style="margin-top:8px">Rodrigo Herrera, Casa Digital. La inversión la revisamos juntos en la reunión.</p></div>
+    <div class="wa"><small>WhatsApp</small>+1 (765) 543-4251</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><span>Casa Digital by Clientia Tech</span><span>Demo de propuesta. No es el sitio oficial de Steel Works.</span></div></footer>
+
+<script>{{HIERRO}}</script>
+<script>{{ENGINE}}</script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const { CATALOGO } = SteelBot;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = t => esc(t).replace(/\*(.+?)\*/g, "<b>$1</b>");
+  const now = () => new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
+  const msgs = $("#msgs"), log = $("#log");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let st = null, queue = Promise.resolve();
+
+  function bubble(html, who, cls) {
+    msgs.querySelectorAll(".opts").forEach(o => o.remove());
+    const d = document.createElement("div"); d.className = "bub " + who + (cls ? " " + cls : "");
+    d.innerHTML = html + `<time>${now()}</time>`; msgs.appendChild(d); msgs.scrollTop = 1e6;
+  }
+  function render(m) {
+    if (m.image) return bubble(`<div class="ph">${Hierro.gate(200, 150, "forjado")}</div>`, "out", "img");
+    let h = "";
+    if (m.card) { const p = CATALOGO.find(x => m.card.title.endsWith(x.code)); h += `<div class="pc"><div class="ph">${Hierro.thumb(p.cat, 3)}</div><div><b>${esc(m.card.title)}</b><small>${esc(m.card.sub)}</small><i class="num">${m.card.price}</i></div></div>`; }
+    h += fmt(m.text || "");
+    if (m.list) h += "<br>" + m.list.map(i => `<br>▸ <b>${i.title}</b> ${esc(i.sub)}`).join("");
+    if (m.pay) h += `<div class="pay"><div><span>Pago con tarjeta (demo)</span><br><b>Pagar ${m.pay.amount}</b></div><span>${m.pay.ref}</span></div>`;
+    bubble(h, "in");
+    const opts = m.buttons || (m.list && m.list.map(i => i.title));
+    if (opts) { const o = document.createElement("div"); o.className = "opts"; o.innerHTML = opts.map(b => `<button type="button">${esc(b)}</button>`).join(""); msgs.appendChild(o); msgs.scrollTop = 1e6; }
+  }
+  function event(text) {
+    log.querySelector(".empty")?.remove();
+    const d = document.createElement("div"); d.innerHTML = `<time>${now()}</time><span>${text}</span>`; log.prepend(d);
+  }
+  function watch(prev, next, input) {
+    const p = prev || {};
+    if (next.last && (!p.last || p.last.n !== next.last.n)) event(`🧾 Pedido <b>${next.last.n}</b> por ${SteelBot.L(next.last.total)} enviado a la sucursal (${esc(next.last.entrega)}). Enlace de pago generado.`);
+    if (next.lastCot && next.lastCot !== p.lastCot) event(`📐 Ficha <b>${next.lastCot}</b> enviada al taller: ${esc(next.data.tipo)}, ${esc(next.data.med)}, ${esc(next.data.estilo)}.`);
+    if (next.handoff && next.handoff !== p.handoff) event(`👤 Conversación pasada a un asesor de <b>${next.handoff}</b> con todo el historial.`);
+    if (/avisarme/i.test(input) && p.step === "agotado") event(`🔔 Aviso de reingreso guardado para la pieza <b>${esc(p.data.p)}</b>.`);
+    if (/foto/i.test(input)) event("📷 Foto recibida y adjuntada a la conversación para el asesor.");
+  }
+  function send(text, silent) {
+    queue = queue.then(async () => {
+      if (!silent) bubble(fmt(text), "out");
+      const r = SteelBot.handle(st, text); watch(st, r.state, text); st = r.state;
+      for (const m of r.messages) {
+        const t = document.createElement("div"); t.className = "typing"; t.textContent = "escribiendo…"; msgs.appendChild(t); msgs.scrollTop = 1e6;
+        await new Promise(res => setTimeout(res, reduce ? 0 : 420));
+        t.remove(); render(m);
+      }
+    });
+  }
+  function run(script) { msgs.innerHTML = ""; st = null; script.split("|").forEach((s, i) => send(s, i === 0)); }
+  $("#tries").addEventListener("click", e => { const b = e.target.closest("[data-run]"); if (b) run(b.dataset.run); });
+  msgs.addEventListener("click", e => { const b = e.target.closest(".opts button"); if (b) send(b.textContent); });
+  $("#chatf").addEventListener("submit", e => { e.preventDefault(); const v = $("#chatin").value.trim(); if (v) { $("#chatin").value = ""; send(v); } });
+  $("#chatin").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#chatf").requestSubmit(); } });
+  run("hola|3|120-1048 x 20\n130-1024 x 50\n110-702 x 6");
+})();
+</script>
