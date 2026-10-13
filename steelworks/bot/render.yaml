@@ -1,0 +1,46 @@
+# Render Blueprint del bot. En Render: New > Blueprint, este repositorio,
+# Blueprint path: steelworks/bot/render.yaml
+services:
+  - type: web
+    name: steelworks-bot
+    runtime: node
+    region: virginia            # el más cercano a Honduras y a Twilio (us1)
+    plan: 0.5c-512mb            # plan pagado más pequeño. El gratis se duerme y Twilio no espera.
+    rootDir: steelworks/bot
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    disk:                       # aquí viven leads.json y sessions.json
+      name: datos
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: America/Tegucigalpa
+      - key: DATA_DIR
+        value: /var/data
+      - key: TWILIO_SANDBOX
+        value: "true"
+      - key: SKIP_TWILIO_SIGNATURE
+        value: "false"
+      - key: LEADS_TOKEN
+        generateValue: true
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      - key: TWILIO_ALERT_CONTENT_SID
+        sync: false
+      - key: OWNER_WHATSAPP
+        sync: false
+      - key: BRANCH_TGU_WHATSAPP
+        sync: false
+      - key: BRANCH_SPS_WHATSAPP
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
