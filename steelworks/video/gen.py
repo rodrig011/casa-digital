@@ -32,6 +32,11 @@ STOPS = [(0, "Su lema y sus trabajos, en la portada."), (971, "Lo que fabrican, 
 # their real shop listings (steelworkshn.com/tienda, 13 oct 2026) and what a visitor runs into
 SHOP = [("p-120-1016", "Adorno Barra 120-1016", "L62.71"), ("p-120-1048", "Adorno Barra 120-1048", "L84.42"),
         ("p-110-702", "Adorno Poste 110-702", "L64.94")]
+# a glass card per view of the site, floating over the MacBook's edge (label, value, detail)
+CHIPS = [("Portada", "Todo, en hierro.", "Su lema, con sus trabajos reales"),
+         ("Galería", "Fotos reales del taller", "Puertas, cercos y protecciones"),
+         ("Cotizador", "L 36,300 – 50,100", "Portón forjado · 3.6 × 2.4 m"),
+         ("Sucursales", "Tegucigalpa y San Pedro Sula", "Horario, teléfonos y cómo llegar")]
 HOY = ["Las piezas solo tienen código, sin nombre ni uso.",
        "Para pedir un portón, solo hay un carrito de piezas.",
        "No se ve cómo queda puesta en un portón.",
@@ -91,7 +96,7 @@ def build():
     hoy = "".join(f'<div class="hrow" id="hr{i}"><i>{i % 3 + 1}</i><b>{t}</b></div>' for i, t in enumerate(HOY))
     tiles = "".join(f'<div class="tile"><img src="assets/{p}.jpg"><span>{n}</span><b>{pr}</b><em>Añadir al carrito</em></div>'
                     for p, n, pr in SHOP)
-    caps = "".join(f'<div class="mcap" id="mc{i}">{c}</div>' for i, (_, c) in enumerate(STOPS))
+    caps = "".join(f'<div class="chip c{i}" id="mc{i}"><span>{a}</span><b>{b}</b><i>{c}</i></div>' for i, (a, b, c) in enumerate(CHIPS))
     chat = "".join(f'<div class="bub {s}" id="cb{i}">{h}<time>9:41</time></div>' for i, (s, h) in enumerate(CHAT))
     wa = (f'<div class="wa"><div class="wa-top"><div class="av"><img src="assets/simbolo.svg"></div><div><b>Steel Works</b><span>en línea</span></div></div>'
           f'<div class="wa-body"><div class="wa-scroll" id="wsc">{chat}</div></div></div>')
@@ -126,7 +131,7 @@ def build():
         scene("mac", f'''
           <div class="mtitle" id="mt">{words("Así puede verse.")}</div>
           {mac("m1", "sitio-web.jpg")}
-          <div class="mcaps">{caps}</div>'''),
+          {caps}'''),
         scene("bot", f'''
           <div class="bot-l">
             <div class="h2" id="bh">{words("Un asistente que cotiza por ustedes.")}</div>
@@ -254,8 +259,11 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#F5F5F7;}
 .base i{position:absolute;left:50%;top:0;width:220px;height:12px;margin-left:-110px;background:#C7C7CC;border-radius:0 0 12px 12px;}
 #m1{top:150px;}
 .mtitle{position:absolute;left:0;right:0;top:40px;text-align:center;font:600 72px/1 "IT";letter-spacing:-.035em;}
-.mcaps{position:absolute;left:0;right:0;bottom:44px;height:50px;}
-.mcap{position:absolute;left:0;right:0;text-align:center;font:500 36px "IT";color:#6E6E73;opacity:0;}
+.chip{position:absolute;z-index:5;opacity:0;padding:22px 28px;border-radius:22px;background:rgba(255,255,255,.74);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 30px 70px rgba(0,0,0,.14);}
+.chip span{display:block;font:600 18px "IT";color:#FF6A13;letter-spacing:.02em;text-transform:uppercase;}
+.chip b{display:block;margin-top:6px;font:600 38px/1.1 "IT";letter-spacing:-.025em;color:#1D1D1F;}
+.chip i{display:block;margin-top:6px;font:400 22px "IT";font-style:normal;color:#6E6E73;}
+.chip.c0{left:1270px;top:250px;}.chip.c1{left:150px;top:560px;}.chip.c2{left:1300px;top:520px;}.chip.c3{left:130px;top:780px;}
 /* iPhone */
 .phone{position:absolute;width:430px;height:900px;border-radius:72px;background:#0B0B0C;padding:14px;box-shadow:inset 0 0 0 2px #3A3A3C,0 50px 100px rgba(0,0,0,.18);}
 .pscr{width:100%;height:100%;border-radius:58px;overflow:hidden;position:relative;background:#fff;}
@@ -351,8 +359,12 @@ tl.fromTo("#m1", { opacity: 0, y: 220, rotationX: 28, transformPerspective: 2200
 STOPS.forEach((y, i) => {
   const t = T(14 + i * 1.5);
   if (i) tl.to("#m1-pg", { y: -y * PX, duration: 1.6, ease: "power3.inOut" }, t - .6);
-  tl.fromTo("#mc" + i, { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: .9, ease: SOFT }, t);
-  if (i < STOPS.length - 1) tl.to("#mc" + i, { opacity: 0, duration: .4 }, T(14 + (i + 1) * 1.5) - .7);
+  const side = i % 2 ? -1 : 1;  // chips alternate sides; the laptop turns a few degrees toward each one
+  tl.to("#m1", { rotationY: i ? -side * 4 : 0, duration: 1.6, ease: "power3.inOut" }, t - .6);
+  if (!i) return;  // the front page already carries its own glass cards
+  tl.fromTo("#mc" + i, { opacity: 0, x: side * 60, y: 10, scale: .96, filter: "blur(12px)" }, { opacity: 1, x: 0, y: 0, scale: 1, filter: "blur(0px)", duration: 1.1, ease: SOFT }, t - .1);
+  tl.to("#mc" + i, { y: -8, duration: 2, ease: "sine.inOut" }, t + 1);
+  if (i < STOPS.length - 1) tl.to("#mc" + i, { opacity: 0, x: side * 30, filter: "blur(8px)", duration: .5, ease: "power2.in" }, T(14 + (i + 1) * 1.5) - .7);
 });
 out("#cam-mac", T(20) - .6);
 
