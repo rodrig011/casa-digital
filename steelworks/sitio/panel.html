@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel Steel Works · Cotizaciones, agenda y taller</title>
+<meta name="theme-color" content="#F5F4F1">
+<style>
+/* The owner's side of the assistant: what came in, who gets visited when, and where every job is in the shop.
+   Light and quiet like the tools people keep open all day; colour only marks state. */
+@font-face{font-family:"Shoulders";src:url("fonts/big-shoulders-display-latin-800-normal.woff2") format("woff2");font-weight:800;font-display:swap;}
+@font-face{font-family:"Archivo";src:url("fonts/archivo-latin-400-normal.woff2") format("woff2");font-weight:400;font-display:swap;}
+@font-face{font-family:"Archivo";src:url("fonts/archivo-latin-500-normal.woff2") format("woff2");font-weight:500;font-display:swap;}
+@font-face{font-family:"Archivo";src:url("fonts/archivo-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap;}
+@font-face{font-family:"Archivo";src:url("fonts/archivo-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap;}
+:root{
+  --bg:#F5F4F1; --card:#FFFFFF; --line:#E6E3DE; --line2:#D8D4CD; --tx:#1B1C1D; --tx2:#5F6368; --tx3:#8A8F94;
+  --ember:#E0661F; --ember-bg:#FCEFE6; --wa:#1FA855; --wa-bg:#E6F6EC; --blue:#2F6FDB; --blue-bg:#E8F0FD; --amber:#B7791F; --amber-bg:#FBF1DF;
+  --side:#161718;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif; --display:"Shoulders",Impact,sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 14px/1.45 var(--body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0;}
+img,svg{display:block;max-width:100%;}
+:focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:6px;}
+.num{font-variant-numeric:tabular-nums;}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100svh;}
+
+/* sidebar */
+aside.side{background:var(--side);color:#C9CCCF;padding:20px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100svh;}
+.side .logo{padding:4px 8px 6px;}
+.side .logo img{height:30px;width:auto;}
+.side nav{display:grid;gap:2px;}
+.side nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px;color:#AEB2B6;text-decoration:none;font-weight:500;transition:background-color .15s ease,color .15s ease;}
+.side nav a svg{width:18px;height:18px;flex:none;}
+.side nav a.on{background:#26282A;color:#fff;}
+.side nav a .c{margin-left:auto;font-size:12px;background:var(--ember);color:#fff;border-radius:999px;padding:1px 7px;font-weight:600;}
+@media (hover:hover) and (pointer:fine){.side nav a:hover{background:#1F2123;color:#fff;}}
+.side .bot{margin-top:auto;background:#1F2123;border-radius:12px;padding:14px;display:grid;gap:6px;}
+.side .bot b{color:#fff;font-weight:600;display:flex;align-items:center;gap:8px;}
+.side .bot b i{width:8px;height:8px;border-radius:50%;background:#2BD46A;box-shadow:0 0 0 4px rgba(43,212,106,.18);}
+.side .bot span{font-size:12px;color:#8C9094;}
+
+/* main */
+main{padding:24px clamp(16px,2.4vw,36px) 48px;min-width:0;}
+.top{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.top h1{margin:0;font:600 24px/1.2 var(--body);letter-spacing:-.01em;}
+.top .date{color:var(--tx2);margin-top:2px;}
+.top .r{margin-left:auto;display:flex;gap:10px;align-items:center;}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--tx2);}
+.chip.demo{background:var(--amber-bg);border-color:transparent;color:var(--amber);font-weight:600;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:9px;font-weight:600;font-size:13px;border:1px solid var(--line2);background:var(--card);transition:transform .16s var(--ease-out),background-color .15s ease,border-color .15s ease;}
+.btn:active{transform:scale(.97);}
+.btn.dark{background:var(--tx);color:#fff;border-color:var(--tx);}
+.btn.wa{background:var(--wa);color:#fff;border-color:var(--wa);}
+.btn svg{width:16px;height:16px;}
+@media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--tx3);}.btn.dark:hover{background:#000;}}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+.kpi span{color:var(--tx2);font-size:13px;}
+.kpi b{display:block;font:800 40px/1 var(--display);margin:10px 0 6px;font-variant-numeric:tabular-nums;}
+.kpi small{font-size:12px;color:var(--tx3);}
+.kpi small em{font-style:normal;color:var(--wa);font-weight:600;}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-bottom:16px;}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0;}
+.panel > header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);}
+.panel > header h2{margin:0;font:600 15px var(--body);}
+.panel > header .r{margin-left:auto;color:var(--tx3);font-size:12px;}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--wa);font-weight:600;}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--wa);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{50%{opacity:.35;}}
+
+/* alerts */
+.feed{list-style:none;margin:0;padding:0;max-height:430px;overflow:auto;}
+.al{display:grid;grid-template-columns:36px 1fr auto;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);align-items:start;transition:background-color .6s ease;}
+.al:last-child{border-bottom:0;}
+.al.fresh{background:#FFF8F2;}
+.al .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;}
+.al .ic svg{width:18px;height:18px;}
+.al .ic.q{background:var(--ember-bg);color:var(--ember);}
+.al .ic.p{background:var(--blue-bg);color:var(--blue);}
+.al .ic.t{background:var(--wa-bg);color:var(--wa);}
+.al .ic.w{background:var(--amber-bg);color:var(--amber);}
+.al b{font-weight:600;}
+.al p{margin:2px 0 0;color:var(--tx2);}
+.al .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;background:var(--bg);color:var(--tx2);font-size:12px;font-weight:500;}
+.tag.price{background:var(--ember-bg);color:var(--ember);font-weight:600;}
+.al .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.al .acts .btn{height:30px;font-size:12px;padding:0 10px;}
+.al time{font-size:12px;color:var(--tx3);white-space:nowrap;}
+@media (prefers-reduced-motion:no-preference){
+  .al{transition:background-color .6s ease,opacity .45s var(--ease-out),transform .45s var(--ease-out),filter .45s var(--ease-out);}
+  @starting-style{.al{opacity:0;transform:translateY(-10px);filter:blur(4px);}}
+}
+
+/* agenda */
+.days{display:grid;}
+.day{padding:12px 18px 6px;border-bottom:1px solid var(--line);}
+.day:last-child{border-bottom:0;}
+.day h3{margin:0 0 8px;font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);}
+.vis{display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:center;padding:8px 0;}
+.vis .h{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14px;}
+.vis .who b{font-weight:600;}
+.vis .who span{display:block;color:var(--tx2);font-size:13px;}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;}
+.vis.new{animation:flash 2.4s ease;}
+@keyframes flash{0%,40%{background:var(--wa-bg);}}
+
+/* shop board */
+.board{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;padding:16px;overflow-x:auto;scroll-snap-type:x mandatory;}
+.col{background:var(--bg);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:260px;scroll-snap-align:start;}
+.col > h3{margin:2px 4px 4px;font:600 13px var(--body);display:flex;align-items:center;gap:8px;}
+.col > h3 span{margin-left:auto;color:var(--tx3);font-weight:500;}
+.col > h3 i{width:8px;height:8px;border-radius:50%;}
+.job{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.job b{font-weight:600;}
+.job .d{color:var(--tx2);font-size:13px;}
+.job .f{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.job .f .due{font-size:12px;color:var(--tx3);}
+.job .f .due.late{color:var(--ember);font-weight:600;}
+.job .f .av{width:24px;height:24px;font-size:10px;margin-left:auto;}
+.job .bar{height:4px;border-radius:4px;background:var(--bg);overflow:hidden;}
+.job .bar i{display:block;height:100%;background:var(--tx);border-radius:4px;transform-origin:left;}
+.job .next{justify-self:start;margin-top:4px;font-size:12px;font-weight:600;color:var(--tx2);display:inline-flex;gap:6px;align-items:center;padding:4px 8px;margin-left:-8px;border-radius:6px;transition:background-color .15s ease,color .15s ease;}
+.job .next svg{width:14px;height:14px;}
+@media (hover:hover) and (pointer:fine){.job .next:hover{background:var(--bg);color:var(--tx);}}
+@media (prefers-reduced-motion:no-preference){
+  .job{transition:opacity .35s var(--ease-out),transform .35s var(--ease-out);}
+  @starting-style{.job{opacity:0;transform:translateY(8px) scale(.98);}}
+}
+
+/* drawer with the ficha the assistant collected */
+.scrim{position:fixed;inset:0;background:rgba(20,20,20,.28);z-index:60;opacity:1;transition:opacity .25s ease;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--card);z-index:61;box-shadow:-30px 0 60px rgba(0,0,0,.12);display:flex;flex-direction:column;transition:transform .4s var(--ease-drawer);}
+.drawer[hidden],.scrim[hidden]{display:block!important;pointer-events:none;}
+.scrim[hidden]{opacity:0;}
+.drawer[hidden]{transform:translateX(102%);}
+.drawer header{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line);}
+.drawer header h2{margin:0;font:600 17px var(--body);}
+.drawer header button{margin-left:auto;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:20px;color:var(--tx2);}
+.drawer .body{flex:1;overflow:auto;padding:20px;display:grid;gap:20px;align-content:start;}
+.drawer dl{margin:0;display:grid;grid-template-columns:110px 1fr;gap:8px 12px;}
+.drawer dt{color:var(--tx3);}
+.drawer dd{margin:0;font-weight:500;}
+.drawer .ref{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;background:var(--bg);border-radius:12px;padding:10px;}
+.drawer .ref img{width:96px;aspect-ratio:3/4;object-fit:cover;border-radius:8px;}
+.drawer .ref span{color:var(--tx2);font-size:13px;}
+.drawer h4{margin:0 0 10px;font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);}
+.convo{display:grid;gap:6px;background:#EFEAE2;border-radius:12px;padding:12px;}
+.convo p{margin:0;max-width:86%;padding:7px 10px;border-radius:8px;font-size:13px;background:#fff;justify-self:start;}
+.convo p.me{background:#D9FDD3;justify-self:end;}
+.drawer footer{display:flex;gap:8px;padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);}
+.drawer footer .btn{flex:1;height:42px;}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none;}}
+
+/* toasts */
+.toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;display:grid;gap:8px;justify-items:center;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;background:var(--tx);color:#fff;border-radius:12px;padding:12px 16px;font-size:13px;box-shadow:0 14px 34px rgba(0,0,0,.2);max-width:min(460px,calc(100vw - 32px));}
+.toast svg{width:18px;height:18px;flex:none;color:#2BD46A;}
+@media (prefers-reduced-motion:no-preference){
+  .toast{transition:opacity .3s var(--ease-out),transform .35s var(--ease-out);}
+  @starting-style{.toast{opacity:0;transform:translateY(12px) scale(.97);}}
+  .toast.out{opacity:0;transform:translateY(6px) scale(.98);transition-duration:.2s;}
+}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;}
+  aside.side{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;align-items:center;padding:10px 14px;gap:12px;}
+  .side nav,.side .bot span{display:none;}
+  .side .bot{margin:0 0 0 auto;padding:8px 12px;}
+  .top .r .chip:not(.demo){display:none;}
+  .kpi b{font-size:32px;}
+  .board{grid-template-columns:repeat(5,82%);}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="logo"><img src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-negro.svg" alt="Steel Works Honduras" width="118" height="30"></div>
+  <nav aria-label="Panel">
+    <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Hoy</a>
+    <a href="#alertas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg>Cotizaciones<span class="c num" id="navq">4</span></a>
+    <a href="#agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
+    <a href="#taller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg>Taller</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5.5"/></svg>Clientes</a>
+  </nav>
+  <div class="bot"><b><i></i>Asistente activo</b><span>Responde en WhatsApp las 24 horas y le pasa aquí cada cotización.</span></div>
+</aside>
+
+<main>
+  <div class="top">
+    <div><h1>Buenos días</h1><div class="date" id="today"></div></div>
+    <div class="r"><span class="chip demo">Datos de ejemplo</span><span class="chip">Sucursal: todas</span></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span>Cotizaciones esta semana</span><b class="num" id="kq">23</b><small><em>+6</em> que la semana pasada</small></div>
+    <div class="kpi"><span>Visitas para medir</span><b class="num" id="kv">9</b><small>4 hoy y mañana</small></div>
+    <div class="kpi"><span>Trabajos en taller</span><b class="num">14</b><small>2 atrasados</small></div>
+    <div class="kpi"><span>Cotizado esta semana</span><b class="num" id="kl">L 612k</b><small>Rango medio estimado</small></div>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" id="alertas"><header><h2>Alertas</h2><span class="live"><i></i>En vivo</span><span class="r">Le llegan también a su WhatsApp</span></header>
+      <ul class="feed" id="feed"></ul>
+    </section>
+    <section class="panel" id="agenda"><header><h2>Agenda de visitas</h2><span class="r">Esta semana</span></header>
+      <div class="days" id="days"></div>
+    </section>
+  </div>
+
+  <section class="panel" id="taller"><header><h2>Taller</h2><span class="r">Al pasar de etapa, el cliente recibe un aviso por WhatsApp</span></header>
+    <div class="board" id="board"></div>
+  </section>
+</main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Ficha de la cotización">
+  <header><h2 id="dTitle"></h2><button type="button" id="dClose" aria-label="Cerrar">×</button></header>
+  <div class="body" id="dBody"></div>
+  <footer><button class="btn" type="button" id="dCall">Llamar</button><button class="btn dark" type="button" id="dOk">Confirmar visita</button></footer>
+</aside>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>window.FOTOS = window.FOTOS || null;</script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const foto = k => (window.FOTOS && window.FOTOS[k]) || "../fotos/" + k + ".jpg";
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const MOTION = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const I = {
+    q: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 10h8"/>',
+    p: '<path d="M20 15.5a16 16 0 0 1-3.5-.4 1 1 0 0 0-1 .3l-2.2 2.2a15 15 0 0 1-6.6-6.6l2.2-2.2a1 1 0 0 0 .3-1A16 16 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1z"/>',
+    t: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    w: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  };
+  const ico = (k, cls) => `<span class="ic ${cls || k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg></span>`;
+  const TEC = { "Mario R.": "#2F6FDB", "José L.": "#B7791F", "Kevin A.": "#1FA855", "Luis M.": "#8E44AD" };
+  const av = n => `<span class="av" style="background:${TEC[n]}" title="${n}">${n.split(" ").map(x => x[0]).join("")}</span>`;
+  $("#today").textContent = new Date().toLocaleDateString("es-HN", { weekday: "long", day: "numeric", month: "long" });
+
+  // the fichas the WhatsApp assistant hands over (same fields as bot/engine.js leads)
+  const LEADS = [
+    { id: 1, nombre: "Carlos Mejía", tel: "9876-5432", tipo: "Portón", med: "3.60 × 2.40 m", estilo: "Forjado clásico", foto: "obra-cerco", acabado: "Negro mate", ap: "Abatible, dos hojas", rango: "L 36,300 – 50,100", cita: "Jueves 8:00 a. m.", suc: "Tegucigalpa", zona: "Col. Lomas del Guijarro", t: "hace 2 min",
+      convo: [["Hola, diseñé un portón en su página: forjado clásico, 3.60 × 2.40 m, negro mate.", 1], ["¡Hola Carlos! Le queda en L 36,300 a L 50,100 instalado. ¿Le agendo la visita para medir, sin costo?", 0], ["Sí, el jueves en la mañana", 1], ["Listo: jueves 8:00 a. m. Le escribe el técnico antes de llegar.", 0]] },
+    { id: 2, nombre: "Ana Rivera", tel: "3312-0987", tipo: "Protección de ventanas", med: "4 ventanas de 1.20 × 1.00 m", estilo: "Moderno", foto: "obra-ventana", acabado: "Grafito", ap: "Con abatible de escape", rango: "L 7,700 – 11,500", cita: "Pidió hablar con una persona", suc: "San Pedro Sula", zona: "Barrio Río de Piedras", t: "hace 18 min", persona: true,
+      convo: [["Buenas, quiero protección para 4 ventanas", 1], ["¡Claro! ¿Qué medida tiene cada una, más o menos?", 0], ["1.20 por 1 metro. ¿Me puede llamar alguien?", 1], ["Le pido a la sucursal de San Pedro Sula que la llame hoy.", 0]] },
+    { id: 3, nombre: "Constructora Valle", tel: "2232-7711", tipo: "Barandas", med: "38 m lineales, 1.00 m de alto", estilo: "Moderno", foto: "obra-puerta-arco", acabado: "Negro mate", ap: "—", rango: "L 83,600 – 114,000", cita: "Viernes 10:00 a. m.", suc: "Tegucigalpa", zona: "Residencial Las Uvas, torre B", t: "hace 1 h",
+      convo: [["Necesitamos barandas para 6 balcones, 38 metros en total", 1], ["Con estilo moderno le queda en L 83,600 a L 114,000. ¿Agendamos la visita al proyecto?", 0], ["Viernes 10 am", 1]] },
+  ];
+  const visitas = [
+    { d: "Hoy", h: "2:00 p. m.", n: "Familia Zelaya", s: "Puerta principal · Col. Palmira", tec: "Mario R." },
+    { d: "Hoy", h: "4:30 p. m.", n: "Roberto Paz", s: "Portón corredizo · Res. Plaza", tec: "Kevin A." },
+    { d: "Mañana", h: "9:00 a. m.", n: "Clínica San Jorge", s: "Protección de ventanas · Blvd. Morazán", tec: "José L." },
+    { d: "Jueves", h: "11:00 a. m.", n: "Sandra López", s: "Baranda de escalera · Col. Kennedy", tec: "Mario R." },
+  ];
+  const STAGES = [["Medición", "#8A8F94"], ["Diseño", "#2F6FDB"], ["Fabricación", "#E0661F"], ["Pintura", "#B7791F"], ["Instalación", "#1FA855"]];
+  let jobs = [
+    ["Familia Zelaya", "Puerta principal, calado CNC", "2.10 × 1.20 m", 0, "Hoy", "Mario R."],
+    ["Roberto Paz", "Portón corredizo moderno", "4.50 × 2.20 m", 0, "Hoy", "Kevin A."],
+    ["Hotel Plaza Real", "Barandas de terraza", "22 m lineales", 1, "Entrega 24 oct", "Luis M."],
+    ["Jorge Andino", "Portón forjado clásico", "3.40 × 2.30 m", 2, "Entrega 18 oct", "José L.", .6],
+    ["Clínica Dental Sonrisa", "Protecciones de ventana", "6 ventanas", 2, "Atrasado 1 día", "Kevin A.", .85, true],
+    ["María Fernanda Cruz", "Puerta de hierro y vidrio", "2.20 × 1.00 m", 2, "Entrega 21 oct", "Luis M.", .3],
+    ["Iglesia Bethel", "Portón doble, forjado", "5.00 × 2.80 m", 3, "Entrega 16 oct", "José L.", .5],
+    ["Daniel Ortez", "Cerco de jardín", "14 m lineales", 4, "Instalan hoy", "Mario R."],
+  ].map(([n, w, m, s, due, tec, p, late], i) => ({ i, n, w, m, s, due, tec, p: p || 0, late }));
+
+  // alerts feed: the newest on top; a new quote arrives on its own a few seconds in
+  const feed = $("#feed");
+  function alertHTML(a) {
+    return `<li class="al${a.fresh ? " fresh" : ""}">${ico(a.k)}<div><b>${a.title}</b><p>${a.text}</p>${a.tags ? `<div class="meta">${a.tags}</div>` : ""}${a.acts ? `<div class="acts">${a.acts}</div>` : ""}</div><time>${a.t}</time></li>`;
+  }
+  const leadAlert = l => ({ k: l.persona ? "p" : "q", lead: l.id,
+    title: l.persona ? `${l.nombre} pidió hablar con una persona` : `Nueva cotización de ${l.nombre}`,
+    text: `${l.tipo} · ${l.med} · ${l.estilo}`,
+    tags: `<span class="tag price num">${l.rango}</span><span class="tag">${l.cita}</span><span class="tag">${l.suc}</span>`,
+    acts: `<button class="btn" type="button" data-open="${l.id}">Ver ficha</button>` + (l.persona ? `<button class="btn dark" type="button" data-call="${l.id}">Llamar ahora</button>` : `<button class="btn dark" type="button" data-ok="${l.id}">Confirmar visita</button>`), t: l.t });
+  const alerts = [
+    leadAlert(LEADS[1]), leadAlert(LEADS[2]),
+    { k: "t", title: "Pintura terminada: Iglesia Bethel", text: "El portón doble está listo para instalar. Al cliente le llegó el aviso.", t: "hace 2 h" },
+    { k: "w", title: "Trabajo atrasado: Clínica Dental Sonrisa", text: "Protecciones de ventana, 1 día después de la fecha prometida.", acts: `<button class="btn" type="button" data-late="1">Avisar al cliente</button>`, t: "hace 3 h" },
+  ];
+  const drawFeed = () => feed.innerHTML = alerts.map(alertHTML).join("");
+  drawFeed();
+  setTimeout(() => {
+    const a = leadAlert(LEADS[0]); a.fresh = true; alerts.unshift(a); drawFeed();
+    $("#kq").textContent = "24"; $("#navq").textContent = "5";
+    toast(`Nueva cotización de ${LEADS[0].nombre} por WhatsApp`);
+    setTimeout(() => { alerts[0].fresh = false; feed.firstElementChild.classList.remove("fresh"); }, 5000);
+  }, MOTION ? 2500 : 0);
+
+  // agenda
+  function drawDays() {
+    const by = {};
+    visitas.forEach(v => (by[v.d] = by[v.d] || []).push(v));
+    $("#days").innerHTML = Object.entries(by).map(([d, vs]) => `<div class="day"><h3>${d}</h3>${vs.map(v => `<div class="vis${v.new ? " new" : ""}"><span class="h">${v.h}</span><div class="who"><b>${esc(v.n)}</b><span>${esc(v.s)}</span></div>${av(v.tec)}</div>`).join("")}</div>`).join("");
+  }
+  drawDays();
+
+  // board
+  const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  function drawBoard() {
+    $("#board").innerHTML = STAGES.map(([name, c], s) => {
+      const js = jobs.filter(j => j.s === s);
+      return `<div class="col"><h3><i style="background:${c}"></i>${name}<span class="num">${js.length}</span></h3>${js.map(j => `<article class="job"><b>${esc(j.n)}</b><span class="d">${esc(j.w)} · ${esc(j.m)}</span>${s === 2 || s === 3 ? `<div class="bar"><i style="transform:scaleX(${j.p || .15})"></i></div>` : ""}<div class="f"><span class="due${j.late ? " late" : ""}">${j.due}</span>${av(j.tec)}</div>${s < 4 ? `<button class="next" type="button" data-next="${j.i}">Pasar a ${STAGES[s + 1][0].toLowerCase()} ${arrow}</button>` : `<button class="next" type="button" data-done="${j.i}">Marcar instalado ${arrow}</button>`}</article>`).join("")}</div>`;
+    }).join("");
+  }
+  drawBoard();
+
+  // toasts, Sonner-style: stack at the bottom, leave faster than they arrive
+  function toast(text) {
+    const t = document.createElement("div"); t.className = "toast";
+    t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>${esc(text)}</span>`;
+    $("#toasts").appendChild(t);
+    setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 220); }, 3600);
+  }
+
+  // drawer
+  let cur = null;
+  function openLead(id) {
+    const l = LEADS.find(x => x.id === id); cur = l;
+    $("#dTitle").textContent = l.nombre;
+    $("#dBody").innerHTML = `<div class="ref"><img src="${foto(l.foto)}" alt="Estilo ${esc(l.estilo)}"><span>El cliente eligió este estilo viendo un trabajo real de Steel Works en el asistente.</span></div>
+      <div><h4>Ficha</h4><dl><dt>Trabajo</dt><dd>${esc(l.tipo)}</dd><dt>Medidas</dt><dd>${esc(l.med)}</dd><dt>Diseño</dt><dd>${esc(l.estilo)}</dd><dt>Acabado</dt><dd>${esc(l.acabado)}</dd><dt>Apertura</dt><dd>${esc(l.ap)}</dd><dt>Estimado</dt><dd class="num">${l.rango}</dd><dt>Visita</dt><dd>${esc(l.cita)}</dd><dt>Dirección</dt><dd>${esc(l.zona)}, ${esc(l.suc)}</dd><dt>Teléfono</dt><dd class="num">${l.tel}</dd></dl></div>
+      <div><h4>Conversación en WhatsApp</h4><div class="convo">${l.convo.map(([m, me]) => `<p class="${me ? "me" : ""}">${esc(m)}</p>`).join("")}</div></div>`;
+    $("#dOk").textContent = l.persona ? "Marcar como atendido" : "Confirmar visita";
+    $("#drawer").hidden = $("#scrim").hidden = false;
+  }
+  const closeD = () => $("#drawer").hidden = $("#scrim").hidden = true;
+  $("#dClose").onclick = $("#scrim").onclick = closeD;
+  addEventListener("keydown", e => { if (e.key === "Escape") closeD(); });
+  function confirm(id) {
+    const l = LEADS.find(x => x.id === id);
+    if (l.persona) { toast(`Listo. ${l.nombre} quedó como atendida.`); }
+    else {
+      const [d, ...h] = l.cita.split(" ");
+      visitas.push({ d, h: h.join(" "), n: l.nombre, s: `${l.tipo} · ${l.zona}`, tec: "Mario R.", new: true });
+      drawDays(); $("#kv").textContent = String(+$("#kv").textContent + 1);
+      toast(`Visita confirmada. A ${l.nombre.split(" ")[0]} le llegó la confirmación por WhatsApp.`);
+    }
+    const i = alerts.findIndex(a => a.lead === id); if (i > -1) { alerts.splice(i, 1); drawFeed(); }
+    $("#navq").textContent = String(Math.max(0, +$("#navq").textContent - 1));
+  }
+  $("#dOk").onclick = () => { if (cur) confirm(cur.id); closeD(); };
+  $("#dCall").onclick = () => toast(`Llamando a ${cur ? cur.tel : ""}…`);
+  feed.addEventListener("click", e => {
+    const o = e.target.closest("[data-open]"), k = e.target.closest("[data-ok]"), c = e.target.closest("[data-call]"), l = e.target.closest("[data-late]");
+    if (o) openLead(+o.dataset.open);
+    if (k) confirm(+k.dataset.ok);
+    if (c) toast(`Llamando a ${LEADS.find(x => x.id === +c.dataset.call).tel}…`);
+    if (l) { toast("Le avisamos a Clínica Dental Sonrisa por WhatsApp con la nueva fecha."); l.disabled = true; l.textContent = "Cliente avisado"; }
+  });
+  $("#board").addEventListener("click", e => {
+    const n = e.target.closest("[data-next]"), d = e.target.closest("[data-done]");
+    if (n) { const j = jobs[+n.dataset.next]; j.s++; j.p = 0; j.late = false; j.due = j.s === 4 ? "Instalación por agendar" : j.due; drawBoard();
+      toast(`${j.n} pasó a ${STAGES[j.s][0].toLowerCase()}. El cliente recibió el aviso por WhatsApp.`); }
+    if (d) { const j = jobs[+d.dataset.done]; jobs = jobs.filter(x => x !== j); drawBoard(); toast(`${j.n}: trabajo instalado. Le pedimos su opinión por WhatsApp.`); }
+  });
+})();
+</script>
+</body>
+</html>

@@ -16,12 +16,18 @@ src = open(os.path.join(HERE, "sitio", "index.html"), encoding="utf-8").read()
 def font(m):
     data = base64.b64encode(open(os.path.join(HERE, "sitio", m.group(1)), "rb").read()).decode()
     return f'url("data:font/woff2;base64,{data}")'
-src = re.sub(r'url\("(fonts/[^"]+)"\)', font, src)
+src = re.sub(r'url\("(fonts/[^"]+)"\)', font, src).replace('href="panel.html"', 'href="steelworks-panel.html"')
 for tag, path in [('<script src="hierro.js"></script>', "sitio/hierro.js"), ('<script src="../bot/engine.js"></script>', "bot/engine.js")]:
     src = src.replace(tag, "<script>\n" + open(os.path.join(HERE, path), encoding="utf-8").read() + "\n</script>")
 os.makedirs(os.path.join(HERE, "dist"), exist_ok=True)
 out = os.path.join(HERE, "dist", "steelworks-sitio.html")
 open(out, "w", encoding="utf-8").write(fotos(src))
+print(out, os.path.getsize(out) // 1024, "KB")
+
+pan = open(os.path.join(HERE, "sitio", "panel.html"), encoding="utf-8").read()
+pan = re.sub(r'url\("(fonts/[^"]+)"\)', font, pan).replace('href="index.html"', 'href="steelworks-sitio.html"')
+out = os.path.join(HERE, "dist", "steelworks-panel.html")
+open(out, "w", encoding="utf-8").write(fotos(pan))
 print(out, os.path.getsize(out) // 1024, "KB")
 
 # propuesta (página publicable): capturas incrustadas como data URI + motor del bot
