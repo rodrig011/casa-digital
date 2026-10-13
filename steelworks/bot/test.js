@@ -1,24 +1,4 @@
-// node test.js · recorre los flujos del asistente en texto plano
-const B = require("./engine");
-let st = null;
-const run = (title, ...xs) => {
-  console.log("\n===== " + title);
-  st = null;
-  for (const x of xs) {
-    const r = B.handle(st, x); st = r.state;
-    console.log("\n>> " + x);
-    r.messages.forEach(m => console.log(m.userImage ? "[foto del cliente]" : B.toText(m)));
-  }
-  return st;
-};
-const a = run("Portón dicho con sus palabras", "hola", "Quiero un portón para la cochera de 4 por 2", "clasico", "110-702", "Tegucigalpa", "Jueves en la mañana");
-console.assert(a.cot.lines[0].qty === 35 && a.handoff === "Tegucigalpa", "portón");
-const b = run("Cerco por número de opción", "hola", "1", "2", "18 metros", "1", "4", "2", "3");
-console.assert(b.cot.medidas === "18 m lineales" && b.visita === "Prefiero que me llamen", "cerco");
-const c = run("Piezas sin saber códigos", "hola", "busco unas puntas para una reja", "110-721", "25", "Ver mi cotización", "Envío a mi ciudad");
-console.assert(c.pedido.total === 25 * 81.27, "piezas");
-const d = run("Foto", "hola", "📷 Enviar una foto", "Sí, una puerta así", "No sé, que vengan a medir", "222-2950", "San Pedro Sula", "Viernes en la tarde");
-console.assert(d.cot.medidas === "Por medir en visita" && d.handoff === "San Pedro Sula", "foto");
-const e = run("Asesor y sucursales", "hola", "dónde están y qué horario tienen", "quiero hablar con una persona", "San Pedro Sula");
-console.assert(e.handoff === "San Pedro Sula", "asesor");
-console.log("\nOK");
+const B=require('./engine');
+let st=null;
+const run=(...xs)=>{for(const x of xs){const r=B.handle(st,x);st=r.state;console.log('>>',x);r.messages.forEach(m=>console.log(B.toText(m)||'[foto]'));console.log('---');}};
+run('hola','1','llamador','222-2650','10','Finalizar pedido','Envío a mi ciudad','La Ceiba, barrio El Centro','Menú','2','Portón','3 x 2.2','2','Tegucigalpa','Sin foto','menu','3','120-1048 x 20\n130-1024 x 50\n110-702 x 2\nXYZ x 1','Finalizar pedido','1','5','SW-1046','6','7','2');

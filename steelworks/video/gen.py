@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Steel Works · video de propuesta (HyperFrames, 1920x1080).
 
-Estilo "forja": fondo negro de taller, texto que entra al rojo vivo y se enfría a acero, fotos reales de sus obras y piezas,
+Estilo "forja": fondo negro de taller, texto que entra al rojo vivo y se enfría a acero,
 chispas en cada golpe, placas metálicas estampadas para los hallazgos. Cierra con el outro
 de Clientia Tech (logo redibujado + estelas de luz) de los videos anteriores.
 
 Música: "Still Buggin" (194 BPM). Un compás de 8 tiempos = 2.474 s; toda escena empieza en
 una línea de compás K(n). Requisitos junto al script: musica.mp3, capturas/*.png y
-deps/node_modules con gsap@3.14.2 y @fontsource/{big-shoulders-display,archivo,jetbrains-mono,inter-tight,bodoni-moda}; las fotos salen de ../fotos.
+deps/node_modules con gsap@3.14.2 y @fontsource/{big-shoulders-display,archivo,jetbrains-mono,inter-tight}.
 
     python3 gen.py && cd build && hyperframes render . -o ../steelworks-propuesta.mp4 -q high
 """
@@ -21,18 +21,18 @@ WHATSAPP = "+1 (765) 543-4251"
 MARK = json.load(open(os.path.join(HERE, "clientia-mark.json")))
 P0, BAR = 0.0012, 8 * 0.3092783
 K = lambda k: round(P0 + BAR * k, 3)
-SCENES = [("intro", 0, 3), ("hook", 3, 6), ("obras", 6, 10), ("audit", 10, 13), ("site", 13, 18),
-          ("bot", 18, 25), ("flow", 25, 29), ("offer", 29, 32), ("cta", 32, 34), ("end", 34, 37)]
+SCENES = [("intro", 0, 3), ("hook", 3, 6), ("audit", 6, 11), ("thesis", 11, 13), ("site", 13, 19),
+          ("bot", 19, 25), ("flow", 25, 29), ("offer", 29, 32), ("cta", 32, 34), ("end", 34, 37)]
 TOTAL = K(37)
 
-# what it takes to get a quote today (from the current site)
 FINDINGS = [
-    ("Saberse el código", "110-702 · 120-1048 · 222-2650", "El catálogo se busca por código de pieza."),
-    ("Buscar en 25 páginas", "30 piezas por página", "Para armar un portón hay que saber qué lleva."),
-    ("Esperar una respuesta", "WhatsApp → una persona", "Cada consulta se contesta a mano."),
+    ("Enlaces que no llevan a nada", "FQA  →  #\nEnvíos  →  #", "«Preguntas» y «Envíos» del menú no abren nada."),
+    ("Teléfonos que no marcan", "tel:TGU:(504)3265-8800", "Desde el celular, tocar el número da error."),
+    ("Código suelto en pantalla", ".path{fill:none;stroke:#333…}", "Estilos del tema aparecen como texto."),
+    ("Un error a la vista", "error: Content is protected !!", "El aviso del plugin se ve en la página."),
+    ("Google no sabe qué venden", "Just another WordPress site", "Es la descripción que leen los buscadores."),
+    ("Sin WhatsApp, sin horario", "WhatsApp: —   Formulario: #", "El botón de «Enviar un mensaje» no abre nada."),
 ]
-OBRAS = [("obra-puerta-cnc", "Puerta principal", "Panel calado y vidrio"), ("obra-cerco", "Cerco de jardín", "Remates en punta"),
-         ("obra-ventana", "Protección de ventana", "Marco trenzado"), ("obra-puerta-arco", "Puerta de hierro y vidrio", "Arco con cuadrícula")]
 
 
 def words(text, cls="w"):
@@ -55,11 +55,8 @@ def build():
                      ("big-shoulders-display/files/big-shoulders-display-latin-600-normal.woff2", "bsd-600"),
                      ("jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2", "jbm-500")] + \
             [(f"archivo/files/archivo-latin-{w}-normal.woff2", f"ar-{w}") for w in (400, 500, 600, 700)] + \
-            [(f"inter-tight/files/inter-tight-latin-{w}-normal.woff2", f"it-{w}") for w in (300, 600)] + \
-            [("bodoni-moda/files/bodoni-moda-latin-400-italic.woff2", "bm-400i")]:
+            [(f"inter-tight/files/inter-tight-latin-{w}-normal.woff2", f"it-{w}") for w in (300, 600)]:
         shutil.copy(os.path.join(fs, src), os.path.join(A, "fonts", dst + ".woff2"))
-    for f in os.listdir(os.path.join(HERE, "..", "fotos")):
-        shutil.copy(os.path.join(HERE, "..", "fotos", f), os.path.join(A, f))
     for f in os.listdir(os.path.join(HERE, "capturas")):
         shutil.copy(os.path.join(HERE, "capturas", f), os.path.join(A, f))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
@@ -87,48 +84,37 @@ def build():
     plates = "".join(f'''<div class="plate" id="pl{i}"><div class="stamp">{i + 1:02d}</div><div class="pt">{t}</div>
         <pre class="snip">{s}</pre><div class="pc">{c}</div></div>''' for i, (t, s, c) in enumerate(FINDINGS))
 
-    def cards(items):
-        return '<div class="cards">' + "".join(f'<div class="cd{" prod" if prod else ""}"><img src="assets/{img}.jpg"><b>{t}</b>{f"<span>{pr}</span>" if pr else ""}</div>'
-                                               for img, t, pr, prod in items) + "</div>"
-    quote = """<div class="qt"><div class="qh"><span>Cotización preliminar</span><b>COT-2051</b></div>
-      <div class="qp"><img src="assets/obra-cerco.jpg"><div><b>Portón · clásico forjado</b><span>4 × 2 m · Tegucigalpa</span></div></div>
-      <div class="ql"><span>35 × Remate en punta</span><b>L 2,262.05</b></div>
-      <div class="ql f"><span>Fabricación</span><i>La confirma el taller al medir</i></div></div>"""
     chat = "".join([
-        bubble("c0", "out", "Buenas, quiero un portón para la cochera, como de 4 por 2"),
-        bubble("c1", "in", "Perfecto. Estos son tres estilos que fabricamos en nuestro taller. ¿Cuál le gusta?" +
-               cards([("obra-cerco", "Clásico", "", False), ("obra-puerta-cnc", "Calado", "", False), ("obra-puerta-arco", "Moderno", "", False)])),
-        bubble("c2", "out", "El clásico 👌"),
-        bubble("c3", "in", "Con 4 m van unos <b>35 remates</b>. Estos son los que más piden:" +
-               cards([("p-110-702", "En punta", "L 64.63", True), ("p-110-705", "Tallado", "L 66.14", True), ("p-110-721", "De bola", "L 81.27", True)])),
-        bubble("c4", "out", "El de punta"),
-        bubble("c5", "in", quote + "¿Le agendo la visita para medir?"),
-        bubble("c6", "out", "Jueves en la mañana"),
-        bubble("c7", "in", "Agendado ✅ Un asesor de Tegucigalpa le confirma la hora por aquí."),
+        bubble("c0", "out", "Hola, buenas"),
+        bubble("c1", "in", "¡Hola! 👋 Soy el asistente de <b>Steel Works</b>. ¿En qué te ayudo?"
+               '<div class="opts"><span>Buscar una pieza</span><span>Cotizar fabricación</span><span>Pedido rápido de taller</span></div>'),
+        bubble("c2", "out", '<span class="mono">120-1048 x 20<br>130-1024 x 50</span>'),
+        bubble("c3", "in", 'Listo, armé tu pedido:<br><span class="mono">20 × 120-1048 · L 1,629.40<br>50 × 130-1024 · L 571.00</span><br><b>Total: L 2,200.40</b> con IVA'),
+        bubble("c4", "out", "Retiro en Tegucigalpa"),
+        bubble("c5", "in", '🧾 <b>Pedido SW-1049</b> listo para retirar.<div class="pay"><span>Pago con tarjeta</span><b>Pagar L 2,200.40</b></div>'),
+        bubble("c6", "out", "Y quiero cotizar un portón forjado de 3.6 x 2.4"),
+        bubble("c7", "in", '📐 <b>Solicitud COT-2248</b><br>Portón · 8.64 m² · forjado clásico<br>Ya la tiene el taller. Un asesor te escribe con el precio.'),
     ])
-    obras = "".join(f'<figure class="ob" id="ob{i}"><div class="obi"><img src="assets/{img}.jpg"></div><figcaption><b>{t}</b><span>{c}</span></figcaption></figure>'
-                    for i, (img, t, c) in enumerate(OBRAS))
 
-    flow_right = [("Estilos con fotos", "De obras reales de Steel Works"), ("Piezas y cantidades", "Con el precio del catálogo"),
-                  ("Visita para medir", "Agendada en la misma conversación"), ("Caso especial", "Pasa a un asesor con todo el contexto")]
+    flow_right = [("Pieza por código", "Precio y existencia al instante"), ("Pedido y pago", "Total con IVA y enlace de pago"),
+                  ("Fabricación", "Ficha con medidas y foto al taller"), ("Caso especial", "Pasa a un asesor con todo el contexto")]
     flow_nodes = "".join(f'<div class="fn r" id="fr{i}" style="top:{150 + i * 170}px"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(flow_right))
     flow_lines = "".join(f'<path class="fl" id="fl{i}" d="M 905 540 C 1040 540, 1040 {195 + i * 170}, 1160 {195 + i * 170}"/>' for i in range(4))
     flow_lines += '<path class="fl" id="fl4" d="M 560 540 L 655 540"/>' + "".join(
         f'<path class="fl" id="fo{i}" d="M 1520 {195 + i * 170} C 1600 {195 + i * 170}, 1600 540, 1660 540"/>' for i in range(4))
 
-    offer = [("Sitio nuevo", "Sus obras y piezas con fotos reales, hecho para el celular.", "obra-puerta-cnc", False),
-             ("Asistente que cotiza", "Entiende lo que el cliente escribe o fotografía, a cualquier hora.", "detalle-calado", False),
-             ("Cuenta de taller", "Para herreros: repetir pedido, precio por volumen e historial.", "p-120-1048", True),
-             ("Pagos en línea", "Tarjeta, transferencia o pago al retirar en TGU y SPS.", "p-222-2650", True)]
-    offer_html = "".join(f'<div class="of" id="of{i}"><div class="stamp">{i + 1:02d}</div><b>{a}</b><span>{b}</span>'
-                         f'<div class="ofi{" prod" if pr else ""}"><img src="assets/{im}.jpg"></div></div>' for i, (a, b, im, pr) in enumerate(offer))
+    offer = [("Sitio nuevo con catálogo vivo", "Buscador por código, precio, existencia y pedido en línea."),
+             ("Asistente de WhatsApp", "Responde 24/7, arma pedidos, cotiza fabricación y pasa a un asesor."),
+             ("Cuenta de taller", "Pedido rápido por lista, precio por volumen y repetir compras."),
+             ("Pagos y avisos", "Pago con tarjeta y aviso automático cuando vuelve una pieza agotada.")]
+    offer_html = "".join(f'<div class="of" id="of{i}"><div class="stamp">{i + 1:02d}</div><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(offer))
 
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
 
     # sparks: deterministic bursts (seeded) + ambient embers
     rnd = random.Random(7)
-    BURSTS = [("b0", K(2) + .05, 960, 700, 34), ("b1", K(3), 960, 560, 26), ("b2", K(10), 960, 380, 20),
-              ("b3", K(13), 960, 900, 26), ("b4", K(18), 1500, 900, 24), ("b5", K(25), 780, 540, 24),
+    BURSTS = [("b0", K(2) + .05, 960, 700, 34), ("b1", K(3), 960, 560, 26), ("b2", K(6), 420, 300, 20),
+              ("b3", K(13), 960, 900, 26), ("b4", K(19), 1500, 900, 24), ("b5", K(25), 780, 540, 24),
               ("b6", K(29), 960, 980, 26), ("b7", K(32), 960, 640, 30)]
     sparks, spark_js = [], []
     for bid, t, x, y, n in BURSTS:
@@ -160,44 +146,45 @@ def build():
           </div>'''),
         scene("hook", '''
           <div class="center">
-            <div class="mega2 hot" id="h1">Nadie se sabe los códigos.</div>
-            <div class="line" id="h2">Sus clientes saben lo que quieren construir.</div>
-            <div class="line dim" id="h3">Un portón. Una puerta. <em class="redhot">Un balcón.</em></div>
+            <div class="mega2 hot" id="h1">Más de 750 piezas.</div>
+            <div class="line" id="h2">Cada una con su código.</div>
+            <div class="line dim" id="h3">Y ninguna forma rápida de <em class="redhot">pedirla</em>.</div>
           </div>'''),
-        scene("obras", f'''
-          <div class="ob-l">
-            <div class="kick">{words("Lo que Steel Works ya hace")}</div>
-            <div class="h2" id="oh">{words("Obras reales, hechas en su taller.")}</div>
-          </div>
-          <div class="obs">{obras}</div>'''),
         scene("audit", f'''
           <div class="aud-l">
-            <div class="kick">{words("Pero hoy, para cotizar")}</div>
-            <div class="h2" id="ah">{words("el cliente hace todo el trabajo.")}</div>
+            <div class="kick">{words("Diagnóstico")}</div>
+            <div class="h2" id="ah">{words("Visitamos steelworkshn.com como un cliente.")}</div>
+            <div class="counter"><b id="acount">0</b><span>problemas que le cuestan ventas</span></div>
           </div>
           <div class="plates">{plates}</div>'''),
+        scene("thesis", '''
+          <div class="center">
+            <div class="line big" id="t1">Tus clientes ya saben lo que quieren.</div>
+            <div class="line big hot" id="t2">Tienen el código.</div>
+            <div class="line dim" id="t3">Solo necesitan dónde escribirlo.</div>
+          </div>'''),
         scene("site", f'''
           <div class="kick sitek" id="sk">{words("La nueva steelworkshn.com")}</div>
           <div class="browser" id="br"><div class="bbar"><i></i><i></i><i></i><span>steelworkshn.com</span></div>
             <div class="bview">
-              <img id="sh0" src="assets/web-hero.png"><img id="sh1" src="assets/web-proyectos.png"><img id="sh2" src="assets/web-piezas.png"><img id="sh3" src="assets/web-obras.png">
+              <img id="sh0" src="assets/web-hero.png"><img id="sh1" src="assets/web-lineas.png"><img id="sh2" src="assets/web-fabricacion.png"><img id="sh3" src="assets/web-taller.png">
             </div></div>
           <div class="iph site-ph" id="sph"><div class="iph-scr"><img src="assets/movil-hero.png"></div><div class="island"></div></div>
           <div class="caps2">
-            <div class="cap2" id="sc0"><b>El hierro, hecho a su medida.</b><span>Sus obras al frente, con aire de galería.</span></div>
-            <div class="cap2" id="sc1"><b>¿Qué quiere construir?</b><span>Se entra por el proyecto, no por el código.</span></div>
-            <div class="cap2" id="sc2"><b>Las piezas, una por una</b><span>Fotos reales y precio. El código, pequeño.</span></div>
-            <div class="cap2" id="sc3"><b>Hecho por Steel Works</b><span>Las obras que ya fabricaron, bien presentadas.</span></div>
+            <div class="cap2" id="sc0"><b>Todo, en hierro.</b><span>Una portada que se siente como su taller.</span></div>
+            <div class="cap2" id="sc1"><b>Catálogo por familia y código</b><span>Precio con IVA y existencia de cada pieza.</span></div>
+            <div class="cap2" id="sc2"><b>Cotizador de portones</b><span>El cliente ve el boceto con sus medidas al instante.</span></div>
+            <div class="cap2" id="sc3"><b>Cuenta de taller</b><span>El herrero pega su lista y el pedido se arma solo.</span></div>
           </div>'''),
         scene("bot", f'''
           <div class="bot-l">
-            <div class="kick">{words("El asistente que cotiza")}</div>
-            <div class="h2" id="bh">{words("Lo dice a su manera. Recibe su cotización.")}</div>
+            <div class="kick">{words("Asistente de WhatsApp")}</div>
+            <div class="h2" id="bh">{words("Atiende 24/7, con el catálogo real.")}</div>
             <div class="steps">
-              <div class="stp" id="bs0"><i>1</i>Describe lo que quiere</div>
-              <div class="stp" id="bs1"><i>2</i>Elige viendo obras reales</div>
-              <div class="stp" id="bs2"><i>3</i>Las piezas se calculan solas</div>
-              <div class="stp" id="bs3"><i>4</i>El taller recibe la visita</div>
+              <div class="stp" id="bs0"><i>1</i>Recibe la lista de códigos</div>
+              <div class="stp" id="bs1"><i>2</i>Calcula el total con IVA</div>
+              <div class="stp" id="bs2"><i>3</i>Cierra el pedido con pago</div>
+              <div class="stp" id="bs3"><i>4</i>Pasa la cotización al taller</div>
             </div>
           </div>
           <div class="iph bot-ph" id="bph"><div class="iph-scr wa">
@@ -207,11 +194,11 @@ def build():
         scene("flow", f'''
           <div class="kick flowk">{words("Cómo funciona")}</div>
           <svg class="flines" viewBox="0 0 1920 1080">{flow_lines}</svg>
-          <div class="fn l" id="fc"><b>El cliente lo cuenta</b><span>«un portón como de 4 por 2», o una foto</span></div>
-          <div class="fn mid" id="fm"><div class="ring"></div><b>Asistente<br>con IA</b><span>entiende texto y fotos</span></div>
+          <div class="fn l" id="fc"><b>El cliente escribe</b><span>a cualquier hora, desde cualquier ciudad</span></div>
+          <div class="fn mid" id="fm"><div class="ring"></div><b>Asistente<br>Steel Works</b><span>conectado al catálogo</span></div>
           {flow_nodes}
           <div class="fn end" id="fe"><b>Sucursal<br>TGU · SPS</b><span>recibe todo ordenado</span></div>
-          <div class="flow-note" id="fnote">{words("Nunca inventa un precio: las piezas salen del catálogo y la fabricación la confirma el taller.")}</div>'''),
+          <div class="flow-note" id="fnote">{words("Ventas deja de copiar precios a mano y atiende lo que sí necesita una persona.")}</div>'''),
         scene("offer", f'''
           <div class="kick offk">{words("Lo que construimos para Steel Works")}</div>
           <div class="offers">{offer_html}</div>'''),
@@ -284,7 +271,6 @@ CSS = r'''
 @font-face{font-family:"JBM";src:url("assets/fonts/jbm-500.woff2") format("woff2");font-weight:500;}
 @font-face{font-family:"IT";src:url("assets/fonts/it-300.woff2") format("woff2");font-weight:300;}
 @font-face{font-family:"IT";src:url("assets/fonts/it-600.woff2") format("woff2");font-weight:600;}
-@font-face{font-family:"BM";src:url("assets/fonts/bm-400i.woff2") format("woff2");font-weight:400;font-style:italic;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 #root{position:relative;width:1920px;height:1080px;background:#070708;color:#EEEBE6;font-family:"AR",sans-serif;-webkit-font-smoothing:antialiased;}
@@ -323,19 +309,6 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 .pt{font:700 29px/1.1 "AR";}
 .snip{margin-top:12px;font:500 20px/1.4 "JBM";color:#FFC46B;background:rgba(0,0,0,.35);border-radius:6px;padding:10px 14px;white-space:pre-wrap;}
 .pc{margin-top:10px;font:400 21px/1.3 "AR";color:#9DA4AA;}
-/* obras (real photos) */
-.ob-l{position:absolute;left:120px;top:96px;width:1680px;}
-#obras .h2{font-size:88px;}
-.obs{position:absolute;left:120px;top:330px;display:flex;gap:24px;}
-.ob{width:408px;}
-.obi{height:540px;overflow:hidden;border-radius:4px;box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);}
-.obi img{width:100%;height:100%;object-fit:cover;}
-.ob figcaption{margin-top:20px;}
-.ob figcaption b{display:block;font:700 28px/1.15 "AR";}
-.ob figcaption span{display:block;margin-top:4px;font:italic 400 24px/1.2 "BM";color:#9DA4AA;}
-#audit .plates{grid-template-columns:1fr;top:180px;gap:24px;}
-#audit .plate{height:216px;}
-#audit .aud-l{top:260px;}
 /* site */
 .sitek{position:absolute;left:120px;top:76px;}
 .browser{position:absolute;left:120px;top:130px;width:1300px;height:854px;border-radius:16px;overflow:hidden;background:#141516;box-shadow:0 60px 120px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);}
@@ -378,25 +351,6 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 .bub .mono{font:500 19px/1.5 "JBM";}
 .opts{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
 .opts span{background:rgba(255,255,255,.06);border-radius:8px;padding:8px;text-align:center;color:#53BDEB;font-size:19px;}
-.cards{display:flex;gap:8px;margin-top:12px;}
-.cd{flex:1;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;}
-.cd img{display:block;width:100%;height:124px;object-fit:cover;}
-.cd.prod img{background:#fff;object-fit:contain;padding:8px;}
-.cd b{display:block;font:600 17px/1.2 "AR";padding:8px 9px 0;}
-.cd span{display:block;padding:2px 9px 9px;font:500 16px "AR";color:#FFC46B;}
-.cd:not(.prod) b{padding-bottom:9px;}
-.qt{background:#F6F6F4;color:#121314;border-radius:10px;padding:14px 16px 6px;margin-bottom:12px;}
-.qh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(0,0,0,.12);padding-bottom:10px;}
-.qh span{font:600 12px "AR";letter-spacing:.16em;text-transform:uppercase;color:#6E6F6C;}
-.qh b{font:italic 400 22px "BM";}
-.qp{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.12);}
-.qp img{width:52px;height:64px;object-fit:cover;}
-.qp b{display:block;font:600 18px/1.2 "AR";}
-.qp span{font:400 15px "AR";color:#6E6F6C;}
-.ql{display:flex;justify-content:space-between;gap:10px;padding:9px 0;font:400 16px "AR";}
-.ql b{font-weight:600;}
-.ql.f{border-top:1px solid rgba(0,0,0,.12);}
-.ql i{font:italic 400 17px "BM";}
 .pay{margin-top:10px;background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:17px;color:#8696A0;}
 .pay b{color:#53BDEB;font-size:19px;}
 /* flow */
@@ -419,12 +373,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 .offers{position:absolute;left:120px;top:200px;width:1680px;display:grid;grid-template-columns:1fr 1fr;gap:28px;}
 .of{position:relative;height:330px;border-radius:12px;padding:44px 48px 40px 150px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,rgba(0,0,0,0) 1px 4px),linear-gradient(180deg,#2B2E31,#1A1C1E);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 60px rgba(0,0,0,.45);}
 .of .stamp{left:46px;top:40px;font-size:80px;}
-.of b{display:block;font:800 58px/.95 "BSD";text-transform:uppercase;max-width:400px;}
-.of span{display:block;margin-top:18px;font:400 27px/1.35 "AR";color:#9DA4AA;max-width:400px;}
-.ofi{position:absolute;right:30px;top:30px;bottom:30px;width:210px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08);}
-.ofi img{width:100%;height:100%;object-fit:cover;}
-.ofi.prod{background:#fff;}
-.ofi.prod img{object-fit:contain;padding:18px;}
+.of b{display:block;font:800 66px/.95 "BSD";text-transform:uppercase;}
+.of span{display:block;margin-top:20px;font:400 30px/1.35 "AR";color:#9DA4AA;max-width:600px;}
 /* cta */
 .wa-pill{margin-top:60px;padding:30px 70px;border-radius:999px;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16);font:600 70px/1 "AR";letter-spacing:-.01em;}
 .wa-pill span{display:block;font:500 26px "AR";color:#30D158;margin-bottom:12px;}
@@ -511,57 +461,56 @@ rise("#h2", K(4), { d: 1.2 });
 rise("#h3", K(5) - .4, { d: 1.2 });
 tl.fromTo(".redhot", { textShadow: "0 0 0px rgba(255,110,30,0)" }, { textShadow: "0 0 34px rgba(255,110,30,.9)", duration: .5, yoyo: true, repeat: 3 }, K(5) + .8);
 
-// 3 · their real work: four photos, slow Ken Burns
-rise("#obras .kick .w", K(6), {});
-rise("#oh .w", K(6) + .2, { st: .07 });
-[0, 1, 2, 3].forEach(i => {
-  const t = K(6.5 + i * .5);
-  tl.fromTo("#ob" + i, { opacity: 0, y: 80, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.6, ease: SOFT }, t);
-  tl.fromTo("#ob" + i + " img", { scale: 1.16 }, { scale: 1.0, duration: K(10) - t, ease: "none" }, t);
-});
-tl.to(".obs", { x: -30, duration: 9, ease: "none" }, K(6.5));
-out("#cam-obras", K(10) - .5, .5);
-
-// 4 · how a quote works today: three plates stamped in
-rise("#audit .kick .w", K(10), {});
-rise("#ah .w", K(10) + .2, { st: .07 });
-[0, 1, 2].forEach(i => {
-  const t = K(10.75 + i * .5);
-  tl.fromTo("#pl" + i, { opacity: 0, scale: 1.1, y: -30, filter: "blur(10px) brightness(2.2)" }, { opacity: 1, scale: 1, y: 0, filter: "blur(0px) brightness(1)", duration: .55, ease: "power4.out" }, t);
+// 3 · audit: plates are stamped in, one every 3/4 bar
+rise("#audit .kick .w", K(6), {});
+rise("#ah .w", K(6) + .2, { st: .07 });
+rise(".counter", K(6) + .8, { d: 1 });
+const cnt = { v: 0 }, cEl = document.getElementById("acount");
+[0, 1, 2, 3, 4, 5].forEach(i => {
+  const t = K(6.75 + i * .7);
+  tl.fromTo("#pl" + i, { opacity: 0, scale: 1.12, y: -30, filter: "blur(10px) brightness(2.2)" }, { opacity: 1, scale: 1, y: 0, filter: "blur(0px) brightness(1)", duration: .55, ease: "power4.out" }, t);
   tl.fromTo("#pl" + i + " .stamp", { textShadow: "0 0 30px rgba(255,140,40,1)" }, { textShadow: "0 0 0px rgba(255,140,40,0)", duration: 1.6 }, t);
+  tl.to(cnt, { v: i + 1, duration: .3, onUpdate: () => { cEl.textContent = Math.round(cnt.v); } }, t);
   hit(t, .22);
 });
-out("#cam-audit", K(13) - .5, .5);
+tl.to("#audit .plates", { y: -20, duration: 4, ease: "sine.inOut" }, K(9.5));
+out("#cam-audit", K(11) - .5, .5);
+
+// 4 · thesis
+rise("#t1", K(11), { d: 1.3 });
+forge("#t2", K(11.5));
+rise("#t3", K(12.25), { d: 1.2 });
 
 // 5 · new site in a browser, scrolls through four views
 rise("#sk .w", K(13), {});
 tl.fromTo("#br", { opacity: 0, y: 140, rotationX: 14, scale: .94 }, { opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 1.8, ease: SOFT }, K(13));
 hit(K(13), .3);
-["#sh1", "#sh2", "#sh3"].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .9, ease: "power3.out" }, K(14.25 + i * 1.05)));
-tl.fromTo("#sh0", { y: 0 }, { y: -40, duration: 3.2, ease: "none" }, K(13));
+["#sh1", "#sh2", "#sh3"].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .9, ease: "power3.out" }, K(14.5 + i * 1.25)));
+tl.fromTo("#sh0", { y: 0 }, { y: -40, duration: 3.5, ease: "none" }, K(13));
 ["#sc0", "#sc1", "#sc2", "#sc3"].forEach((s, i) => {
-  rise(s, K(13.4 + i * 1.05) + (i ? .25 : 0), { d: .9, y: 24, blur: 8 });
-  if (i < 3) out(s, K(14.25 + i * 1.05) - .1, .4);
+  rise(s, K(13.4 + i * 1.25) + (i ? .3 : 0), { d: .9, y: 24, blur: 8 });
+  if (i < 3) out(s, K(14.5 + i * 1.25) - .1, .4);
 });
-tl.fromTo("#sph", { opacity: 0, x: 260, rotation: 6 }, { opacity: 1, x: 0, rotation: 0, duration: 1.6, ease: SOFT }, K(16.5));
-tl.to("#br", { x: -40, scale: .97, duration: 1.6, ease: "power2.inOut" }, K(16.5));
-out("#cam-site", K(18) - .5, .5);
+tl.fromTo("#sph", { opacity: 0, x: 260, rotation: 6 }, { opacity: 1, x: 0, rotation: 0, duration: 1.6, ease: SOFT }, K(17.2));
+tl.to("#br", { x: -40, scale: .97, duration: 1.6, ease: "power2.inOut" }, K(17.2));
+out("#cam-site", K(19) - .5, .5);
 
-// 6 · the assistant quotes a gate from plain words
-rise("#bot .kick .w", K(18), {});
-rise("#bh .w", K(18) + .2, { st: .07 });
-tl.fromTo("#bph", { opacity: 0, y: 200, rotationY: -18 }, { opacity: 1, y: 0, rotationY: -6, duration: 1.8, ease: SOFT }, K(18));
-tl.to("#bph", { rotationY: 4, duration: 14, ease: "sine.inOut" }, K(18) + 1.8);
-const CH = [18.6, 19.2, 20.25, 20.85, 21.9, 22.5, 23.6, 24.1];
+// 6 · WhatsApp assistant, one message per half bar
+rise("#bot .kick .w", K(19), {});
+rise("#bh .w", K(19) + .2, { st: .07 });
+tl.fromTo("#bph", { opacity: 0, y: 200, rotationY: -18 }, { opacity: 1, y: 0, rotationY: -6, duration: 1.8, ease: SOFT }, K(19));
+tl.to("#bph", { rotationY: 4, duration: 12, ease: "sine.inOut" }, K(19) + 1.8);
+const CH = [19.5, 20, 20.75, 21.5, 22.25, 23, 23.75, 24.25];
 CH.forEach((b, i) => tl.fromTo("#c" + i, { opacity: 0, y: 30, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .45, ease: "back.out(1.6)" }, K(b)));
 tl.set(".bub", { opacity: 0 }, 0);
+// scroll the chat up as it fills (measured once)
 const wsc = document.getElementById("wsc"), body = wsc.parentNode;
 const bubs = [...wsc.children];
 CH.forEach((b, i) => {
   const bottom = bubs[i].offsetTop + bubs[i].offsetHeight + 24, shift = Math.max(0, bottom - body.clientHeight);
-  if (shift > 0) tl.to(wsc, { y: -shift, duration: .6, ease: "power2.out" }, K(b) - .1);
+  if (shift > 0) tl.to(wsc, { y: -shift, duration: .5, ease: "power2.out" }, K(b) - .1);
 });
-[[18.6, 0], [20.25, 1], [20.85, 2], [24.1, 3]].forEach(([b, i]) => {
+[[20.75, 0], [21.5, 1], [23, 2], [24.25, 3]].forEach(([b, i]) => {
   tl.to("#bs" + i, { color: "#EEEBE6", duration: .4 }, K(b) + .2);
   tl.to("#bs" + i + " i", { borderColor: "#FF8A3D", color: "#FF8A3D", boxShadow: "0 0 24px rgba(255,110,30,.5)", duration: .4 }, K(b) + .2);
 });
