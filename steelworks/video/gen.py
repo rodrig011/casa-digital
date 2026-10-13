@@ -27,8 +27,8 @@ SCENES = [("intro", 0, 4), ("claim", 4, 7), ("hoy", 7, 13), ("mac", 13, 20), ("b
 TOTAL = T(38)
 
 # where each view of the site starts in the full-page capture (css px at 1440 wide), and its caption
-STOPS = [(0, "Su lema y sus trabajos, en la portada."), (971, "Lo que fabrican, con fotos reales."),
-         (1877, "El cliente pone su medida y ve el precio."), (2821, "Sus dos sucursales, con horario y WhatsApp.")]
+STOPS = [(0, "Su lema y sus trabajos, en la portada."), (1236, "Lo que fabrican, con fotos reales."),
+         (3790, "El cliente pone su medida y ve el precio."), (5971, "Sus dos sucursales, con teléfonos y cómo llegar.")]
 # their real shop listings (steelworkshn.com/tienda, 13 oct 2026) and what a visitor runs into
 SHOP = [("p-120-1016", "Adorno Barra 120-1016", "L62.71"), ("p-120-1048", "Adorno Barra 120-1048", "L84.42"),
         ("p-110-702", "Adorno Poste 110-702", "L64.94")]
@@ -36,26 +36,30 @@ SHOP = [("p-120-1016", "Adorno Barra 120-1016", "L62.71"), ("p-120-1048", "Adorn
 CHIPS = [("Portada", "Todo, en hierro.", "Su lema, con sus trabajos reales"),
          ("Galería", "Fotos reales del taller", "Puertas, cercos y protecciones"),
          ("Cotizador", "L 36,300 – 50,100", "Portón forjado · 3.6 × 2.4 m"),
-         ("Sucursales", "Tegucigalpa y San Pedro Sula", "Horario, teléfonos y cómo llegar")]
-HOY = ["Las piezas solo tienen código, sin nombre ni uso.",
+         ("Sucursales", "Tegucigalpa y San Pedro Sula", "Teléfonos y cómo llegar")]
+HOY = ["Las piezas se identifican por código.",
        "Para pedir un portón, solo hay un carrito de piezas.",
        "No se ve cómo queda puesta en un portón.",
        "Google la describe como «Just another WordPress site».",
        "El blog no se actualiza desde agosto de 2021.",
-       "Sin horario y el formulario de contacto no funciona."]
+       "No tiene horario de atención."]
 CHAT = [("out", "Hola, ¿cuánto me sale un portón de 4 por 2.5?"),
         ("in", 'Perfecto: portón, 4 × 2.5 m. ¿Qué estilo te gusta? Estos son trabajos nuestros:'
                '<div class="gal"><figure><img src="assets/obra-puerta-arco.jpg"><b>Moderno</b></figure>'
                '<figure><img src="assets/obra-cerco.jpg"><b>Forjado</b></figure>'
                '<figure><img src="assets/obra-puerta-cnc.jpg"><b>Calado CNC</b></figure></div>'),
         ("out", "Forjado clásico"),
-        ("in", "Precio estimado: <b>L 42,000 a L 58,000</b>. Incluye fabricación, pintura e instalación."),
+        ("in", "Precio estimado: <b>L 42,000 a L 58,000</b>. El precio final se lo confirmamos en la visita."),
         ("out", "Agendar visita para medir"),
         ("in", "Listo, Carlos. Visita para medir: jueves, de 8 a 10 a. m. Su ficha ya la tiene la sucursal.")]
-OFFER = [("Página nueva", "Con sus trabajos, su catálogo y precios claros."),
+OFFER = [("Página nueva", "Sus trabajos reales y un configurador con precio."),
          ("Asistente de WhatsApp", "Cotiza a cualquier hora: medida, estilo, precio y cita."),
-         ("Ficha a la sucursal", "Cada cliente llega con lo que pidió y su cita."),
-         ("Reporte semanal", "Cuántos cotizaron, cuántas visitas y cuántas ventas.")]
+         ("Panel del dueño", "Cada cotización le llega como alerta, con su cita en la agenda."),
+         ("Taller al día", "Cada trabajo por etapa, y el cliente recibe el aviso.")]
+# what the owner gets on his own phone while the assistant works
+ALERTS = [("Nueva cotización", "Carlos Mejía · Portón forjado, 4 × 2.5 m<br>Estimado: L 42,000 a L 58,000<br>Visita: jueves, 8 a. m."),
+          ("Pidió hablar con una persona", "Ana Rivera · 4 ventanas, San Pedro Sula<br>Llamar hoy"),
+          ("Taller", "Iglesia Bethel pasó a instalación.<br>El cliente ya recibió el aviso.")]
 
 
 def words(text, cls="w"):
@@ -101,6 +105,9 @@ def build():
     wa = (f'<div class="wa"><div class="wa-top"><div class="av"><img src="assets/simbolo.svg"></div><div><b>Steel Works</b><span>en línea</span></div></div>'
           f'<div class="wa-body"><div class="wa-scroll" id="wsc">{chat}</div></div></div>')
     shutil.copy(os.path.join(HERE, "..", "logo", "simbolo", "steelworks-logo-simbolo-naranja.svg"), os.path.join(A, "simbolo.svg"))
+    alerts = "".join(f'<div class="bub in al" id="al{i}"><b>{a}</b><br>{b}<time>9:4{2 + i}</time></div>' for i, (a, b) in enumerate(ALERTS))
+    owner = (f'<div class="wa"><div class="wa-top"><div class="av"><img src="assets/simbolo.svg"></div><div><b>Asistente Steel Works</b><span>avisos para el dueño</span></div></div>'
+             f'<div class="wa-body"><div class="wa-scroll">{alerts}</div></div></div>')
     offer = "".join(f'<div class="of" id="of{i}"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(OFFER))
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
 
@@ -109,7 +116,7 @@ def build():
           <div class="center">
             <div class="kick" id="ik">{words("Casa Digital presenta")}</div>
             <div class="h1" id="it">{words("Para Steel Works.")}</div>
-            <div class="sub" id="is">{words("Más de 40 años haciendo hierro.")}</div>
+            <div class="sub" id="is">{words("Más de 40 años de experiencia.")}</div>
           </div>''', "dark"),
         scene("claim", f'''
           <div class="center">
@@ -126,7 +133,7 @@ def build():
             <div class="ov" id="ov2"><div class="omenu"><img src="assets/logo-actual.jpg"><span>TIENDA</span><span>GALERÍA</span><span>NOSOTROS</span><span>BLOG</span><span>CONTACTO</span></div>
               <div class="gres"><span>steelworkshn.com</span><b>STEEL WORKS</b><p>Just another WordPress site</p></div>
               <div class="gres blog"><span>steelworkshn.com/blog</span><b>Blog</b><p>Última entrada: agosto de 2021</p></div>
-              <div class="gres form"><span>Contacto</span><b>Formulario de contacto</b><p class="err">El formulario no envía el mensaje.</p></div>
+              <div class="gres form"><span>steelworkshn.com/contacto</span><b>Contacto</b><p class="err">Direcciones y teléfonos, sin horario de atención.</p></div>
               <i class="pin" id="pn3" style="left:62px;top:184px">1</i><i class="pin" id="pn4" style="left:62px;top:334px">2</i><i class="pin" id="pn5" style="left:62px;top:483px">3</i></div></div>'''),
         scene("mac", f'''
           <div class="mtitle" id="mt">{words("Así puede verse.")}</div>
@@ -136,12 +143,13 @@ def build():
           <div class="bot-l">
             <div class="h2" id="bh">{words("Un asistente que cotiza por ustedes.")}</div>
             <div class="sub" id="bs">{words("Medida, estilo, precio y cita. A cualquier hora, por WhatsApp.")}</div>
+            <div class="bote" id="bn">Precios de ejemplo para esta propuesta.</div>
           </div>
           {phone("p1", wa)}'''),
         scene("both", f'''
-          <div class="btitle" id="bt">{words("En cualquier pantalla.")}</div>
-          {mac("m2", "sitio-web.jpg")}
-          {phone("p2", '<img class="page" id="p2-pg" src="assets/sitio-movil.jpg">')}'''),
+          <div class="btitle" id="bt">{words("Y usted lo ve todo.")}</div>
+          {mac("m2", "panel-web.jpg")}
+          {phone("p2", owner)}'''),
         scene("offer", f'''
           <div class="otitle" id="ot">{words("Lo que construimos para Steel Works.")}</div>
           <div class="offers">{offer}</div>'''),
@@ -281,6 +289,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#F5F5F7;}
 .wa-scroll{position:absolute;left:0;right:0;top:0;padding:18px 16px;display:flex;flex-direction:column;gap:12px;}
 .bub{max-width:86%;padding:12px 14px 8px;border-radius:16px;font:400 21px/1.35 "IT";color:#111B21;background:#fff;align-self:flex-start;opacity:0;box-shadow:0 1px 1px rgba(0,0,0,.08);}
 .bub.out{background:#D9FDD3;align-self:flex-end;}
+.bub.al b{font-weight:600;color:#C2561B;}
+.bote{margin-top:40px;font:400 24px "IT";color:#86868B;}
 .bub time{display:block;text-align:right;font-size:14px;color:#8696A0;margin-top:2px;}
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
 .gal figure{margin:0;}
@@ -371,6 +381,7 @@ out("#cam-mac", T(20) - .6);
 // 5 · the assistant in an iPhone
 rise("#bh .w", T(20), { st: .07 });
 rise("#bs .w", T(20.5), { st: .04 });
+rise("#bn", T(22), { y: 16, blur: 8, d: 1 });
 tl.fromTo("#p1", { opacity: 0, y: 160, rotationY: -16, transformPerspective: 2200 }, { opacity: 1, y: 0, rotationY: -4, duration: 2, ease: SOFT }, T(20) + .2);
 tl.to("#p1", { rotationY: 4, duration: 8, ease: "sine.inOut" }, T(21));
 const wsc = document.getElementById("wsc"), wbody = wsc.parentNode, bubs = [...wsc.children];
@@ -382,12 +393,12 @@ for (let i = 0; i < $NCHAT; i++) {
 }
 out("#cam-bot", T(25) - .6);
 
-// 6 · any screen: desktop and phone scroll together
+// 6 · the owner's side: the panel on the laptop, the alerts on his phone
 rise("#bt .w", T(25), { st: .08 });
 tl.fromTo("#m2", { opacity: 0, x: -120 }, { opacity: 1, x: 0, duration: 1.8, ease: SOFT }, T(25) + .2);
 tl.fromTo("#p2", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 1.8, ease: SOFT }, T(25) + .35);
-tl.to("#m2-pg", { y: -971 * PX, duration: 4, ease: "power2.inOut" }, T(26));
-tl.to("#p2-pg", { y: -1527, duration: 4, ease: "power2.inOut" }, T(26));
+tl.to("#m2-pg", { y: -200 * PX, duration: 4, ease: "power2.inOut" }, T(26));
+[0, 1, 2].forEach(i => tl.fromTo("#al" + i, { opacity: 0, y: 24, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: .6, ease: "back.out(1.4)" }, T(25.6) + i * 1.1));
 out("#cam-both", T(28) - .6);
 
 // 7 · what we build
