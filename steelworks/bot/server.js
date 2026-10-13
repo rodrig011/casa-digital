@@ -16,7 +16,7 @@ http.createServer((req, res) => {
     req.on("end", () => {
       const p = new URLSearchParams(body);
       const from = p.get("From") || "anon";
-      const text = Number(p.get("NumMedia") || 0) > 0 ? "📷 foto" : p.get("Body") || "";
+      const text = Number(p.get("NumMedia") || 0) > 0 ? "📷 Enviar una foto" : p.get("Body") || "";
       const r = handle(sessions.get(from), text);
       sessions.set(from, r.state);
       if (r.state.handoff) console.log(`[asesor ${r.state.handoff}] ${from} pidió hablar con una persona`);

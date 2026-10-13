@@ -1,0 +1,57 @@
+/* Steel Works · estilos del asistente (sitio/chat.js). Usa las variables de color y letra de la página. */
+.sc{display:flex;flex-direction:column;height:640px}
+.sc-log{flex:1;overflow-y:auto;padding:24px 22px 10px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
+.sc-m{flex-shrink:0;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s cubic-bezier(.2,.7,.2,1);max-width:86%;font-size:15.5px;line-height:1.5}
+.sc-m.on{opacity:1;transform:none}
+.sc-m.bot{align-self:flex-start;background:var(--paper);border:1px solid var(--line);padding:12px 16px;border-radius:2px 16px 16px 16px}
+.sc-m.me{align-self:flex-end;background:var(--ink);color:var(--paper);padding:11px 16px;border-radius:16px 2px 16px 16px;font-weight:400}
+.sc-m.pic{padding:5px;background:var(--ink)}
+.sc-m.pic img{width:200px;aspect-ratio:290/260;object-fit:cover;border-radius:12px 0 12px 12px}
+.sc-m.typing{display:flex;gap:5px;padding:16px 18px}
+.sc-m.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:tp 1s infinite}
+.sc-m.typing i:nth-child(2){animation-delay:.15s}.sc-m.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tp{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.sc-chips{display:flex;flex-wrap:wrap;gap:8px;max-width:100%;margin:2px 0 6px}
+.sc-chips button{border:1px solid var(--ink);border-radius:40px;padding:9px 16px;font-size:14px;font-weight:400;transition:background .25s,color .25s}
+.sc-chips button:hover{background:var(--ink);color:var(--paper)}
+.sc-cards{display:grid;grid-auto-flow:column;grid-auto-columns:168px;gap:10px;max-width:100%;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.sc-cards.one{grid-auto-columns:220px}
+.sc-card{display:block;text-align:left;background:var(--paper);border:1px solid var(--line);transition:border-color .3s,transform .4s}
+.sc-card:hover{border-color:var(--ink);transform:translateY(-2px)}
+.sc-card .ph{display:block;aspect-ratio:1;overflow:hidden;background:#fff}
+.sc-card img{width:100%;height:100%;object-fit:cover}
+.sc-card .t{display:block;padding:12px 12px 0;font:400 17px/1.15 var(--serif)}
+.sc-card .s{display:block;padding:4px 12px 0;font-size:12px;color:var(--mute);line-height:1.35}
+.sc-card .p{display:block;padding:8px 12px 12px;font-size:13.5px;font-weight:500}
+.sc-card .s:last-child{padding-bottom:12px}
+.sc-m.used{opacity:.4;pointer-events:none}
+.sc-quote{align-self:flex-start;width:min(360px,100%);max-width:100%;background:var(--paper);border:1px solid var(--ink);padding:18px 18px 8px}
+.q-h{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.q-h span{font:500 10.5px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.q-h b{font:italic 400 18px/1 var(--serif)}
+.q-p{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.q-p img{width:54px;height:66px;object-fit:cover}
+.q-p b{display:block;font:400 18px/1.2 var(--serif)}
+.q-p span{font-size:13px;color:var(--mute)}
+.q-l{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.q-l img{width:40px;height:40px;object-fit:contain;background:#fff;mix-blend-mode:multiply}
+.q-l small{display:block;color:var(--mute);font-size:11.5px}
+.q-l b,.q-t b{font-weight:500;white-space:nowrap}
+.q-t{display:flex;justify-content:space-between;gap:16px;padding:11px 0;font-size:14px}
+.q-t.f{border-top:1px solid var(--line)}
+.q-t.f b{white-space:normal;max-width:62%;font-weight:400;font-style:italic;font-family:var(--serif);text-align:right;font-size:14.5px}
+.sc-pay{align-self:flex-start;display:grid;grid-template-columns:1fr auto;gap:4px 20px;align-items:center;background:var(--ink);color:var(--paper);padding:16px 18px;width:min(320px,100%)}
+.sc-pay span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.sc-pay b{grid-row:2;font:400 26px/1 var(--serif)}
+.sc-pay i{grid-row:1/3;grid-column:2;font-style:normal;border:1px solid rgba(246,246,244,.6);padding:10px 14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.sc-in{display:flex;border-top:1px solid var(--line);background:var(--paper)}
+.sc-in input{flex:1;border:0;background:none;padding:20px 22px;font:300 16px var(--sans);color:var(--ink);outline:none}
+.sc-in input::placeholder{color:#9A9B98}
+.sc-in button{width:64px;display:grid;place-items:center;border-left:1px solid var(--line)}
+.sc-in button:hover{background:var(--ink);color:var(--paper)}
+
+@media (max-width:620px){
+  .sc{height:600px}
+  .sc-log{padding:18px 14px 8px}
+  .sc-cards{grid-auto-columns:148px}
+}
