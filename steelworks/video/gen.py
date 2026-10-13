@@ -38,7 +38,7 @@ SHOP = [("p-120-1016", "Adorno Barra 120-1016", "L62.71"), ("p-120-1048", "Adorn
         ("p-110-702", "Adorno Poste 110-702", "L64.94")]
 # a glass card per view of the site, floating over the MacBook's edge (label, value, detail)
 CHIPS = [("Portada", "Todo, en hierro.", "Su lema, con sus trabajos reales"),
-         ("Catálogo", "Precio y existencia", "El pedido se envía por WhatsApp"),
+         ("Catálogo", "Precio y existencia", "Pago directo con tarjeta"),
          ("Cotizador", "L 36,300 – 50,100", "Portón forjado · 3.6 × 2.4 m"),
          ("Sucursales", "Tegucigalpa y San Pedro Sula", "Teléfonos y cómo llegar")]
 HOY = ["Las piezas se identifican por código.",
