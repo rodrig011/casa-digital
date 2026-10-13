@@ -28,10 +28,10 @@ TOTAL = K(37)
 FINDINGS = [
     ("Enlaces que no llevan a nada", "FQA  →  #\nEnvíos  →  #", "«Preguntas» y «Envíos» del menú no abren nada."),
     ("Teléfonos que no marcan", "tel:TGU:(504)3265-8800", "Desde el celular, tocar el número da error."),
-    ("Código suelto en pantalla", ".path{fill:none;stroke:#333…}", "Estilos del tema aparecen como texto."),
+    ("Texto técnico en pantalla", ".path{fill:none;stroke:#333…}", "Estilos del tema aparecen como texto."),
     ("Un error a la vista", "error: Content is protected !!", "El aviso del plugin se ve en la página."),
     ("Google no sabe qué venden", "Just another WordPress site", "Es la descripción que leen los buscadores."),
-    ("Sin WhatsApp, sin horario", "WhatsApp: —   Formulario: #", "El botón de «Enviar un mensaje» no abre nada."),
+    ("Para cotizar, hay que llamar", "Contacto  →  sin respuesta", "Sin precios de referencia ni horario."),
 ]
 
 
@@ -59,6 +59,8 @@ def build():
         shutil.copy(os.path.join(fs, src), os.path.join(A, "fonts", dst + ".woff2"))
     for f in os.listdir(os.path.join(HERE, "capturas")):
         shutil.copy(os.path.join(HERE, "capturas", f), os.path.join(A, f))
+    for f in ("obra-puerta-arco", "obra-cerco", "obra-puerta-cnc"):  # real Steel Works work shown in the chat
+        shutil.copy(os.path.join(HERE, "..", "fotos", f + ".jpg"), os.path.join(A, f + ".jpg"))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
                "media": {"autoProxy": True}}, open(os.path.join(OUT, "hyperframes.json"), "w"), indent=2)
@@ -85,28 +87,30 @@ def build():
         <pre class="snip">{s}</pre><div class="pc">{c}</div></div>''' for i, (t, s, c) in enumerate(FINDINGS))
 
     chat = "".join([
-        bubble("c0", "out", "Hola, buenas"),
-        bubble("c1", "in", "¡Hola! 👋 Soy el asistente de <b>Steel Works</b>. ¿En qué te ayudo?"
-               '<div class="opts"><span>Buscar una pieza</span><span>Cotizar fabricación</span><span>Pedido rápido de taller</span></div>'),
-        bubble("c2", "out", '<span class="mono">120-1048 x 20<br>130-1024 x 50</span>'),
-        bubble("c3", "in", 'Listo, armé tu pedido:<br><span class="mono">20 × 120-1048 · L 1,629.40<br>50 × 130-1024 · L 571.00</span><br><b>Total: L 2,200.40</b> con IVA'),
-        bubble("c4", "out", "Retiro en Tegucigalpa"),
-        bubble("c5", "in", '🧾 <b>Pedido SW-1049</b> listo para retirar.<div class="pay"><span>Pago con tarjeta</span><b>Pagar L 2,200.40</b></div>'),
-        bubble("c6", "out", "Y quiero cotizar un portón forjado de 3.6 x 2.4"),
-        bubble("c7", "in", '📐 <b>Solicitud COT-2248</b><br>Portón · 8.64 m² · forjado clásico<br>Ya la tiene el taller. Un asesor te escribe con el precio.'),
+        bubble("c0", "out", "Buenas, ¿cuánto me sale un portón de 4 por 2.5?"),
+        bubble("c1", "in", "Con gusto. ¿Qué estilo te gusta? Estos son trabajos nuestros:"
+               '<div class="gal"><figure><img src="assets/obra-puerta-arco.jpg"><b>Moderno</b></figure>'
+               '<figure><img src="assets/obra-cerco.jpg"><b>Forjado</b></figure>'
+               '<figure><img src="assets/obra-puerta-cnc.jpg"><b>Calado CNC</b></figure></div>'),
+        bubble("c2", "out", "El forjado, con lanzas"),
+        bubble("c3", "in", '¿En qué ciudad sería la instalación?<div class="opts"><span>Tegucigalpa</span><span>San Pedro Sula</span></div>'),
+        bubble("c4", "out", "Tegucigalpa"),
+        bubble("c5", "in", '📐 <b>Tu cotización inicial</b><br>Portón 4 × 2.5 m · forjado clásico<br>Precio estimado: <b class="hotnum">L 42,000 a L 58,000</b><br>El precio final lo confirma el taller al medir, sin costo.'),
+        bubble("c6", "out", "Agendar visita para medir, el jueves en la mañana"),
+        bubble("c7", "in", '✅ <b>Listo, Carlos.</b><br>Visita para medir: jueves 15, 8 a 10 a. m.<br>Tu ficha ya la tiene la sucursal de Tegucigalpa.'),
     ])
 
-    flow_right = [("Pieza por código", "Precio y existencia al instante"), ("Pedido y pago", "Total con IVA y enlace de pago"),
-                  ("Fabricación", "Ficha con medidas y foto al taller"), ("Caso especial", "Pasa a un asesor con todo el contexto")]
+    flow_right = [("Qué necesita", "Portón, puerta, protección o baranda"), ("Medidas y estilo", "Con fotos de trabajos reales"),
+                  ("Precio estimado", "Con las tarifas de Steel Works"), ("Visita o llamada", "El día y la hora que escoja")]
     flow_nodes = "".join(f'<div class="fn r" id="fr{i}" style="top:{150 + i * 170}px"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(flow_right))
     flow_lines = "".join(f'<path class="fl" id="fl{i}" d="M 905 540 C 1040 540, 1040 {195 + i * 170}, 1160 {195 + i * 170}"/>' for i in range(4))
     flow_lines += '<path class="fl" id="fl4" d="M 560 540 L 655 540"/>' + "".join(
         f'<path class="fl" id="fo{i}" d="M 1520 {195 + i * 170} C 1600 {195 + i * 170}, 1600 540, 1660 540"/>' for i in range(4))
 
-    offer = [("Sitio nuevo con catálogo vivo", "Buscador por código, precio, existencia y pedido en línea."),
-             ("Asistente de WhatsApp", "Responde 24/7, arma pedidos, cotiza fabricación y pasa a un asesor."),
-             ("Cuenta de taller", "Pedido rápido por lista, precio por volumen y repetir compras."),
-             ("Pagos y avisos", "Pago con tarjeta y aviso automático cuando vuelve una pieza agotada.")]
+    offer = [("Asistente de WhatsApp", "Cotiza 24/7: medidas, estilo con fotos, precio estimado y cita."),
+             ("Sitio nuevo", "Cotizador con precio estimado y catálogo con fotos reales."),
+             ("Cuenta de taller", "El herrero pide con una foto, con precio por volumen."),
+             ("Reporte semanal", "Cuántos cotizaron, cuántas visitas y cuántas ventas.")]
     offer_html = "".join(f'<div class="of" id="of{i}"><div class="stamp">{i + 1:02d}</div><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(offer))
 
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
@@ -146,9 +150,9 @@ def build():
           </div>'''),
         scene("hook", '''
           <div class="center">
-            <div class="mega2 hot" id="h1">Más de 750 piezas.</div>
-            <div class="line" id="h2">Cada una con su código.</div>
-            <div class="line dim" id="h3">Y ninguna forma rápida de <em class="redhot">pedirla</em>.</div>
+            <div class="mega2 hot" id="h1">«¿Cuánto me sale un portón?»</div>
+            <div class="line" id="h2">Esa pregunta llega a cualquier hora.</div>
+            <div class="line dim" id="h3">Cada una es un cliente que <em class="redhot">ya quiere comprar</em>.</div>
           </div>'''),
         scene("audit", f'''
           <div class="aud-l">
@@ -159,9 +163,9 @@ def build():
           <div class="plates">{plates}</div>'''),
         scene("thesis", '''
           <div class="center">
-            <div class="line big" id="t1">Tus clientes ya saben lo que quieren.</div>
-            <div class="line big hot" id="t2">Tienen el código.</div>
-            <div class="line dim" id="t3">Solo necesitan dónde escribirlo.</div>
+            <div class="line big" id="t1">Que nadie se quede esperando.</div>
+            <div class="line big hot" id="t2">Medidas, estilo, precio y cita.</div>
+            <div class="line dim" id="t3">En la misma conversación.</div>
           </div>'''),
         scene("site", f'''
           <div class="kick sitek" id="sk">{words("La nueva steelworkshn.com")}</div>
@@ -172,19 +176,19 @@ def build():
           <div class="iph site-ph" id="sph"><div class="iph-scr"><img src="assets/movil-hero.png"></div><div class="island"></div></div>
           <div class="caps2">
             <div class="cap2" id="sc0"><b>Todo, en hierro.</b><span>Una portada que se siente como su taller.</span></div>
-            <div class="cap2" id="sc1"><b>Catálogo por familia y código</b><span>Precio con IVA y existencia de cada pieza.</span></div>
-            <div class="cap2" id="sc2"><b>Cotizador de portones</b><span>El cliente ve el boceto con sus medidas al instante.</span></div>
-            <div class="cap2" id="sc3"><b>Cuenta de taller</b><span>El herrero pega su lista y el pedido se arma solo.</span></div>
+            <div class="cap2" id="sc1"><b>Lo que trabajan, con sus fotos</b><span>Desde la pieza suelta hasta el portón instalado.</span></div>
+            <div class="cap2" id="sc2"><b>Pon las medidas, mira el precio</b><span>Boceto y precio estimado al instante.</span></div>
+            <div class="cap2" id="sc3"><b>Cuenta de taller</b><span>El herrero pide con una foto de la pieza.</span></div>
           </div>'''),
         scene("bot", f'''
           <div class="bot-l">
             <div class="kick">{words("Asistente de WhatsApp")}</div>
-            <div class="h2" id="bh">{words("Atiende 24/7, con el catálogo real.")}</div>
+            <div class="h2" id="bh">{words("Cotiza a cualquier hora, con sus fotos.")}</div>
             <div class="steps">
-              <div class="stp" id="bs0"><i>1</i>Recibe la lista de códigos</div>
-              <div class="stp" id="bs1"><i>2</i>Calcula el total con IVA</div>
-              <div class="stp" id="bs2"><i>3</i>Cierra el pedido con pago</div>
-              <div class="stp" id="bs3"><i>4</i>Pasa la cotización al taller</div>
+              <div class="stp" id="bs0"><i>1</i>Entiende lo que pide el cliente</div>
+              <div class="stp" id="bs1"><i>2</i>Muestra estilos con fotos reales</div>
+              <div class="stp" id="bs2"><i>3</i>Da un precio estimado</div>
+              <div class="stp" id="bs3"><i>4</i>Agenda la visita para medir</div>
             </div>
           </div>
           <div class="iph bot-ph" id="bph"><div class="iph-scr wa">
@@ -195,10 +199,10 @@ def build():
           <div class="kick flowk">{words("Cómo funciona")}</div>
           <svg class="flines" viewBox="0 0 1920 1080">{flow_lines}</svg>
           <div class="fn l" id="fc"><b>El cliente escribe</b><span>a cualquier hora, desde cualquier ciudad</span></div>
-          <div class="fn mid" id="fm"><div class="ring"></div><b>Asistente<br>Steel Works</b><span>conectado al catálogo</span></div>
+          <div class="fn mid" id="fm"><div class="ring"></div><b>Asistente<br>Steel Works</b><span>con sus fotos y tarifas</span></div>
           {flow_nodes}
-          <div class="fn end" id="fe"><b>Sucursal<br>TGU · SPS</b><span>recibe todo ordenado</span></div>
-          <div class="flow-note" id="fnote">{words("Ventas deja de copiar precios a mano y atiende lo que sí necesita una persona.")}</div>'''),
+          <div class="fn end" id="fe"><b>Sucursal<br>TGU · SPS</b><span>recibe la ficha y la cita</span></div>
+          <div class="flow-note" id="fnote">{words("Ningún cliente que pregunta se queda sin respuesta, y ventas recibe la cita ya agendada.")}</div>'''),
         scene("offer", f'''
           <div class="kick offk">{words("Lo que construimos para Steel Works")}</div>
           <div class="offers">{offer_html}</div>'''),
@@ -353,6 +357,11 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#070708;}
 .opts span{background:rgba(255,255,255,.06);border-radius:8px;padding:8px;text-align:center;color:#53BDEB;font-size:19px;}
 .pay{margin-top:10px;background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:17px;color:#8696A0;}
 .pay b{color:#53BDEB;font-size:19px;}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.gal figure{margin:0;}
+.gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;display:block;}
+.gal b{display:block;font:600 16px "AR";margin-top:4px;}
+.hotnum{color:#FFB25B;}
 /* flow */
 .flowk{position:absolute;left:120px;top:90px;}
 .flines{position:absolute;inset:0;width:1920px;height:1080px;}
@@ -510,7 +519,7 @@ CH.forEach((b, i) => {
   const bottom = bubs[i].offsetTop + bubs[i].offsetHeight + 24, shift = Math.max(0, bottom - body.clientHeight);
   if (shift > 0) tl.to(wsc, { y: -shift, duration: .5, ease: "power2.out" }, K(b) - .1);
 });
-[[20.75, 0], [21.5, 1], [23, 2], [24.25, 3]].forEach(([b, i]) => {
+[[19.5, 0], [20, 1], [23, 2], [24.25, 3]].forEach(([b, i]) => {
   tl.to("#bs" + i, { color: "#EEEBE6", duration: .4 }, K(b) + .2);
   tl.to("#bs" + i + " i", { borderColor: "#FF8A3D", color: "#FF8A3D", boxShadow: "0 0 24px rgba(255,110,30,.5)", duration: .4 }, K(b) + .2);
 });
