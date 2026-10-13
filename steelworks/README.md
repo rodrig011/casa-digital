@@ -4,12 +4,7 @@ Demo de propuesta para Steel Works Honduras (steelworkshn.com): sitio nuevo, asi
 
 La idea: que ningún cliente que entra a cotizar se quede sin respuesta. El asistente pregunta qué necesita, pide medidas, deja escoger el estilo con fotos de trabajos reales, da un precio estimado y agenda la visita para medir o una llamada. La ficha le llega a la sucursal. Nadie tiene que saberse un código.
 
-- `sitio/`: la nueva página. Abre `sitio/index.html` directo. Hecha con los skills de diseño del repo (taste-skill, dirección «la frase es el diseño», semilla 1199577745):
-  - Portada: su propio lema, «Todo, en hierro.», con fotos de sus trabajos pasando entre las dos palabras al bajar.
-  - Cómo se cotiza: un verbo por pantalla (Mide, Elige, Cotiza, Agenda, Forja), cada uno con lo que dice el asistente.
-  - Tabla de precios en vivo: el cliente pone ancho y alto y ve el rango en los tres estilos; un toque abre el asistente con esa medida.
-  - Piezas sueltas por su nombre, cada una con su foto recortada. Sin códigos.
-  - `hierro.js` ya no lo usa el sitio; lo sigue usando la propuesta.
+- `sitio/`: la nueva página, sobre la base v1 (estilo forja). Abre `sitio/index.html` directo. La portada lleva fotos reales de sus trabajos a su tamaño original (para que se vean nítidas), con animaciones de entrada y respuesta al tocar. `hierro.js` dibuja el boceto del cotizador. La versión v3 («la frase es el diseño») se descartó porque con fotos de 400 a 600 px se veía vacía y borrosa; está en el historial de git.
 - `bot/engine.js`: motor de conversación del asistente. Las tarifas por m² (o por metro de baranda) en `TARIFAS` son de ejemplo; Steel Works pone las suyas. El mismo archivo corre en el navegador (demo del sitio y de la propuesta) y en Node.
 - `bot/server.js`: webhook de WhatsApp para Twilio, sin dependencias. `node server.js` y apuntar el sender a `POST /whatsapp`. `node test.js` recorre los flujos.
 - `propuesta/index.html`: página de propuesta (diagnóstico, capturas, bot para probar, plan). `imgs.json` guarda las capturas en base64.
