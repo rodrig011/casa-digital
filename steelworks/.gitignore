@@ -1,0 +1,6 @@
+video/deps
+video/build/
+node_modules/
+video/work-*/
+video/.*hf-transaction*/
+__pycache__/

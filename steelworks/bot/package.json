@@ -1,0 +1,8 @@
+{
+  "name": "steelworks-whatsapp-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Asistente de WhatsApp para Steel Works Honduras (demo de Casa Digital by Clientia Tech)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "test": "node test.js" }
+}
