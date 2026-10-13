@@ -278,7 +278,13 @@ section{padding-block:clamp(88px,11vw,152px);}
 .cart .tot b{font:800 30px var(--display);}
 .cart footer p{margin:0;font-size:12px;color:var(--tx3);}
 .cart .btn[aria-disabled="true"]{opacity:.45;pointer-events:none;}
+.pay{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pm{height:40px;border-radius:10px;border:1px solid var(--line2);background:none;font-size:13px;font-weight:500;color:var(--tx2);transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .15s ease;}
+.pm[aria-pressed="true"]{border-color:var(--ember);color:var(--tx);background:rgba(232,115,44,.1);}
+.pm:active{transform:scale(.97);}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);z-index:95;transform:translate(-50%,16px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:14px;padding:12px 12px 12px 18px;border-radius:14px;background:#F4F2EE;color:#151515;font-size:14px;font-weight:500;box-shadow:0 18px 50px rgba(0,0,0,.4);transition:transform .4s var(--ease-out),opacity .3s ease;}
+.toast.top{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 20px);transform:translate(-50%,-16px);}
+.nw{white-space:nowrap;}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
 .toast button{border:0;border-radius:999px;background:#151515;color:#F4F2EE;height:32px;padding:0 14px;font-weight:600;font-size:13px;}
 @media (max-width:1080px){.lines,.grid{grid-template-columns:repeat(2,1fr);}}
@@ -549,7 +555,9 @@ body.in-cfg .fab{opacity:0;pointer-events:none;}
   <header><b>Su pedido</b><button type="button" class="x" id="cartx" aria-label="Cerrar">×</button></header>
   <div class="lns" id="lns"></div>
   <footer><div class="tot"><span>Total estimado</span><b class="num" id="ctot">L 0.00</b></div>
-  <a class="btn primary" id="csend" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#i-wa"/></svg>Enviar pedido por WhatsApp</a>
+  <div class="pay" role="group" aria-label="Forma de pago"><button type="button" class="pm" data-pay="tarjeta" aria-pressed="true">Tarjeta</button><button type="button" class="pm" data-pay="transferencia" aria-pressed="false">Transferencia</button><button type="button" class="pm" data-pay="sucursal" aria-pressed="false">En sucursal</button></div>
+  <button class="btn primary" id="cpay" type="button">Pagar ahora</button>
+  <a class="btn ghost" id="csend" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#i-wa"/></svg>Enviar pedido por WhatsApp</a>
   <p>Le confirmamos existencia y si lo retira en sucursal o se lo enviamos.</p></footer>
 </aside>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1109,16 +1117,16 @@ body.in-cfg .fab{opacity:0;pointer-events:none;}
   $("#lines").innerHTML = LINES.map(([t, d, c, k, cls, f], i) => `<a class="line rvi" href="${f ? "#piezas" : "#disena"}" data-line="${i}"><div class="ph ${cls}"><img src="${foto(k)}" alt="${t}" loading="lazy"></div><div class="bd"><h3>${t}</h3><p>${d}</p><span class="cnt">${c}</span></div></a>`).join("");
   $("#lines").addEventListener("click", e => { const a = e.target.closest(".line"); if (a && LINES[a.dataset.line][5]) setCat(LINES[a.dataset.line][5]); });
 
-  // catalog: their real photos and prices (steelworkshn.com, 13 Oct 2026), named by what each piece is, never by code
+  // catalog: their real photos, names and prices as listed on steelworkshn.com (13 Oct 2026)
   const PIEZAS = [
-    ["p-110-702", "Adorno de poste en punta", "Adornos de poste", 64.94],
-    ["p-110-705", "Adorno de poste estriado", "Adornos de poste", 74.83],
-    ["p-110-721", "Adorno de poste de esfera", "Adornos de poste", 81.52],
-    ["p-120-1016", "Adorno de barra labrado", "Adornos de barra", 62.71],
-    ["p-120-1048", "Adorno de barra de anillos", "Adornos de barra", 84.42],
-    ["p-222-1650", "Llamador de acero inoxidable, plateado", "Llamadores", 748.59],
-    ["p-222-2650", "Llamador de acero inoxidable, negro doble", "Llamadores", 765.74],
-    ["p-222-2950", "Llamador de acero inoxidable, negro largo", "Llamadores", 877.74],
+    ["p-110-702", "Adorno Poste 110-702", "Adornos de poste", 64.94],
+    ["p-110-705", "Adorno Poste 110-705", "Adornos de poste", 74.83],
+    ["p-110-721", "Adorno Poste 110-721", "Adornos de poste", 81.52],
+    ["p-120-1016", "Adorno Barra 120-1016", "Adornos de barra", 62.71],
+    ["p-120-1048", "Adorno Barra 120-1048", "Adornos de barra", 84.42],
+    ["p-222-1650", "Llamador INOX 222-1650", "Llamadores", 748.59],
+    ["p-222-2650", "Llamador INOX 222-2650", "Llamadores", 765.74],
+    ["p-222-2950", "Llamador INOX 222-2950", "Llamadores", 877.74],
   ];
   const LP = n => "L " + n.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const CATS = ["Todo", "Adornos de poste", "Adornos de barra", "Llamadores"];
@@ -1129,7 +1137,7 @@ body.in-cfg .fab{opacity:0;pointer-events:none;}
   $("#chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) setCat(b.textContent); });
   function drawGrid(anim) {
     $("#grid").innerHTML = PIEZAS.filter(p => cat === "Todo" || p[2] === cat).map(([k, n, c, pr], i) => `<article class="prod${anim && MOTION ? " in" : ""}" style="animation-delay:${i * 40}ms"><div class="ph"><img src="${foto(k)}" alt="${n}" loading="lazy"></div><div class="bd">
-      <h4>${n}</h4><span class="cat">${c}</span>
+      <h4>${n.replace(/ (\S+)$/, ' <span class="nw">$1</span>')}</h4><span class="cat">${c}</span>
       <div class="row"><span class="price num">${LP(pr)}</span><span class="ok">Disponible</span></div>
       <div class="add"><div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="Menos">−</button><span id="q-${k}">${qty[k] || 1}</span><button type="button" data-q="${k}" data-d="1" aria-label="Más">+</button></div><button class="addb" type="button" data-add="${k}">Agregar</button></div></div></article>`).join("");
   }
@@ -1147,18 +1155,24 @@ body.in-cfg .fab{opacity:0;pointer-events:none;}
     const list = [...cart].map(([k, q]) => `• ${q} × ${PIEZAS.find(p => p[0] === k)[1]}`).join("\n");
     $("#csend").href = waLink(`Hola Steel Works, quiero hacer este pedido:\n${list}\nTotal estimado: ${LP(t)}\n¿Me confirman existencia y si lo retiro o me lo envían?`);
     $("#csend").setAttribute("aria-disabled", String(!cart.size));
+    $("#cpay").setAttribute("aria-disabled", String(!cart.size));
+    $("#cpay").textContent = cart.size ? `Pagar ${LP(t)}` : "Pagar ahora";
   }
   renderCart();
   $("#lns").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (b) { cart.delete(b.dataset.rm); renderCart(); } });
   const openCart = v => { $("#cart").classList.toggle("open", v); $("#cart").setAttribute("aria-hidden", String(!v)); const sc = $("#scrim"); if (v) { sc.hidden = false; requestAnimationFrame(() => sc.classList.add("on")); } else { sc.classList.remove("on"); setTimeout(() => sc.hidden = true, 300); } };
   $("#cartbtn").onclick = () => openCart(true);
+  // payment: the buttons are ready; the bank's payment gateway gets connected here later
+  let pay = "tarjeta";
+  $(".pay").addEventListener("click", e => { const b = e.target.closest("[data-pay]"); if (!b) return; pay = b.dataset.pay; $$(".pm").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  $("#cpay").onclick = () => { if (!cart.size) return; window.dispatchEvent(new CustomEvent("steelworks:pagar", { detail: { metodo: pay, pedido: [...cart] } })); toast(pay === "tarjeta" ? "Aquí se abrirá el pago con tarjeta" : pay === "transferencia" ? "Aquí se mostrarán los datos para la transferencia" : "Su pedido quedará apartado para pagar en sucursal", false); };
   $("#cartx").onclick = $("#scrim").onclick = () => openCart(false);
   addEventListener("keydown", e => { if (e.key === "Escape") openCart(false); });
   let tt;
-  function toast(msg) {
-    const el = $("#toast"); el.innerHTML = `<span>${msg}</span><button type="button">Ver pedido</button>`;
-    el.querySelector("button").onclick = () => { el.classList.remove("on"); openCart(true); };
-    el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 2600);
+  function toast(msg, act = true) {
+    const el = $("#toast"); el.innerHTML = `<span>${msg}</span>${act ? `<button type="button">Ver pedido</button>` : ""}`;
+    if (act) el.querySelector("button").onclick = () => { el.classList.remove("on"); openCart(true); };
+    el.classList.toggle("top", $("#cart").classList.contains("open")); el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 2600);
   }
 
   // configurator ------------------------------------------------------------
