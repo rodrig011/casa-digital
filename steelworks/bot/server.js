@@ -7,6 +7,7 @@
 //
 // Cada ficha terminada se guarda en leads.json y se avisa por WhatsApp al dueño y a la sucursal.
 // Si el cliente pide hablar con una persona, también se avisa. Configuración: .env (ver .env.example).
+// Con ANTHROPIC_API_KEY, WhatsApp contesta en modo IA (ia.js, Claude); si la API falla contesta el menú de engine.js.
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
@@ -15,6 +16,7 @@ const { handle, toText } = require("./engine");
 const { createStore } = require("./store");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const voz = require("./voz");
+const { createIA, MODELO } = require("./ia");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 
@@ -39,6 +41,9 @@ function loadConfig(env = process.env) {
     voiceLang: env.VOICE_LANG || "es-MX",
     voiceTts: env.VOICE_TTS || "Polly.Mia",
     speechModel: env.VOICE_SPEECH_MODEL || "",
+    // modo IA (Claude): solo si hay clave y BOT_IA no es "off"
+    anthropicKey: /^off$/i.test(String(env.BOT_IA || "").trim()) ? "" : env.ANTHROPIC_API_KEY || "",
+    anthropicModel: env.ANTHROPIC_MODEL || MODELO,
   };
 }
 
@@ -48,6 +53,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const client = "client" in deps ? deps.client : cfg.sid && cfg.token ? twilio(cfg.sid, cfg.token) : null;
   const avisos = createNotifier({ client, from: cfg.from, contentSid: cfg.contentSid, sandbox: cfg.sandbox, owner: cfg.owner, branches: cfg.branches, log });
   const now = deps.now || (() => new Date());
+  const ia = "ia" in deps ? deps.ia : cfg.anthropicKey ? createIA({ apiKey: cfg.anthropicKey, model: cfg.anthropicModel }) : null;
   const pending = new Set();                      // alerts in flight (tests wait on them)
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
 
@@ -87,6 +93,29 @@ function createApp(cfg = loadConfig(), deps = {}) {
     return { r, lead, sess };
   }
 
+  // WhatsApp in AI mode: Claude answers; on any API error or timeout this message goes to the rule engine
+  async function conversarIA(key, tel, text) {
+    const sess = store.getSession(key) || { state: null, convo: [] };
+    const numero = () => "COT-" + (store.seq = store.seq + 1);
+    const persona = (p, convo) => guardar({ n: "AS-" + (store.seq = store.seq + 1), nombre: null, resumen: "Pidió hablar con una persona" + (p.motivo ? ": " + p.motivo : ""), rango: null, cita: "Pidió hablar con una persona", sucursal: p.sucursal, persona: true }, tel, "whatsapp", convo);
+    let r;
+    try {
+      r = await ia.turn(sess.ia || [], text, now(), { numero });
+    } catch (e) {
+      log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
+      const convo = sess.convo.concat([[text, 1]]).slice(-16);
+      if (e.lead) guardar({ ...e.lead, persona: false }, tel, "whatsapp", convo);
+      if (e.persona) persona(e.persona, convo);
+      return null;
+    }
+    sess.ia = r.history;
+    sess.convo = sess.convo.concat([[text, 1], [r.reply, 0]]).slice(-16);
+    if (r.lead) guardar({ ...r.lead, n: r.lead.n || numero(), persona: false }, tel, "whatsapp", sess.convo);
+    if (r.persona) persona(r, sess.convo);
+    store.setSession(key, sess);
+    return r.reply;
+  }
+
   function guardar(base, tel, canal, convo) {
     const lead = store.addLead({ ...base, id: base.n, tel: "+" + digits(tel), canal, fecha: now().toISOString(), estado: "nuevo", convo });
     log(`[ficha ${lead.sucursal}] ${lead.tel}`, JSON.stringify({ n: lead.n, nombre: lead.nombre, resumen: lead.resumen, rango: lead.rango, cita: lead.cita }));
@@ -102,13 +131,16 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   // ---- WhatsApp ----
-  app.post("/whatsapp", firma, (req, res) => {
+  app.post("/whatsapp", firma, async (req, res) => {
     const p = req.body || {};
     const from = p.From || "anon";
     const text = Number(p.NumMedia || 0) > 0 ? "📷 foto" : p.Body || "";
     const tw = new twilio.twiml.MessagingResponse();
+    let reply;
     if (esDueno(from) && /^(agenda|citas|pendientes|fichas)$/i.test(text.trim())) {
       tw.message(agenda().slice(0, 1590));
+    } else if (ia && (reply = await conversarIA(from, from, text))) {
+      tw.message(reply.slice(0, 1590));
     } else {
       const { r } = conversar(from, from, "whatsapp", text);
       // photos of real work for the style question, when FOTOS_URL is set
@@ -202,6 +234,7 @@ function start() {
     console.log(`Bot escuchando en :${cfg.port}`);
     if (!cfg.sid || !cfg.token) console.log("Aviso: faltan TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN; los avisos al dueño solo van al log.");
     if (!cfg.owner) console.log("Aviso: falta OWNER_WHATSAPP; nadie recibe las fichas por WhatsApp.");
+    console.log(cfg.anthropicKey ? `Modo IA activo (${cfg.anthropicModel}); si falla, contesta el menú.` : "Modo IA apagado: contesta el menú (falta ANTHROPIC_API_KEY o BOT_IA=off).");
     if (cfg.skipSignature) console.log("Aviso: SKIP_TWILIO_SIGNATURE está activo; no lo uses en producción.");
   });
   const bye = () => { app.locals.store.flush(); server.close(() => process.exit(0)); };

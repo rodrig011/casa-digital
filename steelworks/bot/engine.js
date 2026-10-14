@@ -371,5 +371,6 @@
     return s.trim();
   }
 
-  return { handle, toText, fresh, CATALOGO, SUCURSALES, ESTILOS, TARIFAS, MENU, L };
+  // TIPOS, HORARIO, estimado, resumen y norm también los usa ia.js (modo IA); el motor no cambia.
+  return { handle, toText, fresh, CATALOGO, SUCURSALES, ESTILOS, TARIFAS, MENU, L, TIPOS, HORARIO, estimado, resumen, norm };
 });

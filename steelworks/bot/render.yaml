@@ -44,3 +44,9 @@ services:
         sync: false
       - key: PUBLIC_URL
         sync: false
+      - key: ANTHROPIC_API_KEY     # modo IA (opcional): vacío = el bot contesta con el menú
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: BOT_IA                # "off" apaga el modo IA sin borrar la clave
+        value: "on"
