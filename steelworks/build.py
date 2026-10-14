@@ -26,9 +26,21 @@ print(out, os.path.getsize(out) // 1024, "KB")
 
 pan = open(os.path.join(HERE, "sitio", "panel.html"), encoding="utf-8").read()
 pan = re.sub(r'url\("(fonts/[^"]+)"\)', font, pan).replace('href="index.html"', 'href="steelworks-sitio.html"')
+pan = fotos(pan)
+MODO = '<script>window.PANEL_MODO = window.PANEL_MODO || "archivo";</script>'
+assert MODO in pan
+# demo file (to show people): a demo login screen in the page itself
 out = os.path.join(HERE, "dist", "steelworks-panel.html")
-open(out, "w", encoding="utf-8").write(fotos(pan))
+open(out, "w", encoding="utf-8").write(pan.replace(MODO, '<script>window.PANEL_MODO = "demo";</script>'))
 print(out, os.path.getsize(out) // 1024, "KB")
+# the real one, served by the bot at /panel only after logging in (bot/auth.js)
+out = os.path.join(HERE, "bot", "panel", "panel.html")
+os.makedirs(os.path.dirname(out), exist_ok=True)
+open(out, "w", encoding="utf-8").write(pan.replace(MODO, '<script>window.PANEL_MODO = "servidor";</script>'))
+print(out, os.path.getsize(out) // 1024, "KB")
+import shutil
+for k in ("naranja-sobre-blanco", "naranja-sobre-negro"):     # logo for the login page
+    shutil.copy(os.path.join(HERE, "logo", "horizontal", f"steelworks-logo-horizontal-{k}.svg"), os.path.join(HERE, "bot", "panel", f"logo-{k}.svg"))
 
 # propuesta (página publicable): capturas incrustadas como data URI + motor del bot
 import json, sys

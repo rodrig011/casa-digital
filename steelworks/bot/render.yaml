@@ -28,6 +28,10 @@ services:
         value: "false"
       - key: LEADS_TOKEN
         generateValue: true
+      - key: PANEL_SECRET          # firma las sesiones del panel; cambiarlo cierra todas las sesiones
+        generateValue: true
+      - key: PANEL_USUARIOS        # opcional: "correo|Nombre|hash", una por línea (npm run usuario -- linea ...)
+        sync: false
       - key: TWILIO_ACCOUNT_SID
         sync: false
       - key: TWILIO_AUTH_TOKEN

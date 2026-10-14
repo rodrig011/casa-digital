@@ -16,6 +16,7 @@ const { handle, toText } = require("./engine");
 const { createStore } = require("./store");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const voz = require("./voz");
+const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
@@ -35,6 +36,8 @@ function loadConfig(env = process.env) {
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
     skipSignature: on(env.SKIP_TWILIO_SIGNATURE),
     leadsToken: env.LEADS_TOKEN || "",
+    panelSecret: env.PANEL_SECRET || "",
+    panelUsuarios: env.PANEL_USUARIOS || "",
     dataDir: env.DATA_DIR === "" ? null : path.resolve(__dirname, env.DATA_DIR || "data"),
     ttlHours: +env.SESSION_TTL_HOURS || 24,
     fotosUrl: (env.FOTOS_URL || "").replace(/\/$/, ""),
@@ -210,8 +213,13 @@ function createApp(cfg = loadConfig(), deps = {}) {
     }
   });
 
-  // ---- Fichas para el panel del dueño ----
+  // ---- Panel del dueño (correo y contraseña; ver auth.js) ----
+  const usuarios = deps.usuarios || createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null });
+  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), log });
+
+  // ---- Fichas para el panel del dueño (sesión del panel o token) ----
   app.get("/leads", (req, res) => {
+    if (panel.usuarioDe(req)) return res.set("Cache-Control", "no-store").json(store.leads.slice().reverse());
     res.set("Access-Control-Allow-Origin", "*");
     const given = (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") || String(req.query.token || "");
     const a = Buffer.from(given), b = Buffer.from(cfg.leadsToken);
@@ -235,6 +243,8 @@ function start() {
     if (!cfg.sid || !cfg.token) console.log("Aviso: faltan TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN; los avisos al dueño solo van al log.");
     if (!cfg.owner) console.log("Aviso: falta OWNER_WHATSAPP; nadie recibe las fichas por WhatsApp.");
     console.log(cfg.anthropicKey ? `Modo IA activo (${cfg.anthropicModel}); si falla, contesta el menú.` : "Modo IA apagado: contesta el menú (falta ANTHROPIC_API_KEY o BOT_IA=off).");
+    const nu = createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null }).lista().length;
+    console.log(!cfg.panelSecret ? "Panel cerrado: falta PANEL_SECRET." : nu ? `Panel en /panel con ${nu} usuario(s) autorizado(s).` : "Panel en /panel, pero no hay usuarios: npm run usuario -- agregar correo \"Nombre\"");
     if (cfg.skipSignature) console.log("Aviso: SKIP_TWILIO_SIGNATURE está activo; no lo uses en producción.");
   });
   const bye = () => { app.locals.store.flush(); server.close(() => process.exit(0)); };
