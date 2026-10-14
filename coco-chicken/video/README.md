@@ -16,3 +16,7 @@ Mismo estilo, música y compases que v1, con otra historia: el domicilio lo pone
 ## v3 (`gen8.py`, 2026-10-14)
 
 rodrigo pidió algo más de lujo que muestre cómo contesta y se conecta el bot. Fondo negro con luces suaves (rojo, dorado, verde WhatsApp) y palabras clave en dorado. Recorrido: su TikTok → comentarios reales ("Incluye refresco ese combo ?", "Y al fin bro dnd Estan ubicados", "Hacen envíos??", "nunca me responden") → "Su WhatsApp, que contesta solo" → conversación completa en un iPhone (precios reales) → teléfono, pantalla de cocina y panel conectados, con el aviso al cliente → panel real → promo y códigos de TikTok → Casa Digital. Usa `coco-src/panel/pv-hoy.png`.
+
+## v4 (`gen9.py`, 2026-10-14)
+
+Es el v3 con dos escenas más, a pedido de rodrigo ("que muestre el beneficio, los números, las comisiones que se ahorra"). **Los números:** 300 pedidos al mes pasan a recoger × L140 × 25% = L10,500 al mes (L126,000 al año). Va marcado como ejemplo con supuestos. **Oportunidades:** de 506 comentarios, 87 piden sucursal en su ciudad, 56 preguntan precio o combo y 25 preguntan dónde están. Dura 2:04 (50 compases). No muestra nuestro precio: eso se habla en la llamada.
