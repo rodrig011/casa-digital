@@ -20,6 +20,7 @@ Todo lo que digo del negocio sale de sus propias cuentas (TikTok, Facebook y Ped
 | TikTok @cocochiken1 | 204.9K seguidores · 3.1M me gusta. Bio: "Pagas 3 El 4 Es Gratis / En Pedidos Ya". Cuentas aparte: @CocoChickenSatelite y @cocochickenfans |
 | Facebook "Coco Chicken" | 127K seguidores. Bio: "Pollos Desde 30 lps" |
 | PedidosYa | 4.4 ★ con 1,097 opiniones, con entrega |
+| Bip Bip | Su logo está impreso en el letrero grande del local y en un afiche de la vitrina (portada de Facebook). Un cliente comenta en TikTok que pidió alitas por Bip Bip. Bip Bip es una app de San Pedro Sula con repartidores propios en SPS, Choloma y 20 ciudades más (bipbip.hn) |
 | Sitio web propio | No encontré ninguno |
 
 **Menú y precios en PedidosYa** (nombres exactos): Pierna y tajadas L75 · Cadera y tajadas L85 · Ala y tajadas L95 · Pierna, cadera y tajadas L140. Categorías: Pollo con tajadas (media porción), Pollo con tajadas (porción completa), Alitas con papas fritas, Fingers con papas, Pollo con papas (media porcion), Combo suly calix, Pollo con papa (porciones), Refrescos.
@@ -48,14 +49,14 @@ Donde se les va el valor es después del video:
 2. **Pedidos para recoger (sin repartidor):** el bot de WhatsApp toma el pedido armado y lo manda a la sucursal; tablero Nuevo → En cocina → Listo → Entregado, con pantalla de cocina. Cuando está listo, el bot le avisa solo al cliente. Esto no necesita motos: el cliente pasa a traer y no se paga comisión.
 3. **Cierre de caja:** cada noche el cajero cuenta desde el celular y el panel compara con lo vendido. Faltantes en rojo, historial de 7 días por sucursal. Es el control que el dueño no tiene cuando no está en el local.
 4. **Pollo e insumos:** cuánto pollo queda en cada sucursal, a qué hora se acaba, y cuánto pedir para mañana (promedio de los últimos 4 días iguales + 5%), con el pedido al proveedor listo para mandar por WhatsApp. Insumos (plátano, repollo, aceite, papas) con mínimo.
-5. **Ventas y comisiones:** ventas por canal (mostrador, PedidosYa, WhatsApp) y por producto, y la comisión pagada a PedidosYa con el % de su contrato (lo escriben ellos; no lo conocemos).
+5. **Ventas y comisiones:** ventas por canal (mostrador, PedidosYa, Bip Bip, WhatsApp) y por producto, y la comisión de cada app con el % de su contrato (lo escriben ellos; no lo conocemos). Cada semana dice cuánto les deben depositar las apps, para revisar que llegue completo. Con dos apps, cada una con su tableta y su reporte, tener todo junto en un solo lugar es lo que más valor tiene.
 6. **Clientes y promos:** su promo "Pagas 3, el 4 es gratis" como tarjeta de sellos en WhatsApp; lista de clientes y envío de promos a quien no ha vuelto.
 7. **¿Qué video vendió?:** cada TikTok lleva un código ("di POLLO15 al pedir"), el bot lo anota y el panel muestra cuánto vendió cada video. Las vistas son las reales de @cocochiken1; los pedidos son de ejemplo.
 
 **¿Y el delivery?** No les vendemos repartidores. Tres caminos, en este orden:
 - **PedidosYa se queda para entregas a domicilio.** Ahí está su volumen y la entrega la pone la app.
 - **Pasar a recoger** es lo que movemos a su canal propio: sin comisión y sin motos. El panel muestra cuánto se ahorra con cada pedido que pasa.
-- **Más adelante, si quieren entregas propias:** pedir un mensajero por app solo para pedidos propios (Uber Flash opera en Tegucigalpa y San Pedro Sula desde mayo 2025; no confirmé que lleve comida) o contratar 1 o 2 motoristas cuando el volumen de WhatsApp lo justifique. En su portada se ve un rótulo de Bip Bip (otra app de delivery); preguntarles si la usan.
+- **Más adelante, si quieren entregas propias:** pedir un mensajero por app solo para pedidos propios (Uber Flash opera en Tegucigalpa y San Pedro Sula desde mayo 2025; no confirmé que lleve comida) o contratar 1 o 2 motoristas cuando el volumen de WhatsApp lo justifique. Bip Bip ya pone el repartidor en San Pedro Sula y Choloma, igual que PedidosYa.
 
 La página propia de pedidos (v1) sigue como extra: sirve para el link en la bio y alimenta el mismo tablero.
 
@@ -109,7 +110,7 @@ Nuestro WhatsApp: **+1 (765) 543-4251**
 
 - Ciudad y dirección exacta de cada sucursal (los barrios apuntan a San Pedro Sula).
 - Si los dos números (3189-6607 y 9291-3644) son de sucursales distintas.
-- Si también venden por Bip Bip (en la portada se ve un rótulo con ese logo).
-- Comisión real que pagan a PedidosYa y cuántos pedidos les llegan por ahí.
+- Si usan alguna app aparte de PedidosYa y Bip Bip (no vi señales de Uber Eats, Speedy ni Compi; Hugo ya es parte de PedidosYa desde 2023).
+- Comisión real que pagan a PedidosYa y a Bip Bip, y cuántos pedidos les llegan por cada una.
 - Si tienen perfiles en Google Maps.
 - Nombre del dueño (probablemente quien sale en los videos, inferido).
