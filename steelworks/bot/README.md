@@ -19,6 +19,7 @@ Para llamadas telefónicas ver [LLAMADAS.md](LLAMADAS.md).
 | `avisos.js` | Arma y manda los avisos al dueño y a la sucursal. |
 | `store.js` | Guarda conversaciones y fichas en `DATA_DIR` (`leads.json`, `sessions.json`). |
 | `voz.js` | Convierte la conversación a voz para las llamadas. |
+| `ia.js` | Modo IA opcional con Claude: entiende mensajes libres por WhatsApp (ver *Modo IA*). |
 | `test.js` | Pruebas sin Twilio: `npm test`. |
 | `.env.example` | Todas las variables, explicadas. |
 | `render.yaml`, `Dockerfile` | Para publicarlo en Render o en cualquier servidor con Docker. |
@@ -30,7 +31,7 @@ Necesitas Node 22 o más nuevo.
 ```bash
 cd steelworks/bot
 npm install
-npm test                      # simula conversaciones completas; debe decir "pass 5, fail 0"
+npm test                      # simula conversaciones completas; debe decir "pass 8, fail 0"
 cp .env.example .env          # y llena lo que tengas
 npm start                     # "Bot escuchando en :3000"
 ```
@@ -125,11 +126,48 @@ Precios públicos consultados en octubre de 2026, en dólares. Confirmar antes d
 | Meta, respuestas dentro de las 24 h que abrió el cliente | gratis | US$0 |
 | Meta, avisos al dueño con plantilla Utility | gratis si el dueño escribió en las últimas 24 h; si no, tarifa "Rest of Latin America" (por confirmar en la tabla de Meta, centavos de dólar) | US$0 a ~US$3 |
 | Número | el de Steel Works no cuesta en Twilio; un número de EE. UU. de Twilio, US$1.15 | US$0 a 1.15 |
+| Modo IA con Claude (opcional, ver *Modo IA*) | ≈ US$0.004 por conversación | ~US$1 |
 | **Total** | | **≈ US$25 a 35 al mes** |
 
 El bot manda una sola respuesta por turno (no tres mensajes sueltos), así cada turno cuesta un mensaje.
 
 Fuentes: [Twilio WhatsApp pricing](https://www.twilio.com/en-us/whatsapp/pricing), [Meta: precios de WhatsApp Business](https://developers.facebook.com/docs/whatsapp/pricing), [Render pricing](https://render.com/pricing), [Render free plan](https://render.com/docs/free).
+
+## Modo IA (Claude)
+
+Opcional. Con el modo IA el bot entiende mensajes escritos con las palabras del cliente, por ejemplo *«quiero un portón para mi casa de unos 3 metros, cuánto sale?»*, en vez de solo el menú de botones. Contesta de usted, en mensajes cortos, y:
+
+- da precios **solo** con las tarifas de `engine.js` (las mismas del menú), siempre como *precio estimado* y aclarando que el exacto se da al medir;
+- busca piezas del catálogo por nombre y categoría, da direcciones y teléfonos de las sucursales;
+- agenda la visita para medir: la ficha se guarda en `leads.json` y le llega al dueño igual que con el menú;
+- si el cliente pide una persona o algo que el bot no puede hacer, avisa al dueño ("pidió hablar con una persona").
+- No inventa horarios (dice que una persona los confirma), no promete enlaces de pago ni descuentos.
+
+Solo aplica a WhatsApp; las llamadas siguen con el menú de voz. **Si la API de Claude falla o tarda más de 11 segundos, ese mensaje lo contesta el menú de siempre** (queda anotado en los logs como `[ia] error`). Sin clave el bot sigue funcionando con el menú, como hasta ahora.
+
+### Cómo activarlo
+
+1. Crear una cuenta en [console.anthropic.com](https://console.anthropic.com) con el correo de Steel Works y cargar saldo en **Billing** (con US$5 alcanza para miles de conversaciones). Conviene poner un límite de gasto mensual en **Limits**.
+2. En **API Keys > Create Key**, ponerle de nombre "bot WhatsApp" y copiar la clave (empieza con `sk-ant-`; solo se muestra una vez).
+3. Pegarla en **Render > steelworks-bot > Environment** en `ANTHROPIC_API_KEY` y guardar (Render vuelve a desplegar solo). Para probar en la computadora va en `.env`. **Nunca la mande por chat, correo ni la suba al repositorio**: quien la tenga puede gastar el saldo. Si se filtra, se borra en API Keys y se crea otra.
+4. En los logs de Render debe salir `Modo IA activo (claude-haiku-5-5)`.
+
+Para apagarlo sin borrar la clave: `BOT_IA=off`. Para cambiar de modelo: `ANTHROPIC_MODEL` (por defecto `claude-haiku-5-5`, el más barato de Claude).
+
+### Cuánto cuesta
+
+Precios de Claude Haiku 5.5 (octubre de 2026, confirmar en [anthropic.com/pricing](https://www.anthropic.com/pricing)): US$0.10 por millón de tokens de entrada y US$0.50 por millón de salida; lo que se repite en cada mensaje (instrucciones y herramientas) se guarda en caché y cuesta la décima parte. Un token es más o menos media palabra.
+
+Supuesto: una conversación de unos 8 mensajes del cliente, que son unas 12 llamadas a Claude (algunas usan herramientas).
+
+| Parte | Tokens | Costo |
+|---|---|---|
+| Instrucciones y herramientas, en caché | ~2,000 × 12 = 24,000 (a US$0.01 por millón) + escribir la caché una vez (~2,000 a US$0.125) | US$0.0005 |
+| Conversación (lo que va diciendo el cliente y el bot) | ~1,500 × 12 = 18,000 (a US$0.10 por millón) | US$0.0018 |
+| Respuestas del bot | ~300 × 12 = 3,600 (a US$0.50 por millón) | US$0.0018 |
+| **Por conversación** | | **≈ US$0.004** |
+
+**Unas 100 conversaciones cuestan cerca de US$0.40** (menos de US$1 aunque las conversaciones salgan el doble de largas). Para comparar, Twilio cobra unos US$10 por esas mismas 100 conversaciones. El gasto real se ve en console.anthropic.com > **Usage**.
 
 ## Pendiente con Steel Works
 

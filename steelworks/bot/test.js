@@ -1,6 +1,6 @@
 // Pruebas sin Twilio: npm test   (VERBOSE=1 npm test imprime las conversaciones)
 // 1) el motor recorre los flujos principales, 2) el webhook de WhatsApp con un Twilio simulado,
-// 3) la llamada de voz con <Gather>. Nada sale a internet.
+// 3) la llamada de voz con <Gather>, 4) el modo IA con un Claude simulado. Nada sale a internet.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
@@ -9,6 +9,7 @@ const path = require("path");
 const twilio = require("twilio");
 const B = require("./engine");
 const { createApp } = require("./server");
+const { createIA, MODELO } = require("./ia");
 
 const NOW = new Date("2026-10-13T10:00:00-06:00");
 const VERBOSE = !!process.env.VERBOSE;
@@ -49,7 +50,7 @@ test("motor: flujos principales y ninguna respuesta muestra códigos", () => {
 // ---------- webhook con Twilio simulado ----------
 const TOKEN = "token-de-prueba";
 const PUBLIC = "https://bot.steelworks.test";
-function montar(dir, extra = {}) {
+function montar(dir, extra = {}, deps = {}) {
   const sent = [];
   const client = { messages: { create: async m => { sent.push(m); return { sid: "SM" + sent.length }; } } };
   const cfg = {
@@ -58,7 +59,7 @@ function montar(dir, extra = {}) {
     publicUrl: PUBLIC, skipSignature: false, leadsToken: "secreto", dataDir: dir, ttlHours: 24, fotosUrl: "",
     voiceLang: "es-MX", voiceTts: "Polly.Mia", speechModel: "", ...extra,
   };
-  const app = createApp(cfg, { client, now: () => NOW, log: () => {} });
+  const app = createApp(cfg, { client, now: () => NOW, log: () => {}, ...deps });
   return new Promise(ok => { const srv = app.listen(0, () => ok({ app, srv, sent, base: `http://127.0.0.1:${srv.address().port}` })); });
 }
 async function post(ctx, ruta, params, { firmar = true } = {}) {
@@ -186,5 +187,118 @@ test("voz: pedir una persona transfiere la llamada a la sucursal", async () => {
     assert.match(r.xml, /<Dial>\+50422325628<\/Dial>/);
     await ctx.app.locals.idle();
     assert.match(ctx.sent[0].body, /pidió hablar con una persona · llamada/);
+  } finally { ctx.srv.close(); }
+});
+
+// ---------- modo IA con un cliente de Anthropic simulado ----------
+// guion: lista de respuestas (o errores) que devuelve messages.create, en orden
+function claudeFalso(guion) {
+  const llamadas = [];
+  return {
+    llamadas, guion,
+    messages: {
+      create: async (body, opts) => {
+        llamadas.push({ body: JSON.parse(JSON.stringify(body)), opts });
+        const r = guion.shift();
+        if (!r) throw new Error("guion agotado");
+        if (r instanceof Error) throw r;
+        return { id: "msg_" + llamadas.length, type: "message", role: "assistant", model: body.model, usage: { input_tokens: 10, output_tokens: 10 }, ...r };
+      },
+    },
+  };
+}
+const usar = (id, name, input) => ({ stop_reason: "tool_use", content: [{ type: "thinking", thinking: "", signature: "x" }, { type: "tool_use", id, name, input }] });
+const decir = text => ({ stop_reason: "end_turn", content: [{ type: "text", text }] });
+const resultado = (llamada, id) => llamada.body.messages.at(-1).content.find(b => b.type === "tool_result" && b.tool_use_id === id);
+
+test("ia: estimar_precio usa las tarifas del motor y luego contesta", async () => {
+  const claude = claudeFalso([
+    usar("tu_1", "estimar_precio", { tipo: "porton", estilo: "forjado", ancho: 3, alto: 2.2, motor: true }),
+    decir("Un portón forjado de 3 × 2.2 m con motor anda entre *L 43,700 y L 64,300*. Es un precio estimado; el exacto se lo damos al medir, sin costo."),
+  ]);
+  const ia = createIA({ client: claude });
+  const r = await ia.turn([], "quiero un portón forjado de 3 x 2.2 con motor, cuánto sale?", NOW);
+  assert.match(r.reply, /L 43,700 y L 64,300/);
+  assert.equal(r.lead, null); assert.equal(r.persona, false);
+  assert.equal(claude.llamadas.length, 2);
+  const [primera, segunda] = claude.llamadas;
+  assert.equal(primera.body.model, MODELO);
+  assert.deepEqual(primera.body.system.at(-1).cache_control, { type: "ephemeral" });
+  assert.deepEqual(primera.body.tools.map(t => t.name), ["estimar_precio", "buscar_piezas", "sucursales", "agendar_visita", "pasar_a_persona"]);
+  assert.ok(primera.opts && primera.opts.signal, "cada llamada lleva un límite de tiempo");
+  // el rango sale de engine.js, igual que en el flujo de menú (prueba del motor: [43700, 64300])
+  const tr = JSON.parse(resultado(segunda, "tu_1").content);
+  assert.equal(tr.rango_lempiras, "L 43,700 a L 64,300");
+  assert.match(tr.aviso, /estimado/);
+  // el historial queda listo para el siguiente mensaje, sin bloques de pensamiento
+  assert.equal(r.history[0].role, "user");
+  assert.ok(!JSON.stringify(r.history).includes('"thinking"'));
+  assert.equal(r.history.length, 4);
+  // las piezas se describen por nombre: el código va aparte, nunca dentro del nombre
+  const pz = require("./ia").buscarPiezas({ texto: "llamador" });
+  assert.ok(pz.piezas.length > 0);
+  pz.piezas.forEach(p => sinCodigos(p.nombre, "buscar_piezas"));
+});
+
+test("ia: agendar_visita por WhatsApp guarda la ficha y avisa al dueño", async () => {
+  const claude = claudeFalso([
+    decir("¡Con gusto! ¿Qué medidas tiene el espacio, más o menos?"),
+    usar("tu_a", "agendar_visita", { nombre: "maría López", tipo: "porton", ancho: 3, alto: 2.2, motor: true, estilo: "forjado", acabado: "negro mate", sucursal: "TGU", cuando: "miércoles 14, 10 a 12 m.", zona: "Col. Kennedy, Tegucigalpa" }),
+    decir("✅ Listo, María. Su cotización es la *COT-2215*. La sucursal de Tegucigalpa le confirma la visita por este chat."),
+  ]);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sw-bot-ia-"));
+  const ctx = await montar(dir, {}, { ia: createIA({ client: claude }) });
+  try {
+    const cliente = "whatsapp:+50498765432";
+    let r = await post(ctx, "/whatsapp", { From: cliente, Body: "quiero un portón para mi casa de unos 3 metros, cuánto sale?", NumMedia: "0" });
+    assert.match(textoDe(r.xml), /Qué medidas/);
+    r = await post(ctx, "/whatsapp", { From: cliente, Body: "3 x 2.2 forjado con motor, María López, el miércoles en la mañana", NumMedia: "0" });
+    assert.equal((r.xml.match(/<Message>/g) || []).length, 1);
+    assert.match(textoDe(r.xml), /COT-2215/);
+    // el segundo mensaje llevó el historial del primero
+    assert.equal(claude.llamadas[1].body.messages.length, 3);
+    assert.equal(JSON.parse(resultado(claude.llamadas[2], "tu_a").content).numero, "COT-2215");
+    await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, 1);
+    assert.equal(ctx.sent[0].to, "whatsapp:+50499990000");
+    assert.match(ctx.sent[0].body, /Nueva cotización COT-2215 · WhatsApp/);
+    assert.match(ctx.sent[0].body, /María López · \+50498765432/);
+    assert.match(ctx.sent[0].body, /Portón con motor · Medidas: 3 × 2\.2 m · Estilo: Forjado clásico · Lugar: Col\. Kennedy, Tegucigalpa · Acabado: negro mate/);
+    assert.match(ctx.sent[0].body, /L 43,700 a L 64,300/);
+    assert.match(ctx.sent[0].body, /Visita para medir: miércoles 14/);
+    const disco = JSON.parse(fs.readFileSync(path.join(dir, "leads.json"), "utf8"));
+    assert.equal(disco[0].n, "COT-2215"); assert.equal(disco[0].convo.length, 4);
+
+    // pasar_a_persona: aviso de "pidió hablar con una persona" al dueño y a la sucursal de SPS
+    const otro = "whatsapp:+50433331111";
+    claude.guion.push(usar("tu_p", "pasar_a_persona", { motivo: "quiere factura a nombre de empresa", sucursal: "SPS" }), decir("Le paso con un asesor de San Pedro Sula, le escribe por aquí."));
+    r = await post(ctx, "/whatsapp", { From: otro, Body: "necesito factura a nombre de mi empresa" });
+    assert.match(textoDe(r.xml), /asesor/);
+    await ctx.app.locals.idle();
+    const p = ctx.sent.slice(1);
+    assert.deepEqual(p.map(m => m.to).sort(), ["whatsapp:+50489069307", "whatsapp:+50499990000"]);
+    assert.match(p[0].body, /pidió hablar con una persona · WhatsApp/);
+    assert.match(p[0].body, /factura a nombre de empresa/);
+  } finally { ctx.srv.close(); }
+});
+
+test("ia: si la API falla, contesta el menú de siempre y lo anota en el log", async () => {
+  const Anthropic = require("@anthropic-ai/sdk");
+  const logs = [];
+  const claude = claudeFalso([new Anthropic.APIConnectionTimeoutError(), new Error("529 overloaded")]);
+  const ctx = await montar(null, {}, { ia: createIA({ client: claude }), log: (...a) => logs.push(a.join(" ")) });
+  try {
+    const cliente = "whatsapp:+50455556666";
+    let r = await post(ctx, "/whatsapp", { From: cliente, Body: "hola, quiero un portón" });
+    assert.equal(r.status, 200);
+    assert.match(textoDe(r.xml), /Soy el asistente de \*Steel Works\*/);
+    assert.match(textoDe(r.xml), /Qué te gustaría cotizar/);
+    // the next message also fails over, and the menu flow keeps its place
+    r = await post(ctx, "/whatsapp", { From: cliente, Body: "1" });
+    assert.match(textoDe(r.xml), /Cuánto mide el espacio/);
+    assert.equal(logs.filter(l => /^\[ia\] error/.test(l)).length, 2);
+    assert.match(logs[0], /APIConnectionTimeoutError/);
+    await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, 0);
   } finally { ctx.srv.close(); }
 });

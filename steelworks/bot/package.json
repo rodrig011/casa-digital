@@ -4,12 +4,15 @@
   "private": true,
   "description": "Asistente de WhatsApp (y llamadas) para Steel Works Honduras (Casa Digital by Clientia Tech)",
   "main": "server.js",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server.js",
     "test": "node --test test.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
     "express": "5.2.1",
     "twilio": "6.1.1"
   }
