@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel Coco Chicken</title>
+<meta name="theme-color" content="#F5F3EF">
+<script>try{if(localStorage.getItem("ccp-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+<style>
+/* Coco Chicken's desk: three branches, one screen. Built for the owner who can't be in
+   Cabañas, Satélite and Medina at once: what sold, what the till says, how much chicken
+   to order, which pickup orders are waiting, which TikTok sold. Demo data, clearly marked. */
+:root{
+  --bg:#F5F3EF; --card:#FFFFFF; --sunk:#F8F7F4; --line:#E7E3DD; --line2:#D7D2CA; --tx:#1C1A19; --tx2:#5E5A57; --tx3:#8A8580;
+  --red:#C9241A; --red-bg:#FBE8E6; --ok:#1C8C4E; --ok-bg:#E5F4EB; --blue:#2763C9; --blue-bg:#E8EFFC; --amber:#9A660E; --amber-bg:#FBF0DA; --yel:#FFD21F; --wa:#1FA855;
+  --c1:#C9241A; --c2:#F28C1B; --c3:#6B5B53;
+  --hover:#F1EEE9; --sel:#FBE8E6; --shadow:0 1px 2px rgba(20,20,20,.04);
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121110; --card:#1B1A19; --sunk:#161514; --line:#2C2A28; --line2:#3A3734; --tx:#EEEBE7; --tx2:#A9A49F; --tx3:#7E7974;
+  --red:#F2685D; --red-bg:#3A1A17; --ok:#3CC47A; --ok-bg:#16301F; --blue:#6E9CF0; --blue-bg:#1A2742; --amber:#E0A84A; --amber-bg:#33280F;
+  --c1:#F2685D; --c2:#F5A04A; --c3:#B8A79C;
+  --hover:#242220; --sel:#3A1A17; --shadow:none;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+html{-webkit-text-size-adjust:100%;}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 14px/1.45 var(--body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+button,input,select,textarea{font:inherit;color:inherit;}
+button{cursor:pointer;background:none;border:0;padding:0;}
+a{color:inherit;text-decoration:none;}
+svg{display:block;}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:6px;}
+.num{font-variant-numeric:tabular-nums;}
+.ic{width:18px;height:18px;flex:none;}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;height:60px;padding:0 18px;background:var(--card);border-bottom:1px solid var(--line);}
+.topbar .menu{display:none;}
+.menu{width:38px;height:38px;border-radius:9px;place-items:center;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;}
+.brand img{width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:50% 32%;background:#000;}
+.brand small{display:block;font-weight:500;color:var(--tx3);font-size:12px;letter-spacing:0;}
+.seg{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:3px;margin-left:auto;}
+.seg button{height:32px;padding:0 12px;border-radius:7px;font-weight:600;font-size:13px;color:var(--tx2);white-space:nowrap;transition:background-color .15s ease,color .15s ease;}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.tb-r{display:flex;align-items:center;gap:6px;}
+.iconbtn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--tx2);}
+@media (hover:hover) and (pointer:fine){.iconbtn:hover{background:var(--hover);color:var(--tx);}}
+.theme .sun{display:none;} :root[data-theme="dark"] .theme .sun{display:block;} :root[data-theme="dark"] .theme .moon{display:none;}
+.demo-b{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:7px;background:var(--amber-bg);color:var(--amber);font-size:12px;font-weight:700;white-space:nowrap;}
+
+/* layout */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100svh - 60px);}
+.side{position:sticky;top:60px;height:calc(100svh - 60px);overflow:auto;background:var(--card);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:14px;}
+.side nav{display:grid;gap:2px;}
+.side nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px;color:var(--tx2);font-weight:500;position:relative;}
+.side nav a.on{background:var(--sel);color:var(--tx);}
+.side nav a.on::before{content:"";position:absolute;left:-12px;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--red);}
+.side nav a .c{margin-left:auto;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;background:var(--red);color:#fff;}
+@media (hover:hover) and (pointer:fine){.side nav a:hover{background:var(--hover);color:var(--tx);}}
+.side .note{margin-top:auto;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--sunk);font-size:12px;color:var(--tx2);}
+.side .note b{display:block;color:var(--tx);font-size:13px;margin-bottom:2px;}
+main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
+.scrim{display:none;}
+
+/* headers, cards */
+.ph{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.ph h1{margin:0;font:650 24px/1.2 var(--body);letter-spacing:-.015em;}
+.ph .sub{color:var(--tx2);margin-top:3px;}
+.ph .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);min-width:0;}
+.card > header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.card > header h2{margin:0;font:600 15px var(--body);}
+.card > header .r{margin-left:auto;color:var(--tx3);font-size:12px;display:flex;gap:8px;align-items:center;}
+.pad{padding:16px 18px;}
+.stack{display:grid;gap:16px;}
+.g2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.status{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap;}
+.status i{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.s-ok{background:var(--ok-bg);color:var(--ok);} .s-red{background:var(--red-bg);color:var(--red);} .s-amber{background:var(--amber-bg);color:var(--amber);} .s-blue{background:var(--blue-bg);color:var(--blue);} .s-gray{background:var(--hover);color:var(--tx2);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:9px;font-weight:600;font-size:13px;border:1px solid var(--line2);background:var(--card);white-space:nowrap;transition:transform .12s ease,background-color .15s ease;}
+.btn:active{transform:scale(.97);}
+.btn.pri{background:var(--tx);color:var(--card);border-color:var(--tx);}
+.btn.red{background:var(--red);color:#fff;border-color:var(--red);}
+.btn.wa{background:var(--wa);color:#fff;border-color:var(--wa);}
+.btn.sm{height:30px;padding:0 10px;font-size:12px;}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:var(--hover);}.btn.pri:hover{background:var(--tx);opacity:.9}.btn.red:hover{background:var(--red);opacity:.92}.btn.wa:hover{background:var(--wa);opacity:.92}}
+.dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0;}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);}
+.kpi{padding:18px 20px;border-right:1px solid var(--line);}
+.kpi:last-child{border-right:0;}
+.kpi span{color:var(--tx2);font-size:13px;}
+.kpi b{display:block;font:700 30px/1 var(--body);letter-spacing:-.02em;margin:10px 0 8px;font-variant-numeric:tabular-nums;}
+.kpi small{font-size:12px;color:var(--tx3);}
+.up{color:var(--ok);font-weight:700;} .down{color:var(--red);font-weight:700;}
+
+/* recommended actions */
+.recs{list-style:none;margin:0;padding:0;}
+.rec{display:grid;grid-template-columns:38px 1fr auto;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);}
+.rec:last-child{border-bottom:0;}
+.rec .ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;}
+.rec b{font-weight:650;}
+.rec p{margin:2px 0 0;color:var(--tx2);font-size:13px;}
+.rec.done{opacity:.5;} .rec.done b{text-decoration:line-through;}
+
+/* charts */
+.chart{padding:14px 18px 10px;position:relative;}
+.chart svg{width:100%;height:auto;overflow:visible;}
+.chart text{fill:var(--tx3);font:500 11px var(--body);}
+.chart .gl{stroke:var(--line);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);padding:0 18px 14px;}
+.tip{position:absolute;pointer-events:none;background:var(--tx);color:var(--card);border-radius:8px;padding:7px 10px;font-size:12px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px;z-index:5;}
+.tip b{display:block;font-size:13px;}
+.bars{display:grid;gap:14px;padding:16px 18px;}
+.hb b{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px;gap:10px;}
+.hb b em{font-style:normal;color:var(--tx2);font-weight:500;}
+.trk{height:10px;border-radius:6px;background:var(--hover);overflow:hidden;display:flex;}
+.trk i{display:block;height:100%;}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:12px;font-weight:600;color:var(--tx3);text-align:left;padding:10px 18px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.tbl td{padding:12px 18px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:0;}
+.tbl .r{text-align:right;}
+.scrollx{overflow-x:auto;}
+
+/* pickup board */
+.board{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px;}
+.col{background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:200px;}
+.col h3{margin:2px 4px 12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;color:var(--tx2);}
+.tk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);}
+.tk .t{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.tk .t b{font-size:15px;}
+.tk ul{margin:8px 0;padding:0;list-style:none;font-size:13px;}
+.tk li{display:flex;justify-content:space-between;gap:8px;padding:2px 0;}
+.tk .m{font-size:12px;color:var(--tx2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.tk .a{display:flex;gap:8px;margin-top:10px;}
+.tk .a .btn{flex:1;}
+.late{color:var(--red);font-weight:700;}
+.kmode .board{grid-template-columns:repeat(2,minmax(280px,1fr));}
+.kmode .tk b{font-size:20px;} .kmode .tk ul{font-size:17px;font-weight:600;}
+
+/* forms */
+.form{display:grid;gap:12px;}
+.form label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--tx2);}
+.form > *,.f2 > *{min-width:0;}
+.form input,.form select,.form textarea{width:100%;min-width:0;height:42px;border-radius:10px;border:1px solid var(--line2);background:var(--card);padding:0 12px;font-size:15px;}
+.form textarea{height:110px;padding:10px 12px;resize:vertical;}
+.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--red);}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.res{border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:600;gap:10px;}
+.big{font:700 26px var(--body);letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+
+/* stamp card */
+.stamps{display:flex;gap:6px;}
+.stamps i{width:18px;height:18px;border-radius:50%;border:2px dashed var(--line2);}
+.stamps i.on{background:var(--yel);border:0;}
+.stamps i.free{background:var(--red);border:0;}
+
+.empty{padding:28px 18px;text-align:center;color:var(--tx3);}
+.hint{font-size:12px;color:var(--tx3);}
+.toasts{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:grid;gap:8px;z-index:90;}
+.toast{background:var(--tx);color:var(--card);padding:11px 16px;border-radius:10px;font-weight:600;box-shadow:0 14px 40px rgba(0,0,0,.25);}
+@media (prefers-reduced-motion:no-preference){.toast{animation:tin .25s var(--ease-out);} @keyframes tin{from{opacity:0;transform:translateY(8px)}}}
+
+@media (max-width:1100px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr;}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr;}
+  .topbar .menu{display:grid;}
+  .side{position:fixed;left:0;top:60px;bottom:0;width:260px;z-index:40;transform:translateX(-102%);transition:transform .25s var(--ease-out);height:auto;}
+  .side.open{transform:none;}
+  .scrim.open{display:block;position:fixed;inset:60px 0 0;background:rgba(0,0,0,.3);z-index:35;}
+  .kpis{grid-template-columns:1fr 1fr;}
+  .kpi:nth-child(2){border-right:0;} .kpi:nth-child(-n+2){border-bottom:1px solid var(--line);}
+  .brand .bt{display:none;}
+  .topbar{gap:8px;padding:0 10px;}
+  .seg{overflow-x:auto;max-width:calc(100vw - 150px);}
+  .seg button{padding:0 9px;}
+  .demo-b{display:none;}
+  .board{grid-template-columns:repeat(4,minmax(240px,82vw));}
+  .kmode .board{grid-template-columns:repeat(2,minmax(260px,86vw));}
+  .f2{grid-template-columns:1fr;}
+  .rec{grid-template-columns:38px 1fr;}
+  .rec > div:last-child{grid-column:2;}
+  .tbl th,.tbl td{padding:10px 12px;}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-4-6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M10 9l5 3-5 3z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.4a.5.5 0 000-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.5-.3z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+</svg>
+
+<header class="topbar">
+  <button class="menu iconbtn" id="mbtn" aria-label="Menú"><svg class="ic"><use href="#i-menu"/></svg></button>
+  <div class="brand"><img src="logo.png" alt=""><div class="bt">Coco Chicken<small>Panel del dueño</small></div></div>
+  <div class="seg" id="suc" role="tablist" aria-label="Sucursal"></div>
+  <div class="tb-r">
+    <span class="demo-b">Datos de ejemplo</span>
+    <button class="iconbtn theme" id="tema" aria-label="Cambiar tema"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
+  </div>
+</header>
+<div class="app">
+  <aside class="side" id="side">
+    <nav id="nav"></nav>
+    <div class="note"><b>Demo con datos de ejemplo</b>Los nombres y precios del menú son los de Coco Chicken en PedidosYa. Ventas, clientes, caja e inventario son inventados para mostrar cómo funciona.</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+// ---------- real facts (from their own TikTok, Facebook and PedidosYa) ----------
+const BR = [{id:"cab",n:"Barrio Cabañas",c:"--c3"},{id:"sat",n:"Colonia Satélite",c:"--c1"},{id:"med",n:"Barrio Medina",c:"--c2"}];
+const MENU = [{n:"Pierna y tajadas",p:75,pz:1},{n:"Cadera y tajadas",p:85,pz:1},{n:"Ala y tajadas",p:95,pz:1},{n:"Pierna, cadera y tajadas",p:140,pz:2}];
+const TIKTOKS = [ // title and views as shown on @cocochiken1
+  {t:"¿Pollos A 15 lempiras?",v:871500,code:"POLLO15"},{t:"Video fijado en el local (con @LaYacuny)",v:933300,code:"YACUNY"},
+  {t:"Gracias Por Su Cariño Gente De Choloma",v:169500,code:"CHOLOMA"},{t:"COCO CHICKEN DONDE",v:39100,code:"DONDE"},
+  {t:"Al gordito sexy",v:8124,code:"GORDITO"},{t:"¿Ya pediste las tuyas?",v:2236,code:"TUYAS"}];
+const HOURS = "Lunes a domingo, 9:00 am a 10:00 pm";
+
+// ---------- deterministic demo data ----------
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const pick = a => a[Math.floor(rnd() * a.length)];
+const L = n => "L" + Math.round(n).toLocaleString("en-US");
+const PL = d => d.endsWith("s") ? d : d + "s";
+const DAYS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const now = new Date(); const today = now.getDay();
+const WK = [1.3,.8,.82,.9,.95,1.2,1.4]; // weekday demand
+const BASE = {cab:46,sat:58,med:38};    // chickens per day, average
+const PZ = 8;                            // pieces per chicken (setting)
+const CH = ["Mostrador","PedidosYa","WhatsApp"];
+const CHC = {Mostrador:"--c3",PedidosYa:"--c1",WhatsApp:"--wa"};
+// 28 days of history per branch: chickens used and sales
+const HIST = {};
+BR.forEach(b => { HIST[b.id] = []; for (let d = 28; d >= 1; d--) { const wd = (today - d % 7 + 7) % 7; const ch = Math.round(BASE[b.id] * WK[wd] * (0.9 + rnd() * .2)); HIST[b.id].push({d, wd, ch, ventas: ch * PZ * 0.92 * 86}); } });
+// today's sales by hour, branch and channel
+const HRS = [...Array(13)].map((_, i) => 9 + i); // 9..21
+const curH = 17; // the demo always shows the day at 5 pm
+const SHAPE = {9:.3,10:.45,11:.9,12:1.6,13:1.5,14:.9,15:.6,16:.6,17:.9,18:1.4,19:1.5,20:1.1,21:.6};
+const SALES = []; // {b, h, ch, item, qty, total}
+BR.forEach(b => HRS.filter(h => h <= curH).forEach(h => {
+  const n = Math.round(BASE[b.id] * WK[today] * SHAPE[h] / 2.4 * (0.8 + rnd() * .4));
+  for (let i = 0; i < n; i++) { const it = pick(MENU), q = rnd() < .3 ? 2 : 1, c = rnd() < .46 ? "PedidosYa" : rnd() < .75 ? "Mostrador" : "WhatsApp";
+    SALES.push({b: b.id, h, ch: c, item: it.n, qty: q, total: it.p * q, pz: it.pz * q}); }
+}));
+// stock (chickens) received this morning
+const STOCK = {}; BR.forEach(b => { const used = SALES.filter(s => s.b === b.id).reduce((a, s) => a + s.pz, 0) / PZ; const rec = Math.round(BASE[b.id] * WK[today] * (b.id === "sat" ? .85 : 1.02)); STOCK[b.id] = {rec, used, left: Math.max(0, rec - used)}; });
+const INS = [ // other supplies per branch: [name, unit, stock, minimum]
+  ["Plátano verde (tajadas)","unid.",{cab:180,sat:95,med:140},{cab:120,sat:150,med:100}],
+  ["Repollo","unid.",{cab:14,sat:22,med:9},{cab:8,sat:10,med:8}],
+  ["Aceite","gal.",{cab:6,sat:3,med:5},{cab:4,sat:5,med:4}],
+  ["Papas","lb",{cab:60,sat:85,med:40},{cab:40,sat:50,med:35}]];
+// pickup orders (WhatsApp): no riders needed
+const NAMES = ["Karla M.","José L.","Dania R.","Kevin A.","Marlon S.","Yessenia P.","Óscar F.","Gabriela T.","Wilmer C.","Ana Lucía B.","Héctor Z.","Sofía H.","Brayan O.","Lourdes E.","Fernando G.","Cindy V.","Mario R.","Paola N."];
+const PICK = []; let oid = 4120;
+for (let i = 0; i < 11; i++) { const items = []; const k = 1 + Math.floor(rnd() * 3); for (let j = 0; j < k; j++) { const it = pick(MENU); const ex = items.find(x => x.n === it.n); ex ? ex.q++ : items.push({n: it.n, p: it.p, q: 1}); }
+  const st = i < 3 ? "nuevo" : i < 6 ? "cocina" : i < 8 ? "listo" : "entregado";
+  PICK.push({id: ++oid, who: NAMES[i], tel: "9" + Math.floor(1000000 + rnd() * 8999999), b: pick(BR).id, items, pay: rnd() < .55 ? "Pagado con tarjeta" : "Paga al recoger", min: st === "nuevo" ? 2 + Math.floor(rnd() * 6) : st === "cocina" ? 6 + Math.floor(rnd() * 14) : 18 + Math.floor(rnd() * 30), st}); }
+// till closings, last 7 days
+const CAJA = []; BR.forEach(b => { for (let d = 0; d < 7; d++) { const ef = Math.round(HIST[b.id][27 - d].ventas * .52 / 5) * 5; const tj = Math.round(HIST[b.id][27 - d].ventas * .2 / 5) * 5;
+  let diff = 0; if ((b.id === "cab" && d === 1) || (b.id === "med" && d === 4)) diff = -(220 + Math.round(rnd() * 20) * 10); else if (rnd() < .2) diff = Math.round((rnd() - .5) * 8) * 5;
+  CAJA.push({b: b.id, d, ef, tj, cont: ef + diff, diff, who: pick(["Cajera turno tarde","Cajero turno noche","Encargada"])}); } });
+// customers with the stamp card
+const CLI = []; for (let i = 0; i < 18; i++) { const s = Math.floor(rnd() * 4); CLI.push({n: NAMES[(i + 5) % NAMES.length], b: pick(BR).id, s, last: Math.floor(rnd() * 30), tot: 2 + Math.floor(rnd() * 14)}); }
+const TOTAL_CLI = 1284;
+// TikTok attribution (demo)
+TIKTOKS.forEach((t, i) => { t.ped = Math.round(t.v / 1000 * (0.35 + rnd() * .3) * (i < 3 ? 1 : .6)); t.ven = t.ped * 118; });
+
+// ---------- state ----------
+let VIEW = "hoy", SUC = "all", COMM = 25, KMODE = false;
+try { COMM = +(localStorage.getItem("ccp-com") || 25); } catch (e) {}
+const DONE = new Set();
+const inB = x => SUC === "all" || x.b === SUC;
+const bn = id => BR.find(b => b.id === id).n;
+const col = v => `var(${v})`;
+const $ = s => document.querySelector(s);
+const toast = t => { const e = document.createElement("div"); e.className = "toast"; e.textContent = t; $("#toasts").append(e); setTimeout(() => e.remove(), 2600); };
+const waLink = (txt, tel) => "https://wa.me/" + (tel ? "504" + tel : "") + "?text=" + encodeURIComponent(txt);
+const icon = (id, cls = "ic") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+
+const NAV = [["hoy","Hoy","i-home"],["recoger","Pedidos para recoger","i-bag"],["caja","Cierre de caja","i-cash"],["pollo","Pollo e insumos","i-box"],["ventas","Ventas y comisiones","i-chart"],["clientes","Clientes y promos","i-users"],["tiktok","¿Qué video vendió?","i-play"]];
+function nav() {
+  const waiting = PICK.filter(p => inB(p) && (p.st === "nuevo" || p.st === "listo")).length;
+  const badCaja = CAJA.filter(c => inB(c) && c.d < 3 && c.diff < -100).length;
+  $("#nav").innerHTML = NAV.map(([id, t, ic]) => { const c = id === "recoger" ? waiting : id === "caja" ? badCaja : 0;
+    return `<a href="#${id}" class="${VIEW === id ? "on" : ""}" data-v="${id}">${icon(ic)}${t}${c ? `<span class="c">${c}</span>` : ""}</a>`; }).join("");
+  $("#suc").innerHTML = [["all","Todas"], ...BR.map(b => [b.id, b.n.replace("Barrio ", "").replace("Colonia ", "")])].map(([id, t]) => `<button class="${SUC === id ? "on" : ""}" data-s="${id}" role="tab" aria-selected="${SUC === id}">${t}</button>`).join("");
+}
+const scope = () => SUC === "all" ? "las 3 sucursales" : bn(SUC);
+
+// ---------- views ----------
+function vHoy() {
+  const s = SALES.filter(inB); const tot = s.reduce((a, x) => a + x.total, 0); const ped = s.length;
+  const py = s.filter(x => x.ch === "PedidosYa").reduce((a, x) => a + x.total, 0);
+  const pz = s.reduce((a, x) => a + x.pz, 0);
+  const prev = BR.filter(inB).reduce((a, b) => a + HIST[b.id][21].ventas * HRS.filter(h => h <= curH).reduce((q, h) => q + SHAPE[h], 0) / 12.95, 0);
+  const ch = Math.round((tot / prev - 1) * 100);
+  const recs = RECS().filter(r => SUC === "all" || r.b === SUC || !r.b);
+  return `<div class="ph"><div><h1>Hoy, ${DAYS[today]}</h1><div class="sub">${scope()} · 5:00 pm · ${HOURS}</div></div></div>
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas de hoy</span><b class="num">${L(tot)}</b><small><span class="${ch >= 0 ? "up" : "down"}">${ch >= 0 ? "▲" : "▼"} ${Math.abs(ch)}%</span> vs. el ${DAYS[today]} pasado a esta hora</small></div>
+      <div class="kpi"><span>Pedidos</span><b class="num">${ped}</b><small>${s.filter(x => x.ch === "WhatsApp").length} por WhatsApp para recoger</small></div>
+      <div class="kpi"><span>Pollos vendidos</span><b class="num">${(pz / PZ).toFixed(1)}</b><small>${pz} piezas · ${PZ} piezas por pollo</small></div>
+      <div class="kpi"><span>Comisión a PedidosYa hoy</span><b class="num">${L(py * COMM / 100)}</b><small>${COMM}% de ${L(py)} · <a href="#ventas" data-v="ventas" style="color:var(--blue);font-weight:600">ajustar</a></small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header><h2>Acciones recomendadas</h2><div class="r">${recs.filter(r => !DONE.has(r.id)).length} pendientes</div></header>
+        <ul class="recs">${recs.map(r => `<li class="rec ${DONE.has(r.id) ? "done" : ""}"><div class="ico" style="background:var(--${r.t}-bg);color:var(--${r.t})">${icon(r.i)}</div><div><b>${r.h}</b><p>${r.p}</p></div><div>${r.a}</div></li>`).join("")}</ul></section>
+      <section class="card"><header><h2>Ventas por hora</h2><div class="r">hasta las ${curH}:00</div></header>${hourChart(s)}
+        <div class="legend">${(SUC === "all" ? BR : BR.filter(b => b.id === SUC)).map(b => `<span><i class="dot" style="background:${col(b.c)}"></i>${b.n}</span>`).join("")}</div></section>
+    </div>
+    <div class="g3">${BR.filter(inB).map(b => { const bs = SALES.filter(x => x.b === b.id), st = STOCK[b.id]; const pend = PICK.filter(p => p.b === b.id && p.st !== "entregado").length; const cj = CAJA.find(c => c.b === b.id && c.d === 1);
+      return `<section class="card"><header><h2><i class="dot" style="background:${col(b.c)}"></i>${b.n}</h2></header><div class="pad" style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between"><span class="hint">Ventas</span><b class="num">${L(bs.reduce((a, x) => a + x.total, 0))}</b></div>
+        <div style="display:flex;justify-content:space-between"><span class="hint">Pollo que queda</span><b class="num ${st.left < BASE[b.id] * .25 ? "late" : ""}">${st.left.toFixed(1)} de ${st.rec}</b></div>
+        <div style="display:flex;justify-content:space-between"><span class="hint">Para recoger en curso</span><b>${pend}</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="hint">Caja de ayer</span>${cajaTag(cj)}</div></div></section>`; }).join("")}</div>
+  </div>`;
+}
+function cajaTag(c) { return Math.abs(c.diff) < 30 ? `<span class="status s-ok"><i></i>Cuadró</span>` : c.diff < 0 ? `<span class="status s-red"><i></i>Faltan ${L(-c.diff)}</span>` : `<span class="status s-amber"><i></i>Sobran ${L(c.diff)}</span>`; }
+function forecast(b) { const wd = (today + 1) % 7; const same = HIST[b].filter(h => h.wd === wd); const avg = same.reduce((a, h) => a + h.ch, 0) / same.length; return {wd, need: Math.ceil(avg * 1.05), avg}; }
+function RECS() {
+  const r = [];
+  BR.forEach(b => { const st = STOCK[b.id]; const rate = st.used / Math.max(1, curH - 8); const hrs = st.left / Math.max(.1, rate);
+    if (curH + hrs < 22) r.push({id: "p" + b.id, b: b.id, t: "red", i: "i-warn", h: `${b.n}: el pollo se acaba como a las ${Math.floor(curH + hrs)}:00`, p: `Quedan ${st.left.toFixed(1)} pollos y se venden ${rate.toFixed(1)} por hora.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="p${b.id}" href="${waLink(`Buenas, para ${b.n} necesitamos ${Math.ceil(rate * (22 - curH) - st.left)} pollos hoy lo antes posible. Gracias. Coco Chicken`)}">${icon("i-wa")}Pedir al proveedor</a>`}); });
+  const c = CAJA.find(x => x.d === 1 && x.diff < -100); if (c) r.push({id: "c" + c.b, b: c.b, t: "red", i: "i-cash", h: `${bn(c.b)}: la caja de ayer cerró con ${L(-c.diff)} de menos`, p: `Cerró ${c.who.toLowerCase()}. Efectivo esperado ${L(c.ef)}, contado ${L(c.cont)}.`, a: `<button class="btn sm" data-v="caja">Revisar</button>`});
+  const late = PICK.filter(p => p.st === "listo" && p.min > 25); late.forEach(p => r.push({id: "l" + p.id, b: p.b, t: "amber", i: "i-clock", h: `Pedido #${p.id} listo hace ${p.min} min`, p: `${p.who} no ha llegado a ${bn(p.b)}. Recordarle por WhatsApp.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${p.id}" href="${waLink(`Hola ${p.who.split(" ")[0]}, su pedido #${p.id} de Coco Chicken ya está listo en ${bn(p.b)}. ¡Lo esperamos!`, p.tel)}">${icon("i-wa")}Avisar</a>`}));
+  const f = forecast("sat"); r.push({id: "m", t: "blue", i: "i-box", h: `Pedido de pollo para mañana ${DAYS[f.wd]}: ${BR.reduce((a, b) => a + forecast(b.id).need, 0)} pollos`, p: `Calculado con los últimos 4 ${PL(DAYS[f.wd])} de cada sucursal, más 5% de colchón.`, a: `<button class="btn sm" data-v="pollo">Ver detalle</button>`});
+  const dorm = CLI.filter(c => c.last > 14).length; r.push({id: "promo", t: "ok", i: "i-send", h: `${Math.round(TOTAL_CLI * .31)} clientes no han vuelto en 2 semanas`, p: "Mandarles la promo de la semana por WhatsApp desde Clientes y promos.", a: `<button class="btn sm" data-v="clientes">Preparar</button>`});
+  return r;
+}
+function hourChart(s) {
+  const W = 640, H = 220, pl = 36, pb = 24, bw = (W - pl) / HRS.length;
+  const bs = SUC === "all" ? BR : BR.filter(b => b.id === SUC);
+  const data = HRS.map(h => bs.map(b => s.filter(x => x.h === h && x.b === b.id).reduce((a, x) => a + x.total, 0)));
+  const mx = Math.max(1000, ...data.map(d => d.reduce((a, x) => a + x, 0))); const step = Math.ceil(mx / 4 / 500) * 500;
+  let g = ""; for (let i = 0; i <= 4; i++) { const y = H - pb - (H - pb - 10) * (i * step) / (step * 4); g += `<line class="gl" x1="${pl}" x2="${W}" y1="${y}" y2="${y}"/><text x="${pl - 6}" y="${y + 4}" text-anchor="end">${i ? (i * step / 1000).toFixed(1) + "k" : 0}</text>`; }
+  HRS.forEach((h, i) => { let y0 = H - pb; data[i].forEach((v, j) => { const hh = (H - pb - 10) * v / (step * 4); y0 -= hh; g += `<rect x="${pl + i * bw + bw * .18}" y="${y0}" width="${bw * .64}" height="${Math.max(0, hh)}" rx="2" fill="${col(bs[j].c)}" data-tip="${h}:00 · ${bs[j].n}|${L(v)}"/>`; });
+    if (i % 2 === 0 || HRS.length < 8) g += `<text x="${pl + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${h > 12 ? h - 12 + "pm" : h + (h === 12 ? "pm" : "am")}</text>`; });
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por hora">${g}</svg></div>`;
+}
+
+function vRecoger() {
+  const cols = [["nuevo","Nuevos"],["cocina","En cocina"],["listo","Listos para recoger"],["entregado","Entregados hoy"]];
+  const next = {nuevo: ["cocina","Pasar a cocina"], cocina: ["listo","Marcar listo"], listo: ["entregado","Entregado"]};
+  const ps = PICK.filter(inB);
+  return `<div class="ph"><div><h1>Pedidos para recoger</h1><div class="sub">Llegan por WhatsApp o por su página, ya armados. El cliente pasa a traer: no hace falta repartidor.</div></div>
+    <div class="r"><button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button></div></div>
+  <div class="${KMODE ? "kmode" : ""}"><div class="board">${cols.filter(c => !KMODE || c[0] === "nuevo" || c[0] === "cocina").map(([k, t]) => { const list = ps.filter(p => p.st === k);
+    return `<div class="col"><h3>${t}<span>${list.length}</span></h3>${list.map(p => { const tot = p.items.reduce((a, i) => a + i.p * i.q, 0);
+      return `<div class="tk"><div class="t"><b>#${p.id}</b>${p.st === "entregado" ? `<span class="status s-gray"><i></i>Entregado</span>` : `<span class="hint ${p.min > 20 && p.st !== "listo" ? "late" : ""}">hace ${p.min} min</span>`}</div>
+      <ul>${p.items.map(i => `<li><span>${i.q} × ${i.n}</span>${KMODE ? "" : `<span class="num">${L(i.p * i.q)}</span>`}</li>`).join("")}</ul>
+      ${KMODE ? `<div class="m">${p.who} · ${bn(p.b)}</div>` : `<div class="m"><span>${p.who}</span><span>· ${bn(p.b)}</span><span class="status ${p.pay.startsWith("Pagado") ? "s-ok" : "s-amber"}"><i></i>${p.pay}</span><b class="num" style="margin-left:auto">${L(tot)}</b></div>`}
+      ${next[p.st] ? `<div class="a">${p.st === "listo" && !KMODE ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${p.who.split(" ")[0]}, su pedido #${p.id} de Coco Chicken ya está listo en ${bn(p.b)}. ¡Lo esperamos!`, p.tel)}">${icon("i-wa")}Avisar</a>` : ""}<button class="btn sm ${p.st === "nuevo" ? "red" : ""}" data-mv="${p.id}">${next[p.st][1]}</button></div>` : ""}</div>`; }).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div></div>
+  <p class="hint" style="margin-top:14px">Cuando un pedido pasa a "Listo", el bot le escribe solo al cliente. El botón "Avisar" es para recordarle si no ha llegado.</p>`;
+}
+
+function vCaja() {
+  const bs = BR.filter(inB); const b0 = SUC === "all" ? "cab" : SUC;
+  const rows = CAJA.filter(inB).filter(c => c.d < 7).sort((a, b) => a.d - b.d || a.b.localeCompare(b.b));
+  const lbl = d => d === 0 ? "Hoy" : d === 1 ? "Ayer" : DAYS[(today - d + 7) % 7];
+  return `<div class="ph"><div><h1>Cierre de caja</h1><div class="sub">Cada noche el cajero cuenta desde el celular. El panel compara con lo que se vendió y le avisa si no cuadra.</div></div></div>
+  <div class="g2">
+    <section class="card"><header><h2>Últimos 7 días</h2><div class="r">${bs.length === 3 ? "3 sucursales" : bs[0].n}</div></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Día</th>${SUC === "all" ? "<th>Sucursal</th>" : ""}<th class="r">Efectivo esperado</th><th class="r">Contado</th><th>Resultado</th></tr></thead>
+      <tbody>${rows.filter(c => c.d > 0).map(c => `<tr><td>${lbl(c.d)}</td>${SUC === "all" ? `<td>${bn(c.b)}</td>` : ""}<td class="r num">${L(c.ef)}</td><td class="r num">${L(c.cont)}</td><td>${cajaTag(c)}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="card"><header><h2>Cerrar caja de hoy</h2></header><div class="pad form" id="cform">
+      <label>Sucursal<select id="cb">${BR.map(b => `<option value="${b.id}" ${b.id === b0 ? "selected" : ""}>${b.n}</option>`).join("")}</select></label>
+      <div class="f2"><label>Efectivo contado (L)<input id="cef" inputmode="decimal" placeholder="0"></label><label>Gastos pagados de caja (L)<input id="cga" inputmode="decimal" placeholder="0"></label></div>
+      <div id="cres"></div>
+      <button class="btn pri" id="cok">Guardar cierre</button>
+      <p class="hint">El efectivo esperado sale de las ventas en mostrador y de los pedidos que se pagan al recoger.</p>
+    </div></section>
+  </div>`;
+}
+function cajaCalc() {
+  const b = $("#cb").value; const exp = Math.round(SALES.filter(x => x.b === b && x.ch !== "PedidosYa").reduce((a, x) => a + x.total, 0) * .7);
+  const ef = +($("#cef").value || 0), ga = +($("#cga").value || 0); const d = ef + ga - exp;
+  $("#cres").innerHTML = `<div class="res" style="background:var(--sunk)"><span>Efectivo esperado</span><span class="big">${L(exp)}</span></div>` + (ef ? `<div class="res" style="background:var(--${Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber"}-bg);color:var(--${Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber"})"><span>${Math.abs(d) < 30 ? "Cuadra" : d < 0 ? "Faltan" : "Sobran"}</span><span class="big">${Math.abs(d) < 30 ? "✓" : L(Math.abs(d))}</span></div>` : "");
+}
+
+function vPollo() {
+  const bs = BR.filter(inB); const f0 = forecast("sat").wd;
+  const tot = bs.reduce((a, b) => a + forecast(b.id).need, 0);
+  const msg = `Buenas, pedido de Coco Chicken para mañana ${DAYS[f0]}:\n` + bs.map(b => `• ${b.n}: ${forecast(b.id).need} pollos`).join("\n") + `\nTotal: ${tot} pollos. Gracias.`;
+  return `<div class="ph"><div><h1>Pollo e insumos</h1><div class="sub">Cuánto pollo queda hoy, cuánto pedir para mañana y qué insumo está por acabarse.</div></div></div>
+  <div class="stack">
+    <div class="g3">${bs.map(b => { const st = STOCK[b.id]; const pct = st.left / st.rec * 100;
+      return `<section class="card"><header><h2><i class="dot" style="background:${col(b.c)}"></i>${b.n}</h2></header><div class="pad" style="display:grid;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="hint">Quedan hoy</span><span class="big ${pct < 25 ? "late" : ""}">${st.left.toFixed(1)} <small style="font-size:14px;color:var(--tx3)">pollos</small></span></div>
+      <div class="trk"><i style="width:${pct}%;background:${pct < 25 ? "var(--red)" : col(b.c)}"></i></div>
+      <div class="hint">Recibidos ${st.rec} esta mañana · vendidos ${st.used.toFixed(1)}</div></div></section>`; }).join("")}</div>
+    <div class="g2">
+      <section class="card"><header><h2>Pedido para mañana, ${DAYS[f0]}</h2><div class="r">promedio de los últimos 4 ${PL(DAYS[f0])} + 5%</div></header>
+        <table class="tbl"><thead><tr><th>Sucursal</th><th class="r">Promedio</th><th class="r">Pedir</th></tr></thead>
+        <tbody>${bs.map(b => { const f = forecast(b.id); return `<tr><td>${b.n}</td><td class="r num">${f.avg.toFixed(0)}</td><td class="r num"><b>${f.need}</b></td></tr>`; }).join("")}
+        <tr><td><b>Total</b></td><td></td><td class="r num"><b>${tot} pollos</b></td></tr></tbody></table>
+        <div class="pad" style="border-top:1px solid var(--line)"><a class="btn wa" target="_blank" rel="noopener" href="${waLink(msg)}">${icon("i-wa")}Mandar pedido al proveedor</a></div></section>
+      <section class="card"><header><h2>Insumos</h2><div class="r">en rojo: debajo del mínimo</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Insumo</th>${bs.map(b => `<th class="r">${b.n.split(" ").pop()}</th>`).join("")}</tr></thead>
+        <tbody>${INS.map(([n, u, s, m]) => `<tr><td>${n}</td>${bs.map(b => `<td class="r num ${s[b.id] < m[b.id] ? "late" : ""}">${s[b.id]} ${u}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+    </div>
+  </div>`;
+}
+
+function vVentas() {
+  const bs = BR.filter(inB);
+  const wk = bs.reduce((a, b) => a + HIST[b.id].slice(21).reduce((q, h) => q + h.ventas, 0), 0);
+  const s = SALES.filter(inB); const tot = s.reduce((a, x) => a + x.total, 0) || 1;
+  const byCh = CH.map(c => [c, s.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]);
+  const pyShare = byCh[1][1] / tot; const pyWeek = wk * pyShare; const comWeek = pyWeek * COMM / 100;
+  const items = MENU.map(m => [m.n, s.filter(x => x.item === m.n).reduce((a, x) => a + x.qty, 0), s.filter(x => x.item === m.n).reduce((a, x) => a + x.total, 0)]).sort((a, b) => b[2] - a[2]);
+  const mxI = Math.max(...items.map(i => i[2]));
+  return `<div class="ph"><div><h1>Ventas y comisiones</h1><div class="sub">${scope()} · por canal, por producto y cuánto se va en comisión.</div></div></div>
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas últimos 7 días</span><b class="num">${L(wk)}</b><small>${scope()}</small></div>
+      <div class="kpi"><span>Por PedidosYa (estimado)</span><b class="num">${L(pyWeek)}</b><small>${Math.round(pyShare * 100)}% de las ventas</small></div>
+      <div class="kpi"><span>Comisión pagada en 7 días</span><b class="num" style="color:var(--red)">${L(comWeek)}</b><small>al ${COMM}% · al mes ≈ ${L(comWeek * 4.3)}</small></div>
+      <div class="kpi"><span>Si 1 de cada 4 pasa a recoger</span><b class="num" style="color:var(--ok)">${L(comWeek * .25 * 4.3)}</b><small>de ahorro al mes</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header><h2>Hoy por canal</h2></header><div class="bars">${byCh.map(([c, v]) => `<div class="hb"><b>${c}<em class="num">${L(v)} · ${Math.round(v / tot * 100)}%</em></b><div class="trk"><i style="width:${v / tot * 100}%;background:${col(CHC[c])}"></i></div></div>`).join("")}</div>
+        <div class="pad form" style="border-top:1px solid var(--line)"><label>Comisión de PedidosYa según su contrato (%)<input id="com" inputmode="decimal" value="${COMM}"></label><p class="hint">No conocemos su comisión real; póngala aquí y todo el panel se recalcula.</p></div></section>
+      <section class="card"><header><h2>Lo más vendido hoy</h2></header><div class="bars">${items.map(([n, q, v]) => `<div class="hb"><b>${n}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
+    </div>
+  </div>`;
+}
+
+function vClientes() {
+  const cs = CLI.filter(inB);
+  return `<div class="ph"><div><h1>Clientes y promos</h1><div class="sub">La tarjeta "Pagas 3, el 4 es gratis" vive en WhatsApp: cada compra suma un sello y cada cliente queda en su lista.</div></div></div>
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Clientes en la lista</span><b class="num">${TOTAL_CLI.toLocaleString("en-US")}</b><small>con número de WhatsApp</small></div>
+      <div class="kpi"><span>A un sello del gratis</span><b class="num">${Math.round(TOTAL_CLI * .12)}</b><small>3 sellos</small></div>
+      <div class="kpi"><span>No vuelven hace 2 semanas</span><b class="num">${Math.round(TOTAL_CLI * .31)}</b><small>buen público para una promo</small></div>
+      <div class="kpi"><span>Pollos gratis canjeados</span><b class="num">74</b><small>este mes</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header><h2>Clientes</h2><div class="r">muestra</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Cliente</th><th>Sucursal</th><th>Tarjeta</th><th class="r">Compras</th><th class="r">Última</th></tr></thead>
+        <tbody>${cs.map(c => `<tr><td>${c.n}</td><td>${bn(c.b)}</td><td><span class="stamps">${[0, 1, 2, 3].map(i => `<i class="${i < c.s ? "on" : ""}"></i>`).join("")}</span></td><td class="r num">${c.tot}</td><td class="r">${c.last ? "hace " + c.last + " d" : "hoy"}</td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header><h2>Mandar una promo</h2></header><div class="pad form">
+        <label>A quién<select id="pa"><option value="all">Todos (${TOTAL_CLI.toLocaleString("en-US")})</option><option value="dorm">No vuelven hace 2 semanas (${Math.round(TOTAL_CLI * .31)})</option><option value="near">A un sello del gratis (${Math.round(TOTAL_CLI * .12)})</option></select></label>
+        <label>Mensaje<textarea id="pm">¡Hola! Esta semana en Coco Chicken: pagas 3, el 4 es gratis. Pide por aquí y pasa a recoger a tu sucursal. ¡Mmm qué sabroso! 🍗</textarea></label>
+        <button class="btn red" id="psend">${icon("i-send")}Programar envío</button>
+        <p class="hint">WhatsApp cobra cada mensaje de promoción; el panel muestra el costo antes de enviar. Solo se escribe a quien aceptó recibir promos.</p></div></section>
+    </div>
+  </div>`;
+}
+
+function vTiktok() {
+  const ts = TIKTOKS.slice().sort((a, b) => b.ven - a.ven); const mx = ts[0].ven;
+  return `<div class="ph"><div><h1>¿Qué video vendió?</h1><div class="sub">Cada video lleva su código ("di POLLO15 al pedir"). El bot lo anota y aquí se ve cuánto vendió cada uno.</div></div></div>
+  <section class="card"><header><h2>Videos de @cocochiken1</h2><div class="r">vistas reales · pedidos de ejemplo</div></header><div class="scrollx"><table class="tbl">
+    <thead><tr><th>Video</th><th>Código</th><th class="r">Vistas</th><th class="r">Pedidos</th><th style="min-width:160px">Ventas</th></tr></thead>
+    <tbody>${ts.map(t => `<tr><td>${t.t}</td><td><span class="status s-gray">${t.code}</span></td><td class="r num">${t.v >= 1000 ? (t.v / 1000).toFixed(1) + "K" : t.v}</td><td class="r num">${t.ped}</td><td><div style="display:flex;gap:10px;align-items:center"><div class="trk" style="flex:1"><i style="width:${t.ven / mx * 100}%;background:var(--c1)"></i></div><span class="num">${L(t.ven)}</span></div></td></tr>`).join("")}</tbody></table></div></section>
+  <p class="hint" style="margin-top:14px">Con esto se sabe qué tipo de video repetir: los de oferta de precio y los de inauguración pasan de 100 mil vistas; los del día a día quedan entre 600 y 10 mil.</p>`;
+}
+
+// ---------- render & events ----------
+const VIEWS = {hoy: vHoy, recoger: vRecoger, caja: vCaja, pollo: vPollo, ventas: vVentas, clientes: vClientes, tiktok: vTiktok};
+function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); if (VIEW === "caja") cajaCalc(); window.scrollTo(0, 0); }
+function go(v) { if (!VIEWS[v]) return; VIEW = v; KMODE = false; history.replaceState(null, "", "#" + v); $("#side").classList.remove("open"); $("#scrim").classList.remove("open"); render(); }
+document.addEventListener("click", e => {
+  const v = e.target.closest("[data-v]"); if (v) { e.preventDefault(); go(v.dataset.v); return; }
+  const s = e.target.closest("[data-s]"); if (s) { SUC = s.dataset.s; render(); return; }
+  const d = e.target.closest("[data-done]"); if (d) { DONE.add(d.dataset.done); setTimeout(render, 300); }
+  const m = e.target.closest("[data-mv]"); if (m) { const p = PICK.find(x => x.id === +m.dataset.mv); const nx = {nuevo: "cocina", cocina: "listo", listo: "entregado"}[p.st]; p.st = nx; p.min = 0;
+    toast(nx === "listo" ? `#${p.id} listo. El bot le avisó a ${p.who.split(" ")[0]} (demo)` : nx === "cocina" ? `#${p.id} pasó a cocina` : `#${p.id} entregado`); render(); }
+  if (e.target.closest("#kmode")) { KMODE = !KMODE; render(); }
+  if (e.target.closest("#cok")) { if (!$("#cef").value) { toast("Escriba el efectivo contado"); return; } toast(`Cierre de ${bn($("#cb").value)} guardado (demo)`); $("#cef").value = ""; $("#cga").value = ""; cajaCalc(); }
+  if (e.target.closest("#psend")) { const n = {all: TOTAL_CLI, dorm: Math.round(TOTAL_CLI * .31), near: Math.round(TOTAL_CLI * .12)}[$("#pa").value]; toast(`Promo programada para ${n.toLocaleString("en-US")} clientes (demo)`); }
+  if (e.target.closest("#mbtn")) { $("#side").classList.toggle("open"); $("#scrim").classList.toggle("open"); }
+  if (e.target.closest("#scrim")) { $("#side").classList.remove("open"); $("#scrim").classList.remove("open"); }
+  if (e.target.closest("#tema")) { const dk = document.documentElement.dataset.theme === "dark"; if (dk) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = "dark"; try { localStorage.setItem("ccp-tema", dk ? "light" : "dark"); } catch (er) {} }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "cef" || e.target.id === "cga" || e.target.id === "cb") cajaCalc();
+  if (e.target.id === "com") { const v = +e.target.value; if (v >= 0 && v <= 60) { COMM = v; try { localStorage.setItem("ccp-com", v); } catch (er) {} const pos = e.target.selectionStart; render(); const i = $("#com"); i.focus(); i.setSelectionRange(pos, pos); } }
+});
+document.addEventListener("change", e => { if (e.target.id === "cb") cajaCalc(); });
+// chart tooltips
+document.addEventListener("pointerover", e => { const r = e.target.closest("[data-tip]"); const old = document.querySelector(".tip"); if (old) old.remove(); if (!r) return;
+  const ch = r.closest(".chart"); const bb = r.getBoundingClientRect(), cb = ch.getBoundingClientRect(); const [a, b] = r.dataset.tip.split("|");
+  const t = document.createElement("div"); t.className = "tip"; t.innerHTML = `<b>${b}</b>${a}`; t.style.left = (bb.left + bb.width / 2 - cb.left) + "px"; t.style.top = (bb.top - cb.top) + "px"; ch.append(t); });
+const h0 = location.hash.slice(1); if (VIEWS[h0]) VIEW = h0;
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (VIEWS[h] && h !== VIEW) go(h); });
+render();
+</script>
+</body>
+</html>
