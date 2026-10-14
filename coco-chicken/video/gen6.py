@@ -213,8 +213,8 @@ def build():
           <div class="quote" id="qtk"><span>Su bio en TikTok</span><b>“Pagas 3 El 4 Es Gratis<br>En Pedidos Ya”</b></div>
           <div class="quote" id="qpy" style="top:800px;left:940px;width:874px"><span>En PedidosYa</span><b>★ 4.4 · 1,097 opiniones</b></div>
           <div class="left narrow">
-            <div class="grp" id="pg1"><div class="stepn" id="p0">Hoy, para pedir</div><div class="h1" id="p1">{words("El video")}</div><div class="h1" id="p2">{words("lleva a")}</div><div class="h1" id="p3">{hl("PedidosYa.")}</div></div>
-            <div class="grp" id="pg2"><div class="h1" id="p4">{words("Su menú,")}</div><div class="h1" id="p5">{words("su promo,")}</div><div class="h1" id="p6">{words("en la app")}</div><div class="h1" id="p7">{hl("de otro.")}</div></div>
+            <div class="grp" id="pg1"><div class="stepn" id="pa0">Hoy, para pedir</div><div class="h1" id="pa1">{words("El video")}</div><div class="h1" id="pa2">{words("lleva a")}</div><div class="h1" id="pa3">{hl("PedidosYa.")}</div></div>
+            <div class="grp" id="pg2"><div class="h1" id="pa4">{words("Su menú,")}</div><div class="h1" id="pa5">{words("su promo,")}</div><div class="h1" id="pa6">{words("en la app")}</div><div class="h1" id="pa7">{hl("de otro.")}</div></div>
           </div>'''),
         scene("calm", f'''
           <div class="wash w6"></div>
@@ -380,8 +380,8 @@ tl.fromTo("#photo img", { scale: 1.06 }, { scale: 1, duration: K(11) - K(8), eas
 [9, 9.35, 9.7, 10.1].forEach((k, i) => rise("#cp" + i, K(k), { y: 24, d: 1.2 }));
 
 // 4 · today the order path ends in PedidosYa
-rise("#p0", K(11), { d: 1.2 }); rise("#p1 .w", K(11) + .2); rise("#p2 .w", K(11) + .5); rise("#p3 .w", K(11) + .8);
-swipe("#p3 .hlbg", K(11.6));
+rise("#pa0", K(11), { d: 1.2 }); rise("#pa1 .w", K(11) + .2); rise("#pa2 .w", K(11) + .5); rise("#pa3 .w", K(11) + .8);
+swipe("#pa3 .hlbg", K(11.6));
 tl.fromTo("#shtk", { opacity: 0, y: 70, filter: "blur(12px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(11.3));
 box("#shtk-mk0", K(12.3));
 rise("#qtk", K(12.6), { d: 1.4 });
@@ -391,8 +391,8 @@ tl.fromTo("#shpy", { opacity: 0, y: 70, filter: "blur(12px)" }, { opacity: 1, y:
 box("#shpy-mk0", K(14)); box("#shpy-mk1", K(14.5));
 rise("#qpy", K(14.2), { d: 1.4 });
 out("#pg1", K(14) - .9);
-rise("#p4 .w", K(14)); rise("#p5 .w", K(14) + .4); rise("#p6 .w", K(14) + .8); rise("#p7 .w", K(14) + 1.2);
-swipe("#p7 .hlbg", K(14.8));
+rise("#pa4 .w", K(14)); rise("#pa5 .w", K(14) + .4); rise("#pa6 .w", K(14) + .8); rise("#pa7 .w", K(14) + 1.2);
+swipe("#pa7 .hlbg", K(14.8));
 
 // 5 · break
 rise("#k1 .w", K(16), { d: 2, st: .12 });
