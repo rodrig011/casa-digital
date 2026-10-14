@@ -74,13 +74,16 @@ La página propia de pedidos (v1) sigue como extra: sirve para el link en la bio
 
 ## 4. Números (de referencia, por validar)
 
-- **Panel + bot de WhatsApp para recoger, 3 sucursales (v2):** propongo L32,000 de instalación (en 2 pagos) + L3,500/mes, con el login, la pantalla de cocina y el cierre de caja. Es mi estimado, sin tarifas publicadas para comparar.
+**Un solo paquete, todo incluido: L32,000 de instalación (en 2 pagos) + L3,500/mes.** Es mi estimado; no hay tarifas publicadas de agencias en Honduras para comparar. Incluye:
+- **El bot de WhatsApp** en su número: toma el pedido para recoger, lo manda a la sucursal, le avisa al cliente cuando está listo, anota la tarjeta "pagas 3, el 4 es gratis" y el código del TikTok. Se construye en la instalación, sobre el bot que ya hicimos para Steel Works (`casa-digital/steelworks/bot/`); no hay que pagarlo aparte.
+- **El panel del dueño** para las 3 sucursales: ventas por sucursal y por app (PedidosYa y Bip Bip con su comisión), pedidos y pantalla de cocina, cierre de caja, pollo e insumos, clientes y TikTok. Con login para las personas que ellos autoricen.
+- La configuración, la capacitación del personal y el soporte mensual.
 
-- **Precio fundador**, como en la oferta de restaurantes: L19,900 de instalación (en 2 pagos) + L2,200/mes por la página de pedidos y los 3 perfiles de Google.
-- **Bot de WhatsApp + tarjeta de sellos + panel:** propongo sumar L12,000 de instalación + L1,500/mes. Es mi estimado: no hay tarifas publicadas de agencias en Honduras para comparar.
-- **Costos que paga el restaurante aparte:** comisión de la pasarela de pago (PixelPay, BAC o Pagadito; tarifa sin confirmar), mensajes de WhatsApp por Twilio/Meta y la IA del bot (~US$0.40 por 100 conversaciones).
-- **Ejemplo de ahorro (supuestos, no datos de ellos):** si pasan 300 pedidos al mes de PedidosYa a su canal, con un pedido promedio de L140 y una comisión de 25%, se ahorran unos L10,500 al mes. La comisión real de PedidosYa en Honduras no está confirmada (en Latinoamérica ronda 20 a 30%).
-- **Garantía** (como en la oferta general): 50 pedidos pagados en línea en 90 días, o seguimos trabajando gratis hasta llegar.
+**Costos que paga el restaurante aparte:** los mensajes de WhatsApp (Twilio/Meta) y la IA del bot (~US$0.40 por 100 conversaciones). Si después quieren cobro en línea, la comisión de la pasarela (PixelPay, BAC o Pagadito; tarifa sin confirmar).
+
+**Ejemplo de ahorro (supuestos, no datos de ellos):** si pasan 300 pedidos al mes de las apps a "pasar a recoger", con un pedido promedio de L140 y una comisión de 25%, se ahorran unos L10,500 al mes. Las comisiones reales de PedidosYa y Bip Bip no están confirmadas (en Latinoamérica rondan 20 a 30%).
+
+> Versión anterior (v1, ya no se usa): página de pedidos a precio fundador L19,900 + L2,200/mes, más el bot como extra (L12,000 + L1,500/mes). Se reemplazó por el paquete de arriba, que ya trae el bot.
 
 ## 5. El video
 
