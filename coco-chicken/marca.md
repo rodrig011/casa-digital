@@ -88,6 +88,8 @@ Escenas: intro → "Ya tienen lo más difícil: la atención" con su TikTok fija
 
 El diseño de la página, la conversación del bot y las cifras del panel están marcados en pantalla como "Diseño de muestra", "Conversación de ejemplo" y "Datos de ejemplo".
 
+**Video v2 (2026-10-14): `coco-chicken-casa-digital-v2.mp4`, 1:41.** Mismo estilo y música. Historia: ya tienen la atención (su TikTok) → tres sucursales → a domicilio venden por PedidosYa (su bio) y Bip Bip (su letrero) → "dos apps, dos tabletas, dos depósitos que revisar" → "las apps ponen al repartidor; lo que falta es ver todo junto" → 4 pantallas reales del panel (acciones, ventas por app, pedidos para recoger, caja), marcadas "Datos de ejemplo" → por qué nosotros → by Clientia Tech. El v1 (`coco-chicken-casa-digital.mp4`) se queda guardado.
+
 ## 6. Contacto (borradores, nada enviado)
 
 El mejor canal es el WhatsApp de Facebook (3189-6607) o un mensaje directo en TikTok, porque el dueño maneja sus redes.
