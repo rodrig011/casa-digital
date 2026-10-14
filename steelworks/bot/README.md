@@ -19,6 +19,8 @@ Para llamadas telefónicas ver [LLAMADAS.md](LLAMADAS.md).
 | `avisos.js` | Arma y manda los avisos al dueño y a la sucursal. |
 | `store.js` | Guarda conversaciones y fichas en `DATA_DIR` (`leads.json`, `sessions.json`). |
 | `voz.js` | Convierte la conversación a voz para las llamadas. |
+| `auth.js`, `usuarios.js` | Acceso al panel del dueño con correo y contraseña (ver *Panel del dueño*). |
+| `panel/` | El panel que se abre en `/panel` después de entrar (lo genera `python3 ../build.py`). |
 | `ia.js` | Modo IA opcional con Claude: entiende mensajes libres por WhatsApp (ver *Modo IA*). |
 | `test.js` | Pruebas sin Twilio: `npm test`. |
 | `.env.example` | Todas las variables, explicadas. |
@@ -31,7 +33,7 @@ Necesitas Node 22 o más nuevo.
 ```bash
 cd steelworks/bot
 npm install
-npm test                      # simula conversaciones completas; debe decir "pass 8, fail 0"
+npm test                      # simula conversaciones completas; debe decir "pass 9, fail 0"
 cp .env.example .env          # y llena lo que tengas
 npm start                     # "Bot escuchando en :3000"
 ```
@@ -168,6 +170,29 @@ Supuesto: una conversación de unos 8 mensajes del cliente, que son unas 12 llam
 | **Por conversación** | | **≈ US$0.004** |
 
 **Unas 100 conversaciones cuestan cerca de US$0.40** (menos de US$1 aunque las conversaciones salgan el doble de largas). Para comparar, Twilio cobra unos US$10 por esas mismas 100 conversaciones. El gasto real se ve en console.anthropic.com > **Usage**.
+
+## Panel del dueño (correo y contraseña)
+
+El panel vive en el mismo servidor del bot: `https://<su-servicio>.onrender.com/panel`. Para verlo hay que entrar con correo y contraseña, y solo entran las personas que usted autorice.
+
+1. **PANEL_SECRET.** El Blueprint lo crea solo. Si lo cambia, se cierran todas las sesiones abiertas.
+2. **Dar acceso a alguien.** En Render, abra el servicio, vaya a **Shell** y escriba:
+   ```
+   npm run usuario -- agregar correo@steelworks.hn "Nombre Apellido"
+   ```
+   Le pide la contraseña dos veces sin mostrarla. Debe tener al menos 10 caracteres. La persona queda guardada en el disco, en `usuarios.json`, y ya puede entrar.
+3. **Quitar acceso.** Escriba `npm run usuario -- quitar correo@steelworks.hn`. Su sesión deja de valer en ese momento. Para ver quién tiene acceso, escriba `npm run usuario -- lista`.
+4. **Sin consola.** En su computadora, escriba `npm run usuario -- linea correo "Nombre"`. Eso imprime una línea; péguela en **Environment > PANEL_USUARIOS**, una persona por línea.
+
+Para cambiar una contraseña, vuelva a usar `agregar` con el mismo correo.
+
+**Cómo protege el panel:**
+- Las contraseñas no se guardan, solo una huella (scrypt).
+- La sesión dura 12 horas. Va en una cookie firmada que el navegador no deja leer a otras páginas (HttpOnly, SameSite=Strict, Secure).
+- Después de 5 intentos fallidos, ese correo o esa conexión quedan bloqueados 15 minutos.
+- Si falta PANEL_SECRET, el panel no abre.
+
+El archivo `steelworks-panel.html` que se manda para mostrar es solo una demostración. Trae su propia pantalla de entrada (demo@steelworks.hn / acero2026) y no protege nada.
 
 ## Pendiente con Steel Works
 

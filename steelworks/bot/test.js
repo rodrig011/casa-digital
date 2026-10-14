@@ -302,3 +302,69 @@ test("ia: si la API falla, contesta el menú de siempre y lo anota en el log", a
     assert.equal(ctx.sent.length, 0);
   } finally { ctx.srv.close(); }
 });
+
+test("panel: solo entra quien tiene correo y contraseña autorizados", async () => {
+  const { hashClave, verificarClave, COOKIE } = require("./auth");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sw-panel-"));
+  const linea = `dueno@steelworks.hn|Dueño|${await hashClave("hierro-forjado-40")}`;
+  assert.ok(await verificarClave("hierro-forjado-40", linea.split("|")[2]));
+  assert.ok(!(await verificarClave("otra-clave-larga", linea.split("|")[2])));
+  await assert.rejects(hashClave("corta"), /al menos 10/);
+
+  // without PANEL_SECRET the panel stays closed
+  const cerrado = await montar(dir, { panelSecret: "", panelUsuarios: linea });
+  try { assert.equal((await fetch(cerrado.base + "/panel", { redirect: "manual" })).status, 503); } finally { cerrado.srv.close(); }
+
+  const ctx = await montar(dir, { panelSecret: "s".repeat(40), panelUsuarios: linea });
+  const entrar = (correo, clave, extra = {}) => fetch(ctx.base + "/panel/entrar", { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded", ...extra }, body: new URLSearchParams({ correo, clave }) });
+  try {
+    // no session: sent to the login page, and the panel file is not served
+    const sin = await fetch(ctx.base + "/panel", { redirect: "manual" });
+    assert.equal(sin.status, 303); assert.equal(sin.headers.get("location"), "/panel/entrar");
+    assert.match(await (await fetch(ctx.base + "/panel/entrar")).text(), /Entrar al panel/);
+    assert.equal((await fetch(ctx.base + "/panel/yo")).status, 401);
+
+    // wrong password, unknown email
+    const mal = await entrar("dueno@steelworks.hn", "no-es-esta-clave");
+    assert.equal(mal.status, 401); assert.match(await mal.text(), /incorrectos/); assert.equal(mal.headers.get("set-cookie"), null);
+    assert.equal((await entrar("otro@gmail.com", "hierro-forjado-40")).status, 401);
+    // another site cannot post the login form
+    assert.equal((await entrar("dueno@steelworks.hn", "hierro-forjado-40", { Origin: "https://malo.example" })).status, 403);
+
+    // right password (email in any case): cookie, then the panel and /leads open
+    const ok = await entrar("  Dueno@SteelWorks.hn ", "hierro-forjado-40");
+    assert.equal(ok.status, 303); assert.equal(ok.headers.get("location"), "/panel");
+    const sc = ok.headers.get("set-cookie");
+    assert.match(sc, new RegExp(`^${COOKIE}=`)); assert.match(sc, /HttpOnly/); assert.match(sc, /SameSite=Strict/);
+    const cookie = sc.split(";")[0];
+    const pan = await fetch(ctx.base + "/panel", { headers: { Cookie: cookie } });
+    assert.equal(pan.status, 200); assert.match(await pan.text(), /PANEL_MODO = "servidor"/); assert.equal(pan.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await (await fetch(ctx.base + "/panel/yo", { headers: { Cookie: cookie } })).json(), { correo: "dueno@steelworks.hn", nombre: "Dueño" });
+    assert.equal((await fetch(ctx.base + "/leads", { headers: { Cookie: cookie } })).status, 200);
+
+    // a tampered cookie does not work
+    const [v, f] = cookie.split("=")[1].split(".");
+    const otro = Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(v, "base64url")), e: "otro@gmail.com" })).toString("base64url");
+    assert.equal((await fetch(ctx.base + "/panel", { redirect: "manual", headers: { Cookie: `${COOKIE}=${otro}.${f}` } })).status, 303);
+
+    // log out clears the cookie
+    const out = await fetch(ctx.base + "/panel/salir", { redirect: "manual", headers: { Cookie: cookie } });
+    assert.equal(out.status, 303); assert.match(out.headers.get("set-cookie"), /Max-Age=0/);
+  } finally { ctx.srv.close(); }
+
+  // a password change ends old sessions; 5 wrong tries lock the email
+  const ctx2 = await montar(dir, { panelSecret: "s".repeat(40), panelUsuarios: linea });
+  try {
+    const r = await fetch(ctx2.base + "/panel/entrar", { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ correo: "dueno@steelworks.hn", clave: "hierro-forjado-40" }) });
+    const cookie = r.headers.get("set-cookie").split(";")[0];
+    ctx2.srv.close();
+    const nueva = `dueno@steelworks.hn|Dueño|${await hashClave("clave-nueva-2026")}`;
+    const ctx3 = await montar(dir, { panelSecret: "s".repeat(40), panelUsuarios: nueva });
+    try {
+      assert.equal((await fetch(ctx3.base + "/panel", { redirect: "manual", headers: { Cookie: cookie } })).status, 303, "la sesión vieja ya no vale");
+      const intento = clave => fetch(ctx3.base + "/panel/entrar", { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ correo: "dueno@steelworks.hn", clave }) });
+      for (let i = 0; i < 5; i++) assert.equal((await intento("mala-clave-" + i)).status, 401);
+      assert.equal((await intento("clave-nueva-2026")).status, 429, "bloqueado aunque ahora acierte");
+    } finally { ctx3.srv.close(); }
+  } finally { ctx2.srv.close(); }
+});

@@ -67,6 +67,24 @@ img,svg{display:block;max-width:100%;}
 :root[data-theme="dark"] .theme .sun{display:block;}
 :root[data-theme="dark"] .theme .moon{display:none;}
 
+.me{cursor:pointer;border:0;}
+.usermenu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;display:grid;}
+.usermenu .who small{color:var(--tx3);font-size:12px;}
+/* demo login (only in the demo file; the real panel logs in on the server) */
+.gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;background:var(--bg);}
+.gate form{width:min(400px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;display:grid;gap:16px;box-shadow:var(--shadow);}
+.gate .brand img{height:30px;width:auto;margin-bottom:6px;}
+.gate h1{margin:0;font:600 22px var(--body);letter-spacing:-.01em;}
+.gate p{margin:0;color:var(--tx2);}
+.gate label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--tx2);}
+.gate input{height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--card);padding:0 12px;font-size:16px;}
+.gate input:focus{outline:none;border-color:var(--ember);box-shadow:0 0 0 3px color-mix(in srgb,var(--ember) 18%,transparent);}
+.gate .btn{height:46px;font-size:15px;}
+.gate .err{background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:500;}
+.gate .hint{background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:10px 12px;font-size:13px;}
+.gate .hint b{font-weight:700;}
+@media (prefers-reduced-motion:no-preference){.gate form{animation:vin .4s var(--ease-out);}}
+
 /* ===== buttons ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:9px;font-weight:600;font-size:13px;border:1px solid var(--line2);background:var(--card);white-space:nowrap;transition:transform .16s var(--ease-out),background-color .15s ease,border-color .15s ease;}
 .btn:active{transform:scale(.97);}
@@ -460,6 +478,7 @@ main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
   <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></g></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></g></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
 </svg>
 
@@ -483,7 +502,10 @@ main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
     </div>
     <button class="iconbtn theme hide-s" type="button" id="themeBtn" aria-label="Cambiar a modo noche" title="Día / Noche"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
     <a class="iconbtn" href="#/inicio" aria-label="Alertas"><svg class="ic"><use href="#i-bell"/></svg><span class="dot"></span></a>
-    <span class="me" title="Dueño">SW</span>
+    <div class="newmenu usermenu">
+      <button class="me" type="button" id="meBtn" aria-haspopup="true" aria-expanded="false" aria-label="Mi cuenta">SW</button>
+      <div class="pop" id="mePop" hidden><div class="who"><b id="meName">Dueño</b><small id="meMail"></small></div><a href="/panel/salir" id="salir"><svg class="ic"><use href="#i-out"/></svg>Salir</a></div>
+    </div>
   </div>
 </header>
 
@@ -510,6 +532,18 @@ main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<div class="gate" id="gate" hidden>
+  <form id="gateForm" autocomplete="on">
+    <div class="brand"><img class="lg-n" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-blanco.svg" alt="Steel Works Honduras" width="118" height="30"><img class="lg-d" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-negro.svg" alt="Steel Works Honduras" width="118" height="30"></div>
+    <div><h1>Entrar al panel</h1><p>Solo para personas autorizadas por Steel Works.</p></div>
+    <div class="err" id="gateErr" role="alert" hidden>Correo o contraseña incorrectos.</div>
+    <label>Correo<input id="gMail" type="email" autocomplete="username" required></label>
+    <label>Contraseña<input id="gPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn pri" type="submit">Entrar</button>
+    <div class="hint">Demostración: entre con <b>demo@steelworks.hn</b> y la contraseña <b>acero2026</b>. En el panel real solo entran los correos que el dueño autoriza, y la contraseña se revisa en el servidor.</div>
+  </form>
+</div>
+<script>window.PANEL_MODO = window.PANEL_MODO || "archivo";</script>
 <script>window.FOTOS = window.FOTOS || null;</script>
 <script>
 (function () {
@@ -1122,7 +1156,7 @@ q.addEventListener("keydown", e => {
   if (e.key === "Escape") { q.value = ""; res.hidden = true; q.blur(); $("#search").classList.remove("open"); }
 });
 res.addEventListener("click", e => { if (e.target.closest("a")) { q.value = ""; res.hidden = true; $("#search").classList.remove("open"); } });
-document.addEventListener("click", e => { if (!e.target.closest("#search") && !e.target.closest("#sbtn")) { res.hidden = true; $("#search").classList.remove("open"); } if (!e.target.closest(".newmenu")) { $("#newPop").hidden = true; $("#newBtn").setAttribute("aria-expanded", "false"); } });
+document.addEventListener("click", e => { if (!e.target.closest("#search") && !e.target.closest("#sbtn")) { res.hidden = true; $("#search").classList.remove("open"); } if (!e.target.closest(".newmenu")) { $("#newPop").hidden = true; $("#newBtn").setAttribute("aria-expanded", "false"); } if (!e.target.closest(".usermenu")) { $("#mePop").hidden = true; $("#meBtn").setAttribute("aria-expanded", "false"); } });
 $("#sbtn").addEventListener("click", () => { $("#search").classList.add("open"); q.focus(); });
 addEventListener("keydown", e => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); q.focus(); } });
 
@@ -1136,6 +1170,27 @@ const closeSide = () => { $("#side").classList.remove("open"); $("#scrimside").c
 $("#menuBtn").addEventListener("click", () => { $("#side").classList.add("open"); $("#scrimside").classList.add("open"); });
 $("#scrimside").addEventListener("click", closeSide);
 $("#suc").addEventListener("change", e => { curSuc = e.target.value; route(); toast(curSuc ? `Mostrando solo ${SUC[curSuc].n}.` : "Mostrando las dos sucursales."); });
+
+// ----- who is signed in -----
+$("#meBtn").addEventListener("click", () => { const p = $("#mePop"); p.hidden = !p.hidden; $("#meBtn").setAttribute("aria-expanded", String(!p.hidden)); });
+const quien = (nombre, correo) => { $("#meBtn").textContent = initials(nombre) || "SW"; $("#meName").textContent = nombre; $("#meMail").textContent = correo; };
+const MODO = window.PANEL_MODO;
+if (MODO === "servidor") {
+  fetch("/panel/yo", { credentials: "same-origin" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(u => quien(u.nombre, u.correo)).catch(() => location.replace("/panel/entrar"));
+} else if (MODO === "demo") {
+  let dentro = false; try { dentro = sessionStorage.getItem("swp-demo") === "1"; } catch (e) {}
+  const gate = $("#gate");
+  if (!dentro) { gate.hidden = false; setTimeout(() => $("#gMail").focus(), 50); }
+  quien("Dueño (demo)", "demo@steelworks.hn");
+  $("#gateForm").addEventListener("submit", e => {
+    e.preventDefault();
+    if ($("#gMail").value.trim().toLowerCase() === "demo@steelworks.hn" && $("#gPass").value === "acero2026") { try { sessionStorage.setItem("swp-demo", "1"); } catch (e) {} gate.hidden = true; $("#gateErr").hidden = true; $("#gPass").value = ""; }
+    else { $("#gateErr").hidden = false; $("#gPass").select(); }
+  });
+  $("#salir").addEventListener("click", e => { e.preventDefault(); try { sessionStorage.removeItem("swp-demo"); } catch (e) {} $("#mePop").hidden = true; gate.hidden = false; $("#gMail").focus(); });
+} else {
+  $("#salir").hidden = true;
+}
 
 route();
 
