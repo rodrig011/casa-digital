@@ -12,3 +12,7 @@ python3 gen6.py src && cd videos6/coco-chicken && hyperframes render . -o ../coc
 ## v2 (`gen7.py`, 2026-10-14)
 
 Mismo estilo, música y compases que v1, con otra historia: el domicilio lo ponen PedidosYa y Bip Bip (su bio de TikTok y el letrero de su local), y lo que les falta es ver todo junto. Luego vienen 4 pantallas reales del panel demo (acciones, ventas por app, pedidos para recoger, caja), todas marcadas "Datos de ejemplo". `src/panel/` tiene las capturas a 2x que hace `vshot.js` sobre `coco-chicken/panel/dist/coco-chicken-panel.html`. Ojo: `gen7.py` lee las fuentes de `coco-src/` junto a los scripts.
+
+## v3 (`gen8.py`, 2026-10-14)
+
+rodrigo pidió algo más de lujo que muestre cómo contesta y se conecta el bot. Fondo negro con luces suaves (rojo, dorado, verde WhatsApp) y palabras clave en dorado. Recorrido: su TikTok → comentarios reales ("Incluye refresco ese combo ?", "Y al fin bro dnd Estan ubicados", "Hacen envíos??", "nunca me responden") → "Su WhatsApp, que contesta solo" → conversación completa en un iPhone (precios reales) → teléfono, pantalla de cocina y panel conectados, con el aviso al cliente → panel real → promo y códigos de TikTok → Casa Digital. Usa `coco-src/panel/pv-hoy.png`.
