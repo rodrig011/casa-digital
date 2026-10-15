@@ -3,7 +3,8 @@
 *Casa Digital, una línea de Clientia Tech · Investigación del 15 de octubre de 2026 · Nada se ha enviado todavía*
 
 **Video:** [toretos-grill-casa-digital.mp4](toretos-grill-casa-digital.mp4) (horizontal 1920×1080, 2:04, con "Still Buggin", cortes en los compases, cierra con el logo de Clientia Tech)
-**Video para celular:** [toretos-grill-casa-digital-vertical.mp4](toretos-grill-casa-digital-vertical.mp4) (vertical 1080×1920, el mismo video acomodado para la pantalla del teléfono; es el que conviene mandar por WhatsApp)
+**Video nuevo (el que hay que mandar):** [toretos-grill-casa-digital-v2.mp4](toretos-grill-casa-digital-v2.mp4) (vertical, 1:22). Sigue el método de [propuestas/metodos-video.md](../../propuestas/metodos-video.md): abre con el comentario real "No contestan whats" encima de su video, tacha la venta fácil ("el mejor bot del mundo") y hace 5 preguntas sobre su negocio, cada una con su respuesta: la dirección escrita a mano 10 veces, quién contesta el WhatsApp, el efectivo de los motoristas, el carbón y los 1,000 almuerzos. Cierra con "No vendemos un sistema. Resolvemos lo que Toreto's necesita" y el botón de WhatsApp.
+**Video anterior para celular:** [toretos-grill-casa-digital-vertical.mp4](toretos-grill-casa-digital-vertical.mp4) (vertical, la versión de antes del método nuevo)
 **Panel demo:** [toretos-grill-panel.html](toretos-grill-panel.html) (un solo archivo, funciona en compu y celular; capturas en `capturas-panel/`)
 
 Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos, 278 comentarios y 49 respuestas del propio negocio) y del video y la captura que mandó rodrigo. Detalle y fuentes en `redes/investigacion-redes.md` (en la carpeta del proyecto). Lo inferido o de ejemplo está marcado.
@@ -26,7 +27,7 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 
 ## 2. Lo que de verdad necesitan (sacado de sus propios comentarios)
 
-1. **Nadie puede contestar todo.** Contestan a mano, uno por uno: en los comentarios escribió la misma dirección a mano 11 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
+1. **Nadie puede contestar todo.** Contestan a mano, uno por uno: en los comentarios escribió la misma dirección a mano 10 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
 2. **El domicilio es suyo.** Dejaron PedidosYa y llevan los pedidos con su propio motorista. Eso significa tomar el pedido, pasarlo a cocina, mandar al motorista, cobrar y cuadrar el efectivo, todo a mano.
 3. **Le piden factura con RTN** ("Dan factura con rtn ?", sin respuesta) y vienen grupos de trabajo ("ahí te llego con todos los compañeros de la chamba").
 4. **Tienen una meta clara:** "cuando vendamos 1000 almuerzos diarios en sps nos vamos a tegus".

@@ -219,7 +219,7 @@ def build():
           <div class="sp sp-green" style="left:900px;top:-300px;width:1500px;height:1500px"></div>
           <div class="inbox" id="inbox">
             <div class="ibh"><i></i>Su WhatsApp, hoy</div>
-            <div class="iq" id="iq0"><div class="q"><b>“donde estan ubicados?”</b><span>Le escribieron la dirección a mano 11 veces</span></div><div class="ok" id="ok0">✓ Contestado</div></div>
+            <div class="iq" id="iq0"><div class="q"><b>“donde estan ubicados?”</b><span>Le escribieron la dirección a mano 10 veces</span></div><div class="ok" id="ok0">✓ Contestado</div></div>
             <div class="iq" id="iq1"><div class="q"><b>“y pa domicilio”</b><span>Pedido tomado y mandado a la cocina</span></div><div class="ok" id="ok1">✓ Contestado</div></div>
             <div class="iq" id="iq2"><div class="q"><b>“Dan factura con rtn ?”</b><span>Pide el RTN y la factura sale con el pedido</span></div><div class="ok" id="ok2">✓ Contestado</div></div>
             <div class="zres" id="zres"><div class="k">Sin contestar</div><div class="big"><span id="nz">3</span></div></div>
