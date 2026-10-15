@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-"""Bocha's Grill pitch video v2 (2026-10-15), vertical 1080x1920 for WhatsApp.
+"""Bocha's Grill pitch video v3 (2026-10-15), vertical 1080x1920 for WhatsApp.
 
-rodrigo liked the question-method pitch from his "sell me this pen" reference but not the reference's
-editing (2-word captions, opening on the owner's TikTok clips; see gen-v0-pip.py). So the script follows
-/mnt/project-files/propuestas/metodos-video.md and the look is the one he liked: the Toreto's Grill
-vertical video (dark, slow, soft lights, full phrases on top with gold keywords, the visual below,
-"Still Buggin" with every scene on a bar line, Clientia Tech outro).
+rodrigo rejected the question-method videos and asked to go back to the videos he liked: same pitch
+and editing as the Toreto's Grill vertical (toretos-grill/video/gen.py --vertical) and Coco Chicken v5.
+Dark, slow, soft lights, full phrases on top with gold keywords, the visual below, "Still Buggin" with
+every scene on a bar line, Clientia Tech outro. The question version is kept in gen-v2-preguntas.py.
 
-Story: Casa Digital -> "we could open with 'the best system in the world'... that's not how you sell" ->
-"first, some questions" -> 4 questions, each with real comments from their TikTok (price unanswered,
-Villanueva out of beans, 50 minutes in Choloma, the same plate in five branches) -> "if any answer was
-'I don't know', that's what we solve" -> 4 answers in the same order (WhatsApp bot, stock + supplier,
-live wait per branch, rating after every order) -> his own words about a franchise -> "we don't sell a
-system" -> contact -> outro. Conversations, stock, times and ratings are examples, labelled on screen.
+Story, all from their own TikTok @bochasgrill: their own "primero empiezas, luego mejoras" photos ->
+real comments asking the price and where they are -> their WhatsApp answers by itself and takes a pickup
+order for the branch the customer picks -> stock per branch, supplier told by itself -> wait per branch,
+live -> rating after every order -> the owner panel with the five branches -> his own goal, a franchise ->
+Casa Digital -> outro. Conversations, stock, times, ratings and panel numbers are examples, labelled on screen.
 Helpers come from coco-chicken/video (gen2, gen3, gen6, gen10) and toretos-grill/video/gen.py.
 """
 import importlib.util, json, os, re, shutil, sys
@@ -31,9 +29,8 @@ _spec.loader.exec_module(TG)
 SRC = os.path.join(HERE, "src")
 OUT = os.path.join(HERE, "build")
 SLUG = "bochas-grill-vertical"
-SCENES = [("intro", 0, 3), ("nosale", 3, 6), ("secret", 6, 8), ("q1", 8, 11), ("q2", 11, 14), ("q3", 14, 17), ("q4", 17, 20),
-          ("bridge", 20, 22), ("bot", 22, 27), ("supply", 27, 30), ("wait", 30, 33), ("rate", 33, 36), ("meta", 36, 40),
-          ("close", 40, 43), ("us", 43, 46), ("end", 46, 50)]
+SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("meet", 11, 13), ("bot", 13, 20), ("supply", 20, 24),
+          ("wait", 24, 28), ("rate", 28, 32), ("owner", 32, 37), ("meta", 37, 42), ("us", 42, 46), ("end", 46, 50)]
 TOTAL = K(50)
 
 
@@ -52,6 +49,10 @@ CSS_B = r'''
 .wa-av{background:#fff;}
 .wa-av img{object-fit:contain;}
 .iname{font-size:92px;}
+/* their own before/after photos */
+.hist{position:absolute;left:180px;top:820px;width:720px;height:900px;border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 50px 120px rgba(0,0,0,.6);}
+.hist img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.hist .cap2{position:absolute;left:24px;top:22px;font-size:20px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.55);padding:10px 16px;border-radius:12px;}
 /* the salesman line, struck out */
 .pitchc{position:absolute;left:90px;right:90px;top:930px;padding:56px 50px;border-radius:40px;background:linear-gradient(180deg,#161618,#111113);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 100px rgba(0,0,0,.55);text-align:center;}
 .pitchc .k{font-size:22px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#6E6E73;}
@@ -80,18 +81,16 @@ CSS_B = r'''
 
 # vertical positions for the Bocha's scenes (after the Toreto's vertical rules)
 CSS_BV = r'''
-#nosale .left,#q1 .left,#q2 .left,#q3 .left,#q4 .left{top:100px;height:700px;}
-.h1.q{font-size:84px;}
-#q1 .cms{top:860px;}
-#q2 .photo2{top:860px;} #q2 .cm.on-photo{top:1440px;}
-#q3 .cms{top:900px;height:420px;}
-#q4 .photo2{top:830px;} #q4 .cm.on-photo{top:1380px;} #q4 #q4c1{top:1620px;}
+#fame .left{height:700px;}
+#fame .stats{gap:56px;margin-top:40px;}
+#asks .cms{top:860px;height:960px;}
 #wait .riders{top:820px;padding:30px 40px 30px;}
 #wait .rd{padding:20px 0;grid-template-columns:1fr 170px 250px;}
 #wait .rd.hot{padding:20px;}
 #rate .chat2{top:860px;}
 #rate .alert2{top:1460px;}
-#close .shot{top:840px;}
+#owner .shot{top:840px;}
+#meta .goal{top:1240px;}
 '''
 
 
@@ -106,12 +105,12 @@ def build():
     shutil.copy(os.path.join(DEPS, "@fontsource", "archivo-black", "files", "archivo-black-latin-400-normal.woff2"), A("fonts", "display.woff2"))
     for w in (300, 400, 500, 600, 700):
         shutil.copy(os.path.join(DEPS, "@fontsource", "inter-tight", "files", f"inter-tight-latin-{w}-normal.woff2"), A("fonts", f"it-{w}.woff2"))
-    for n in ("logo.png", "villa.jpg", "plato.jpg", "panel-m.jpg"):
+    for n in ("logo.png", "hist2.jpg", "hist4.jpg", "hist5.jpg", "hist1.jpg", "panel-m.jpg"):
         shutil.copy(os.path.join(SRC, n), A(n))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
                "media": {"autoProxy": True}}, open(os.path.join(proj, "hyperframes.json"), "w"), indent=2)
-    json.dump({"id": "bochas-grill-v2", "name": "Casa Digital x Bocha's Grill"}, open(os.path.join(proj, "meta.json"), "w"))
+    json.dump({"id": "bochas-grill-v3", "name": "Casa Digital x Bocha's Grill"}, open(os.path.join(proj, "meta.json"), "w"))
 
     def scene(sid, inner, cls=""):
         s, e = next((a, b) for i, a, b in SCENES if i == sid)
@@ -119,7 +118,10 @@ def build():
                 f'data-track-index="0"><div class="cam" id="cam-{sid}">{inner}</div></section>')
 
     # verbatim comments from redes/tiktok-comentarios.md
-    q1c = "".join(cm(t, i, "q1c") for i, t in enumerate(["cuanto vale??", "pero cual es el precio", "alguien sabe los precios", "DIRECCIÓN SPS POR FAVOR... Y HORARIO"]))
+    cms = "".join(cm(t, i) for i, t in enumerate(["cuanto vale??", "donde estan ubicados en san pedro sula", "pero cual es el precio", "DIRECCIÓN SPS POR FAVOR... Y HORARIO"]))
+    stats = [("139K", "vistas de su historia"), ("5", "sucursales"), ("21.8K", "seguidores")]
+    stats_html = "".join(f'<div class="st" id="st{i}"><b>{a}</b><span>{b}</span></div>' for i, (a, b) in enumerate(stats))
+    hist = "".join(f'<img id="hi{i}" src="assets/hist{n}.jpg">' for i, n in enumerate((2, 4, 5, 1)))
     head = ('<div class="wa-h"><span class="bk">‹</span><div class="wa-av"><img src="assets/logo.png"></div>'
             '<div><b>Bocha\'s Grill</b><span>en línea</span></div></div>')
     order = ('<div class="oc-in"><div class="oc-k">Pedido #5120</div><div class="oc-t">Para recoger</div>'
@@ -155,78 +157,38 @@ def build():
             <div class="ilogo" id="ilogo"><img src="assets/logo.png"></div>
             <div class="iname" id="iname">Bocha's Grill</div>
           </div>'''),
-        scene("nosale", f'''
+        scene("fame", f'''
           <div class="sp sp-red" style="left:900px;top:-300px;width:1500px;height:1500px"></div>
-          <div class="pitchc" id="pitch"><div class="k">Lo que dice cualquier vendedor</div><p>“Le instalamos el mejor sistema para restaurantes del mundo.”<i class="strike" id="strike" style="display:block"></i></p></div>
+          <div class="hist" id="hist">{hist}<div class="cap2">Su historia · su propio TikTok</div></div>
           <div class="left">
-            <div class="lgrp" id="ng1"><div class="eb" id="n0">Podríamos empezar así</div><div class="h1" id="n1">{words("Con lo que")}</div><div class="h1" id="n2">{words("hace el sistema.")}</div></div>
-            <div class="lgrp" id="ng2"><div class="h1" id="n3">{words("Pero así")}</div><div class="h1" id="n4">{gold("no se vende.")}</div></div>
+            <div class="eb" id="f0">TikTok · @bochasgrill</div>
+            <div class="h1" id="f1">{words("Primero empezó,")}</div>
+            <div class="h1" id="f2">{words("luego mejoró.")}</div>
+            <div class="h1" id="f3">{gold("Hoy son cinco.")}</div>
+            <div class="stats">{stats_html}</div>
           </div>'''),
-        scene("secret", f'''
-          <div class="sp sp-gold" style="left:260px;top:-300px;width:1400px;height:1400px"></div>
-          <div class="center">
-            <div class="wa-pill" id="sp0" style="background:rgba(242,181,68,.10);box-shadow:0 0 0 1px rgba(242,181,68,.35);color:#F2B544"><i style="background:#F2B544;box-shadow:0 0 0 6px rgba(242,181,68,.22)"></i>Antes de ofrecerle algo</div>
-            <div class="h1" id="se1" style="font-size:124px">{words("Primero,")}</div>
-            <div class="h1" id="se2" style="font-size:124px">{gold("unas preguntas.")}</div>
-            <div class="sub" id="se3" style="max-width:860px">{words("Sobre sus cinco sucursales. Contéstelas usted.")}</div>
-          </div>'''),
-        scene("q1", f'''
+        scene("asks", f'''
           <div class="sp sp-gold" style="left:900px;top:-200px;width:1400px;height:1400px"></div>
-          <div class="cms">{q1c}</div>
+          <div class="cms">{cms}</div>
           <div class="left">
-            <div class="qn" id="q1n">Pregunta 1</div>
-            <div class="h1 q" id="q1a">{words("¿Cuántos le preguntan")}</div>
-            <div class="h1 q" id="q1b">{words("el precio y")}</div>
-            <div class="h1 q" id="q1d">{gold("nadie les contesta?")}</div>
+            <div class="lgrp" id="ag1"><div class="eb" id="a0">Comentarios reales</div><div class="h1" id="a1">{words("Todos los días")}</div><div class="h1" id="a2">{words("le preguntan.")}</div></div>
+            <div class="lgrp" id="ag2"><div class="h1" id="a3">{words("Y muchas preguntas")}</div><div class="h1" id="a4">{gold("se quedan sin respuesta.")}</div></div>
           </div>
-          <div class="foot" id="q1f">Comentarios reales en su TikTok @bochasgrill. Ninguno tiene respuesta del negocio.</div>'''),
-        scene("q2", f'''
-          <div class="sp sp-red" style="left:900px;top:-300px;width:1500px;height:1500px"></div>
-          <div class="photo2" id="q2p"><img src="assets/villa.jpg"><div class="cap2">Bocha's Villanueva · su propio video</div></div>
-          {cm("Fui al local de Villanueva, y no tenian NI FRIJOLES, NI CARNE ASADA NI INCURTIDO!", 0, "q2c").replace('class="cm"', 'class="cm on-photo"')}
-          <div class="left">
-            <div class="qn" id="q2n">Pregunta 2</div>
-            <div class="h1 q" id="q2a">{words("¿Se enteró a tiempo")}</div>
-            <div class="h1 q" id="q2b">{words("de que Villanueva")}</div>
-            <div class="h1 q" id="q2d">{gold("se quedó sin frijoles?")}</div>
-          </div>'''),
-        scene("q3", f'''
-          <div class="sp sp-gold" style="left:900px;top:-200px;width:1400px;height:1400px"></div>
-          <div class="cms">{cm("ayer fui a Bonchas Choloma y me dijeron que debía esperar 50 minutos por la orden", 0, "q3c")}</div>
-          <div class="bigmin" id="q3m"><b>50</b><span>minutos</span></div>
-          <div class="left">
-            <div class="qn" id="q3n">Pregunta 3</div>
-            <div class="h1 q" id="q3a">{words("¿Sabe cuánto espera")}</div>
-            <div class="h1 q" id="q3b">{words("hoy un cliente")}</div>
-            <div class="h1 q" id="q3d">{gold("en Choloma?")}</div>
-          </div>
-          <div class="foot" id="q3f">Comentario real en su TikTok, septiembre 2026.</div>'''),
-        scene("q4", f'''
-          <div class="sp sp-red" style="left:900px;top:-300px;width:1500px;height:1500px"></div>
-          <div class="photo2" id="q4p"><img src="assets/plato.jpg"><div class="cap2">El aderezo de la casa · su propio video</div></div>
-          {cm("hoy pedí y ni el aderezo me pusieron", 0, "q4c").replace('class="cm"', 'class="cm on-photo"')}
-          {cm("varias veces me e quejado x carne tan reseca y dura en la stibys", 1, "q4c").replace('class="cm"', 'class="cm on-photo"')}
-          <div class="left">
-            <div class="qn" id="q4n">Pregunta 4</div>
-            <div class="h1 q" id="q4a">{words("¿Sus cinco sucursales")}</div>
-            <div class="h1 q" id="q4b">{words("sirven")}</div>
-            <div class="h1 q" id="q4d">{gold("el mismo plato?")}</div>
-          </div>'''),
-        scene("bridge", f'''
-          <div class="sp sp-gold" style="left:260px;top:-300px;width:1400px;height:1400px"></div>
+          <div class="foot" id="afoot">Comentarios reales en su TikTok @bochasgrill</div>'''),
+        scene("meet", f'''
+          <div class="sp sp-green" style="left:260px;top:-300px;width:1400px;height:1400px"></div>
           <div class="center">
-            <div class="h1" id="br1">{words("Si alguna respuesta")}</div>
-            <div class="h1" id="br2">{words("fue “no sé”,")}</div>
-            <div class="h1" id="br3">{gold("eso es lo que")}</div>
-            <div class="h1" id="br4">{gold("resolvemos.")}</div>
+            <div class="wa-pill" id="mp"><i></i>WhatsApp · Bocha's Grill</div>
+            <div class="h1" id="me1" style="font-size:124px">{words("Su WhatsApp,")}</div>
+            <div class="h1" id="me2" style="font-size:124px">{gold("que contesta solo.")}</div>
           </div>'''),
         scene("bot", f'''
           <div class="sp sp-green" style="left:950px;top:-250px;width:1400px;height:1400px"></div>
           <div class="ph-stage">{gen3.phone(wa, "phw", dark=True)}</div>
           <div class="left">
-            <div class="lgrp" id="bg1"><div class="eb g" id="b10">Respuesta 1 · al instante</div><div class="h1" id="b11">{words("Su WhatsApp")}</div><div class="h1" id="b12">{gold("contesta solo.")}</div></div>
-            <div class="lgrp" id="bg2"><div class="eb g" id="b20">Con la promo y sus condiciones</div><div class="h1" id="b21">{words("Explica el precio")}</div><div class="h1" id="b22">{gold("sin confusión.")}</div></div>
-            <div class="lgrp" id="bg3"><div class="eb g" id="b30">En la sucursal que el cliente diga</div><div class="h1" id="b31">{words("Y toma el pedido")}</div><div class="h1" id="b32">{gold("para recoger.")}</div></div>
+            <div class="lgrp" id="bg1"><div class="eb g" id="b10">Al instante, a cualquier hora</div><div class="h1" id="b11">{words("Contesta el precio")}</div><div class="h1" id="b12">{gold("con la promo real.")}</div></div>
+            <div class="lgrp" id="bg2"><div class="eb g" id="b20">En la sucursal que el cliente diga</div><div class="h1" id="b21">{words("Toma el pedido")}</div><div class="h1" id="b22">{gold("para recoger.")}</div></div>
+            <div class="lgrp" id="bg3"><div class="eb g" id="b30">Sin que nadie lo copie a mano</div><div class="h1" id="b31">{words("Y lo manda")}</div><div class="h1" id="b32">{gold("a la cocina.")}</div></div>
           </div>
           <div class="demo" id="bdemo">Conversación de ejemplo · la pregunta y la promo son reales</div>'''),
         scene("supply", f'''
@@ -238,7 +200,7 @@ def build():
             <div class="b out" id="pm1"><div class="tag">Aviso automático</div>Buenas, le escribe Bocha's Grill Villanueva. Nos quedan 4 lb de frijoles. ¿Nos trae 30 lb mañana temprano?<small>6:10 pm <em>✓✓</em></small></div>
             <div class="b in" id="pm2">Claro, mañana a las 9 se los llevo.<small>6:14 pm</small></div></div>
           <div class="left">
-            <div class="eb g" id="s0">Respuesta 2 · Inventario</div>
+            <div class="eb g" id="s0">Inventario por sucursal</div>
             <div class="h1 m" id="s1">{words("Se acaban los frijoles,")}</div>
             <div class="h1 m" id="s2">{gold("el proveedor ya sabe.")}</div>
             <div class="sub" id="s3">{words("Cada sucursal tiene su mínimo. Cuando algo baja, el panel le escribe solo al proveedor y le avisa a usted.")}</div>
@@ -248,7 +210,7 @@ def build():
           <div class="sp sp-red" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
           <div class="riders" id="riders"><div class="k">Espera ahora · 7:30 pm</div>{wait_rows}</div>
           <div class="left">
-            <div class="eb g" id="w0">Respuesta 3 · Cocina</div>
+            <div class="eb g" id="w0">Pedidos por sucursal</div>
             <div class="h1 m" id="w1">{words("La espera de")}</div>
             <div class="h1 m" id="w2">{words("cada sucursal,")}</div>
             <div class="h1 m" id="w3">{gold("en vivo.")}</div>
@@ -262,7 +224,7 @@ def build():
             <div class="b in" id="rm2">2. me tocó sin aderezo<small>8:03 pm</small></div></div>
           <div class="alert2" id="ralert"><div class="ai">!</div><div><div class="k">Su panel · Choloma</div><b>Faltó el aderezo</b><span>3 clientes hoy · repasar la ficha con el turno de la noche</span></div></div>
           <div class="left">
-            <div class="eb g" id="r0">Respuesta 4 · Calidad</div>
+            <div class="eb g" id="r0">Después de cada pedido</div>
             <div class="h1 m" id="r1">{words("Cada cliente califica,")}</div>
             <div class="h1 m" id="r2">{gold("usted se entera hoy.")}</div>
             <div class="sub" id="r3">{words("Las quejas llegan por sucursal el mismo día, y no semanas después en un comentario.")}</div>
@@ -282,12 +244,12 @@ def build():
             <div class="sub" id="g4">{words("Sin que usted tenga que estar en las cinco a la vez.")}</div>
           </div>
           <div class="demo" id="gdemo">Cita real · conteo de ejemplo</div>'''),
-        scene("close", f'''
+        scene("owner", f'''
           <div class="sp sp-gold" style="left:700px;top:-300px;width:1500px;height:1500px"></div>
           <div class="shot" id="shot"><img src="assets/panel-m.jpg"></div>
           <div class="left">
-            <div class="lgrp" id="cg1"><div class="eb g" id="c0">Panel Bocha's Grill</div><div class="h1 m" id="c1">{words("No vendemos")}</div><div class="h1 m" id="c2">{gold("un sistema.")}</div></div>
-            <div class="lgrp" id="cg2"><div class="h1 m" id="c3">{words("Primero preguntamos,")}</div><div class="h1 m" id="c4">{words("y resolvemos lo que")}</div><div class="h1 m" id="c5">{gold("Bocha's Grill necesita.")}</div></div>
+            <div class="lgrp" id="cg1"><div class="eb g" id="c0">Panel Bocha's Grill</div><div class="h1 m" id="c1">{words("Sus cinco sucursales,")}</div><div class="h1 m" id="c2">{gold("en su celular.")}</div></div>
+            <div class="lgrp" id="cg2"><div class="eb g" id="c3">Ventas, pedidos, inventario y quejas</div><div class="h1 m" id="c4">{words("Y le dice")}</div><div class="h1 m" id="c5">{gold("qué hacer hoy.")}</div></div>
           </div>
           <div class="demo" id="cdemo">Panel demo · datos de ejemplo</div>'''),
         scene("us", f'''
@@ -353,109 +315,88 @@ rise("#ipres .w", K(.9), { d: 1.6, st: .12 });
 tl.fromTo("#ilogo", { opacity: 0, scale: .9, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(1.3));
 tl.fromTo("#iname", { opacity: 0, y: 30, filter: "blur(20px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.4, ease: SOFT }, K(1.7));
 
-// 2 · what not to do: the salesman line, struck out
-rise("#n0", K(3), { d: 1.2 }); rise("#n1 .w", K(3) + .3); rise("#n2 .w", K(3) + .6);
-tl.fromTo("#pitch", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(3) + .4);
-tl.fromTo("#strike", { scaleX: 0, rotation: -5 }, { scaleX: 1, rotation: -5, duration: .9, ease: "power3.inOut" }, K(4.3));
-tl.to("#pitch p", { color: "#6E6E73", duration: .8 }, K(4.5));
-out("#ng1", K(4.7) - .8);
-rise("#n3 .w", K(4.7)); rise("#n4 .w", K(4.7) + .45, { d: 1.8 });
+// 2 · their own story: "primero empiezas, luego mejoras", five branches today
+rise("#f0", K(3), { d: 1.2 }); rise("#f1 .w", K(3) + .2); rise("#f2 .w", K(3) + .55); rise("#f3 .w", K(3) + .9, { d: 1.8 });
+tl.fromTo("#hist", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(3) + .3);
+tl.fromTo("#hist img", { scale: 1.05 }, { scale: 1, duration: K(7) - K(3), ease: "none" }, K(3));
+[4.2, 5.2, 6.2].forEach((k, i) => tl.fromTo("#hi" + (i + 1), { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "sine.inOut" }, K(k)));
+tl.set("#hi1, #hi2, #hi3", { opacity: 0 }, 0);
+[4.4, 4.9, 5.4].forEach((k, i) => rise("#st" + i, K(k), { y: 30, d: 1.4 }));
 
-// 3 · the refrain
-rise("#sp0", K(6), { d: 1.4 });
-rise("#se1 .w", K(6) + .3, { d: 1.8, st: .12 });
-rise("#se2 .w", K(6.6), { d: 2, st: .12 });
-rise("#se3 .w", K(7.1), { st: .03 });
+// 3 · real comments: the price and where they are
+rise("#a0", K(7), { d: 1.2 }); rise("#a1 .w", K(7) + .3); rise("#a2 .w", K(7) + .6);
+[7.3, 7.8, 8.3, 8.8].forEach((k, i) => rise("#cm" + i, K(k), { y: 40, d: 1.6 }));
+rise("#afoot", K(7.8), { d: 1.2 });
+out("#ag1", K(9.4) - .8);
+rise("#a3 .w", K(9.4)); rise("#a4 .w", K(9.4) + .45, { d: 1.8 });
 
-// 4 · question 1: the price, asked and never answered
-rise("#q1n", K(8), { d: 1.2 }); rise("#q1a .w", K(8) + .3); rise("#q1b .w", K(8) + .6); rise("#q1d .w", K(8) + .9, { d: 1.8 });
-[8.6, 9.0, 9.4, 9.8].forEach((k, i) => rise("#q1c" + i, K(k), { y: 40, d: 1.6 }));
-rise("#q1f", K(9.2), { d: 1.2 });
+// 4 · meet their WhatsApp
+rise("#mp", K(11), { d: 1.4 });
+rise("#me1 .w", K(11) + .3, { d: 1.8, st: .12 });
+rise("#me2 .w", K(11.7), { d: 2, st: .12 });
 
-// 5 · question 2: Villanueva out of beans
-rise("#q2n", K(11), { d: 1.2 }); rise("#q2a .w", K(11) + .3); rise("#q2b .w", K(11) + .6); rise("#q2d .w", K(11) + .9, { d: 1.8 });
-tl.fromTo("#q2p", { opacity: 0, y: 70, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(11.3));
-tl.fromTo("#q2p img", { scale: 1.06 }, { scale: 1, duration: K(14) - K(11.3), ease: "none" }, K(11.3));
-rise("#q2c0", K(12.2), { y: 40, d: 1.6 });
+// 5 · the bot: the real L139 question, a pickup order, the kitchen (7 bars)
+tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(13));
+tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(20) - K(14), ease: "sine.inOut" }, K(14));
+rise("#bdemo", K(13.5), { d: 1.2 });
+rise("#b10", K(13), { d: 1.2 }); rise("#b11 .w", K(13) + .3); rise("#b12 .w", K(13) + .6);
+show("m1", K(13.5)); show("t1", K(14)); dots("t1", K(14) + .3); hide("t1", K(14.6)); show("m2", K(14.6));
+out("#bg1", K(15.7) - .8);
+rise("#b20", K(15.7), { d: 1.2 }); rise("#b21 .w", K(15.7) + .3); rise("#b22 .w", K(15.7) + .6);
+show("m3", K(15.8)); show("m4", K(16.6)); show("t2", K(17.2)); dots("t2", K(17.2) + .3); hide("t2", K(17.7)); show("m5", K(17.7));
+out("#bg2", K(18.3) - .8);
+rise("#b30", K(18.3), { d: 1.2 }); rise("#b31 .w", K(18.3) + .3); rise("#b32 .w", K(18.3) + .6);
+show("m6", K(18.6));
 
-// 6 · question 3: 50 minutes in Choloma
-rise("#q3n", K(14), { d: 1.2 }); rise("#q3a .w", K(14) + .3); rise("#q3b .w", K(14) + .6); rise("#q3d .w", K(14) + .9, { d: 1.8 });
-rise("#q3c0", K(14.6), { y: 40, d: 1.6 });
-tl.fromTo("#q3m", { opacity: 0, scale: .9, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(15.4));
-rise("#q3f", K(15), { d: 1.2 });
+// 6 · stock per branch, the supplier is told by itself
+rise("#s0", K(20), { d: 1.2 }); rise("#s1 .w", K(20) + .3); rise("#s2 .w", K(20) + .6, { d: 1.8 });
+rise("#s3 .w", K(21), { st: .03 });
+tl.fromTo("#stk", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(20) + .3);
+tl.fromTo("#plb", { scaleX: 1 }, { scaleX: .27, duration: 1.6, ease: FINE }, K(20.5));
+tl.fromTo("#chat2", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.6, ease: SOFT }, K(21.2));
+rise("#pm1", K(21.5), { y: 20, d: 1.2 });
+rise("#pm2", K(22.6), { y: 20, d: 1.2 });
+rise("#sdemo", K(20.6), { d: 1.2 });
 
-// 7 · question 4: the same plate in five branches
-rise("#q4n", K(17), { d: 1.2 }); rise("#q4a .w", K(17) + .3); rise("#q4b .w", K(17) + .6); rise("#q4d .w", K(17) + .9, { d: 1.8 });
-tl.fromTo("#q4p", { opacity: 0, y: 70, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(17.3));
-tl.fromTo("#q4p img", { scale: 1.06 }, { scale: 1, duration: K(20) - K(17.3), ease: "none" }, K(17.3));
-rise("#q4c0", K(18.1), { y: 40, d: 1.6 }); rise("#q4c1", K(18.7), { y: 40, d: 1.6 });
+// 7 · wait per branch, live
+rise("#w0", K(24), { d: 1.2 }); rise("#w1 .w", K(24) + .3); rise("#w2 .w", K(24) + .6); rise("#w3 .w", K(24) + .9, { d: 1.8 });
+rise("#w4 .w", K(25.2), { st: .03 });
+tl.fromTo("#riders", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(24) + .3);
+[24.6, 24.9, 25.2, 25.5, 25.8].forEach((k, i) => rise("#rd" + i, K(k), { y: 20, d: 1.2 }));
+tl.fromTo("#rd4", { scale: 1 }, { scale: 1.025, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, K(26.5));
+rise("#wdemo", K(24.6), { d: 1.2 });
 
-// 8 · bridge
-rise("#br1 .w", K(20), { d: 1.8, st: .12 }); rise("#br2 .w", K(20.4), { d: 1.8, st: .12 });
-rise("#br3 .w", K(21), { d: 2, st: .12 }); rise("#br4 .w", K(21.3), { d: 2, st: .12 });
+// 8 · every customer rates, the owner hears it the same day
+rise("#r0", K(28), { d: 1.2 }); rise("#r1 .w", K(28) + .3); rise("#r2 .w", K(28) + .6, { d: 1.8 });
+rise("#r3 .w", K(29), { st: .03 });
+tl.fromTo("#rchat", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(28) + .3);
+rise("#rm1", K(28.5), { y: 20, d: 1.2 });
+rise("#rm2", K(29.3), { y: 20, d: 1.2 });
+tl.fromTo("#ralert", { opacity: 0, y: 50, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: SOFT }, K(30.1));
+rise("#rdemo", K(28.6), { d: 1.2 });
 
-// 9 · answer 1: their WhatsApp answers the real L139 question and takes a pickup order (5 bars)
-tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(22));
-tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(27) - K(23), ease: "sine.inOut" }, K(23));
-rise("#bdemo", K(22.5), { d: 1.2 });
-rise("#b10", K(22), { d: 1.2 }); rise("#b11 .w", K(22) + .3); rise("#b12 .w", K(22) + .6);
-show("m1", K(22.5)); show("t1", K(23)); dots("t1", K(23) + .3); hide("t1", K(23.5)); show("m2", K(23.5));
-out("#bg1", K(24) - .8);
-rise("#b20", K(24), { d: 1.2 }); rise("#b21 .w", K(24) + .3); rise("#b22 .w", K(24) + .6);
-show("m3", K(24.3)); show("m4", K(25));
-out("#bg2", K(25.4) - .8);
-rise("#b30", K(25.4), { d: 1.2 }); rise("#b31 .w", K(25.4) + .3); rise("#b32 .w", K(25.4) + .6);
-show("t2", K(25.4)); dots("t2", K(25.4) + .3); hide("t2", K(25.9)); show("m5", K(25.9)); show("m6", K(26.4));
+// 9 · the owner panel on his phone (5 bars)
+tl.fromTo("#shot", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(32) + .2);
+tl.fromTo("#shot img", { objectPosition: "50% 0%" }, { objectPosition: "50% 100%", duration: K(37) - K(33.5), ease: "sine.inOut" }, K(33.5));
+rise("#c0", K(32), { d: 1.2 }); rise("#c1 .w", K(32) + .3); rise("#c2 .w", K(32) + .6, { d: 1.8 });
+out("#cg1", K(34.4) - .8);
+rise("#c3", K(34.4), { d: 1.2 }); rise("#c4 .w", K(34.4) + .3); rise("#c5 .w", K(34.4) + .6, { d: 1.8 });
+rise("#cdemo", K(32.5), { d: 1.2 });
 
-// 10 · answer 2: stock drops, the supplier is told by itself
-rise("#s0", K(27), { d: 1.2 }); rise("#s1 .w", K(27) + .3); rise("#s2 .w", K(27) + .6, { d: 1.8 });
-rise("#s3 .w", K(28), { st: .03 });
-tl.fromTo("#stk", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(27) + .3);
-tl.fromTo("#plb", { scaleX: 1 }, { scaleX: .27, duration: 1.6, ease: FINE }, K(27.5));
-tl.fromTo("#chat2", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.6, ease: SOFT }, K(28));
-rise("#pm1", K(28.3), { y: 20, d: 1.2 });
-rise("#pm2", K(29.1), { y: 20, d: 1.2 });
-rise("#sdemo", K(27.6), { d: 1.2 });
+// 10 · his own words: a franchise (5 bars)
+rise("#g0", K(37), { d: 1.2 }); rise("#g1 .w", K(37) + .3); rise("#g2 .w", K(37) + .6); rise("#g3 .w", K(37) + .9, { d: 1.8 });
+rise("#g4 .w", K(38.4), { st: .03 });
+tl.fromTo("#quote", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(37) + .3);
+tl.fromTo("#goal", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.8, ease: SOFT }, K(38));
+tl.fromTo("#gb", { scaleX: 0 }, { scaleX: .4, duration: 2.4, ease: FINE }, K(38.5));
+count("ng", 0, 2, K(38.5), n => String(n), 2.4);
+rise("#gdemo", K(37.6), { d: 1.2 });
 
-// 11 · answer 3: wait per branch, live
-rise("#w0", K(30), { d: 1.2 }); rise("#w1 .w", K(30) + .3); rise("#w2 .w", K(30) + .6); rise("#w3 .w", K(30) + .9, { d: 1.8 });
-rise("#w4 .w", K(31.2), { st: .03 });
-tl.fromTo("#riders", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(30) + .3);
-[30.6, 30.9, 31.2, 31.5, 31.8].forEach((k, i) => rise("#rd" + i, K(k), { y: 20, d: 1.2 }));
-tl.fromTo("#rd4", { scale: 1 }, { scale: 1.025, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, K(32.3));
-rise("#wdemo", K(30.6), { d: 1.2 });
-
-// 12 · answer 4: every customer rates, the owner hears it the same day
-rise("#r0", K(33), { d: 1.2 }); rise("#r1 .w", K(33) + .3); rise("#r2 .w", K(33) + .6, { d: 1.8 });
-rise("#r3 .w", K(34), { st: .03 });
-tl.fromTo("#rchat", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(33) + .3);
-rise("#rm1", K(33.5), { y: 20, d: 1.2 });
-rise("#rm2", K(34.2), { y: 20, d: 1.2 });
-tl.fromTo("#ralert", { opacity: 0, y: 50, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: SOFT }, K(34.9));
-rise("#rdemo", K(33.6), { d: 1.2 });
-
-// 13 · his own words: a franchise
-rise("#g0", K(36), { d: 1.2 }); rise("#g1 .w", K(36) + .3); rise("#g2 .w", K(36) + .6); rise("#g3 .w", K(36) + .9, { d: 1.8 });
-rise("#g4 .w", K(37.4), { st: .03 });
-tl.fromTo("#quote", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(36) + .3);
-tl.fromTo("#goal", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.8, ease: SOFT }, K(36.8));
-tl.fromTo("#gb", { scaleX: 0 }, { scaleX: .4, duration: 2.4, ease: FINE }, K(37.3));
-count("ng", 0, 2, K(37.3), n => String(n), 2.4);
-rise("#gdemo", K(36.6), { d: 1.2 });
-
-// 14 · we don't sell a system (their real panel)
-tl.fromTo("#shot", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(40) + .2);
-tl.fromTo("#shot img", { scale: 1 }, { scale: 1.035, duration: K(43) - K(40), ease: "none", transformOrigin: "30% 30%" }, K(40));
-rise("#c0", K(40), { d: 1.2 }); rise("#c1 .w", K(40) + .3); rise("#c2 .w", K(40) + .6, { d: 1.8 });
-out("#cg1", K(41.5) - .8);
-rise("#c3 .w", K(41.5)); rise("#c4 .w", K(41.5) + .35); rise("#c5 .w", K(41.5) + .7, { d: 1.8 });
-rise("#cdemo", K(40.5), { d: 1.2 });
-
-// 15 · Casa Digital, call to action
-rise("#u0", K(43), { d: 1.2 }); rise("#u1 .w", K(43) + .3); rise("#u2 .w", K(43) + .7, { d: 1.8 });
-[43.9, 44.4, 44.9].forEach((k, i) => rise("#wy" + i + " .w, #wy" + i + " i", K(k), { st: .04, d: 1.3 }));
-tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(43.5));
-float("#cta", K(44.4), K(46) - K(44.4));
+// 11 · Casa Digital, call to action
+rise("#u0", K(42), { d: 1.2 }); rise("#u1 .w", K(42) + .3); rise("#u2 .w", K(42) + .7, { d: 1.8 });
+[42.9, 43.4, 43.9].forEach((k, i) => rise("#wy" + i + " .w, #wy" + i + " i", K(k), { st: .04, d: 1.3 }));
+tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(42.5));
+float("#cta", K(43.4), K(46) - K(43.4));
 
 '''
 

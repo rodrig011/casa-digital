@@ -2,7 +2,7 @@
 
 *Casa Digital, una línea de Clientia Tech · Investigación del 15 de octubre de 2026 · Nada se ha enviado todavía*
 
-**Video para celular:** [bochas-grill-casa-digital-vertical.mp4](bochas-grill-casa-digital-vertical.mp4) (vertical 1080×1920, 2:04, "Still Buggin"; el guion sigue el método de preguntas de [metodos-video.md](../../propuestas/metodos-video.md) y la edición es la de los videos verticales anteriores)
+**Video para celular:** [bochas-grill-casa-digital-vertical.mp4](bochas-grill-casa-digital-vertical.mp4) (vertical 1080×1920, 2:04, "Still Buggin", con el mismo pitch y la misma edición del video vertical de Toreto's). La versión anterior, con el guion de preguntas, quedó como [bochas-grill-casa-digital-v2-preguntas.mp4](bochas-grill-casa-digital-v2-preguntas.mp4)
 **Panel demo:** [bochas-grill-panel.html](bochas-grill-panel.html) (un solo archivo, funciona en compu y celular; capturas en `capturas-panel/`)
 
 Todo lo que digo del negocio sale de su TikTok @bochasgrill (perfil, 13 videos, 214 comentarios) y del TikTok del dueño @bochas10. Detalle y fuentes en [redes/investigacion-redes.md](redes/investigacion-redes.md); comentarios copiados en [redes/tiktok-comentarios.md](redes/tiktok-comentarios.md). Lo inferido o de ejemplo está marcado.
@@ -54,18 +54,20 @@ Además el panel tiene **Promos** (canal, sucursal y fechas; el bot deja de ofre
 
 **Aparte los paga el restaurante:** los mensajes de WhatsApp (Twilio/Meta) y la IA del bot (~US$0.40 por 100 conversaciones).
 
-## 5. El video (guion de preguntas, edición de antes)
+## 5. El video (como los de antes)
 
-Fondo negro con luces suaves, frases completas que suben palabra por palabra con lo clave en dorado, y la prueba en tarjetas debajo. No abre con sus videos de TikTok. Lo de ejemplo dice "Ejemplo".
+Fondo negro con luces suaves, frases completas que suben palabra por palabra con lo clave en dorado, y la prueba en tarjetas debajo. Lo de ejemplo dice "Ejemplo".
 
 1. **Apertura:** Casa Digital, "una propuesta para", su logo y Bocha's Grill.
-2. **Lo que no hay que hacer:** "Podríamos empezar así: con lo que hace el sistema." La frase "“Le instalamos el mejor sistema para restaurantes del mundo.”" se tacha. "Pero así no se vende."
-3. **"Primero, unas preguntas."** Sobre sus cinco sucursales; que las conteste él.
-4. **Pregunta 1 a 4**, cada una con su prueba real: los comentarios que preguntan el precio sin respuesta; la foto de su local de Villanueva con "no tenian NI FRIJOLES"; la espera de 50 minutos en Choloma; la foto de su plato con el aderezo y "ni el aderezo me pusieron".
-5. **Puente:** "Si alguna respuesta fue “no sé”, eso es lo que resolvemos."
-6. **Respuesta 1 a 4**, en el mismo orden: su WhatsApp contesta solo la pregunta real de los L139 y toma un pedido para recoger en Calpules; el inventario de Villanueva le escribe al proveedor de frijoles; la espera de cada sucursal en vivo (Choloma en rojo, avisando a los clientes); la encuesta que avisa "Faltó el aderezo".
-7. **Su meta:** su frase real de @bochas10 sobre la franquicia. "Una franquicia funciona cuando cada local hace lo mismo."
-8. **Cierre:** el panel en el celular. "No vendemos un sistema. Primero preguntamos, y resolvemos lo que Bocha's Grill necesita." Luego "Escríbanos y le mostramos exactamente cómo", +1 (765) 543-4251, y by Clientia Tech.
+2. **Su historia:** sus propias fotos de "Primero empiezas, luego mejoras" (de su TikTok de 139K vistas). "Primero empezó, luego mejoró. Hoy son cinco." Con 139K vistas, 5 sucursales y 21.8K seguidores.
+3. **Lo que le preguntan:** comentarios reales ("cuanto vale??", "donde estan ubicados en san pedro sula", "pero cual es el precio", "DIRECCIÓN SPS POR FAVOR... Y HORARIO"). "Todos los días le preguntan. Y muchas preguntas se quedan sin respuesta."
+4. **Su WhatsApp, que contesta solo:** contesta la pregunta real de los L139 con la promo real, toma un pedido para recoger en Calpules y lo manda a la cocina.
+5. **Inventario por sucursal:** a Villanueva se le acaban los frijoles y el panel le escribe solo al proveedor.
+6. **Pedidos por sucursal:** la espera de cada sucursal en vivo; Choloma en rojo, avisando a los clientes.
+7. **Después de cada pedido:** el cliente califica y el panel avisa "Faltó el aderezo".
+8. **Panel Bocha's Grill:** sus cinco sucursales en su celular, y le dice qué hacer hoy.
+9. **Su meta:** su frase real de @bochas10 sobre la franquicia. "Una franquicia funciona cuando cada local hace lo mismo."
+10. **Cierre:** "Escríbanos y le mostramos exactamente cómo", +1 (765) 543-4251, y by Clientia Tech.
 
 ## 6. Contacto (borradores, nada enviado)
 
