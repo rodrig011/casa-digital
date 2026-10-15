@@ -26,7 +26,7 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 
 ## 2. Lo que de verdad necesitan (sacado de sus propios comentarios)
 
-1. **Nadie puede contestar todo.** Contestan a mano, uno por uno: en los comentarios escribió la misma dirección a mano 11 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
+1. **Nadie puede contestar todo.** Contestan a mano, uno por uno: en los comentarios escribió la misma dirección a mano 10 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
 2. **El domicilio es suyo.** Dejaron PedidosYa y llevan los pedidos con su propio motorista. Eso significa tomar el pedido, pasarlo a cocina, mandar al motorista, cobrar y cuadrar el efectivo, todo a mano.
 3. **Le piden factura con RTN** ("Dan factura con rtn ?", sin respuesta) y vienen grupos de trabajo ("ahí te llego con todos los compañeros de la chamba").
 4. **Tienen una meta clara:** "cuando vendamos 1000 almuerzos diarios en sps nos vamos a tegus".
