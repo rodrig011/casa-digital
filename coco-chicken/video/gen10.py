@@ -551,9 +551,11 @@ tl.fromTo("#inbox", { opacity: 0, y: 70, filter: "blur(14px)" }, { opacity: 1, y
 rise("#zres", K(32.5), { y: 20, d: 1.3 });
 [33.1, 33.6, 34.1].forEach((k, i) => {
   tl.fromTo("#ok" + i, { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .6, ease: "back.out(2)" }, K(k));
-  const o = { v: 3 - i }; tl.fromTo(o, { v: 3 - i }, { v: 2 - i, duration: .05, ease: "none", onUpdate: () => { document.getElementById("nz").textContent = String(Math.round(o.v)); } }, K(k) + .2);
   tl.fromTo("#nz", { scale: 1.12 }, { scale: 1, duration: .5, ease: "power2.out" }, K(k) + .2);
 });
+// one tween drives the counter so any seek lands on the right number: 3, then 2, 1, 0 as each badge lands
+const zo = { p: 0 }, zn = document.getElementById("nz");
+tl.fromTo(zo, { p: 0 }, { p: 1, duration: K(34.1) - K(33.1), ease: "none", onUpdate: () => { zn.textContent = String(zo.p <= 0 ? 3 : Math.max(0, 2 - Math.floor(zo.p * 2 + 1e-6))); } }, K(33.1) + .2);
 rise("#zfoot", K(32), { d: 1.2 });
 
 // 8b · the panel warns the supplier by itself
