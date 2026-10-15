@@ -20,3 +20,7 @@ rodrigo pidió algo más de lujo que muestre cómo contesta y se conecta el bot.
 ## v4 (`gen9.py`, 2026-10-14)
 
 Es el v3 con dos escenas más, a pedido de rodrigo ("que muestre el beneficio, los números, las comisiones que se ahorra"). **Los números:** 300 pedidos al mes pasan a recoger × L140 × 25% = L10,500 al mes (L126,000 al año). Va marcado como ejemplo con supuestos. **Oportunidades:** de 506 comentarios, 87 piden sucursal en su ciudad, 56 preguntan precio o combo y 25 preguntan dónde están. Dura 2:04 (50 compases). No muestra nuestro precio: eso se habla en la llamada.
+
+## v5 (`gen10.py`, 2026-10-15)
+
+rodrigo no quiso el ejemplo de comisiones ("olvida cuánto cobra PedidosYa, ocupamos algo que de verdad ayude"). Las dos escenas de v4 se cambiaron por: **Cero clientes sin respuesta** (tres preguntas reales de sus comentarios, "Donde están ubicados", "precio?", "cuando para Tegucigalpa", con sus conteos 25/56/87, se contestan una por una y el contador baja a 0) y **Proveedores** (el inventario de Satélite baja del mínimo de plátano y el panel le escribe solo a la Verdulería, que contesta; marcado "Ejemplo"). En el panel, "PedidosYa y Bip Bip, con su comisión" pasó a "WhatsApp, apps y mostrador juntos". Misma duración: 2:04.

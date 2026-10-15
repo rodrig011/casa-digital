@@ -178,6 +178,21 @@ main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:
 
 /* forms */
 .form{display:grid;gap:12px;}
+.tin{width:130px;height:28px;border-radius:4px;border:1px solid var(--line2);background:var(--card);color:var(--tx);padding:0 8px;font-size:13px;}
+.tin:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;white-space:nowrap;}
+.sw input{position:absolute;opacity:0;width:1px;height:1px;}
+.sw i{width:34px;height:20px;border-radius:10px;background:var(--line2);position:relative;transition:background .15s;flex:none;}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s;}
+.sw input:checked + i{background:var(--brand);}
+.sw input:checked + i::after{transform:translateX(14px);}
+.sw input:focus-visible + i{box-shadow:0 0 0 2px var(--brand);}
+@media (max-width:640px){.prov thead{display:none;}.prov,.prov tbody,.prov tr,.prov td{display:block;width:100%;}
+.prov tr{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;}
+.prov tr:last-child{border-bottom:0;}.prov td{padding:0;border:0;}.prov td.r{text-align:left;}
+.prov td:nth-child(2){grid-column:1/-1;color:var(--tx2);margin-top:-6px;}.prov .tin{width:100%;}
+.avi td:nth-child(1){grid-column:2;grid-row:1;color:var(--tx3);}.avi td:nth-child(2){grid-column:1;grid-row:1;margin:0;color:var(--tx);font-weight:700;}
+.avi td:nth-child(3),.avi td:nth-child(4){grid-column:1/-1;}.avi .status{white-space:normal;height:auto;padding:2px 8px;}}
 .form > *,.f2 > *{min-width:0;}
 .form label{display:grid;gap:2px;font-size:12px;color:var(--tx2);}
 .form input,.form select,.form textarea{width:100%;min-width:0;height:32px;border-radius:4px;border:1px solid var(--line2);background:var(--card);padding:0 10px;font-size:13px;}
@@ -292,9 +307,14 @@ BR.forEach(b => HRS.filter(h => h <= curH).forEach(h => {
 const STOCK = {}; BR.forEach(b => { const used = SALES.filter(s => s.b === b.id).reduce((a, s) => a + s.pz, 0) / PZ; const rec = Math.round(BASE[b.id] * WK[today] * (b.id === "sat" ? .85 : 1.02)); STOCK[b.id] = {rec, used, left: Math.max(0, rec - used)}; });
 const INS = [ // other supplies per branch: [name, unit, stock, minimum]
   ["Plátano verde (tajadas)","unid.",{cab:180,sat:95,med:140},{cab:120,sat:150,med:100}],
-  ["Repollo","unid.",{cab:14,sat:22,med:9},{cab:8,sat:10,med:8}],
+  ["Repollo","unid.",{cab:14,sat:22,med:6},{cab:8,sat:10,med:8}],
   ["Aceite","gal.",{cab:6,sat:3,med:5},{cab:4,sat:5,med:4}],
   ["Papas","lb",{cab:60,sat:85,med:40},{cab:40,sat:50,med:35}]];
+// suppliers: the owner types their real WhatsApp; names here are placeholders
+const PROV = [
+  {id:"pollo", n:"Proveedor de pollo", what:"Pollo entero", ins:[]},
+  {id:"verdu", n:"Verdulería", what:"Plátano verde y repollo", ins:["Plátano verde (tajadas)","Repollo"]},
+  {id:"dist", n:"Distribuidora", what:"Aceite y papas", ins:["Aceite","Papas"]}];
 // pickup orders (WhatsApp): no riders needed
 const NAMES = ["Karla M.","José L.","Dania R.","Kevin A.","Marlon S.","Yessenia P.","Óscar F.","Gabriela T.","Wilmer C.","Ana Lucía B.","Héctor Z.","Sofía H.","Brayan O.","Lourdes E.","Fernando G.","Cindy V.","Mario R.","Paola N."];
 const PICK = []; let oid = 4120;
@@ -317,6 +337,9 @@ const COMM = {PedidosYa:25,"Bip Bip":25}; // % per app; real contracts unknown, 
 try { Object.assign(COMM, JSON.parse(localStorage.getItem("ccp-com2") || "{}")); } catch (e) {}
 const appSum = (s, a) => s.filter(x => x.ch === a).reduce((q, x) => q + x.total, 0);
 const commOf = s => APPS.reduce((q, a) => q + appSum(s, a) * COMM[a] / 100, 0);
+const PCFG = {pollo:{tel:"",auto:true},verdu:{tel:"",auto:true},dist:{tel:"",auto:true}};
+try { const sv = JSON.parse(localStorage.getItem("ccp-prov") || "{}"); Object.keys(sv).forEach(k => PCFG[k] && Object.assign(PCFG[k], sv[k])); } catch (e) {}
+const savePC = () => { try { localStorage.setItem("ccp-prov", JSON.stringify(PCFG)); } catch (e) {} };
 const DONE = new Set();
 const inB = x => SUC === "all" || x.b === SUC;
 const bn = id => BR.find(b => b.id === id).n;
@@ -372,10 +395,24 @@ function vHoy() {
 }
 function cajaTag(c) { return Math.abs(c.diff) < 30 ? `<span class="status s-ok"><i></i>Cuadró</span>` : c.diff < 0 ? `<span class="status s-red"><i></i>Faltan ${L(-c.diff)}</span>` : `<span class="status s-amber"><i></i>Sobran ${L(c.diff)}</span>`; }
 function forecast(b) { const wd = (today + 1) % 7; const same = HIST[b].filter(h => h.wd === wd); const avg = same.reduce((a, h) => a + h.ch, 0) / same.length; return {wd, need: Math.ceil(avg * 1.05), avg}; }
+// what each supplier is short of right now (stock under the minimum)
+function faltas(pid, bs = BR) { const pv = PROV.find(x => x.id === pid); const out = [];
+  INS.filter(i => pv.ins.includes(i[0])).forEach(([n, u, st, mn]) => bs.forEach(b => { if (st[b.id] < mn[b.id]) out.push({n, u, b: b.id, left: st[b.id], ask: mn[b.id] * 2 - st[b.id]}); }));
+  return out; }
+const short = n => n.replace(/ \(.*\)/, "").toLowerCase();
+function provMsg(pid, bs) { const f = faltas(pid, bs); if (!f.length) return "";
+  return "Buenas, le escribe Coco Chicken. Se nos está acabando:\n" + f.map(x => `• ${short(x.n)[0].toUpperCase() + short(x.n).slice(1)} en ${bn(x.b)}: quedan ${x.left} ${x.u}, necesitamos ${x.ask} ${x.u}`).join("\n") + "\n¿A qué hora nos lo puede traer? Gracias."; }
+const provWa = (pid, txt) => waLink(txt, PCFG[pid].tel.replace(/\D/g, ""));
+// demo log of notices the bot sent today
+const AVISOS = [
+  {h:"7:05 am", p:"pollo", t:`Pedido de hoy: ${BR.reduce((q, b) => q + STOCK[b.id].rec, 0)} pollos para las 3 sucursales`, r:"Confirmó: sale a las 8:00"},
+  {h:"3:48 pm", p:"dist", t:"Aceite en Satélite: quedan 3 gal., necesitamos 7 gal.", r:"Confirmó: llega a las 6:00 pm"},
+  {h:"4:52 pm", p:"verdu", t:"Plátano verde en Satélite y repollo en Medina", r:"Visto, sin respuesta todavía"}];
 function RECS() {
   const r = [];
   BR.forEach(b => { const st = STOCK[b.id]; const rate = st.used / Math.max(1, curH - 8); const hrs = st.left / Math.max(.1, rate);
-    if (curH + hrs < 22) r.push({id: "p" + b.id, b: b.id, t: "red", i: "i-warn", h: `${b.n}: el pollo se acaba como a las ${Math.floor(curH + hrs)}:00`, p: `Quedan ${st.left.toFixed(1)} pollos y se venden ${rate.toFixed(1)} por hora.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="p${b.id}" href="${waLink(`Buenas, para ${b.n} necesitamos ${Math.ceil(rate * (22 - curH) - st.left)} pollos hoy lo antes posible. Gracias. Coco Chicken`)}">${icon("i-wa")}Pedir al proveedor</a>`}); });
+    if (curH + hrs < 22) r.push({id: "p" + b.id, b: b.id, t: "red", i: "i-warn", h: `${b.n}: el pollo se acaba como a las ${Math.floor(curH + hrs)}:00`, p: `Quedan ${st.left.toFixed(1)} pollos y se venden ${rate.toFixed(1)} por hora.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="p${b.id}" href="${provWa("pollo", `Buenas, para ${b.n} necesitamos ${Math.ceil(rate * (22 - curH) - st.left)} pollos hoy lo antes posible. Gracias. Coco Chicken`)}">${icon("i-wa")}Pedir al proveedor</a>`}); });
+  const vp = AVISOS.find(a => a.p === "verdu"); if (PCFG.verdu.auto) r.push({id: "verdu", b: "sat", t: "amber", i: "i-send", h: `El bot le avisó a la Verdulería que se acaba el plátano en Satélite`, p: `Mensaje enviado a las ${vp.h}. ${vp.r}.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="verdu" href="${provWa("verdu", provMsg("verdu"))}">${icon("i-wa")}Escribirle</a>`});
   const c = CAJA.find(x => x.d === 1 && x.diff < -100); if (c) r.push({id: "c" + c.b, b: c.b, t: "red", i: "i-cash", h: `${bn(c.b)}: la caja de ayer cerró con ${L(-c.diff)} de menos`, p: `Cerró ${c.who.toLowerCase()}. Efectivo esperado ${L(c.ef)}, contado ${L(c.cont)}.`, a: `<button class="btn sm" data-v="caja">Revisar</button>`});
   const late = PICK.filter(p => p.st === "listo" && p.min > 25); late.forEach(p => r.push({id: "l" + p.id, b: p.b, t: "amber", i: "i-clock", h: `Pedido #${p.id} listo hace ${p.min} min`, p: `${p.who} no ha llegado a ${bn(p.b)}. Recordarle por WhatsApp.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${p.id}" href="${waLink(`Hola ${p.who.split(" ")[0]}, su pedido #${p.id} de Coco Chicken ya está listo en ${bn(p.b)}. ¡Lo esperamos!`, p.tel)}">${icon("i-wa")}Avisar</a>`}));
   const f = forecast("sat"); r.push({id: "m", t: "blue", i: "i-box", h: `Pedido de pollo para mañana ${DAYS[f.wd]}: ${BR.reduce((a, b) => a + forecast(b.id).need, 0)} pollos`, p: `Calculado con los últimos 4 ${PL(DAYS[f.wd])} de cada sucursal, más 5% de colchón.`, a: `<button class="btn sm" data-v="pollo">Ver detalle</button>`});
@@ -438,7 +475,7 @@ function vPollo() {
   const bs = BR.filter(inB); const f0 = forecast("sat").wd;
   const tot = bs.reduce((a, b) => a + forecast(b.id).need, 0);
   const msg = `Buenas, pedido de Coco Chicken para mañana ${DAYS[f0]}:\n` + bs.map(b => `• ${b.n}: ${forecast(b.id).need} pollos`).join("\n") + `\nTotal: ${tot} pollos. Gracias.`;
-  return `${PH("Pollo e insumos", "Cuánto pollo queda hoy, cuánto pedir para mañana y qué insumo está por acabarse.")}
+  return `${PH("Inventario y proveedores", "Cuánto pollo queda, qué insumo está por acabarse y a qué proveedor ya se le avisó.")}
   <div class="stack">
     <div class="g3">${bs.map(b => { const st = STOCK[b.id]; const pct = st.left / st.rec * 100;
       return `<section class="card"><header><h2><i class="dot" style="background:${col(b.c)}"></i>${b.n}</h2></header><div class="pad" style="display:grid;gap:12px">
@@ -450,11 +487,23 @@ function vPollo() {
         <table class="tbl"><thead><tr><th>Sucursal</th><th class="r">Promedio</th><th class="r">Pedir</th></tr></thead>
         <tbody>${bs.map(b => { const f = forecast(b.id); return `<tr><td>${b.n}</td><td class="r num">${f.avg.toFixed(0)}</td><td class="r num"><b>${f.need}</b></td></tr>`; }).join("")}
         <tr><td><b>Total</b></td><td></td><td class="r num"><b>${tot} pollos</b></td></tr></tbody></table>
-        <div class="pad" style="border-top:1px solid var(--line)"><a class="btn wa" target="_blank" rel="noopener" href="${waLink(msg)}">${icon("i-wa")}Mandar pedido al proveedor</a></div></section>
+        <div class="pad" style="border-top:1px solid var(--line)"><a class="btn wa" target="_blank" rel="noopener" href="${provWa("pollo", msg)}">${icon("i-wa")}Mandar pedido al proveedor</a></div></section>
       <section class="card"><header>${CT("i-box","#B78300")}<h2>Insumos</h2><div class="r">en rojo: debajo del mínimo</div></header><div class="scrollx"><table class="tbl">
         <thead><tr><th>Insumo</th>${bs.map(b => `<th class="r">${b.n.split(" ").pop()}</th>`).join("")}</tr></thead>
         <tbody>${INS.map(([n, u, s, m]) => `<tr><td>${n}</td>${bs.map(b => `<td class="r num ${s[b.id] < m[b.id] ? "late" : ""}">${s[b.id]} ${u}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
     </div>
+    <section class="card"><header>${CT("i-send","#0B827C")}<h2>Proveedores</h2><div class="r">cuando algo baja del mínimo, el bot le escribe solo al proveedor</div></header><div class="scrollx"><table class="tbl prov">
+      <thead><tr><th>Proveedor</th><th>Le compra</th><th>WhatsApp</th><th>Aviso automático</th><th>Ahora</th><th></th></tr></thead>
+      <tbody>${PROV.map(pv => { const f = pv.id === "pollo" ? [] : faltas(pv.id, bs); const c = PCFG[pv.id];
+        const now = pv.id === "pollo" ? `<span class="status s-blue"><i></i>Pedido de mañana: ${tot}</span>` : f.length ? `<span class="status s-red"><i></i>Falta ${[...new Set(f.map(x => short(x.n)))].join(" y ")}</span>` : `<span class="status s-ok"><i></i>Todo arriba del mínimo</span>`;
+        const txt = pv.id === "pollo" ? msg : provMsg(pv.id, bs);
+        return `<tr><td><b>${pv.n}</b></td><td>${pv.what}</td><td><input class="tin" data-ptel="${pv.id}" id="pt-${pv.id}" inputmode="tel" placeholder="Número" value="${c.tel}"></td>
+        <td><label class="sw"><input type="checkbox" data-pauto="${pv.id}" ${c.auto ? "checked" : ""}><i></i><span>${c.auto ? "Activo" : "Apagado"}</span></label></td><td>${now}</td>
+        <td class="r">${txt ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${provWa(pv.id, txt)}">${icon("i-wa")}Avisar ahora</a>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+      <div class="pad" style="border-top:1px solid var(--line)"><p class="hint">Escriba el WhatsApp de cada proveedor una vez. Con el aviso automático, el bot le manda el pedido en cuanto un insumo baja del mínimo y anota la respuesta aquí abajo. Nombres y avisos son de ejemplo.</p></div></section>
+    <section class="card"><header>${CT("i-clock","#5A6872")}<h2>Avisos a proveedores hoy</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl prov avi">
+      <thead><tr><th>Hora</th><th>A quién</th><th>Qué se le pidió</th><th>Respuesta</th></tr></thead>
+      <tbody>${AVISOS.map(a => `<tr><td class="num">${a.h}</td><td>${PROV.find(x => x.id === a.p).n}</td><td>${a.t}</td><td><span class="status ${a.r.startsWith("Confirm") ? "s-ok" : "s-amber"}"><i></i>${a.r}</span></td></tr>`).join("")}</tbody></table></div></section>
   </div>`;
 }
 
@@ -535,9 +584,11 @@ document.addEventListener("input", e => {
       ...CLI.filter(c => c.n.toLowerCase().includes(q)).map(c => `<a href="#clientes" data-v="clientes"><span>${c.n}</span><small>Cliente · ${bn(c.b)}</small></a>`)].slice(0, 8);
     r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; }
   if (e.target.id === "cef" || e.target.id === "cga" || e.target.id === "cb") cajaCalc();
+  if (e.target.dataset.ptel) { PCFG[e.target.dataset.ptel].tel = e.target.value; savePC(); const id = e.target.id, pos = e.target.selectionStart; render(); const i = document.getElementById(id); i.focus(); i.setSelectionRange(pos, pos); }
   if (e.target.dataset.app) { const v = +e.target.value, id = e.target.id; if (v >= 0 && v <= 60) { COMM[e.target.dataset.app] = v; try { localStorage.setItem("ccp-com2", JSON.stringify(COMM)); } catch (er) {} const pos = e.target.selectionStart; render(); const i = document.getElementById(id); i.focus(); i.setSelectionRange(pos, pos); } }
 });
-document.addEventListener("change", e => { if (e.target.id === "cb") cajaCalc(); });
+document.addEventListener("change", e => { if (e.target.id === "cb") cajaCalc();
+  if (e.target.dataset.pauto) { const pv = e.target.dataset.pauto; PCFG[pv].auto = e.target.checked; savePC(); toast(e.target.checked ? `Aviso automático a ${PROV.find(x => x.id === pv).n} activado` : `Aviso automático a ${PROV.find(x => x.id === pv).n} apagado`); render(); } });
 // chart tooltips
 document.addEventListener("pointerover", e => { const r = e.target.closest("[data-tip]"); const old = document.querySelector(".tip"); if (old) old.remove(); if (!r) return;
   const ch = r.closest(".chart"); const bb = r.getBoundingClientRect(), cb = ch.getBoundingClientRect(); const [a, b] = r.dataset.tip.split("|");
