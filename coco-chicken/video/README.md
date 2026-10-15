@@ -28,3 +28,7 @@ rodrigo no quiso el ejemplo de comisiones ("olvida cuánto cobra PedidosYa, ocup
 ## v6 vertical (`gen11.py`, 2026-10-15)
 
 Usa los métodos de `propuestas/metodos-video.md`, sacados del video de referencia que mandó rodrigo ("sell me this pen"): no vender funciones, primero preguntar. Va en vertical 1080×1920 y dura 1:27. Abre con un comentario real sobre su TikTok ("Yo quierooooooo pero nunca me responden"). Después dice "no le vamos a decir que tenemos el mejor sistema del mundo" y hace cuatro preguntas, cada una con una prueba: comentarios reales, conteos 87/56/25, plátano bajo el mínimo y ventas por sucursal. El puente es "si alguna respuesta fue «no sé», eso es lo que resolvemos". Las respuestas van en el mismo orden: bot, cero sin respuesta, aviso al proveedor y panel. Cierra con WhatsApp ("Escribir → Enviado ✓") y "by Clientia Tech". Los subtítulos van de 2 a 4 palabras con una tarjeta arriba que ilustra cada frase. `src/panel/pv-hoy-v.png` es el panel a 840 px de ancho.
+
+## v7 vertical (actual)
+
+`gen12.py` genera `coco-chicken-casa-digital-v7-vertical.mp4` (1:59, 1080×1920). Usa el guion de preguntas del v6 con la edición de los videos anteriores: fondo negro, frases completas que suben palabra por palabra, palabras clave en dorado, tarjetas reales, iPhone con WhatsApp, panel y cierre de Clientia Tech. No abre con los videos del dueño. El v6 queda guardado como versión anterior.
