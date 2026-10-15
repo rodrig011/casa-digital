@@ -19,7 +19,8 @@ from gen6 import K, P0, BAR  # noqa: E402
 
 SRC = os.path.join(HERE, "src")
 OUT = os.path.join(HERE, "build")
-SLUG = "toretos-grill"
+VERTICAL = "--vertical" in sys.argv  # 1080x1920 for phones: text on top, the visual below
+SLUG = "toretos-grill-vertical" if VERTICAL else "toretos-grill"
 SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("meet", 11, 13), ("bot", 13, 20), ("link", 20, 25),
           ("owner", 25, 28), ("zero", 28, 32), ("moto", 32, 36), ("supply", 36, 39), ("meta", 39, 43), ("us", 43, 46), ("end", 46, 50)]
 TOTAL = K(50)
@@ -83,7 +84,7 @@ def build():
     shutil.copy(os.path.join(DEPS, "@fontsource", "archivo-black", "files", "archivo-black-latin-400-normal.woff2"), A("fonts", "display.woff2"))
     for w in (300, 400, 500, 600, 700):
         shutil.copy(os.path.join(DEPS, "@fontsource", "inter-tight", "files", f"inter-tight-latin-{w}-normal.woff2"), A("fonts", f"it-{w}.woff2"))
-    for n in ("tiktok.mp4", "logo.jpg", "pv-hoy.png"):
+    for n in ("tiktok.mp4", "logo.jpg", "pv-hoy.png", "pv-hoy-m.jpg"):
         shutil.copy(os.path.join(SRC, n), A(n))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
@@ -320,8 +321,89 @@ def build():
     js = (j6[:j6.index("// 1 · intro")] + JS_T + re.sub(r"K\((\d+(?:\.\d+)?)\)", lambda m: f"K({float(m.group(1)) + 9:g})", j6[j6.index("// 11 · outro"):])).replace("$scenes", scenes_js).replace("$P0", str(P0)).replace("$BAR", str(BAR))
     html = (gen3.HTML.replace("$title", "Casa Digital x Toreto's Grill").replace("$css", css).replace("$body", body)
             .replace("$js", js).replace("$total", str(TOTAL)).replace('data-fade-out="2.5"', 'data-fade-out="4"'))
+    if VERTICAL:
+        html = vertical(html)
     open(os.path.join(proj, "index.html"), "w").write(html)
     return proj
+
+
+# vertical: same scenes and timing, re-laid out for a phone screen
+CSS_V = r'''
+html,body,#root{width:1080px !important;height:1920px !important;}
+.left{left:80px;right:80px;width:auto !important;top:110px;bottom:auto;height:660px;}
+.h1{font-size:100px;}
+.h1.m,#owner .h1.m,#moto .h1.m{font-size:82px;}
+.sub{font-size:34px;margin-top:28px;}
+.foot{left:80px;bottom:60px;}
+.iname{font-size:92px;}
+.ilogo{width:240px;height:240px;}
+#me1,#me2{font-size:96px !important;}
+.ttl{top:150px;}
+.ttl .h1.m{font-size:76px;}
+/* phone under the text, a bit bigger */
+.ph-stage{left:160px !important;top:720px;height:1100px;transform:scale(1.15);transform-origin:50% 0;}
+.tagv{display:none;}
+.demo{left:80px;right:80px;bottom:22px;text-align:center;font-size:16px;}
+.stats{gap:44px;margin-top:50px;}
+.st b{font-size:64px;}
+.st span{font-size:22px;}
+/* cards under the text, with bigger type */
+.cms{left:90px;right:90px;width:auto;top:820px;bottom:auto;height:1000px;gap:26px;}
+.cm-h{font-size:24px;}.cm-h i{width:36px;height:36px;}
+.cm p{font-size:46px;}
+.inbox{left:90px;top:860px;width:900px;}
+.iq .q b{font-size:40px;}.iq .q span{font-size:27px;}.iq .ok{font-size:25px;}.ibh{font-size:25px;}
+.riders{left:90px;top:880px;width:900px;}
+.riders .k{font-size:23px;}
+.rd{grid-template-columns:1fr 170px 200px;}
+.rd .n{font-size:40px;}.rd .n span{font-size:27px;}.rd .c{font-size:42px;}.rd .st{font-size:26px;}
+.rtot{font-size:32px;}.rtot b{font-size:60px;}
+.stk{left:90px;top:840px;width:900px;}
+.stk .k{font-size:23px;}.stk .row b,.stk .row span{font-size:46px;}.stk .min{font-size:24px;}
+.chat2{left:90px;top:1150px;width:900px;}
+.chat2 .hd{font-size:28px;}.chat2 .b{font-size:31px;max-width:700px;}.chat2 .b small{font-size:18px;}.chat2 .tag{font-size:18px;}
+.quote{left:90px;top:860px;width:900px;}
+.quote p{font-size:46px;}.quote .h{font-size:24px;}
+.goal{left:90px;top:1240px;width:900px;}
+.goal .k{font-size:23px;}.goal .s{font-size:25px;}
+#us .left{top:110px;height:900px;}
+.cta2{left:260px;top:1110px;}
+/* the owner panel, as it looks on the owner's phone */
+.shot{left:300px;top:800px;width:480px;height:1010px;border-radius:64px;padding:14px;background:linear-gradient(145deg,#3A3A3C,#0C0C0D 40%,#1C1C1E 70%,#48484A);}
+.shot img{width:452px;height:982px;border-radius:52px;object-fit:cover;object-position:50% 0;}
+#owner .blt{margin-top:36px;gap:16px;}
+/* connected devices, stacked and larger */
+.wires{width:1080px;height:1920px;}
+.mini,.tab,.lap{transform:scale(1.2);transform-origin:0 0;}
+#dv0{width:300px;}#dv1{width:792px;}#dv2{width:648px;}
+.dcap{font-size:28px;}.dcap span{font-size:22px;}
+/* outro */
+.ribwrap{left:0;top:0;transform:none;}
+.endglow{left:-110px;top:310px;}
+'''
+
+
+def vertical(html):
+    html = (html.replace('content="width=1920, height=1080"', 'content="width=1080, height=1920"')
+            .replace('data-width="1920" data-height="1080"', 'data-width="1080" data-height="1920"'))
+    # the soft lights: keep them on the narrow frame, alternating high and low
+    n = iter(range(100))
+    html = re.sub(r'(<div class="sp sp-\w+") style="[^"]*"', lambda m: m.group(1) + (' style="left:-260px;top:%dpx;width:1600px;height:1600px"' % (-500 if next(n) % 2 == 0 else 700)), html)
+    html = html.replace('src="assets/pv-hoy.png"', 'src="assets/pv-hoy-m.jpg"')
+    # devices: phone top left, panel top right, kitchen below
+    html = (html.replace('id="dv0" style="left:120px;top:300px"', 'id="dv0" style="left:44px;top:290px"')
+            .replace('id="dv2" style="left:1300px;top:390px"', 'id="dv2" style="left:366px;top:410px"')
+            .replace('id="dv1" style="left:560px;top:360px"', 'id="dv1" style="left:144px;top:1110px"')
+            .replace('<div class="dcap" style="top:546px">', '<div class="dcap" style="top:648px">')
+            .replace('<div class="dcap" style="top:486px">', '<div class="dcap" style="top:556px">')
+            .replace('<div class="dcap" style="top:400px">', '<div class="dcap" style="top:460px">')
+            .replace('viewBox="0 0 1920 1080"', 'viewBox="0 0 1080 1920"'))
+    paths = {"M 374 560 C 440 560 480 580 556 580": "M 194 1030 C 194 1180 60 1330 140 1390",
+             "M 1228 580 C 1255 580 1270 560 1298 560": "M 940 1330 C 1050 1270 1060 820 1025 720",
+             "M 890 352 C 820 230 450 220 270 300": "M 690 405 C 630 290 360 240 230 290"}
+    for a, b in paths.items():
+        html = html.replace(a, b)
+    return html.replace("</style>", CSS_V + "</style>", 1)
 
 
 JS_T = r'''

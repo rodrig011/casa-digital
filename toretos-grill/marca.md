@@ -3,6 +3,7 @@
 *Casa Digital, una línea de Clientia Tech · Investigación del 15 de octubre de 2026 · Nada se ha enviado todavía*
 
 **Video:** [toretos-grill-casa-digital.mp4](toretos-grill-casa-digital.mp4) (horizontal 1920×1080, 2:04, con "Still Buggin", cortes en los compases, cierra con el logo de Clientia Tech)
+**Video para celular:** [toretos-grill-casa-digital-vertical.mp4](toretos-grill-casa-digital-vertical.mp4) (vertical 1080×1920, el mismo video acomodado para la pantalla del teléfono; es el que conviene mandar por WhatsApp)
 **Panel demo:** [toretos-grill-panel.html](toretos-grill-panel.html) (un solo archivo, funciona en compu y celular; capturas en `capturas-panel/`)
 
 Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos, 278 comentarios y 49 respuestas del propio negocio) y del video y la captura que mandó rodrigo. Detalle y fuentes en `redes/investigacion-redes.md` (en la carpeta del proyecto). Lo inferido o de ejemplo está marcado.
