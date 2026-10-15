@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel Bocha's Grill</title>
+<meta name="theme-color" content="#F5F3EF">
+<script>try{if(localStorage.getItem("bgp-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+<style>
+/* Bocha's Grill owner desk, laid out like a CRM: global header, app tabs, record-style page header,
+   dense cards and list views. Five branches side by side: WhatsApp, pickup orders, quality,
+   stock and suppliers, promos and growth. Demo data, clearly marked. */
+:root{
+  --bg:#F3F3F3; --band:#B0C4DF; --card:#FFFFFF; --sunk:#F3F3F3; --th:#F3F3F3; --line:#E5E5E5; --line2:#C9C9C9; --tx:#181818; --tx2:#444444; --tx3:#706E6B;
+  --brand:#0176D3; --brand-d:#014486; --brand-bg:#EEF4FF;
+  --red:#BA0517; --red-bg:#FEDED8; --ok:#2E844A; --ok-bg:#CDEFC4; --blue:#0176D3; --blue-bg:#EEF4FF; --amber:#8C4B02; --amber-bg:#FEF1CD; --yel:#FE9339; --wa:#2E844A;
+  --c1:#0176D3; --c2:#FE9339; --c3:#3BA755;
+  --hover:#F3F3F3; --sel:#EEF4FF; --shadow:0 2px 2px 0 rgba(0,0,0,.1);
+  --body:"Salesforce Sans",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#1B1B1B; --band:#16325C; --card:#242424; --sunk:#2B2B2B; --th:#2B2B2B; --line:#3A3A3A; --line2:#4A4A4A; --tx:#F3F3F3; --tx2:#C9C9C9; --tx3:#A0A0A0;
+  --brand:#1B96FF; --brand-d:#78B0FD; --brand-bg:#0B2A4E;
+  --red:#FE5C4C; --red-bg:#4A1410; --ok:#45C65A; --ok-bg:#163A1F; --blue:#1B96FF; --blue-bg:#0B2A4E; --amber:#FFBA45; --amber-bg:#3D2A06;
+  --c1:#1B96FF; --c2:#FE9339; --c3:#45C65A;
+  --hover:#2E2E2E; --sel:#0B2A4E; --shadow:none;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+html{-webkit-text-size-adjust:100%;}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 13px/1.5 var(--body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+button,input,select,textarea{font:inherit;color:inherit;}
+button{cursor:pointer;background:none;border:0;padding:0;}
+a{color:inherit;text-decoration:none;}
+svg{display:block;}
+:focus-visible{outline:0;box-shadow:0 0 3px var(--brand);border-radius:4px;}
+.num{font-variant-numeric:tabular-nums;}
+.ic{width:16px;height:16px;flex:none;}
+
+/* global header */
+.gh{position:sticky;top:0;z-index:30;background:var(--card);box-shadow:0 2px 3px rgba(0,0,0,.08);}
+.gh-top{display:flex;align-items:center;gap:14px;height:50px;padding:0 16px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand img{width:32px;height:32px;border-radius:4px;object-fit:cover;object-position:50% 32%;background:#000;}
+.search{flex:1;max-width:520px;margin:0 auto;position:relative;}
+.search input{width:100%;height:32px;border:1px solid var(--line2);border-radius:4px;background:var(--card);padding:0 10px 0 32px;font-size:13px;}
+.search svg{position:absolute;left:10px;top:8px;color:var(--tx3);}
+.tb-r{display:flex;align-items:center;gap:4px;}
+.iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--tx3);border:1px solid transparent;}
+@media (hover:hover) and (pointer:fine){.iconbtn:hover{border-color:var(--line2);color:var(--brand);}}
+.theme .sun{display:none;} :root[data-theme="dark"] .theme .sun{display:block;} :root[data-theme="dark"] .theme .moon{display:none;}
+.avatar{width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-left:4px;}
+.gh-nav{display:flex;align-items:stretch;height:40px;padding:0 16px;border-top:1px solid var(--line);gap:0;overflow-x:auto;scrollbar-width:none;}
+.gh-nav::-webkit-scrollbar{display:none;}
+.appname{display:flex;align-items:center;gap:10px;padding-right:20px;margin-right:6px;font-size:16px;font-weight:400;white-space:nowrap;}
+.appname .grid{width:20px;height:20px;display:grid;grid-template-columns:repeat(3,4px);gap:3px;}
+.appname .grid i{width:4px;height:4px;border-radius:50%;background:var(--tx3);}
+#nav{display:flex;}
+#nav a{display:flex;align-items:center;gap:6px;padding:0 12px;white-space:nowrap;color:var(--tx2);border-bottom:3px solid transparent;border-top:3px solid transparent;position:relative;}
+#nav a.on{border-bottom-color:var(--brand);color:var(--tx);font-weight:700;background:var(--sel);}
+@media (hover:hover) and (pointer:fine){#nav a:hover{background:var(--hover);color:var(--tx);}}
+#nav a .c{font-size:11px;font-weight:700;border-radius:10px;padding:0 6px;background:var(--red);color:#fff;line-height:16px;}
+.band{position:absolute;left:0;right:0;top:0;height:170px;background:var(--band);z-index:-1;}
+main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:0 auto;}
+.app{position:relative;isolation:isolate;}
+
+.results{position:absolute;left:0;right:0;top:36px;background:var(--card);border:1px solid var(--line2);border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.16);padding:4px 0;max-height:60vh;overflow:auto;z-index:40;}
+.results a{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;}
+.results a:hover{background:var(--hover);}
+.results small{color:var(--tx3);}
+.results .empty{padding:10px 12px;}
+/* demo notice */
+.notice{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:4px;padding:8px 12px;margin-bottom:12px;color:var(--tx2);font-size:12px;box-shadow:var(--shadow);}
+.notice b{color:var(--tx);}
+
+/* record-style page header */
+.ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.ph .tile{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none;}
+.ph .tile svg{width:22px;height:22px;}
+.ph .ey{font-size:12px;color:var(--tx3);line-height:1.2;}
+.ph h1{margin:0;font:700 18px/1.25 var(--body);}
+.ph .sub{display:none;}
+.ph .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.subline{margin:-4px 0 12px 2px;color:var(--tx2);font-size:12px;}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:4px;overflow:hidden;background:var(--card);}
+.seg button{height:32px;padding:0 12px;font-size:13px;color:var(--brand);border-left:1px solid var(--line2);white-space:nowrap;}
+.seg button:first-child{border-left:0;}
+.seg button.on{background:var(--brand);color:#fff;}
+@media (hover:hover) and (pointer:fine){.seg button:not(.on):hover{background:var(--hover);}}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);min-width:0;}
+.card > header{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap;}
+.card > header h2{margin:0;font:700 14px var(--body);}
+.card > header .r{margin-left:auto;color:var(--tx3);font-size:12px;display:flex;gap:8px;align-items:center;}
+.ct{width:24px;height:24px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none;}
+.ct svg{width:14px;height:14px;}
+.pad{padding:12px 16px 16px;}
+.stack{display:grid;gap:12px;}
+.g2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.status{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:15px;font-size:12px;font-weight:400;white-space:nowrap;background:var(--hover);color:var(--tx);}
+.status i{display:none;}
+.s-ok{background:var(--ok-bg);color:#056764;} .s-red{background:var(--red-bg);color:var(--red);} .s-amber{background:var(--amber-bg);color:var(--amber);} .s-blue{background:var(--blue-bg);color:var(--blue);} .s-gray{background:var(--hover);color:var(--tx2);}
+:root[data-theme="dark"] .s-ok{color:var(--ok);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:4px;font-size:13px;font-weight:400;border:1px solid var(--line2);background:var(--card);color:var(--brand);white-space:nowrap;}
+.btn:active{background:var(--hover);}
+.btn.pri,.btn.red{background:var(--brand);color:#fff;border-color:var(--brand);}
+.btn.wa{color:var(--brand);}
+.btn.wa svg{color:#2E844A;}
+.btn.sm{height:28px;padding:0 10px;font-size:12px;}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:var(--hover);}.btn.pri:hover,.btn.red:hover{background:var(--brand-d);border-color:var(--brand-d);}}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+
+/* highlights (KPIs) */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);}
+.kpi{padding:12px 16px 14px;border-left:1px solid var(--line);}
+.kpi:first-child{border-left:0;}
+.kpi span{color:var(--tx3);font-size:12px;}
+.kpi b{display:block;font:300 28px/1.15 var(--body);margin:2px 0 2px;font-variant-numeric:tabular-nums;}
+.kpi small{font-size:12px;color:var(--tx3);}
+.up{color:var(--ok);font-weight:700;} .down{color:var(--red);font-weight:700;}
+
+/* recommended actions */
+.recs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+.rec{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);}
+.rec:last-child{border-bottom:0;}
+.rec .ico{width:28px;height:28px;border-radius:4px;display:grid;place-items:center;color:#fff!important;}
+.rec .ico svg{width:16px;height:16px;}
+.rec b{font-weight:400;color:var(--brand);}
+.rec p{margin:1px 0 0;color:var(--tx3);font-size:12px;}
+.rec.done{opacity:.55;} .rec.done b{text-decoration:line-through;}
+
+/* charts */
+.chart{padding:4px 16px 6px;position:relative;border-top:1px solid var(--line);}
+.chart svg{width:100%;height:auto;overflow:visible;}
+.chart text{fill:var(--tx3);font:400 11px var(--body);}
+.chart .gl{stroke:var(--line);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);padding:0 16px 12px;}
+.tip{position:absolute;pointer-events:none;background:#032D60;color:#fff;border-radius:4px;padding:6px 10px;font-size:12px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px;z-index:5;}
+.tip b{display:block;font-size:13px;}
+.bars{display:grid;gap:12px;padding:12px 16px 16px;border-top:1px solid var(--line);}
+.hb b{display:flex;justify-content:space-between;font-weight:400;margin-bottom:4px;gap:10px;}
+.hb b em{font-style:normal;color:var(--tx3);}
+.trk{height:8px;border-radius:2px;background:var(--hover);overflow:hidden;display:flex;}
+.trk i{display:block;height:100%;}
+
+/* list views */
+.tbl{width:100%;border-collapse:collapse;border-top:1px solid var(--line);}
+.tbl th{font-size:12px;font-weight:700;color:var(--tx2);text-align:left;padding:6px 16px;background:var(--th);border-bottom:1px solid var(--line);white-space:nowrap;text-transform:none;}
+.tbl td{padding:8px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:0;}
+@media (hover:hover) and (pointer:fine){.tbl tbody tr:hover td{background:var(--hover);}}
+.tbl .r{text-align:right;}
+.scrollx{overflow-x:auto;}
+
+/* kanban */
+.board{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px;}
+.col{background:var(--card);border:1px solid var(--line);border-radius:4px;min-height:200px;box-shadow:var(--shadow);}
+.col h3{margin:0;padding:10px 12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--th);border-radius:4px 4px 0 0;}
+.col h3 span{font-weight:400;color:var(--tx3);}
+.col > .tk:first-of-type{margin-top:10px;}
+.tk{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin:0 10px 10px;}
+.tk .t{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.tk .t b{font-size:13px;color:var(--brand);font-weight:400;}
+.tk ul{margin:6px 0;padding:0;list-style:none;font-size:13px;}
+.tk li{display:flex;justify-content:space-between;gap:8px;padding:1px 0;}
+.tk .m{font-size:12px;color:var(--tx3);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.tk .a{display:flex;gap:8px;margin-top:8px;}
+.tk .a .btn{flex:1;}
+.late{color:var(--red);font-weight:700;}
+.empty{padding:20px 12px;text-align:center;color:var(--tx3);font-size:12px;}
+.kmode .board{grid-template-columns:repeat(2,minmax(280px,1fr));}
+.kmode .tk .t b{font-size:20px;font-weight:700;color:var(--tx);} .kmode .tk ul{font-size:17px;font-weight:700;}
+
+/* forms */
+.form{display:grid;gap:12px;}
+.tin{width:130px;height:28px;border-radius:4px;border:1px solid var(--line2);background:var(--card);color:var(--tx);padding:0 8px;font-size:13px;}
+.tin:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;white-space:nowrap;}
+.sw input{position:absolute;opacity:0;width:1px;height:1px;}
+.sw i{width:34px;height:20px;border-radius:10px;background:var(--line2);position:relative;transition:background .15s;flex:none;}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s;}
+.sw input:checked + i{background:var(--brand);}
+.sw input:checked + i::after{transform:translateX(14px);}
+.sw input:focus-visible + i{box-shadow:0 0 0 2px var(--brand);}
+@media (max-width:640px){.prov thead{display:none;}.prov,.prov tbody,.prov tr,.prov td{display:block;width:100%;}
+.prov tr{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;}
+.prov tr:last-child{border-bottom:0;}.prov td{padding:0;border:0;}.prov td.r{text-align:left;}
+.prov td:nth-child(2){grid-column:1/-1;color:var(--tx2);margin-top:-6px;}.prov .tin{width:100%;}
+.avi td:nth-child(1){grid-column:2;grid-row:1;color:var(--tx3);}.avi td:nth-child(2){grid-column:1;grid-row:1;margin:0;color:var(--tx);font-weight:700;}
+.avi td:nth-child(3),.avi td:nth-child(4){grid-column:1/-1;}.avi .status{white-space:normal;height:auto;padding:2px 8px;}}
+.form > *,.f2 > *{min-width:0;}
+.form label{display:grid;gap:2px;font-size:12px;color:var(--tx2);}
+.form input,.form select,.form textarea{width:100%;min-width:0;height:32px;border-radius:4px;border:1px solid var(--line2);background:var(--card);padding:0 10px;font-size:13px;}
+.form textarea{height:96px;padding:8px 10px;resize:vertical;}
+.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.res{border-radius:4px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);}
+.big{font:300 24px var(--body);font-variant-numeric:tabular-nums;}
+
+.stamps{display:flex;gap:4px;}
+.stamps i{width:14px;height:14px;border-radius:50%;border:1px solid var(--line2);}
+.stamps i.on{background:var(--brand);border-color:var(--brand);}
+.hint{font-size:12px;color:var(--tx3);}
+.toasts{position:fixed;left:50%;top:60px;transform:translateX(-50%);display:grid;gap:8px;z-index:90;}
+.toast{background:#2E844A;color:#fff;padding:10px 16px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.2);min-width:280px;}
+
+@media (max-width:1100px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr;}}
+@media (max-width:860px){
+  .search{display:none;}
+  .gh-top{justify-content:space-between;}
+  .appname{display:none;}
+  .gh-nav{padding:0 4px;}
+  .kpis{grid-template-columns:1fr 1fr;}
+  .kpi:nth-child(3){border-left:0;} .kpi:nth-child(-n+2){border-bottom:1px solid var(--line);}
+  .ph .r{margin-left:0;width:100%;}
+  .seg{width:100%;} .seg button{flex:1;padding:0 6px;}
+  .board{grid-template-columns:repeat(4,minmax(240px,82vw));}
+  .kmode .board{grid-template-columns:repeat(2,minmax(260px,86vw));}
+  .f2{grid-template-columns:1fr;}
+  .tbl th,.tbl td{padding:8px 10px;}
+  .rec{grid-template-columns:28px 1fr;}
+  .rec > div:last-child{grid-column:2;}
+  main{padding:8px 8px 64px;}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-4-6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M10 9l5 3-5 3z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.4a.5.5 0 000-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.5-.3z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/><path d="M5.5 17l4-7h5l4 7M9.5 10L8 6H5.5M14.5 10l1.5-4h2.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+</svg>
+<style>
+/* chat transcript, scorecards, stock matrix */
+.brand img{object-position:50% 50%;}
+.stack > *{min-width:0;}
+.goal{padding:14px 16px 16px;border-top:1px solid var(--line);display:grid;gap:10px;}
+.goal .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.goal .trk{height:12px;}
+.spark{padding:4px 16px 10px;}
+.spark svg{width:100%;height:auto;overflow:visible;}
+.spark text{fill:var(--tx3);font:400 11px var(--body);}
+.chat{display:grid;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line);background:var(--sunk);}
+.msg{max-width:88%;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08);}
+.msg.in{background:var(--card);justify-self:start;border-top-left-radius:2px;}
+.msg.out{background:#D9FDD3;color:#111;justify-self:end;border-top-right-radius:2px;}
+:root[data-theme="dark"] .msg.out{background:#144D37;color:#E9EDEF;}
+.msg small{display:block;font-size:11px;color:var(--tx3);margin-top:2px;text-align:right;}
+.msg.out small{color:#55705A;}
+:root[data-theme="dark"] .msg.out small{color:#9FC4AE;}
+.convs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+.conv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer;}
+.conv:last-child{border-bottom:0;}
+.conv.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--brand);}
+@media (hover:hover) and (pointer:fine){.conv:hover{background:var(--hover);}}
+.conv b{font-weight:700;} .conv p{margin:0;color:var(--tx3);font-size:12px;grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tbl input.tin{width:90px;text-align:right;}
+.inv{border:1px solid var(--line);border-radius:4px;padding:16px;background:var(--card);display:grid;gap:12px;}
+.inv h3{margin:0;font:700 16px var(--body);}
+.inv .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;color:var(--tx2);}
+.inv .tot{display:grid;justify-content:end;gap:2px;text-align:right;}
+.inv .tot b{font:300 22px var(--body);font-variant-numeric:tabular-nums;}
+.inv .tot span{color:var(--tx3);font-size:12px;}
+.water{font-size:11px;color:var(--red);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+@media (max-width:640px){.inv .meta{grid-template-columns:1fr;}.msg{max-width:94%;}}
+</style>
+<style>
+.brand img{object-position:50% 50%;background:#fff;}
+.stack > *{min-width:0;}
+.mx td.c{text-align:center;}
+.cell{display:inline-block;min-width:64px;padding:2px 8px;border-radius:12px;font-size:12px;font-variant-numeric:tabular-nums;}
+.cell.ok{background:var(--ok-bg);color:#056764;} .cell.lo{background:var(--red-bg);color:var(--red);font-weight:700;}
+:root[data-theme="dark"] .cell.ok{color:var(--ok);}
+.stars{color:#FE9339;letter-spacing:1px;}
+.fb{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:10px 16px;border-bottom:1px solid var(--line);align-items:start;}
+.fb:last-child{border-bottom:0;}
+.fb p{margin:0;grid-column:2/-1;color:var(--tx2);}
+.tags{display:flex;gap:6px;flex-wrap:wrap;grid-column:2/-1;}
+.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;}
+.sc{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);padding:12px 14px;display:grid;gap:6px;}
+.sc h3{margin:0;font:700 14px var(--body);}
+.sc .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--tx2);}
+.sc .row b{font-weight:700;color:var(--tx);}
+.quote{border-left:3px solid var(--brand);padding:6px 12px;color:var(--tx2);font-style:italic;margin:0;}
+@media (max-width:1100px){.score{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:640px){.score{grid-template-columns:1fr;}.fb{grid-template-columns:auto 1fr;}.fb > .hint{grid-column:2;}}
+</style>
+
+<header class="gh">
+  <div class="gh-top">
+    <div class="brand"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCACgAKADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9SKKKKCAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAHJp20Ug606mhNibRRtFLRTsK4m0UbRQSAMntXM658SfBfh9zBe65DJcdre2zNIT6YXOPxrOpVp0VzVGkvM3oYetiZclGLk/JX/I6baKNorzXV/ilr6WD6nY+F4NH01cZ1PxHeJZQAHocMRn865NPHet+K4HgsPEniDxFvlG0eDtFdbf3H2648uAr9JOvPtXP9bU/4UHL5WX3u34XO15ZKlriakYeV+Z/dG9vnY9xuLm1tE827uYoE/vSOFH5msa58d+CbRtlx4r0pW9PtSH+Rryi3+HHjLVQ86/DrSbZmbifxP4lmvZwPUwWkfl59vOreg+E/jRY1UeIfAtlgcpZ+Ct4z/vz3bk/kKL4uW0Yr5t/oh8mW095zl6KMfzcvyR3dr438G3rBLXxTpcjHsLpAf1NbMMsFwglt5klQ9GRgw/MV5Re/Cbxq8Lgav4A1E9VS88HvAx9vMt7sY+u01jL4J8a+HLmO7i+HCqyqym48JeJ/n5BBP2a/SNc4J4Ep9jmnzYqO8Yv0bX5p/mLky6ovdnOL84pr700/wZ7ngUbRXhkXxIvPDFsItU8b6jpF40gWO28baO9hBtGcr9swYXbpgrLiuusvilrNraR33iPwbcNZSLvXUtHmW9tXU9GBUnj8TS+txh/Gi4/K6+9XX3gssnV/3acZ+Sdn/wCAys38rnou0UbRWDoXjzwj4kwmk67bSyn/AJYu3lyj22tg/lW/XTTnCquaDTXkcFajVw8uStFxfZqz/ETaKNopaKuxlcTaKaeDT6aetJjTAdadTR1rkvHPjG70eS28PeHbeO613UgTAjn93bxj700h7KOevofSs6lWNGDnI3w+GqYuqqVPf8Elu2+iXVm1r/inw/4Xtxc67qkForfcVjl3/wB1RyfwFcdefEvXtUiEvhTw19ns3YIup61KLW3JJwNqkguc9ADn2rifC2k+I/iFdf2z4U1BDYH5X8aarbC5lveTn+yrV/3YhBztuZgVbrHHIpD16Rofwk8H6TqUPiDUYbvxDrkB3R6trty19cxNnOYt/wC7t/pCkY9qw5MRX1k+Rdlv83t9y+Z3OpgcHpCPtZd5XUflFWb9W/8At08zGqa/4++awbxN40jkGQdPj/sfRBzj/j6nCmZPeGOWuo0L4VeMAv8ApXiDSfCVudwNr4XshJc4PZtQu1Z2+qQxn0Ner+/JNFaU8JRpvmSu+71f3swr5licRH2blaP8qtGP3KyON0j4QfD3Sb5NYfw+mq6qmCupazNJqV4CO6zXDOyfRNo9q7M89efrRRXScAVDeTvbWk1xFEZXijZ1jB5cgZwPrWD4z8V2XhkabDf6vbaTHqlybVb26X90j7SwTccIrMA20uQpIxyxVSkek3byLdvqutTuCrI4uisRzJtB2RhUI24bGCMe1RKVi4Ru7m5p91DeWqzQzmYAshYjB3KSCCPUEEfhVn6VyB0keHdPa4i17UNLtrSN2llnnjNsoRwC7CYbVDcuSGXvzzVz4f8AjTSPiD4VtfFeg6pZanp9280cF9Yvut7oRSvEZYjzlCyNg5IPYkYJINuKvuOrFRk+Xa+h0LIjo0bqGRwQykZDA9QR3riL34L+AZLmXUdC02fwxqMvLXnh26fTZHbOcusJEcv/AG0Rx7V3NFUZ3PINe+FvjVWaUXHh/wAaQgsQurW/9l6kOOMXtopjc+ga3Xnq1YCeKta8CssN/rOueEFBVRb+LYBcaYxI6JqMBeFBnoHaNvYV79SMqupR1BVhhgehHofWuapg6M3zWs+60f3o9CjmmJpR9m5c0P5Ze8vud7fKxwEPxTbT4oJ/E2gXMNlPEjpqlltubOQkclWRm+XPQ5OR2FdlpGuaRr9oL7RtRgvID/HE2cH0I6g+xrmJ/hN4ZtI9Qk8FGbwde6l5bT3OiLHErsjFgzW7q1u5OSGJj3MOCa82vrHxR4F1+2TW3sdI1G+lS303xHpcRh0rU5mOEtb63Yt9jnc4CEM0MjEAMjssdRL6xQ1Xvx7bS+XR+mnqax+o4z3ZL2U++8X6rePqm15Hv1NPWue8FeL08VWUy3Nq1lqlhJ5F/Zt1hkHp/snHH410J610QqRrQU4PRnBWoVMNVdKqrNf193Z9QHWvBPEVk3i7xHe6PeyEQ+K/Fcfhi7IYq39mW9rPdXFuCOgmW28psfwyNXvY6j614bZ/8jtoP/ZTL7/0zahXPW1r0k+7f3I78G+XCYiS3tFfJyV/yPcIIIbaFLe3iSKKNQiIihVVQMAADgADgCuf1D4i+D9LfxAl9qkkY8LWv2zV3+yyslrF5ImyWCkMfLIbauTjtkGujHSuU1P4YeENWn8ST3trdN/wltmbHV0S7kRLiLyRDjAPykRjAIxjJI5JNdp5RreIPFWg+FrK11HX78Wdte3trp0MjRsQbi5lWKBDtB27pHVcnABYZIrK0X4peBvEb6Umh6y96daW7ksjFaTYkS1uFt53JKfKqTOqZbAO4EZHNWfEXgTw74s8Ly+D/Ecd3f6bOD5gku5BKxySD5oIcFScqQQVIXGNoqhpnwo8FaNc6Zd6VZ3VrJpBv/spjvZBtW9ulurlTzyryopx2A2jCkigBLv4v/DqyiuZrnxGiLZT6hBc/wCjykxGxIF47DbkRxbl3SfdG4cnIrT07x54T1XxPeeDbDV1k1mwV3ntTE6kKiwMxDEbWAW6tydpP+tWsKb4JfDi4099OuNHnljmbUDcO97MZblb/b9sSV92XWXYm4H+4uMEZrU0n4b+EdD8Z6p4+0uxlh1nWolhvZRcuUlRViVB5edg2iFAuBxlv7xoAi+KXgG1+JfgnUfCdxci2kuU3W9wU3iGZeUYrkblzwRkZBIr8T/2ifFXxr+EWueJfDXhrWPF+iS6Bqf9m6jf+H9Qu49Ot5wiSNF59u4h37ZI8rwy7sMAeK/b3xzqHiKx8O3EXhC3il169/0TTTOpMMU78CaXH/LOMZkYdSE2jlhXzr8cfg0/hX9kH4i/CnR7W9ay/wCEevLiS/kuIJn1W+kkE017csVWX7RLLukbquWwDgAUmVF2Pyo+CPwO/aa/bB+Jmk/Dnxb4z8Vx2F3bNq9zf+KdRunRdOjlRJZ7eO4bNywaRFAQEbmG4qMkfun4S0nwN8IvDHhf4XaLPFYWWm2EWm6TaO26V4YBHFuOByd0kYZzgbpRk5YVxnxC+GfijxVq+j+KdC3W2u+Arlr7w5dXjW6+cxQxz2TeUu4W1zCTE+9sgiKTbujFdtqXhTQfHz+HPE+pQXkFxo8yajZKcRTW82VJVmA3qflMbqrBXUurblNCE3cnuviN4FsrK61G68VadFbWOoyaTcytLxDeRqWeFuOHCgsR6c9KnXx14OfUBpcfiXT3uinmCNZg2R5PnYBHBPk/vNoOdnzYxzXKat8BfBGtW2oWd9dau0Gp3trqNzGLpSr3EFsbcSYKHBeMjf6lFIxir1v8HvCNtqserRzakZIpxeKj3e9ftf8AZ39nfaCSNxk+yjy+TtJ+bG7mmI3tM8b+EdZ0G48T6V4jsLrSrONpbi7ilBjhVYxKS5/h/dsr8/wsp6EVTPxQ+HiwWd03jLSlhv5ZIIHa4ADSRsiOpz90q0kYIbGC6+orO8J/CDwp4N8A3/w30m51J9J1GOeKRri4DzqssIiYLJtB4UcZzt6D5QqjJf8AZ4+H72Gk6aZtYEOjXM93bBbwKRLM0TMQQvyYaFCNm3BLH+I0Adxp/i3w1qurXGh6drdpcX9t5vmwRyZYeW4SXHY7HYI2M7WIBwTip9f0DR/FOi3vhzxBYxXum6lA9tdW8g+WSJxhgfTjuOQcEciuS8L/AAi0fwn4+1XxxYavqUyX8dz9m064mLwadLd3H2i+eDn5RPKkLspyA0eVxuIrvaAPDfhffanB4j8OSajfNd31zBqvh3U7hj893Npl1LbrcSesjrCrMfVjXuB614l8O5LFPEOlpNayyXT+K/GQhkEu1Ih/alzuJXGWJ6DkAc9a9tPWuLDLllUS/m/NJ/nqenj5OcKEpLXk++0pJfckl8gHUfWvDbLH/Cb6DnP/ACUu/wDz/sbUK9yHUfWvDbIE+NtBwOnxLvj/AOUbUKK3+8Uv+3vyHhf9yxHpD/0o9z7VFNB5/C3E8f8A1zfH9K5T4yTXVt8JPGt3Y393Y3Vv4e1GeC5tJ2hmglS2kZJEdSCrKyggj0r8d/2crH/got+1vpWsav8ADf8AaU8QQWmhXUVtdNqfjC7tCJJIy67RGrEjAP412O2zPNjdao/aZ9FZj/yGdUX2Fxj/ANlpn9gNnI13WD7C5H/xNfk38CPip+2J+zp+3J4W/Z7+M3xe1HxbDrd7aWOp2l1rE2qWjw3cW6OWF5wHjdSVOQFztIOQasftW/Ef9on4/wD7f037LHgP4w6p4M0a2vIdM05LK9ntLdWWwFzNNP8AZyHmcneBk4HygYGTWfs4PobKtUXX8j9X00Rl66vqx/3p/wD7GrlvbeR/y83Evb94+7+lfjT+1P8As4/tT/seeA9J+LV7+154g1l5tch02O3tNX1GCZJGjkkWRfMlIcDyiGGO465NfRv7SH7UXxStf+CafgX4p6R45GmeMvGkel6ff6pYusNw5ZZftLQlf9XIfJG4pgrubG3jDUIx2RM5zno2fofz/db/AL5NUNe0ez8RaNe6DqCuba/gaCUAfNsbg4r8nv2d/wDgn78Xv2hPg94a+MK/tk6/pY8SQSXD2SR3d41uyyuhRpfta5f5Mn5RgnHvWr+01+zb4y/Y5/ZW8bXWofH7VPFuoeJ/EPh0abfSyT2V7bmA3YmiQmdyylJs4VugbI4Bq7mdj9XPfBGTnkUjAsCDvHuAR+tfK3/BPz4j+Fo/2P8A4cyeJ/Humf2pJa3cl42o6xGbhpDfT8yGV9+du3r2xjivk39gLxle6z/wUU+Kuiap4tu9Q0u1HiX+xLafVJJrdSupxqhgVnKHEJfG3PybiOMmgLH6nS6WZTkajqCeyTf/AFqgbQXPP9t6wv8A28Y/9lr48/4KyfGZvhl+zdF4a0TWJbLxF4u1m1t7KS1uWhureG3bz5p0ZGDLgxxxkj/nrjvXzl/wSL+O3jK7+NPi/wCFnxO8T67qV7rmiR3um/23fzzyRS2r7nijEzErvinLnA5EQPaocIt7GkatRLRn0z+2/wDtp3f7HGreFtLh8Ba14tHiS2ubk3MuvGyig8p0XYCIJN7Hfk9MDHXNfSXwj8TxfE74Y+EviXbtqljH4q0Sy1lbOW8ErW4uIVk8ssFAbbuxuwM4zgVofE74c+Hfix4J1PwD4t+1No2rxiC/itpvKee33AvD5mCyq4G1ihVtpIDDrX5T/Hz4k/tQ/En9tC6/ZL/Z/wDik3w+0Tw06aD4a0uw1Z9IsoYbazV8SPEN8jkBgq4b+FVHGaPZxQ/bTkrNn6/oojUJvdj6ucmn1+U11+yf/wAFbNJgKQftD3upKiY8qDx5c73H90GZF5PqSPrX6qWyuttEsgIYRqCD1BwM1aMWjw3wB/yNeif9jX4z/wDTpc17oa8L8Af8jXon/Y1+M/8A06XVe6HrXHh/4lX/ABf+2xPTx/8ABw3+B/8ApcxR1H1rw+wx/wAJtoecf8lJv/8A0zahXuA6j614dY/8jvoX/ZS7/wD9M2oUVv8AeKX/AG9+QYX/AHLEekP/AEo7X4/6e+q/A34g6fHqN3YNN4Y1RRc2jhZo/wDRZDlSQQDxjp0J+tfi1+xJ+1x8a/2d/Dnibw18IPguvjiXXL63u55TaXtwbdkiZFTZbDuCTyR0r9sPjR/yR/xz/wBi1qv/AKSS1+Xf/BK39pn4F/AH4d+P4fi98SLDw3NqOrWU9pBLHPLLMiW7BmVIkYkAkDpXW9zzo7Hh/i/4/wDxf0f9srwd+1H+0Z8FNR0K5W7s7uHR20+60tJ7a2TyQ0BuMs7ISGOSQWABwDXsWmeGtJ/4fQnSYNLie0HimbUPJbLKJf7KNwZPmPUS/OPQ9OmK5n/gpJ+0j8Mf2uPiF8MdD+A99qniOXSftdkzHTprcXFxdz24ijiWUB3YmI5+UDlcZ5xP+0X8RNa/ZY/4Khar8cPEfgTUNRsLa9F7ZW24241C3m0pbbfDKVZW2s7ZwDyhU4PQGfV//BZTTNOn/Ze0DVJ7GCS9tPGVlFBcNGDJEklrdeYqt1AbYmR0O0egrwz9pLR9Ctf+CSfwZnj0uyinW90mWF1gQMJZku2mZTjIZ8Esf4sc5rjP2pv2yPil+3f4H0j4O/D79mPxHZIuu2+qJPbyz6jNM6RyxogVIERB++JLEkDHYZNfUP7Qf7JHxg8Vf8E6PAPwR8O6RBf+NfBaaVqF3pkVwgaZ4YplmgickIzr9o45AbyzgnIyCR7f/wAE8ra3tv2MvhaLa3iiEmjvK4jQLudrmbcxx1J7nqa83/4K5W1vN+yBfSywRu8PiHSjG7ICyEu4JUnoSCRx2OK+c/gr8aP+CnHwX+F3h/4U+E/2RI7vTPDVs9lbXGpaDefaJF8xny+24RTjeRkAAgV03xnP7dX7UH7MPjbwj8WfgFNpfiJNf0CTQtL0fTTEJrdftD3MrPJM+dpWIHLDG5Rj5qL6BbW5zf7KP/BLb4F/Hr9nXwZ8WPE3jTxxp+s+I7aea5isLm0FujJdSxDYskDMBtjHVjyT9K5H/gmV4K0jwP8A8FB/iH4IsS95aeFdN8RabYz3aI02231CCBZCQAA5QEEqB95h0OK/RD9hHwZ4t+Hf7KPw/wDBPjrw7faHruj291Be2N4gWSJjezuucEggo6sCD0P4V8h/sZfBX4ufDz9v34o/FDxz8MPFOj+FNej8TS2GqXGly+TMs2oxzxAFQcFo0YqDycYHJAoC5w3/AAUrkT4//tx/DT9nfR1i3WENhpd9OoUSRS384ll3N12x2/lvg9NzetR/tZaDo37Mf/BS34cfF2DTYIvC+vT6RqLfKPJhWPFhc7e25EVJfqwNc54L/Y1+J37an7VPxO8XfGPSvGnw10u/lutZsLq/0CaGWYNcLFbQJ54VSEgA3YbI2rxzkZP7aP8AwTWvf2aPhPH8VNI+MN54ts7PUoLGexvdN+zPbxzhgJUcTOGw6qCoUcNnPy0DXY/azGBjrjj618Hft8/8E7pvjjqqfGn4EiLS/iWk8Ul/G999mg1JYo8JKr4/dXKlIlVgVVh94gjdX0p+yT8U4vjL+zd8P/iEbxLm7vtEgh1FlcMRfQL5NwD6HzI2ODzyK4Xxb/wUS/Zd+HfxH174WfEfxdqXhvW/D16bG5+06RcTW7narK6SwK42lWH3gCOQRTIV09D5g/Yn/wCChWseAtZj/Zi/bBS/0HXdHuDp9p4i1h5BKspYkQaiZCSpy3y3GdpBXdgfOf02VldQysCCMgg5BFfjx/wVZ+Mn7Nfxr0jwF4n+EPi7w94i8SQ3F5Bf3VhG63S2XloY0mLIrbRJnaG5GWxwTX6o/A+We4+C3gCe5dnmk8LaS8jP94sbOIkn3zQhyXU8/wDAP/I16J/2NfjP/wBOlzXuhrwvwD/yNeif9jX4z/8ATpc17oa48P8AHV/xf+2xPSx/8HDf4H/6XMUdR9a8a0PSNS1LxdZXtjb+ZDpXxCvby8bcB5cJ0u8hDYJyf3ksYwMn5s9ATXso614Rquqnwf4luNTvpTBaaB41i1TUmL7Qun3lrPaec3/TOOS4idyeFVSx+7SraV6Tfd/kPCLmwmJS3tF/LmX+Z69428Nt4x8Ha54SGoPY/wBtadc6c10kayNCs0bRs6q3BIDEgHjOM56V8g+Ef+CQ37I3h1I/7ctvF3ih1xv/ALR1owox/wB22SLj2zX2wOaWu08q9jx74Z/sk/s4/BjVYte+GHwa8OaTq8ClYdQeN57qEEYOyaYu6kjglSDXp13p99fbPP8A7N/dtuj32pmKH1G4jB/CtOik43LjNrYzDp2rONsniK4RemIbeJR/48rVieKrzw94R00ax4v8eXunWbzR2yST3qxebNIdscSBEBeRjwqKCxPQV11fP/7UWla1p3ir4Q/Fu2tbjUtH8CeLHfVNNtlEk8n9oWsmn208UJI86SK4uY8Rr85EjbMngy6cf6bNFiKi2svkv8jvJPE3wsXwfqHj68+IEo8P6U0iajqEutTpFZtG22RZvmBiZCQGVgCvcCrPh+7+F/i20vr3w54mOqx6Y2y+FvrNzI9s2zeFkQPuRihDAEAlSCMg186t4l8e/H79kz9oXQbXwlBNr6634n8JaZbaVpRsp9RaNY40lmiZzidnZhISwA24ONprtP2ZPCvi/wANfEX4qeJ/iJ4R1eDWtWOjRWmrJZGGyv8AR7SwUWsUcO5mW5jeS4SUMWZmwRhdqhexp/yor61XW0397PQ4/GvwP/4V63xYi+INuPBqZLa4NeuPsQAk8snzd+3Af5c9M8VseJ77wD4G8Lz+NfFPjG60PQraNJZ9Qu9YnigiRyArOzNhQSyjJ9RXyovwh+Kj/wDBL+8+DX/CB6wvjeXSbmyXRWjX7SZX1VpgPvbcGNg2d2Me/FepftW2Xjf4xfstfFXwT4R+HniBtWuIYdK0i2mgEc2qc2srTRoxBRAxlTL4yYmPQjJ7Gn0ig+tYh7zf3s90tNHWaCK7svEmsGKZFkQm4DhlIBBw6Hsank0q/ddjay06d1ubSJwfyC1S8IeI7/xCNTW68MarpMOm3UdpbS6hF5TX6eRE7TIh+ZUDu8fzYJMbEcEV0NNU4rb82Q8RUb1s/kv8jK03Sn0hHgsbLSoYpXMki21t9n3uRyxC5BJwOfavHPiT+w1+yv8AF7W9S8UeP/hBp99reryme81GK8ure4lkIA3F4pV7AAcYGOle8UVaVjNyvqfE8v8AwSG/ZEk1+11mODxlFa28okk0sa5utZ1H8Ds0ZmCnodsgOO4r7Ss7O10+0hsbG3jgt7aNYYYo12rGigBVA7AAAD6VNVfUNQsdJsLjVNUu4bWzs4nuLieZwkcUSKWd2Y8BQoJJPQCgTdzxDwD/AMjXon/Y1+M//Tpc17oeteGfC1LnUNf8LXElnJbzTLrXii4hcEPBHqV5NcQpID91/Lmjyp6HIr3Q9a48NrOq1/N/7aj08w0p4eL35PznNr8LMB1rkPHvhvVL22k1Pw5Baz3LJ5V/YXEKvFqdttZTBIGHIw7cHg5we1deOtOrepSVWHK9PNbr0OKhXlhqiqRSfdPVNdmu3/DrU8K8DeLdd8FRHRdD0+/8S+HLMlF0aSUHX9DUD/UoJSBf2yYwvzCdFAX99xj1Dwt8R/BfjKeWx0HXoZNQt8/aNNnV7a+t8f8APS1lCzJ/wJQKk8TeA/DPisrNqliVuk/1d3A5jnT0ww6/jmuK8Z/DHXdXht4rq10PxbZ2USx28GrW+y7hIGPMiugd6SHGdysvPTFYKpXoK1WPMu63+a/yv6HdKhg8W74efI39me3yl/8AJJerPVqK8Eg1rxX4NlFvbeK9c0LBbbp3i63bV7A/7Md4hW6T6u8oHoa7HTfi1q8EIm8UeBL1rUEBtU8MzDW7IDGcskSrdJ9DAQPXitaWJpVtIS17dfu3ObEYDE4VKVWDS77p+jV0/kz0qqeraPpOvafNpOuaba6hZXAAlt7mJZY3wQRlWBBwQCPQgHqKy/C/j/wV40D/APCLeKNN1OSIZmggnUzw+0kRxJGfZlBroPatzjM/RtC0Lwzpi6ToGkWWmWEJd1t7WBYYlLMWdtqgDJYliepJJPJrQCr2x+VUdZ0m11zTLjSbxpVhuV2OYnKOB7EdKx/EukeIU8MR6R4OvRDdRhIVecg/IOrM3UHjqMnJ6emdScoXfLdJdN/Sx0UaUKzjFz5W3bXZLvf/AIB0h2KPmwBkD8TS7RjG0Y+lYV74dbxHoNrYeIbidZwY5pmgYRESDnHykjAPuc4rdUBVCrwAMAVUZSk9VZGc4QgtJXd3ft5NPrf0ADHQYFLR3x39K5jxL8TfAXhK5Gn674osodQfGzT4mNxeyZ6bLaINM34IaszOno9q8w1n4p+KpLRrrQ/A40ayxgan4uuxp8eSeClpGJLlzwTtdYs46iuPlfxL48Z4brWPEvi5HLBrXSlbQNGGRj5mRjcyr7POQf7tc9XFUqL5ZPXtu/uWp24fLsTio89OPu93pFerdl+J6j4k+KngrwzfnRJtUfUdb2kro+lQPfX7cZ5ghDMg/wBp9qjuRXmXirW/EPjnVINN8WaMsdmsoksvBVvMtxcXsqtmOTVpoyYkiQgN9ljZlJAMkjj5B0/h74UazDp40ua90/wxpLHc2k+G7VbZGz13yAAsT3J3E+td34c8IeHvCluYND02OAv/AKyU/NLIf9pzyf5Vi54jEaQjyLu9/kv8/uOlUsFg/eqz9rJfZjfl+ctL+kVr/Mil4L8MXujxXGr6/dLea7qZV7ycABVCjCxLgfdUd+5/CukPWnU09a6adONGChHY4K9eeJqurU3f3LskuiS0SAdadTBwaduFWjFoWik3CjcKdxWGTwQXMTQXMMcsTcMkihlP1B4rj9R+EvhK6uPt2lRXOiXoO5Z9NmMJB9dv3f0FdnuFG4VlVoUqytUimdOHxeIwjvQm4+j39Vs/meTeLvhTrWqiJr2z0DxkkEIWM63aql7G/cxXMYDp7EMCPWsO7j8R+D5pF03WfiH4ftk2iMXXl69YHAGci43Touc4Czjgfl7ruFG4e9YvDSh/Cm166r8dfxOpY+FX/eaMZea91/hp/wCSnjWnfFjxmsjRx6p4A8QqFyA13daFcZ9PLmS4jz/20ArobH4qeJpk/wBJ+EOvS4GTJp2r6Tdxn6E3SMf++RXY6j4a8OauD/aehWF0T1MtuhP54zWBN8IvhxOxY+GIYyf+eUsifoGpXxcf5Zfev8x2yyp/PD5Rl+N4fkZOofFXxVD8tr8JtStj2k1fXtKtI/qfLuJnA/4DWDqHxM8dXKTyHxB4I0KGLajCwiu9fnDNnaAQLaIMdpxncOD1rtrf4S/Dm2YMvha2kI7yu8n/AKE1dFp+i6LpK7NL0mztBx/qYFT+QoTxct+WP3v/ACBrLqe3PP8A8Bj+szxFtI8T+L12Xcfj3xRHIm0/2jfromnn6wWYiLr7O7+9dP4b+FfiPTrZrSzvdE8HWUpDSWnhrT0hdzj+OXAZj7kmvVdw96Nwo+quf8abflsvw1+9j/tGNL/dqMY+bXM//Jrr7kjkdH+FfgzSJftT6c2o3RO43GoSGdyfXDfL+ldaiJGgjjUKqjAUDAH0FLuFG4VvTo0qKtTikcWIxVfFS5q83J+buLRSbhRuFa3OewtNPWl3Cmnk0mNBRRRSGFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAf/Z" alt="Bocha's Grill"></div>
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" placeholder="Buscar pedidos, clientes y sucursales" autocomplete="off"><div class="results" id="results" hidden></div></div>
+    <div class="tb-r">
+      <button class="iconbtn theme" id="tema" aria-label="Cambiar tema"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
+      <span class="avatar" title="Dueño">BG</span>
+    </div>
+  </div>
+  <div class="gh-nav"><div class="appname"><span class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Bocha's Grill</div><nav id="nav" aria-label="Secciones"></nav></div>
+</header>
+<div class="app">
+  <div class="band"></div>
+  <main id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+// ---------- real facts (their own TikTok @bochasgrill and the owner's @bochas10, checked 2026-10-15) ----------
+// Branches as their own captions list them. Only Villanueva's address is published in a video; the rest stay "por confirmar".
+const SUC = [
+  {id:"stibys", n:"SPS Stibys", dir:""},
+  {id:"calpules", n:"SPS Calpules", dir:""},
+  {id:"progreso", n:"El Progreso", dir:""},
+  {id:"villa", n:"Villanueva", dir:"Gasolinera Shell, carretera hacia San Manuel, frente a colonia Gracias a Dios"},
+  {id:"choloma", n:"Choloma", dir:""}];
+const sn = id => SUC.find(s => s.id === id).n;
+// promos exactly as they posted them
+const PROMOS = [
+  {t:"Chicharrones de Carne (nuevo)", d:"Exclusivo por Bip Bip en San Pedro Sula", ch:"Bip Bip", suc:"SPS", fecha:"Desde el 5 de octubre", st:"activa"},
+  {t:"Nueva presentación para llevar", d:"\"El mismo sabor que te encanta\", para llevar", ch:"Restaurante", suc:"Todas", fecha:"Desde el 15 de agosto", st:"activa"},
+  {t:"Económicos de Carne y Costilla a L149", d:"Promo del mes patrio. Válido únicamente en restaurante", ch:"Restaurante", suc:"Todas", fecha:"14 al 18 de septiembre", st:"terminó"},
+  {t:"Económicos de Costilla y Carne a L139", d:"Lunes, miércoles y viernes", ch:"Bip Bip", suc:"Todas", fecha:"Septiembre", st:"terminó"},
+  {t:"Feria de Villanueva: segunda costilla a -50%", d:"Válido solo en la sucursal de Villanueva", ch:"Restaurante", suc:"Villanueva", fecha:"28 de agosto", st:"terminó"}];
+// where people ask for a new branch, counted from 214 comments on 13 of their videos
+const ASKS = [["Siguatepeque",3,"\"Cuando en Siguatepeque 🥺?\""],["La Ceiba",2,"\"Cuando Bochas en La Ceiba ??\""],["Tegucigalpa",1,"\"tegucigalpa para cuando 🥺\""],
+  ["Comayagua",1,"\"Por favor, uno en comayagua\""],["Puerto Cortés",1,"\"Para pto cortés oa cuando\""],["Franquicia",1,"\"tienen franquicias ??\""]];
+
+// ---------- deterministic demo data ----------
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const L = n => "L" + Math.round(n).toLocaleString("en-US");
+const DAYS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const today = new Date().getDay();
+// per-branch day so far (7:30 pm). Demo.
+const HOY = {
+  stibys:  {v:21480, p:118, esp:18, cal:4.6, enc:41, falt:[]},
+  calpules:{v:18950, p:104, esp:16, cal:4.7, enc:37, falt:[]},
+  progreso:{v:15320, p:86,  esp:22, cal:4.3, enc:29, falt:[]},
+  villa:   {v:12700, p:71,  esp:19, cal:4.4, enc:22, falt:["Frijoles","Encurtido"]},
+  choloma: {v:13880, p:79,  esp:41, cal:3.9, enc:26, falt:[]}};
+const META_ESP = 25; // minutes: above this the branch turns red
+// WhatsApp: the questions are the real ones from their TikTok comments; the answers are what the bot would say
+const CONV = [
+  {id:1, who:"Queen A.", h:"7:22 pm", q:"DIRECCIÓN SPS POR FAVOR... Y HORARIO", st:"bot", tag:"Ubicación", suc:"calpules",
+    msgs:[["in","DIRECCIÓN SPS POR FAVOR... Y HORARIO"],["out","¡Hola! En San Pedro Sula tenemos dos sucursales: Stibys y Calpules 📍\n¿Cuál le queda más cerca? Le mando la ubicación en el mapa y el horario de esa sucursal."],["in","calpules"],["out","Aquí va la ubicación de Bocha's Calpules 📍 ¿Quiere dejar su pedido listo para recoger?"]]},
+  {id:2, who:"José J.", h:"7:15 pm", q:"Esos L.139 ya con el envío?", st:"bot", tag:"Promo", suc:"",
+    msgs:[["in","Esos L.139 ya con el envío? o hay q sumarle el delivery?"],["out","Los L139 eran el precio del Económico de Costilla o de Carne por Bip Bip, los lunes, miércoles y viernes de septiembre. El envío lo cobra Bip Bip aparte y la app se lo muestra antes de pagar."],["out","Esa promo ya terminó. Hoy le puedo ofrecer los nuevos Chicharrones de Carne por Bip Bip en San Pedro Sula 🔥"]]},
+  {id:3, who:"Soraya B.", h:"7:09 pm", q:"es todo el dia ?? o hasta que horas?", st:"bot", tag:"Horario", suc:"villa",
+    msgs:[["in","es todo el dia ?? o hasta que horas?"],["out","¡Sí, todo el día! La promo es solo en la sucursal de Villanueva: Gasolinera Shell, carretera hacia San Manuel, frente a colonia Gracias a Dios 📍"]]},
+  {id:4, who:"Carlos O.", h:"6:58 pm", q:"Cuando abren en Choloma?", st:"bot", tag:"Sucursal", suc:"choloma",
+    msgs:[["in","Cuando abren en Choloma?"],["out","¡Ya estamos en Choloma! 🙌 ¿Le mando la ubicación en el mapa?"]]},
+  {id:5, who:"Kevin R.", h:"6:41 pm", q:"quiero 2 económicos de costilla para recoger en calpules a las 7:30", st:"pedido", tag:"Pedido", suc:"calpules",
+    msgs:[["in","quiero 2 económicos de costilla para recoger en calpules a las 7:30"],["out","¡Con gusto! 2 Económicos de Costilla para recoger en Calpules a las 7:30 pm.\n¿Con el aderezo de la casa aparte o encima?"],["in","encima"],["out","Listo ✅ Pedido #5120 en la cocina de Calpules. Le aviso cuando esté listo."]]},
+  {id:6, who:"Alfredo C.", h:"6:20 pm", q:"tienen franquicias ??", st:"persona", tag:"Franquicia", suc:"",
+    msgs:[["in","tienen franquicias ??"],["out","¡Gracias por su interés! Eso lo atiende el dueño en persona. Ya le pasé su mensaje y le escribe hoy mismo 🙌"],["out","(Pasado a una persona · aviso al celular del dueño)"]]}];
+const BOTTXT = {hor:"", chi:""};
+try { Object.assign(BOTTXT, JSON.parse(localStorage.getItem("bgp-bot") || "{}")); } catch (e) {}
+// pickup orders taken on WhatsApp
+const NAMES = ["Kevin R.","Karla M.","Dania R.","Marlon S.","Yessenia P.","Óscar F.","Gabriela T.","Wilmer C.","Ana Lucía B.","Héctor Z.","Sofía H.","Brayan O.","Lourdes E.","José L."];
+const PLATOS = ["Económico de Costilla","Económico de Carne","Chicharrones de Carne","Parrillada para 6"];
+const ORD = []; let oid = 5119;
+for (let i = 0; i < 14; i++) { const k = 1 + Math.floor(rnd() * 3); const items = [];
+  for (let j = 0; j < k; j++) { const n = PLATOS[Math.floor(rnd() * (rnd() < .92 ? 3 : 4))]; const ex = items.find(x => x.n === n); ex ? ex.q++ : items.push({n, q: 1}); }
+  const st = i < 3 ? "nuevo" : i < 8 ? "cocina" : i < 11 ? "listo" : "entregado"; const suc = SUC[i % 5].id;
+  ORD.push({id: ++oid, who: NAMES[i], suc, items, st, min: st === "nuevo" ? 1 + Math.floor(rnd() * 4) : st === "cocina" ? (suc === "choloma" ? 38 + Math.floor(rnd() * 8) : 6 + Math.floor(rnd() * 14)) : 15 + Math.floor(rnd() * 20)}); }
+ORD[0].who = "Kevin R."; ORD[0].suc = "calpules"; ORD[0].items = [{n:"Económico de Costilla", q:2}];
+// quality: the bot asks "¿Cómo estuvo su pedido?" after every order. Comments are examples written like the real complaint types.
+const FB = [
+  {suc:"choloma", s:2, h:"7:18 pm", t:"Me tocó sin aderezo", tags:["Faltó aderezo"]},
+  {suc:"choloma", s:3, h:"7:02 pm", t:"Rico pero esperé casi 45 minutos", tags:["Espera"]},
+  {suc:"villa", s:3, h:"6:55 pm", t:"No había frijoles, me dieron más queso", tags:["Faltó producto"]},
+  {suc:"stibys", s:5, h:"6:40 pm", t:"La costilla buenísima", tags:[]},
+  {suc:"progreso", s:3, h:"6:31 pm", t:"La atención en caja muy seca", tags:["Atención"]},
+  {suc:"choloma", s:2, h:"6:12 pm", t:"Las tajadas muy delgadas y tostadas", tags:["Tajadas"]},
+  {suc:"calpules", s:5, h:"6:05 pm", t:"Todo perfecto, como siempre", tags:[]}];
+const TAGS = ["Faltó aderezo","Tajadas","Carne dura","Espera","Atención","Faltó producto"];
+const TAGC = {choloma:[3,2,0,4,1,0], villa:[0,0,1,1,0,3], progreso:[0,1,0,1,3,0], stibys:[0,1,2,0,0,0], calpules:[0,0,1,0,0,0]};
+// the house plate, checked at the pass before it goes out (the owner writes his own list)
+const FICHA = [["Aderezo de la casa","encima o aparte, como lo pida el cliente"],["Tajadas","gruesas, doradas, no quemadas"],["Frijoles","porción completa"],["Encurtido","porción completa"],["Corte","del peso de la ficha"]];
+// stock per branch: [name, unit, min, [stibys, calpules, progreso, villa, choloma], supplier]
+const INS = [
+  ["Costilla","lb",40,[86,72,55,48,61],"carne"],["Carne de res","lb",40,[74,66,52,44,58],"carne"],["Chuleta","lb",25,[38,31,30,27,29],"carne"],["Chorizo","unid.",30,[52,47,36,33,41],"carne"],
+  ["Frijoles","lb",15,[34,29,21,4,18],"abarr"],["Encurtido","porc.",30,[64,58,41,9,37],"verdu"],["Plátano verde","unid.",60,[140,122,90,77,95],"verdu"],["Queso","lb",10,[22,18,14,16,13],"lacteo"],
+  ["Aderezo de la casa","bolsas",12,[30,26,19,15,7],"central"],["Carbón","sacos",4,[9,8,6,5,5],"carbon"],["Desechables para llevar","unid.",150,[420,380,260,210,300],"desech"]];
+const PROV = {carne:"Carnicería", abarr:"Abarrotería", verdu:"Verdulería", lacteo:"Lácteos", central:"Cocina central", carbon:"Carbón", desech:"Desechables"};
+const AVISOS = [
+  {h:"6:10 pm", suc:"villa", p:"abarr", t:"Frijoles: quedan 4 lb, mínimo 15", r:"Confirmó: llega mañana 9:00 am"},
+  {h:"6:12 pm", suc:"villa", p:"verdu", t:"Encurtido: quedan 9 porciones, mínimo 30", r:"Visto, sin respuesta todavía"},
+  {h:"5:47 pm", suc:"choloma", p:"central", t:"Aderezo de la casa: quedan 7 bolsas, mínimo 12", r:"Confirmó: sale en el camión de las 8"}];
+
+// ---------- state ----------
+let VIEW = "hoy", KMODE = false, CSEL = 1, FSUC = "todas";
+const DONE = new Set();
+const $ = s => document.querySelector(s);
+const toast = t => { const e = document.createElement("div"); e.className = "toast"; e.textContent = t; $("#toasts").append(e); setTimeout(() => e.remove(), 2600); };
+const waLink = txt => "https://wa.me/?text=" + encodeURIComponent(txt);
+const icon = (id, cls = "ic") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</span>`;
+const stars = s => `<span class="stars">${"★".repeat(s)}${"☆".repeat(5 - s)}</span>`;
+
+const NAV = [["hoy","Inicio","i-home"],["whatsapp","WhatsApp","i-chat"],["pedidos","Pedidos","i-bag"],["calidad","Calidad","i-check"],["inventario","Inventario","i-box"],["promos","Promos","i-bolt"],["crecer","Crecimiento","i-flag"]];
+const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bag","#FE9339"],calidad:["i-check","#BA0517"],inventario:["i-box","#B78300"],promos:["i-bolt","#9050E9"],crecer:["i-flag","#032D60"]};
+function nav() {
+  const nuevos = ORD.filter(o => o.st === "nuevo").length; const pers = CONV.filter(c => c.st === "persona").length;
+  $("#nav").innerHTML = NAV.map(([id, t]) => { const c = id === "pedidos" ? nuevos : id === "whatsapp" ? pers : 0;
+    return `<a href="#${id}" class="${VIEW === id ? "on" : ""}" data-v="${id}">${t}${c ? `<span class="c">${c}</span>` : ""}</a>`; }).join("");
+}
+const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Sucursales, promos, productos y preguntas de clientes son los reales de Bocha's Grill. Ventas, tiempos, calificaciones, pedidos e inventario son datos de ejemplo.</div>
+  <div class="ph"><div class="tile" style="background:${TILE[VIEW][1]}">${icon(TILE[VIEW][0])}</div><div><div class="ey">Bocha's Grill · 5 sucursales</div><h1>${title}</h1></div><div class="r">${extra}</div></div><div class="subline">${sub}</div>`;
+const segSuc = () => `<div class="seg">${[["todas","Todas"], ...SUC.map(s => [s.id, s.n.replace("SPS ", "")])].map(([id, t]) => `<button class="${FSUC === id ? "on" : ""}" data-fs="${id}">${t}</button>`).join("")}</div>`;
+
+// ---------- views ----------
+function vHoy() {
+  const tot = SUC.reduce((a, s) => a + HOY[s.id].v, 0), ped = SUC.reduce((a, s) => a + HOY[s.id].p, 0);
+  const cal = SUC.reduce((a, s) => a + HOY[s.id].cal * HOY[s.id].enc, 0) / SUC.reduce((a, s) => a + HOY[s.id].enc, 0);
+  const recs = RECS(); const mx = Math.max(...SUC.map(s => HOY[s.id].v));
+  return `${PH(`Hoy, ${DAYS[today]}`, "7:30 pm · las cinco sucursales en una sola pantalla")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas de hoy, 5 sucursales</span><b class="num">${L(tot)}</b><small><span class="up">▲ 6%</span> vs. el ${DAYS[today]} pasado a esta hora</small></div>
+      <div class="kpi"><span>Mensajes de WhatsApp sin contestar</span><b class="num" style="color:var(--ok)">0</b><small>183 contestados por el bot · 1 pasó al dueño</small></div>
+      <div class="kpi"><span>Espera más larga ahora</span><b class="num" style="color:var(--red)">${HOY.choloma.esp} min</b><small>Choloma · la meta es menos de ${META_ESP} min</small></div>
+      <div class="kpi"><span>Calificación de hoy</span><b class="num">${cal.toFixed(1)} <small style="font-size:14px">de 5</small></b><small>${SUC.reduce((a, s) => a + HOY[s.id].enc, 0)} clientes contestaron la encuesta</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-warn","#FE9339")}<h2>Acciones recomendadas</h2><div class="r">${recs.filter(r => !DONE.has(r.id)).length} pendientes</div></header>
+        <ul class="recs">${recs.map(r => `<li class="rec ${DONE.has(r.id) ? "done" : ""}"><div class="ico" style="background:${{red:"#EA001E",amber:"#FE9339",blue:"#0176D3",ok:"#3BA755"}[r.t]}">${icon(r.i)}</div><div><b>${r.h}</b><p>${r.p}</p></div><div>${r.a}</div></li>`).join("")}</ul></section>
+      <section class="card"><header>${CT("i-chart","#0176D3")}<h2>Sucursales hoy</h2><div class="r">${ped} pedidos</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Sucursal</th><th style="min-width:130px">Ventas</th><th class="r">Espera</th><th class="r">Calif.</th><th>Faltantes</th></tr></thead>
+        <tbody>${SUC.map(s => { const h = HOY[s.id]; return `<tr><td><b>${s.n}</b><div class="hint">${h.p} pedidos</div></td>
+          <td><div style="display:flex;gap:8px;align-items:center"><div class="trk" style="flex:1;min-width:50px"><i style="width:${h.v / mx * 100}%;background:var(--c1)"></i></div><span class="num">${L(h.v)}</span></div></td>
+          <td class="r num ${h.esp > META_ESP ? "late" : ""}">${h.esp} min</td><td class="r num ${h.cal < 4.2 ? "late" : ""}">${h.cal.toFixed(1)}</td>
+          <td>${h.falt.length ? `<span class="status s-red">${h.falt.join(", ")}</span>` : `<span class="status s-ok">Nada</span>`}</td></tr>`; }).join("")}</tbody></table></div></section>
+    </div>
+  </div>`;
+}
+function RECS() {
+  return [
+    {id:"villa", t:"red", i:"i-box", h:"Villanueva se está quedando sin frijoles y encurtido", p:"Quedan 4 lb de frijoles y 9 porciones de encurtido. El panel ya le escribió al proveedor; los frijoles llegan mañana. Stibys tiene de sobra.", a:`<button class="btn sm" data-done="villa" data-t="Traslado de Stibys a Villanueva pedido (demo)">Pedir a Stibys</button>`},
+    {id:"chol", t:"amber", i:"i-clock", h:`Choloma: la espera va en ${HOY.choloma.esp} minutos`, p:"Hay 6 pedidos en cocina. El bot puede avisarles a los clientes que esperan para recoger.", a:`<button class="btn sm" data-done="chol" data-t="El bot les avisó a los 6 clientes de Choloma (demo)">${icon("i-wa")}Avisar a los 6</button>`},
+    {id:"ader", t:"amber", i:"i-check", h:"3 clientes de Choloma dicen que les faltó el aderezo", p:"Salió en la encuesta de hoy. Repasar la ficha del plato con el turno de la noche.", a:`<button class="btn sm" data-v="calidad">Ver calidad</button>`},
+    {id:"fran", t:"blue", i:"i-flag", h:"Alfredo C. pregunta por franquicias", p:"Escribió por WhatsApp. El bot se lo pasó a usted.", a:`<button class="btn sm" data-v="whatsapp" data-c2="6">Contestar</button>`},
+    {id:"ok", t:"ok", i:"i-chart", h:"Calpules tiene la mejor nota del día: 4.7", p:"16 minutos de espera promedio y ninguna queja de aderezo o tajadas.", a:""}];
+}
+
+function vWhatsapp() {
+  const c = CONV.find(x => x.id === CSEL) || CONV[0];
+  const tag = x => x.st === "persona" ? `<span class="status s-amber">Pasó al dueño</span>` : x.st === "pedido" ? `<span class="status s-blue">Pedido tomado</span>` : `<span class="status s-ok">Contestó el bot</span>`;
+  return `${PH("WhatsApp de Bocha's Grill", "El bot contesta en su número de WhatsApp, de las cinco sucursales, a cualquier hora. Lo que no sabe, se lo pasa a usted.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Conversaciones hoy</span><b class="num">184</b><small>hasta las 7:30 pm</small></div>
+      <div class="kpi"><span>Contestadas por el bot</span><b class="num">183</b><small>en menos de 1 minuto</small></div>
+      <div class="kpi"><span>Pedidos para recoger</span><b class="num">${ORD.length}</b><small>listos a la hora que el cliente dijo</small></div>
+      <div class="kpi"><span>Sin contestar</span><b class="num" style="color:var(--ok)">0</b><small>nadie se queda esperando</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chat","#2E844A")}<h2>${c.who}</h2><div class="r">${c.suc ? sn(c.suc) + " · " : ""}${tag(c)}</div></header>
+        <div class="chat">${c.msgs.map(([d, t]) => `<div class="msg ${d}">${t}<small>${c.h}${d === "out" ? " · bot" : ""}</small></div>`).join("")}</div>
+        ${c.st === "persona" ? `<div class="pad" style="border-top:1px solid var(--line)"><a class="btn pri" target="_blank" rel="noopener" href="${waLink("Hola Alfredo, gracias por escribirnos. Con gusto le cuento cómo trabajamos las franquicias de Bocha's Grill.")}">${icon("i-wa")}Contestar yo</a></div>` : ""}</section>
+      <section class="card"><header>${CT("i-chat","#2E844A")}<h2>Conversaciones</h2><div class="r">preguntas reales de sus clientes en TikTok</div></header>
+        <ul class="convs">${CONV.map(x => `<li class="conv ${x.id === c.id ? "on" : ""}" data-c="${x.id}"><b>${x.who}</b><span class="hint">${x.h}</span><p>${x.q}</p><div style="grid-column:1/-1;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap"><span class="status s-gray">${x.tag}</span>${tag(x)}</div></li>`).join("")}</ul></section>
+    </div>
+    <section class="card"><header>${CT("i-check","#2E844A")}<h2>Lo que el bot sabe</h2><div class="r">si cambia algo, se cambia aquí y el bot ya lo dice así</div></header><div class="pad form">
+      <div class="scrollx"><table class="tbl"><thead><tr><th>Sucursal</th><th>Dirección</th></tr></thead><tbody>${SUC.map(s => `<tr><td><b>${s.n}</b></td><td>${s.dir || `<span class="status s-amber">Por confirmar con ustedes</span>`}</td></tr>`).join("")}</tbody></table></div>
+      <div class="f2"><label>Horario de cada sucursal<input data-bot="hor" placeholder="Lo pone usted" value="${BOTTXT.hor}"></label><label>Precio de los Chicharrones de Carne (L)<input data-bot="chi" inputmode="decimal" placeholder="Lo pone usted" value="${BOTTXT.chi}"></label></div>
+      <p class="hint">Promos que el bot está diciendo hoy: ${PROMOS.filter(p => p.st === "activa").map(p => p.t).join(" · ")}. Se cambian en Promos.</p></div></section>
+  </div>`;
+}
+
+function vPedidos() {
+  const cols = [["nuevo","Nuevos"],["cocina","En cocina"],["listo","Listos para recoger"],["entregado","Entregados"]];
+  const next = {nuevo:["cocina","Pasar a cocina"], cocina:["listo","Listo"], listo:["entregado","Entregado"]};
+  const list = ORD.filter(o => FSUC === "todas" || o.suc === FSUC);
+  return `${PH("Pedidos para recoger", "Llegan por WhatsApp ya armados, con la sucursal y la hora. Cada uno lleva su reloj: si pasa de 25 minutos, se pone en rojo.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
+  <div style="margin-bottom:12px">${segSuc()}</div>
+  <div class="${KMODE ? "kmode" : ""}"><div class="board">${cols.filter(c => !KMODE || c[0] === "nuevo" || c[0] === "cocina").map(([k, t]) => { const l = list.filter(o => o.st === k);
+    return `<div class="col"><h3>${t}<span>${l.length}</span></h3>${l.map(o => `<div class="tk"><div class="t"><b>#${o.id}</b>${o.st === "entregado" ? `<span class="status s-gray">Entregado</span>` : `<span class="hint ${o.min > META_ESP ? "late" : ""}">hace ${o.min} min</span>`}</div>
+      <ul>${o.items.map(i => `<li><span>${i.q} × ${i.n}</span></li>`).join("")}</ul>
+      <div class="m"><span>${o.who}</span><span>· ${sn(o.suc)}</span></div>
+      ${next[o.st] ? `<div class="a"><button class="btn sm ${o.st === "nuevo" ? "red" : ""}" data-mv="${o.id}">${next[o.st][1]}</button></div>` : ""}</div>`).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div></div>
+  <p class="hint" style="margin-top:14px">Cuando el pedido está listo, el bot le escribe solo al cliente: "Su pedido ya está listo en ${"Calpules"}". Nombres y pedidos son de ejemplo.</p>`;
+}
+
+function vCalidad() {
+  const fb = FB.filter(f => FSUC === "todas" || f.suc === FSUC);
+  return `${PH("Calidad en cada sucursal", "Después de cada pedido el bot pregunta \"¿Cómo estuvo?\". Usted se entera hoy, por sucursal, y no semanas después en un comentario.")}
+  <div style="margin-bottom:12px">${segSuc()}</div>
+  <div class="stack">
+    <div class="score">${SUC.map(s => { const h = HOY[s.id]; return `<div class="sc"><h3>${s.n}</h3>
+      <div class="row"><span>Calificación</span><b class="${h.cal < 4.2 ? "late" : ""}">${h.cal.toFixed(1)} de 5</b></div>
+      <div class="row"><span>Encuestas hoy</span><b>${h.enc}</b></div>
+      <div class="row"><span>Espera promedio</span><b class="${h.esp > META_ESP ? "late" : ""}">${h.esp} min</b></div>
+      <div class="row"><span>Queja más repetida</span><b>${(() => { const t = TAGC[s.id]; const m = Math.max(...t); return m ? TAGS[t.indexOf(m)] : "Ninguna"; })()}</b></div></div>`; }).join("")}</div>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chat","#BA0517")}<h2>Lo que dijeron hoy</h2><div class="r">ejemplo</div></header>
+        <div>${fb.map(f => `<div class="fb">${stars(f.s)}<b>${sn(f.suc)}</b><span class="hint">${f.h}</span><p>"${f.t}"</p>${f.tags.length ? `<div class="tags">${f.tags.map(t => `<span class="status s-red">${t}</span>`).join("")}</div>` : ""}</div>`).join("") || `<div class="empty">Sin encuestas</div>`}</div></section>
+      <section class="card"><header>${CT("i-check","#2E844A")}<h2>Ficha del plato</h2><div class="r">se revisa antes de que salga</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Qué lleva</th><th>Cómo tiene que ir</th></tr></thead><tbody>${FICHA.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join("")}</tbody></table></div>
+        <div class="pad" style="border-top:1px solid var(--line)"><p class="hint" style="margin:0">La ficha la escribe usted, una vez, y es la misma en las cinco cocinas. Así el plato de Choloma sale igual que el de Stibys.</p></div></section>
+    </div>
+    <section class="card"><header>${CT("i-chart","#BA0517")}<h2>Quejas de la semana por sucursal</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl mx">
+      <thead><tr><th>Sucursal</th>${TAGS.map(t => `<th class="r">${t}</th>`).join("")}</tr></thead>
+      <tbody>${SUC.map(s => `<tr><td><b>${s.n}</b></td>${TAGC[s.id].map(v => `<td class="r num ${v >= 3 ? "late" : ""}">${v}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+function vInventario() {
+  return `${PH("Inventario y proveedores", "Lo que hay en cada sucursal. Cuando algo baja del mínimo, el panel le escribe solo al proveedor y le avisa a usted.")}
+  <div class="stack">
+    <section class="card"><header>${CT("i-box","#B78300")}<h2>Insumos por sucursal</h2><div class="r">${INS.reduce((a, r) => a + r[3].filter(v => v < r[2]).length, 0)} debajo del mínimo</div></header><div class="scrollx"><table class="tbl mx">
+      <thead><tr><th>Insumo</th><th class="r">Mínimo</th>${SUC.map(s => `<th class="c" style="text-align:center">${s.n.replace("SPS ", "")}</th>`).join("")}</tr></thead>
+      <tbody>${INS.map(([n, u, m, vs]) => `<tr><td>${n}</td><td class="r num">${m} ${u}</td>${vs.map(v => `<td class="c"><span class="cell ${v < m ? "lo" : "ok"}">${v}</span></td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+    <section class="card"><header>${CT("i-send","#0B827C")}<h2>Avisos a proveedores hoy</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl prov avi">
+      <thead><tr><th>Hora</th><th>Sucursal y proveedor</th><th>Qué se le pidió</th><th>Respuesta</th></tr></thead>
+      <tbody>${AVISOS.map(a => `<tr><td class="num">${a.h}</td><td>${sn(a.suc)} · ${PROV[a.p]}</td><td>${a.t}</td><td><span class="status ${a.r.startsWith("Confirm") ? "s-ok" : "s-amber"}">${a.r}</span></td></tr>`).join("")}</tbody></table></div>
+      <div class="pad" style="border-top:1px solid var(--line)"><p class="hint" style="margin:0">Cantidades, mínimos y proveedores son de ejemplo. Los insumos salen de lo que ustedes sirven: costilla, carne, chuleta, chorizo, tajadas, frijoles, encurtido, queso y el aderezo de la casa.</p></div></section>
+  </div>`;
+}
+
+function vPromos() {
+  return `${PH("Promos", "Se cargan una vez, con su canal, sucursal y fechas. El bot, la caja y el anuncio dicen lo mismo, y cuando termina, el bot deja de ofrecerla.")}
+  <div class="stack">
+    <section class="card"><header>${CT("i-bolt","#9050E9")}<h2>Promos publicadas en su TikTok</h2><div class="r">reales</div></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Promo</th><th>Canal</th><th>Sucursal</th><th>Fechas</th><th>Estado</th></tr></thead>
+      <tbody>${PROMOS.map(p => `<tr><td><b>${p.t}</b><div class="hint">${p.d}</div></td><td>${p.ch}</td><td>${p.suc}</td><td>${p.fecha}</td><td><span class="status ${p.st === "activa" ? "s-ok" : "s-gray"}">${p.st === "activa" ? "El bot la ofrece" : "Terminó"}</span></td></tr>`).join("")}</tbody></table></div></section>
+    <section class="card"><header>${CT("i-chat","#9050E9")}<h2>Lo que preguntan de las promos</h2><div class="r">comentarios reales</div></header><div class="pad" style="display:grid;gap:10px">
+      <p class="quote">"Esos L.139 ya con el envío? o hay q sumarle L.120 más por el delivery?"</p>
+      <p class="quote">"pues en la app no dice eso" (18 me gusta)</p>
+      <p class="quote">"Hasta cuando dura la promoción?"</p>
+      <p class="hint" style="margin:0">Con la promo cargada en el panel, el bot contesta estas preguntas al momento y con las condiciones exactas.</p></div></section>
+  </div>`;
+}
+
+function vCrecer() {
+  const mx = Math.max(...ASKS.map(a => a[1]));
+  return `${PH("Crecimiento", "Dónde le piden la próxima sucursal, y qué tan lista está cada una para repetirse como franquicia.")}
+  <div class="stack">
+    <div class="g2">
+      <section class="card"><header>${CT("i-flag","#032D60")}<h2>Dónde le piden Bocha's</h2><div class="r">conteo real de 214 comentarios</div></header>
+        <div class="bars">${ASKS.map(([c, n, q]) => `<div class="hb"><b><span>${c}</span><em>${n} ${n === 1 ? "comentario" : "comentarios"}</em></b><div class="trk"><i style="width:${n / mx * 100}%;background:var(--c1)"></i></div><div class="hint" style="margin-top:3px">${q}</div></div>`).join("")}</div>
+        <div class="pad" style="border-top:1px solid var(--line)"><p class="hint" style="margin:0">Choloma también la pedían en 3 comentarios, y ya abrió. Desde ahora el bot anota cada mensaje que pide una ciudad nueva y el conteo se llena solo.</p></div></section>
+      <section class="card"><header>${CT("i-users","#032D60")}<h2>Su meta</h2></header><div class="pad" style="display:grid;gap:12px">
+        <p class="quote">"Quiero compartirles mi emprendimiento que hoy en día va hacia una franquicia"</p>
+        <p class="hint" style="margin:0">@bochas10 en TikTok. Una franquicia funciona cuando cada local hace lo mismo sin que el dueño esté ahí: misma ficha, mismos tiempos, mismo inventario mínimo, y las cuentas a la vista.</p></div></section>
+    </div>
+    <section class="card"><header>${CT("i-check","#032D60")}<h2>¿Se puede copiar cada sucursal?</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Sucursal</th><th class="r">Espera prom.</th><th class="r">Calificación</th><th class="r">Ficha cumplida</th><th class="r">Días sin faltantes</th><th>Estado</th></tr></thead>
+      <tbody>${SUC.map((s, i) => { const h = HOY[s.id]; const fc = [96, 97, 91, 88, 79][i], ds = [24, 30, 12, 0, 6][i]; const ok = h.esp <= META_ESP && h.cal >= 4.5 && fc >= 95;
+        return `<tr><td><b>${s.n}</b></td><td class="r num ${h.esp > META_ESP ? "late" : ""}">${h.esp} min</td><td class="r num">${h.cal.toFixed(1)}</td><td class="r num">${fc}%</td><td class="r num">${ds}</td><td><span class="status ${ok ? "s-ok" : "s-amber"}">${ok ? "Lista para copiar" : "Por ajustar"}</span></td></tr>`; }).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+// ---------- render & events ----------
+const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, calidad: vCalidad, inventario: vInventario, promos: vPromos, crecer: vCrecer};
+function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); }
+function go(v) { if (!VIEWS[v]) return; const rs = $("#results"); if (rs) { rs.hidden = true; $("#q").value = ""; } VIEW = v; KMODE = false; history.replaceState(null, "", "#" + v); render(); window.scrollTo(0, 0); }
+document.addEventListener("click", e => {
+  const c2 = e.target.closest("[data-c2]"); if (c2) CSEL = +c2.dataset.c2;
+  const v = e.target.closest("[data-v]"); if (v) { e.preventDefault(); go(v.dataset.v); return; }
+  const cv = e.target.closest("[data-c]"); if (cv) { CSEL = +cv.dataset.c; render(); return; }
+  const fs = e.target.closest("[data-fs]"); if (fs) { FSUC = fs.dataset.fs; render(); return; }
+  const d = e.target.closest("[data-done]"); if (d) { DONE.add(d.dataset.done); if (d.dataset.t) toast(d.dataset.t); setTimeout(render, 300); }
+  const m = e.target.closest("[data-mv]"); if (m) { const o = ORD.find(x => x.id === +m.dataset.mv); const nx = {nuevo:"cocina", cocina:"listo", listo:"entregado"}[o.st]; o.st = nx; o.min = 0;
+    toast(nx === "listo" ? `#${o.id} listo. El bot le avisó a ${o.who.split(" ")[0]} (demo)` : nx === "cocina" ? `#${o.id} pasó a cocina en ${sn(o.suc)}` : `#${o.id} entregado`); render(); }
+  if (e.target.closest("#kmode")) { KMODE = !KMODE; render(); }
+  if (e.target.closest("#tema")) { const dk = document.documentElement.dataset.theme === "dark"; if (dk) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = "dark"; try { localStorage.setItem("bgp-tema", dk ? "light" : "dark"); } catch (er) {} }
+});
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.id === "q") { const q = t.value.trim().toLowerCase().replace("#", ""); const r = $("#results"); if (!q) { r.hidden = true; return; }
+    const hits = [...ORD.filter(o => String(o.id).includes(q) || o.who.toLowerCase().includes(q)).map(o => `<a href="#pedidos" data-v="pedidos"><span>Pedido #${o.id} · ${o.who}</span><small>${sn(o.suc)}</small></a>`),
+      ...CONV.filter(c => c.who.toLowerCase().includes(q) || c.q.toLowerCase().includes(q)).map(c => `<a href="#whatsapp" data-v="whatsapp" data-c2="${c.id}"><span>${c.who}</span><small>WhatsApp · ${c.tag}</small></a>`),
+      ...SUC.filter(s => s.n.toLowerCase().includes(q)).map(s => `<a href="#hoy" data-v="hoy"><span>${s.n}</span><small>Sucursal</small></a>`)].slice(0, 8);
+    r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; return; }
+  if (t.dataset.bot) { BOTTXT[t.dataset.bot] = t.value; try { localStorage.setItem("bgp-bot", JSON.stringify(BOTTXT)); } catch (er) {} }
+});
+const h0 = location.hash.slice(1); if (VIEWS[h0]) VIEW = h0;
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (VIEWS[h] && h !== VIEW) go(h); });
+render();
+</script>
+</body>
+</html>
