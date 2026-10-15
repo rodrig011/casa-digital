@@ -4,8 +4,8 @@ dark, slow, gold keywords, soft lights, "Still Buggin" with every scene on a bar
 Story, all from their own TikTok @toretosgrills: the Colocho already has people watching (his pinned video)
 -> real comments asking where they are, if they deliver, for an RTN invoice, "No contestan whats" -> their
 WhatsApp answers by itself and takes a delivery order -> phone, kitchen and panel connected, customer told
-the rider is on the way -> the real owner panel -> zero customers left without an answer -> the electricity
-bill he showed (L15,142.85, before L6,000) and what each plate leaves -> supplier warned by itself ->
+the rider is on the way -> the real owner panel -> zero customers left without an answer -> his own riders,
+each delivery logged with the cash collected and squared on return -> supplier warned by itself ->
 his own goal of 1,000 lunches a day -> Casa Digital -> outro.
 Conversations, panel numbers and costs per plate are examples and are labelled on screen.
 Helpers (gen2/gen3/gen6, clientia-mark.json, deps/) live in coco-chicken/video."""
@@ -21,7 +21,7 @@ SRC = os.path.join(HERE, "src")
 OUT = os.path.join(HERE, "build")
 SLUG = "toretos-grill"
 SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("meet", 11, 13), ("bot", 13, 20), ("link", 20, 25),
-          ("owner", 25, 28), ("zero", 28, 32), ("luz", 32, 36), ("supply", 36, 39), ("meta", 39, 43), ("us", 43, 46), ("end", 46, 50)]
+          ("owner", 25, 28), ("zero", 28, 32), ("moto", 32, 36), ("supply", 36, 39), ("meta", 39, 43), ("us", 43, 46), ("end", 46, 50)]
 TOTAL = K(50)
 GOLD = "#F2B544"
 ADDR = "colonia La Ideal, 6 y 7 calle, 15 avenida, atrás de Megamall"
@@ -40,24 +40,21 @@ CSS_T = r'''
 #fame .left,#asks .left{width:860px;}
 .cm p{font-size:34px;}
 .kcol .tk b{font-size:14px;}
-/* recibo de luz */
-#luz .left{width:780px;}
-#luz .h1.m{font-size:72px;}
-.bill{position:absolute;left:1000px;top:150px;width:780px;background:linear-gradient(180deg,#161618,#0F0F10);border-radius:40px;padding:34px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 60px 140px rgba(0,0,0,.7);display:grid;grid-template-columns:300px 1fr;gap:34px;align-items:center;}
-.bill img{width:300px;height:300px;border-radius:24px;object-fit:cover;display:block;}
-.bill .k{font-size:19px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8E8E93;}
-.bill .v{font-size:64px;font-weight:600;letter-spacing:-.04em;color:#FF6B5E;margin-top:8px;font-variant-numeric:tabular-nums;line-height:1;}
-.bill .was{font-size:26px;color:#8E8E93;margin-top:14px;}
-.bill .was b{color:#F5F5F7;font-weight:600;}
-.plates{position:absolute;left:1000px;top:570px;width:780px;background:linear-gradient(180deg,#161618,#111113);border-radius:36px;padding:28px 40px 30px;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 40px 90px rgba(0,0,0,.5);}
-.plates h3{font-size:24px;font-weight:600;color:#D1D1D6;}
-.pr{display:flex;align-items:baseline;justify-content:space-between;margin-top:16px;font-size:30px;font-weight:500;}
-.pr span{color:#D1D1D6;}
-.pr b{font-weight:600;font-variant-numeric:tabular-nums;color:#F5F5F7;}
-.pr b em{font-style:normal;color:#8E8E93;font-weight:500;font-size:22px;margin-right:12px;}
-.pr.hot{margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1);}
-.pr.hot span{color:#F5F5F7;}
-.pr.hot b{font-size:52px;background:linear-gradient(100deg,#FFE7B3 0%,#F2B544 55%,#D98E1C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* motoristas y efectivo */
+#moto .left{width:780px;}
+#moto .h1.m{font-size:72px;}
+.riders{position:absolute;left:1000px;top:190px;width:780px;background:linear-gradient(180deg,#161618,#0F0F10);border-radius:40px;padding:36px 44px 38px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 60px 140px rgba(0,0,0,.7);}
+.riders .k{font-size:19px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8E8E93;}
+.rd{display:grid;grid-template-columns:1fr 150px 170px;align-items:center;gap:18px;padding:26px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.rd:last-of-type{border-bottom:0;}
+.rd .n{font-size:32px;font-weight:600;color:#F5F5F7;}
+.rd .n span{display:block;font-size:22px;font-weight:500;color:#8E8E93;margin-top:6px;}
+.rd .c{font-size:34px;font-weight:600;color:#F5F5F7;font-variant-numeric:tabular-nums;text-align:right;}
+.rd .st{justify-self:end;font-size:22px;font-weight:600;padding:10px 18px;border-radius:999px;}
+.rd .st.ok{color:#5FD38A;background:rgba(95,211,138,.12);}
+.rd .st.go{color:#F2B544;background:rgba(242,181,68,.12);}
+.rtot{display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12);font-size:28px;color:#F5F5F7;font-weight:500;}
+.rtot b{font-size:52px;font-weight:600;font-variant-numeric:tabular-nums;background:linear-gradient(100deg,#FFE7B3 0%,#F2B544 55%,#D98E1C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
 /* meta */
 #meta .left{width:820px;}
 .quote{position:absolute;left:1020px;top:170px;width:760px;background:linear-gradient(180deg,#161618,#111113);border-radius:36px;padding:34px 40px;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 40px 90px rgba(0,0,0,.5);}
@@ -86,7 +83,7 @@ def build():
     shutil.copy(os.path.join(DEPS, "@fontsource", "archivo-black", "files", "archivo-black-latin-400-normal.woff2"), A("fonts", "display.woff2"))
     for w in (300, 400, 500, 600, 700):
         shutil.copy(os.path.join(DEPS, "@fontsource", "inter-tight", "files", f"inter-tight-latin-{w}-normal.woff2"), A("fonts", f"it-{w}.woff2"))
-    for n in ("tiktok.mp4", "logo.jpg", "recibo.jpg", "pv-hoy.png"):
+    for n in ("tiktok.mp4", "logo.jpg", "pv-hoy.png"):
         shutil.copy(os.path.join(SRC, n), A(n))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
@@ -233,21 +230,21 @@ def build():
             <div class="sub" id="z3">{words("Un “No contestan whats” es un almuerzo que se vende en otro lado. El bot contesta todos, y el Colocho sigue en la parrilla.")}</div>
           </div>
           <div class="foot" id="zfoot">Preguntas tal como las escribieron en su TikTok, octubre 2026.</div>'''),
-        scene("luz", f'''
-          <div class="sp sp-red" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
-          <div class="bill" id="bill"><img src="assets/recibo.jpg"><div><div class="k">Su recibo de luz</div><div class="v" id="lv">L15,142.85</div><div class="was">Antes pagaba <b>L6,000</b></div></div></div>
-          <div class="plates" id="plates"><h3>Lo que deja un almuerzo de L80</h3>
-            <div class="pr" id="pr0"><span>Ingredientes y empaque</span><b><em>ejemplo</em>L44</b></div>
-            <div class="pr" id="pr1"><span>Le queda por almuerzo</span><b>L36</b></div>
-            <div class="pr hot" id="pr2"><span>Almuerzos al día solo para la luz</span><b><span id="nl">0</span></b></div></div>
+        scene("moto", f'''
+          <div class="sp sp-gold" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
+          <div class="riders" id="riders"><div class="k">Motoristas · hoy</div>
+            <div class="rd" id="rd0"><div class="n">Motorista 1<span>9 entregas</span></div><div class="c">L1,240</div><div class="st ok" id="rs0">✓ Cuadrado</div></div>
+            <div class="rd" id="rd1"><div class="n">Motorista 2<span>7 entregas</span></div><div class="c">L980</div><div class="st ok" id="rs1">✓ Cuadrado</div></div>
+            <div class="rd" id="rd2"><div class="n">Motorista 3<span>2 en camino</span></div><div class="c">L360</div><div class="st go" id="rs2">Trae L360</div></div>
+            <div class="rtot" id="rtot"><span>Efectivo cobrado hoy</span><b>L<span id="ncash">0</span></b></div></div>
           <div class="left">
-            <div class="eb g" id="l0">Costos</div>
-            <div class="h1 m" id="l1">{words("La luz subió.")}</div>
-            <div class="h1 m" id="l2">{gold("Ahora sabe cuánto")}</div>
-            <div class="h1 m" id="l3">{gold("le deja cada plato.")}</div>
-            <div class="sub" id="l4">{words("Con sus costos reales, el panel le dice cada día desde qué almuerzo empieza a ganar.")}</div>
+            <div class="eb g" id="l0">Domicilio propio</div>
+            <div class="h1 m" id="l1">{words("Sus motoristas,")}</div>
+            <div class="h1 m" id="l2">{gold("con las cuentas")}</div>
+            <div class="h1 m" id="l3">{gold("claras.")}</div>
+            <div class="sub" id="l4">{words("Cada entrega queda anotada con lo que cobró. Al volver, el efectivo se cuadra con un clic.")}</div>
           </div>
-          <div class="demo" id="ldemo2">Recibo de su video · costos de ejemplo</div>'''),
+          <div class="demo" id="ldemo2">Ejemplo</div>'''),
         scene("supply", f'''
           <div class="sp sp-gold" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
           <div class="stk" id="stk"><div class="k">Inventario · Toreto's Grill</div>
@@ -423,14 +420,14 @@ const zo = { p: 0 }, zn = document.getElementById("nz");
 tl.fromTo(zo, { p: 0 }, { p: 1, duration: K(31.1) - K(30.1), ease: "none", onUpdate: () => { zn.textContent = String(zo.p <= 0 ? 3 : Math.max(0, 2 - Math.floor(zo.p * 2 + 1e-6))); } }, K(30.1) + .2);
 rise("#zfoot", K(29), { d: 1.2 });
 
-// 9 · the electricity bill he showed, and what each lunch leaves
+// 9 · their own riders: every delivery logged with the cash, squared on return
 rise("#l0", K(32), { d: 1.2 }); rise("#l1 .w", K(32) + .3); rise("#l2 .w", K(32) + 1); rise("#l3 .w", K(32) + 1.3, { d: 1.8 });
 rise("#l4 .w", K(33.4), { st: .03 });
-tl.fromTo("#bill", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(32) + .3);
-tl.fromTo("#bill img", { scale: 1.06 }, { scale: 1, duration: 3, ease: SOFT }, K(32) + .3);
-tl.fromTo("#plates", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.8, ease: SOFT }, K(33));
-[33.3, 33.7, 34.1].forEach((k, i) => rise("#pr" + i, K(k), { y: 20, d: 1.2 }));
-count("nl", 0, 15, K(34.1) + .3, n => String(n), 1.6);
+tl.fromTo("#riders", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(32) + .3);
+[32.8, 33.2, 33.6].forEach((k, i) => rise("#rd" + i, K(k), { y: 20, d: 1.2 }));
+[0, 1, 2].forEach(i => tl.fromTo("#rs" + i, { opacity: 0, scale: .85 }, { opacity: 1, scale: 1, duration: .9, ease: SOFT }, K(34) + i * .35));
+rise("#rtot", K(34.2), { y: 20, d: 1.2 });
+count("ncash", 0, 2580, K(34.2) + .3, n => n.toLocaleString("en-US"), 1.6);
 rise("#ldemo2", K(32.6), { d: 1.2 });
 
 // 10 · the panel warns the supplier by itself

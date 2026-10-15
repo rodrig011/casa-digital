@@ -17,7 +17,7 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 | Contacto | 9612-3466 (WhatsApp) para todo: pedidos, domicilio y reservas |
 | Precios publicados | Almuerzo desde L80 (arroz, frijoles, ensalada y carne o pollo). Asados por L180. Pollo frito con tajadas: sus clientes citan L140 |
 | Delivery | Propio. Ya no usan PedidosYa ("Ya no estamos con ellos, 9612-3466 pedidos directo con nuestro delivery") |
-| El dueño | "El Colocho", sale en todos los videos. Etiquetan a @Farem Cartagena y @jeimi Gonzales (inferido: dueños o equipo) |
+| Quién sale en los videos | "El Colocho": así lo llaman sus propios videos ("Regresó el COLOCHO 🧑🏻‍🦲", "Ya le creció el pelo al colocho") y los clientes. Sale en todos. Que sea el dueño no está confirmado. Etiquetan a @Farem Cartagena y @jeimi Gonzales (inferido: dueños o equipo) |
 | TikTok @toretosgrills | 5,652 seguidores · 55K me gusta · 290 videos. Fijados: 176.8K, 100.2K y 84.7K vistas |
 | Instagram / Facebook | @toretosgrillhn / "Toreto's Grill HN" (no se pudieron abrir desde el servidor) |
 | Sitio web propio | No encontré ninguno |
@@ -25,11 +25,10 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 
 ## 2. Lo que de verdad necesitan (sacado de sus propios comentarios)
 
-1. **Nadie puede contestar todo.** El Colocho contesta él mismo, uno por uno: en los comentarios escribió la misma dirección a mano 11 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
+1. **Nadie puede contestar todo.** Contestan a mano, uno por uno: en los comentarios escribió la misma dirección a mano 11 veces. Y aun así un cliente se quejó: **"No contestan whats"**. Su respuesta: "Pida 9612-3466 yo le contesto". Todo entra por un solo número: pedidos, domicilio, reservas, preguntas de menú y de factura.
 2. **El domicilio es suyo.** Dejaron PedidosYa y llevan los pedidos con su propio motorista. Eso significa tomar el pedido, pasarlo a cocina, mandar al motorista, cobrar y cuadrar el efectivo, todo a mano.
-3. **La luz se le duplicó.** Enseñó su recibo en TikTok: L15,142.85, cuando antes pagaba unos L6,000. Necesita saber cuánto le deja cada plato y cuántos almuerzos tiene que vender para cubrir sus gastos.
-4. **Le piden factura con RTN** ("Dan factura con rtn ?", sin respuesta) y vienen grupos de trabajo ("ahí te llego con todos los compañeros de la chamba").
-5. **Tiene una meta clara:** "cuando vendamos 1000 almuerzos diarios en sps nos vamos a tegus".
+3. **Le piden factura con RTN** ("Dan factura con rtn ?", sin respuesta) y vienen grupos de trabajo ("ahí te llego con todos los compañeros de la chamba").
+4. **Tienen una meta clara:** "cuando vendamos 1000 almuerzos diarios en sps nos vamos a tegus".
 
 ## 3. La propuesta: su WhatsApp que contesta solo + el panel del dueño
 
@@ -37,19 +36,18 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 - Contesta al instante dirección (con el pin del mapa), horario, menú del día y precios.
 - Toma el pedido a domicilio o para recoger, con la dirección, y lo manda a la cocina. Avisa al cliente cuando sale el motorista.
 - Pide el RTN cuando quieren factura.
-- Toma reservas; los grupos grandes se los pasa al Colocho con un aviso al celular.
+- Toma reservas; los grupos grandes se los pasa al encargado con un aviso al celular.
 - Sin códigos de producto en la conversación; habla como ellos.
 - Se construye sobre el bot que ya hicimos para Steel Works (`casa-digital/steelworks/bot/`).
 
 **b) Panel Toreto's Grill** (estilo CRM, con login para las personas que ellos autoricen):
 1. **Inicio:** ventas de hoy, almuerzos vendidos, WhatsApp sin contestar (0) y domicilios en camino. Acciones de un clic ("la carne no llega a la cena → escribirle a la carnicería", "pedido lleva 32 min en camino → avisarle al cliente"). Medidor de su meta de 1,000 almuerzos al día.
 2. **WhatsApp:** cada conversación, si la contestó el bot o pasó al dueño, y lo que el bot sabe (dirección, horario, menú de hoy, costo de envío), editable.
-3. **Pedidos y domicilio:** tablero Nuevo → En cocina → En camino → Entregado, pantalla de cocina, y cuadre de efectivo por motorista.
-4. **Costos y luz:** su recibo de luz real, cuánto deja cada plato (costos que pone él) y cuántos almuerzos al día pagan la luz y todos los gastos fijos.
-5. **Inventario y proveedores:** carne, chuleta, costilla, pollo, chorizo, carbón, gas, plátano, lechuga, arroz, frijoles, tortillas. Cuando algo baja del mínimo, el bot le escribe solo al proveedor.
-6. **Facturas:** con RTN, ISV 15%, se mandan por WhatsApp. Demo sin valor fiscal; las reales necesitan el CAI del SAR.
-7. **Reservas y eventos:** grupos, cumpleaños y eventos como el Car Meet.
-8. **TikTok:** cuánto vendió cada video con un código ("diga COLOCHO80 al pedir"). Vistas reales; pedidos de ejemplo.
+3. **Pedidos y motoristas:** tablero Nuevo → En cocina → En camino → Entregado y pantalla de cocina. Cada entrega queda anotada con lo que cobró el motorista; al volver, el efectivo se cuadra con un clic.
+4. **Inventario y proveedores:** carne, chuleta, costilla, pollo, chorizo, carbón, gas, plátano, lechuga, arroz, frijoles, tortillas. Cuando algo baja del mínimo, el bot le escribe solo al proveedor.
+5. **Facturas:** con RTN, ISV 15%, se mandan por WhatsApp. Demo sin valor fiscal; las reales necesitan el CAI del SAR.
+6. **Reservas y eventos:** grupos, cumpleaños y eventos como el Car Meet.
+7. **TikTok:** cuánto vendió cada video con un código ("diga COLOCHO80 al pedir"). Vistas reales; pedidos de ejemplo.
 
 **Lo que no hacemos:** tocar sus videos (ya funcionan), inventar fotos ni volver a meterlos a una app de delivery.
 
@@ -61,7 +59,7 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 
 ## 5. El video
 
-Escenas: intro con su logo → "El Colocho ya tiene a la gente" con su video fijado (el que mandó rodrigo) → 4 comentarios reales ("donde estan ubicados?", "y pa domicilio", "Dan factura con rtn ?", "No contestan whats") y "Y él contesta uno por uno" → "Su WhatsApp, que contesta solo" → conversación en un iPhone (dirección, horario y almuerzo de L80 reales; pedido a domicilio de ejemplo) → teléfono, cocina y panel conectados, con el aviso "su pedido va en camino con el motorista" → el panel real → "Cero clientes sin respuesta" → su recibo de luz (L15,142.85, antes L6,000) y lo que deja un almuerzo (costos de ejemplo) → el carbón se acaba y el proveedor ya sabe → su meta de 1,000 almuerzos al día, con su frase real → Casa Digital → by Clientia Tech. Lo de ejemplo está marcado en pantalla.
+Escenas: intro con su logo → "El Colocho ya tiene a la gente" con su video fijado (el que mandó rodrigo) → 4 comentarios reales ("donde estan ubicados?", "y pa domicilio", "Dan factura con rtn ?", "No contestan whats") y "Y él contesta uno por uno" → "Su WhatsApp, que contesta solo" → conversación en un iPhone (dirección, horario y almuerzo de L80 reales; pedido a domicilio de ejemplo) → teléfono, cocina y panel conectados, con el aviso "su pedido va en camino con el motorista" → el panel real → "Cero clientes sin respuesta" → sus motoristas con el efectivo de cada uno cuadrado (ejemplo) → el carbón se acaba y el proveedor ya sabe → su meta de 1,000 almuerzos al día, con su frase real → Casa Digital → by Clientia Tech. Lo de ejemplo está marcado en pantalla.
 
 ## 6. Contacto (borradores, nada enviado)
 
@@ -69,11 +67,11 @@ Mejor por mensaje directo en TikTok (él mismo contesta ahí) o por WhatsApp al 
 
 **Primer mensaje:**
 
-> Hola, buenas. Mi nombre es Rodrigo Herrera. Soy hondureño y estudio ingeniería en Estados Unidos, y quiero ayudar a los negocios de mi país con lo que he aprendido. Vi sus videos del almuerzo de 80 lempiras y el del recibo de luz, y vi que usted mismo le contesta a cada persona que pregunta dónde están o si llevan a domicilio. Les preparé un video corto con una idea: que su WhatsApp conteste y tome los pedidos solo, y un panel donde usted vea pedidos, motoristas y cuánto le deja cada plato. ¿Se lo puedo mandar?
+> Hola, buenas. Mi nombre es Rodrigo Herrera. Soy hondureño y estudio ingeniería en Estados Unidos, y quiero ayudar a los negocios de mi país con lo que he aprendido. Vi sus videos del almuerzo de 80 lempiras y vi que ustedes mismos le contesta a cada persona que pregunta dónde están o si llevan a domicilio. Les preparé un video corto con una idea: que su WhatsApp conteste y tome los pedidos solo, y un panel donde usted vea pedidos, motoristas, inventario y facturas. ¿Se lo puedo mandar?
 
 **Con el video:**
 
-> Aquí está el video para Toreto's Grill. La idea es que ningún cliente se quede sin respuesta mientras usted está en la parrilla, y que sepa cada día cuánto le deja cada almuerzo con lo que está pagando de luz. Si le interesa, se lo muestro en 15 minutos con su menú real. ¿Le queda bien esta semana?
+> Aquí está el video para Toreto's Grill. La idea es que ningún cliente se quede sin respuesta mientras usted está en la parrilla, y que cada motorista vuelva con las cuentas claras. Si le interesa, se lo muestro en 15 minutos con su menú real. ¿Le queda bien esta semana?
 
 **Seguimiento a los 3 días:**
 
@@ -85,6 +83,6 @@ Nuestro WhatsApp: **+1 (765) 543-4251**
 
 - Precio exacto del pollo frito con tajadas, los asados y los taquitos (solo están publicados el almuerzo de L80 y el asado de L180).
 - Costo del envío a domicilio (un cliente dice L150; no lo confirmó el negocio) y cuántos motoristas tienen.
-- Nombre del dueño (se presenta como "el Colocho"; etiquetan a Farem Cartagena, inferido).
+- Quién es el dueño (el que sale en los videos es "el Colocho", pero no dice que sea el dueño; etiquetan a Farem Cartagena, inferido).
 - Si tienen RTN y CAI para facturar.
 - Instagram y Facebook (no se pudieron abrir desde el servidor; si rodrigo manda capturas, se agregan).
