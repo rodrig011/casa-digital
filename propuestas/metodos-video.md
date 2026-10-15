@@ -1,5 +1,7 @@
 # Métodos para los videos de propuesta
 
+> **DESCARTADO (2026-10-15, 16:14):** rodrigo vio los videos hechos con este método (Coco Chicken v6 y v7, Toreto's v2 y v3) y dijo: "olvida todo lo nuevo, volvamos a los videos de antes". No usar este método ni su guion de preguntas. Los videos de propuesta vuelven al guion y la edición de antes: el modelo es Coco Chicken v5 (`restaurantes/coco-chicken/coco-chicken-casa-digital-v5.mp4`, y su versión vertical `coco-chicken-casa-digital-v5-vertical.mp4`). Este archivo se queda solo como registro.
+
 Este playbook sale del video de referencia que mandó rodrigo el 2026-10-15. Es un TikTok vertical de 62 s de @wolfofwallstreet que contesta un comentario: "So what does sell me this pen actually mean?". Desde ahora, todos los videos de propuesta (Coco Chicken, Toreto's Grill, Bochas Grill y los que vengan) siguen estos métodos.
 
 ## El método de venta (lo principal)
