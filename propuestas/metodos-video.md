@@ -15,14 +15,18 @@ Cómo lo aplicamos:
 5. **La línea final:** no vendemos un sistema, resolvemos lo que ese negocio necesita.
 6. **Cierre con una acción clara**, como "Síganme y les enseño cómo". Nosotros: "Escríbanos y le mostramos exactamente cómo", con el WhatsApp +1 (765) 543-4251. Termina en "by Clientia Tech".
 
-## El formato
+## El formato (la edición de antes, en vertical)
 
-- Vertical 1080×1920, para WhatsApp y TikTok. Dura alrededor de 60 a 80 s.
-- **Gancho con un comentario real.** El video abre con una tarjeta tipo "respuesta a comentario" encima del contenido. En nuestro caso es un comentario real del TikTok del cliente (por ejemplo, "Yo quierooooooo pero nunca me responden 😞😞").
-- **Subtítulos grandes de 2 a 4 palabras**, centrados, en blanco con sombra y las palabras clave resaltadas. Reemplazan la voz. Tienen que quedarse en pantalla lo suficiente para leerlos, porque a rodrigo le gusta lento y legible.
-- **Ventana de apoyo arriba** (picture in picture) que ilustra cada frase. En la referencia son escenas de la película; nosotros usamos contenido real del cliente y pantallas del panel o del bot, marcadas "Ejemplo" cuando lo son.
-- Hay un fondo constante todo el video. En la referencia es la misma toma; nosotros usamos el contenido del cliente desenfocado y oscuro.
-- El cierre imita el botón "Seguir → Siguiendo", pero en WhatsApp: "Escribir → Enviado ✓".
+El 2026-10-15 rodrigo vio el primer video con este método (Coco Chicken v6, subtítulos de 2-4 palabras y ventana arriba) y dijo que la edición se veía mal: "el texto parece que se queda sin aire tirando 2 palabras por vez" y no le gustó que abriera con los videos del dueño. Lo que sí le gustó fue el mensaje y la estrategia. Entonces el método de arriba es solo para el guion; la edición es la de los videos anteriores (Coco Chicken v3-v5), que "quedó belleza".
+
+- Vertical 1080×1920, para WhatsApp y TikTok. Dura alrededor de 1:30 a 2:00, con escenas lentas y legibles.
+- **Fondo negro de lujo** con luces suaves de color (nada de crema o durazno). Cada escena entra con desenfoque y sale con un fundido suave, sin cortes bruscos.
+- **Frases completas**, nunca subtítulos de 2-4 palabras. Cada escena tiene un rótulo arriba ("Pregunta 1", "Respuesta 1") y un titular grande que sube palabra por palabra, con las palabras clave en dorado.
+- **La prueba va como tarjeta o pantalla real**, debajo del titular: comentarios reales de su TikTok, números, el iPhone con la conversación de WhatsApp, el inventario, el panel. Lo que sea ejemplo lleva la nota "Ejemplo" abajo.
+- **No abrir con los videos del dueño.** Se abre con Casa Digital, "una propuesta para" y el logo y nombre del cliente.
+- Los cortes van al ritmo de la música (compases).
+- Cierre: tarjeta de Casa Digital con el WhatsApp +1 (765) 543-4251 y el logo de Clientia Tech dibujado y animado, "by Clientia Tech".
+- Ejemplo de referencia: `restaurantes/coco-chicken/coco-chicken-casa-digital-v7-vertical.mp4` (generado con `gen12.py`, en el repo casa-digital `coco-chicken/video/`).
 
 ## Detalles que también vienen de la referencia
 
