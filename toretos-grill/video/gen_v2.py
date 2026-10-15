@@ -95,6 +95,7 @@ html,body,#root{width:1080px !important;height:1920px !important;}
 .quote p{font-size:46px;}.quote .h{font-size:24px;}
 .goal{left:90px;top:1010px;width:900px;}
 .goal .k{font-size:23px;}.goal .s{font-size:25px;}
+.goal .row b span{font-size:inherit;color:inherit;}
 /* panel on the owner's phone */
 .shot{position:absolute;left:300px;top:720px;width:480px;height:1040px;border-radius:64px;overflow:hidden;padding:14px;background:linear-gradient(145deg,#3A3A3C,#0C0C0D 40%,#1C1C1E 70%,#48484A);box-shadow:0 60px 140px rgba(0,0,0,.7);}
 .shot img{display:block;width:452px;height:1012px;border-radius:52px;object-fit:cover;object-position:50% 0;}
