@@ -409,7 +409,7 @@ tl.fromTo("#iname", { opacity: 0, y: 30, filter: "blur(20px)" }, { opacity: 1, y
 
 // 2 · their own clips play in the phone, with their numbers
 rise("#f0", K(3), { d: 1.2 }); rise("#f1 .w", K(3) + .2); rise("#f2 .w", K(3) + .55); rise("#f3 .w", K(3) + .9);
-tl.set("#fstage", { opacity: 1 }, K(3)); tl.set("#fstage", { opacity: 0 }, K(7));
+tl.set("#fstage", { opacity: 1 }, K(3)); 
 tl.fromTo("#phv", { y: 700, rotationY: -18, rotationX: 8 }, { y: 0, rotationY: -8, rotationX: 2, duration: 2.6, ease: SOFT }, K(3));
 tl.to("#phv", { rotationY: 6, rotationX: 0, duration: K(7) - K(4), ease: "sine.inOut" }, K(4));
 [4.4, 4.9, 5.4].forEach((k, i) => rise("#st" + i, K(k), { y: 30, d: 1.4 }));
@@ -470,16 +470,16 @@ tl.set("#pfi0", { opacity: 1 }, K(33));
 tl.to("#pfimg0", { y: -665, duration: 1.7, ease: "sine.inOut" }, K(33.9));
 tl.to("#pfimg0", { y: -1349, duration: 1.7, ease: "sine.inOut" }, K(34.9));
 tl.set("#pfimg1", { y: -295 }, 0);
-tl.to("#pfi1", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(36) - .2);
-tl.set("#pfi0", { opacity: 0 }, K(36) + .6);
+tl.to("#pfi0", { opacity: 0, duration: .4, ease: "power2.in" }, K(36) - .45);
+tl.to("#pfi1", { opacity: 1, duration: .5, ease: "power2.out" }, K(36) - .05);
 tl.to("#pfimg1", { y: -369, duration: 1.7, ease: "sine.inOut" }, K(36.7));
 tl.set("#pfimg2", { y: -49 }, 0);
-tl.to("#pfi2", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(38) - .2);
-tl.set("#pfi1", { opacity: 0 }, K(38) + .6);
+tl.to("#pfi1", { opacity: 0, duration: .4, ease: "power2.in" }, K(38) - .45);
+tl.to("#pfi2", { opacity: 1, duration: .5, ease: "power2.out" }, K(38) - .05);
 tl.to("#pfimg2", { y: -689, duration: 1.7, ease: "sine.inOut" }, K(38.8));
 tl.set("#pfimg3", { y: -37 }, 0);
-tl.to("#pfi3", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(40) - .2);
-tl.set("#pfi2", { opacity: 0 }, K(40) + .6);
+tl.to("#pfi2", { opacity: 0, duration: .4, ease: "power2.in" }, K(40) - .45);
+tl.to("#pfi3", { opacity: 1, duration: .5, ease: "power2.out" }, K(40) - .05);
 tl.to("#pfimg3", { y: -615, duration: 1.7, ease: "sine.inOut" }, K(40.8));
 rise("#o0", K(33), { d: 1.2 }); rise("#o1 .w", K(33) + .3); rise("#o2 .w", K(33) + .6, { d: 1.8 });
 out("#og1", K(36) - .8);
@@ -495,6 +495,10 @@ rise("#u0", K(42), { d: 1.2 }); rise("#u1 .w", K(42) + .3); rise("#u2 .w", K(42)
 out("#wy0, #wy1, #wy2, #wy3", K(44.7) - .7, .8);
 tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(44.7));
 float("#cta", K(45.2), K(46) - K(45.2));
+
+// every scene leaves softly before the next one starts: no hard cuts
+$scenes.filter(([id]) => id !== "end").forEach(([id, s, e]) => tl.to("#cam-" + id, { opacity: 0, y: -24, filter: "blur(12px)", duration: .8, ease: "power2.in" }, e - .85));
+tl.to("#fstage", { opacity: 0, filter: "blur(12px)", duration: .8, ease: "power2.in" }, K(7) - .85);
 
 '''
 
