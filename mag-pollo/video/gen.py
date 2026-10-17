@@ -14,7 +14,7 @@ the owner panel with the four branches and each promo -> their own "prontooo" fo
 Casa Digital -> outro. Conversations, deliveries and panel numbers are examples, labelled on screen.
 
 Music: src/musica.mp3. Cuts land on bars: MUSIC_P0 (first downbeat, s) and MUSIC_BAR (bar length, s)
-set the grid; the defaults are "Still Buggin" (194 BPM). Helpers come from coco-chicken/video and
+set the grid; the defaults are "Stylish" by FASSounds (110 BPM), the song rodrigo picked on 2026-10-17. Helpers come from coco-chicken/video and
 toretos-grill/video/gen.py, like bochas-grill/video/gen.py.
 """
 import importlib.util, json, os, re, shutil, sys
@@ -29,8 +29,8 @@ _spec = importlib.util.spec_from_file_location("toretos_gen", os.path.join(HERE,
 TG = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(TG)
 
-P0 = float(os.environ.get("MUSIC_P0", 0.0012))
-BAR = float(os.environ.get("MUSIC_BAR", 8 * 0.3092783))
+P0 = float(os.environ.get("MUSIC_P0", 0.035))  # "Stylish" (FASSounds), 110 BPM
+BAR = float(os.environ.get("MUSIC_BAR", 4 * 60 / 110))
 K = lambda k: round(P0 + BAR * k, 3)
 
 SRC = os.path.join(HERE, "src")
