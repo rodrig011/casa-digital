@@ -3,8 +3,9 @@
 Investigación en la carpeta del proyecto: `restaurantes/mag-pollo/redes/investigacion-redes.md` (TikTok @magpollohn, 4 sucursales en SPS, comentarios y respuestas).
 Ojo: Mag Pollo y Coco Chicken se pelearon en público (16-oct). Nunca usar material de uno con el otro.
 
-- `mag-pollo-casa-digital-vertical.mp4`: el video, 1:40, con "Stylish" de FASSounds (Pixabay, `/mnt/project-files/musica/stylish-fassounds.mp3`), un corte por compás.
-- `video/gen.py`: video vertical 1080×1920 (1:40 con "Stylish"), con el mismo pitch y la misma edición del vertical de Toreto's y de Bocha's: sus platos, comentarios reales, el bloque de sucursales que pegan a mano 16+ veces, link en el perfil y comentario fijado que llevan a un solo WhatsApp (el bot no contesta comentarios de TikTok), el bot con la promo real de L399 y la sucursal más cercana, delivery por sucursal, panel con sus 4 sucursales y promos, su "Prontooo" para El Progreso, Casa Digital y Clientia Tech.
+- `mag-pollo-casa-digital-vertical.mp4`: el video v2, 1:53, con "Stylish" de FASSounds (Pixabay, `/mnt/project-files/musica/stylish-fassounds.mp3`), un corte por compás. Va en cuatro partes marcadas: 1 El problema (comentarios reales y el bloque de 4 sucursales pegado a mano 16+ veces), 2 La solución (link en el perfil y comentario fijado llevan a un solo WhatsApp, porque el bot no contesta comentarios de TikTok; el bot con la promo real de L399, la sucursal más cercana y el delivery), 3 Su panel (tres pantallas grandes: ventas de hoy por sucursal y canal, pedidos y clientes esperando, y qué hacer), 4 Por qué nosotros (lo hacemos con su menú y sus 4 sucursales, lo instalamos y actualizamos nosotros, llamada de 15 minutos), Casa Digital y Clientia Tech.
+- `video/gen.py`: genera el v2 vertical 1080×1920.
+- `mag-pollo-casa-digital-v1-vertical.mp4` y `video/gen-v1.py`: la primera versión (1:40), guardada por si acaso.
 - `video/src/`: logo (foto de perfil de TikTok bajada a 600 px), `food1-4.jpg` (su publicación de fotos 7696215765099318546, 2160×2880 bajadas a 720×960).
 
 ```bash
