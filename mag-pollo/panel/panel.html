@@ -357,44 +357,41 @@ const BASE = {cal:1.25,pri:1,gua:.85,cos:.95};
 const curH = 18; // the demo always shows the day at 6 pm
 const HRS = [...Array(11)].map((_, i) => 10 + i); // 10..20
 const SHAPE = {10:.4,11:.8,12:1.7,13:1.6,14:.9,15:.6,16:.6,17:1,18:1.5,19:1.6,20:1};
-const CH = ["Mostrador","Autoservicio","Delivery","WhatsApp para recoger"];
-const CHC = {Mostrador:"--c3",Autoservicio:"--c1",Delivery:"--c2","WhatsApp para recoger":"--c5"};
+const CH = ["Mostrador","Autoservicio","PedidosYa","WhatsApp para recoger"]; // home delivery is through PedidosYa (their own auto-reply says so)
+const CHC = {Mostrador:"--c3",Autoservicio:"--c1",PedidosYa:"--c2","WhatsApp para recoger":"--c5"};
 const MIXP = [.2,.52,.68,.88,1]; // ali, pec, pep, com, cua
 const SALES = [];
 BR.forEach(b => HRS.filter(h => h <= curH).forEach(h => { const n = Math.round(BASE[b.id] * WK[today] * SHAPE[h] * 5 * (0.85 + rnd() * .3));
   for (let i = 0; i < n; i++) { const r = rnd(); const it = MENU[MIXP.findIndex(x => r < x)]; const q = it.id === "ali" ? 1 : rnd() < .3 ? 2 : 1;
-    const c = b.auto && rnd() < .3 ? "Autoservicio" : rnd() < .24 ? "Delivery" : rnd() < .2 ? "WhatsApp para recoger" : "Mostrador";
+    const c = b.auto && rnd() < .3 ? "Autoservicio" : rnd() < .24 ? "PedidosYa" : rnd() < .2 ? "WhatsApp para recoger" : "Mostrador";
     SALES.push({b: b.id, h, ch: c, it: it.id, qty: q, total: it.p * q}); } }));
 const HIST = {}; // 28 days of sales per branch
 BR.forEach(b => { HIST[b.id] = []; for (let d = 28; d >= 1; d--) { const wd = (today - d % 7 + 7) % 7; HIST[b.id].push({d, wd, ventas: Math.round(BASE[b.id] * WK[wd] * 8600 * (0.9 + rnd() * .2))}); } });
 // WhatsApp: the kinds of questions their followers really ask in TikTok comments, answered by the bot
 const CONV = [
   {id:1, who:"Daniela R.", h:"5:52 pm", q:"Precio de la promo de alitas?", st:"pedido", tag:"Precio",
-    msgs:[["in","Precio de la promo de alitas?"],["out","¡Hola! 🐔 La promo es L399: 24 alitas (o 12 alitas y 12 fingers), papas familiar y refresco de 1.1 L. Vale todo el mes.\n¿La quiere a domicilio o pasa a recoger?"],["in","a domicilio, colonia Jardines del Valle"],["out","A Jardines del Valle le llega de Plaza Calpules ✅ Pedido #5214: 1 promo 24 alitas, L399.\n¿Paga en efectivo o transferencia? Le aviso cuando el motorista vaya en camino."]]},
+    msgs:[["in","Precio de la promo de alitas?"],["out","¡Hola! 🐔 La promo es L399: 24 alitas (o 12 alitas y 12 fingers), papas familiar y refresco de 1.1 L. Vale todo el mes.\n¿En qué colonia está? Le digo qué sucursal le queda más cerca."],["in","Jardines del Valle, paso a recogerla"],["out","Le queda Plaza Calpules, que tiene autoservicio 🚗\nListo ✅ Pedido #5214 para recoger: 1 promo 24 alitas, L399. Le aviso cuando esté lista."]]},
   {id:2, who:"Kevin A.", h:"5:47 pm", q:"Donde están ubicados?", st:"bot", tag:"Sucursal",
     msgs:[["in","Donde están ubicados?"],["out","Tenemos 4 sucursales en San Pedro Sula. ¿En qué colonia está? Le digo cuál le queda más cerca."],["in","Bo. La Guardia"],["out","Le queda Plaza La Guardia: Blv. del Sur, Bo. La Guardia, Ave. Nueva Orleans 📍\n¿Le mando la ubicación en el mapa?"]]},
-  {id:3, who:"Wendy C.", h:"5:39 pm", q:"Hacen envíos a Res. Santa Mónica?", st:"pedido", tag:"Delivery",
-    msgs:[["in","Hacen envíos a Res. Santa Mónica?"],["out","¡Sí! Santa Mónica le toca a Plaza Prisma. ¿Qué le mandamos? Hoy la pechuga con tajadas está a L99 (con papas L109)."],["in","2 pechugas con tajadas"],["out","Listo ✅ Pedido #5211 para Plaza Prisma: 2 pechugas con tajadas, L198.\nYa está en la pantalla de cocina."]]},
+  {id:3, who:"Wendy C.", h:"5:39 pm", q:"Hacen envíos a Res. Santa Mónica?", st:"pedido", tag:"Domicilio",
+    msgs:[["in","Hacen envíos a Res. Santa Mónica?"],["out","¡Sí! El servicio a domicilio es por PedidosYa 🛵 Aquí lo encuentra: (link de PedidosYa)\nSi prefiere pasar, le queda Plaza Prisma y se lo tenemos listo sin hacer fila. Hoy la pechuga con tajadas está a L99."],["in","mejor paso, 2 pechugas con tajadas"],["out","Listo ✅ Pedido #5211 para recoger en Plaza Prisma: 2 pechugas con tajadas, L198.\nYa está en la pantalla de cocina."]]},
   {id:4, who:"Josué M.", h:"5:21 pm", q:"Cuándo abren en El Progreso?", st:"bot", tag:"Otra ciudad",
     msgs:[["in","Cuándo abren en El Progreso?"],["out","Todavía no tenemos en El Progreso 🙏 Lo anotamos: cuando abramos, le avisamos por aquí primero."]]},
   {id:5, who:"Alejandra P.", h:"4:58 pm", q:"Están contratando?", st:"bot", tag:"Trabajo",
     msgs:[["in","Están contratando?"],["out",`Gracias por su interés 🙌 Mande su hoja de vida al WhatsApp ${CV} y el equipo le contesta.`]]},
   {id:6, who:"Carlos E.", h:"4:40 pm", q:"Necesito 40 combos para la empresa el viernes", st:"persona", tag:"Pedido grande",
     msgs:[["in","Necesito 40 combos para la empresa el viernes"],["out","¡Con gusto! Para pedidos de más de 20 le paso con Magdiel para dejarle todo listo. Un momento 🙌"],["out","(Pasado a una persona · aviso al celular del dueño)"]]}];
-const BOTTXT = {promo: "Promo 24 alitas + papas familiar + refresco 1.1 L a L399, todo el mes", envio: "", zonas: ""};
+const BOTTXT = {promo: "Promo 24 alitas + papas familiar + refresco 1.1 L a L399, todo el mes", pya: ""};
 try { Object.assign(BOTTXT, JSON.parse(localStorage.getItem("mgp-bot") || "{}")); } catch (e) {}
-// orders from WhatsApp: delivery with their own riders, or pickup at the branch
+// orders the bot takes on WhatsApp: picked up at the branch (home delivery stays on PedidosYa)
 const NAMES = ["Daniela R.","Wendy C.","José L.","Dania R.","Kevin A.","Marlon S.","Yessenia P.","Óscar F.","Gabriela T.","Wilmer C.","Ana Lucía B.","Héctor Z.","Sofía H.","Brayan O.","Lourdes E.","Fernando G."];
-const ZONAS = {cal:["Col. Jardines del Valle","Col. Calpules"],pri:["Res. Santa Mónica","Col. Universidad"],gua:["Bo. La Guardia","Col. Moderna"],cos:["Res. Costa Verde","Col. Rivera Hernández"]};
-const MOTOS = [{id:"m1",n:"Motorista 1",b:"cal"},{id:"m2",n:"Motorista 2",b:"cal"},{id:"m3",n:"Motorista 3",b:"pri"},{id:"m4",n:"Motorista 4",b:"gua"},{id:"m5",n:"Motorista 5",b:"cos"}];
 const ORD = []; let oid = 5190;
 for (let i = 0; i < 15; i++) { const b = BR[i % 4].id; const items = []; const k = 1 + Math.floor(rnd() * 2); for (let j = 0; j < k; j++) { const it = pick(MENU); const ex = items.find(x => x.id === it.id); ex ? ex.q++ : items.push({id: it.id, n: it.s, p: it.p, q: 1}); }
-  const st = i < 3 ? "nuevo" : i < 7 ? "cocina" : i < 10 ? "camino" : "entregado"; const dom = i % 5 !== 2;
-  const mb = MOTOS.filter(m => m.b === b);
-  ORD.push({id: ++oid, b, who: NAMES[i], tel: "9" + Math.floor(1000000 + rnd() * 8999999), dom, zona: dom ? pick(ZONAS[b]) : "Pasa a recoger", moto: dom && (st === "camino" || st === "entregado") ? mb[i % mb.length].id : "", items, pay: rnd() < .65 ? "Efectivo" : "Transferencia", min: st === "nuevo" ? 1 + Math.floor(rnd() * 4) : st === "cocina" ? 5 + Math.floor(rnd() * 10) : 12 + Math.floor(rnd() * 22), st}); }
-const O1 = ORD.find(o => o.st === "camino" && o.b === "pri"); if (O1) O1.min = 42;
-const N1 = ORD.find(o => o.st === "nuevo" && o.b === "pri"); if (N1) { N1.id = 5211; N1.who = "Wendy C."; N1.zona = "Res. Santa Mónica"; N1.dom = true; N1.items = [{id:"pec", n:"Pechuga con tajadas", p:99, q:2}]; }
-const N2 = ORD.find(o => o.st === "nuevo" && o.b === "cal"); if (N2) { N2.id = 5214; N2.who = "Daniela R."; N2.zona = "Col. Jardines del Valle"; N2.dom = true; N2.items = [{id:"ali", n:"Promo 24 alitas", p:399, q:1}]; }
+  const st = i < 3 ? "nuevo" : i < 7 ? "cocina" : i < 10 ? "listo" : "entregado";
+  ORD.push({id: ++oid, b, who: NAMES[i], tel: "9" + Math.floor(1000000 + rnd() * 8999999), items, pay: rnd() < .55 ? "Paga al recoger" : "Transferencia", min: st === "nuevo" ? 1 + Math.floor(rnd() * 4) : st === "cocina" ? 5 + Math.floor(rnd() * 10) : 6 + Math.floor(rnd() * 14), st}); }
+const O1 = ORD.find(o => o.st === "listo" && o.b === "pri"); if (O1) O1.min = 34;
+const N1 = ORD.find(o => o.st === "nuevo" && o.b === "pri"); if (N1) { N1.id = 5211; N1.who = "Wendy C."; N1.items = [{id:"pec", n:"Pechuga con tajadas", p:99, q:2}]; }
+const N2 = ORD.find(o => o.st === "nuevo" && o.b === "cal"); if (N2) { N2.id = 5214; N2.who = "Daniela R."; N2.items = [{id:"ali", n:"Promo 24 alitas", p:399, q:1}]; }
 // supplies per branch: [name, unit, stock{}, minimum{}, supplier]
 const INS = [
   ["Pollo en piezas","lb",{cal:120,pri:64,gua:88,cos:95},{cal:90,pri:80,gua:70,cos:75},"pollo"],
@@ -433,11 +430,10 @@ const toast = t => { const e = document.createElement("div"); e.className = "toa
 const waLink = (txt, tel) => "https://wa.me/" + (tel ? "504" + tel : "") + "?text=" + encodeURIComponent(txt);
 const icon = (id, cls = "ic") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
 const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</span>`;
-const motoN = id => (MOTOS.find(m => m.id === id) || {n:""}).n;
 const oTot = o => o.items.reduce((a, i) => a + i.p * i.q, 0);
 
 const NAV = [["hoy","Inicio","i-home"],["whatsapp","WhatsApp","i-chat"],["pedidos","Pedidos","i-bike"],["caja","Caja","i-cash"],["inventario","Inventario","i-box"],["promos","Promos y canales","i-chart"],["ciudades","Nuevas ciudades","i-pin"],["tiktok","TikTok","i-play"]];
-const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bike","#FE9339"],caja:["i-cash","#3BA755"],inventario:["i-box","#B78300"],promos:["i-chart","#0B827C"],ciudades:["i-pin","#BA0517"],tiktok:["i-play","#181818"]};
+const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bag","#FE9339"],caja:["i-cash","#3BA755"],inventario:["i-box","#B78300"],promos:["i-chart","#0B827C"],ciudades:["i-pin","#BA0517"],tiktok:["i-play","#181818"]};
 const BYSUC = new Set(["hoy","pedidos","caja","inventario","promos"]);
 function nav() {
   const nuevos = ORD.filter(o => inB(o) && o.st === "nuevo").length; const pers = CONV.filter(c => c.st === "persona").length; const bad = CAJA.filter(c => inB(c) && c.d < 3 && c.diff < -100).length;
@@ -461,7 +457,7 @@ function vHoy() {
       <div class="kpi"><span>Ventas de hoy</span><b class="num">${L(tot)}</b><small><span class="${ch >= 0 ? "up" : "down"}">${ch >= 0 ? "▲" : "▼"} ${Math.abs(ch)}%</span> vs. el ${DAYS[today]} pasado a esta hora</small></div>
       <div class="kpi"><span>Pedidos</span><b class="num">${s.length}</b><small>${s.filter(x => x.ch === "Autoservicio").length} en el autoservicio de Calpules</small></div>
       <div class="kpi"><span>Clientes esperando respuesta</span><b class="num" style="color:var(--ok)">0</b><small>118 contestados por el bot · ${pers} pasó al dueño</small></div>
-      <div class="kpi"><span>Delivery en camino</span><b class="num">${os.filter(o => o.st === "camino").length}</b><small>${os.filter(o => o.dom).length} pedidos a domicilio hoy</small></div>
+      <div class="kpi"><span>Para recoger en curso</span><b class="num">${os.filter(o => o.st !== "entregado").length}</b><small>${os.filter(o => o.st === "listo").length} listos esperando al cliente</small></div>
     </div></section>
     <div class="g2">
       <section class="card"><header>${CT("i-warn","#FE9339")}<h2>Acciones recomendadas</h2><div class="r">${recs.filter(r => !DONE.has(r.id)).length} pendientes</div></header>
@@ -485,7 +481,7 @@ function RECS() {
   const r = [];
   r.push({id:"ali", b:"pri", t:"red", i:"i-warn", h:"Plaza Prisma: las alitas no llegan al cierre", p:"Quedan 22 lb y la promo de L399 se lleva unas 6 lb por hora. El bot le avisó al proveedor a las 5:35 pm y no ha contestado.", a:`<a class="btn sm wa" target="_blank" rel="noopener" data-done="ali" href="${provWa("pollo", "Buenas, le escribe Mag Pollo. Para Plaza Prisma necesitamos 48 lb de alitas hoy lo antes posible. ¿Nos confirma? Gracias.")}">${icon("i-wa")}Escribirle</a>`});
   const c = CAJA.find(x => x.d === 1 && x.diff < -100); if (c) r.push({id:"caja", b:c.b, t:"red", i:"i-cash", h:`${bn(c.b)}: la caja de ayer cerró con ${L(-c.diff)} de menos`, p:`Cerró ${c.who.toLowerCase()}. Efectivo esperado ${L(c.ef)}, contado ${L(c.cont)}.`, a:`<button class="btn sm" data-v="caja">Revisar</button>`});
-  ORD.filter(o => o.st === "camino" && o.min > 38).forEach(o => r.push({id:"l" + o.id, b:o.b, t:"amber", i:"i-clock", h:`Delivery #${o.id} lleva ${o.min} min en camino`, p:`${motoN(o.moto)} de ${bn(o.b)} va a ${o.zona}. Avisarle a ${o.who} cuánto falta.`, a:`<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${o.id}" href="${waLink(`Hola ${o.who.split(" ")[0]}, su pedido #${o.id} de Mag Pollo va en camino. Ya casi llega. ¡Gracias por esperar!`, o.tel)}">${icon("i-wa")}Avisar</a>`}));
+  ORD.filter(o => o.st === "listo" && o.min > 25).forEach(o => r.push({id:"l" + o.id, b:o.b, t:"amber", i:"i-clock", h:`Pedido #${o.id} listo hace ${o.min} min`, p:`${o.who} no ha llegado a ${bn(o.b)}. Recordarle por WhatsApp.`, a:`<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${o.id}" href="${waLink(`Hola ${o.who.split(" ")[0]}, su pedido #${o.id} de Mag Pollo ya está listo en ${bn(o.b)}. ¡Lo esperamos!`, o.tel)}">${icon("i-wa")}Avisar</a>`}));
   r.push({id:"gua", b:"gua", t:"amber", i:"i-send", h:"El bot le pidió aceite a la Distribuidora para La Guardia", p:"Mensaje enviado a las 3:12 pm. Confirmó: llega a las 5:30 pm.", a:`<button class="btn sm" data-v="inventario">Ver</button>`});
   r.push({id:"emp", t:"blue", i:"i-chat", h:"Una empresa pide 40 combos para el viernes", p:"Carlos E. escribió por WhatsApp. El bot se lo pasó a usted porque es un pedido grande.", a:`<button class="btn sm" data-c="6">Contestar</button>`});
   r.push({id:"pec", t:"ok", i:"i-chart", h:`La pechuga a L99 y L109 lleva ${SALES.filter(x => x.it === "pec" || x.it === "pep").reduce((a, x) => a + x.qty, 0)} vendidas hoy`, p:"La promo termina el sábado. Si la repiten, el bot ya la ofrece en cada conversación.", a:`<button class="btn sm" data-v="promos">Ver promos</button>`});
@@ -510,7 +506,7 @@ function vWhatsapp() {
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Conversaciones hoy</span><b class="num">124</b><small>hasta las 6:00 pm</small></div>
       <div class="kpi"><span>Contestadas por el bot</span><b class="num">118</b><small>en menos de 1 minuto</small></div>
-      <div class="kpi"><span>Pedidos tomados por el bot</span><b class="num">${ORD.length}</b><small>${ORD.filter(o => o.dom).length} a domicilio · ${ORD.filter(o => !o.dom).length} para recoger</small></div>
+      <div class="kpi"><span>Pedidos tomados por el bot</span><b class="num">${ORD.length}</b><small>para recoger · el domicilio sigue por PedidosYa</small></div>
       <div class="kpi"><span>Sin contestar</span><b class="num" style="color:var(--ok)">0</b><small>nadie se queda esperando</small></div>
     </div></section>
     <div class="g2">
@@ -522,37 +518,31 @@ function vWhatsapp() {
     </div>
     <section class="card"><header>${CT("i-check","#2E844A")}<h2>Lo que el bot sabe</h2><div class="r">si cambia algo, se cambia aquí y el bot ya lo dice así</div></header><div class="pad form">
       <label>Promo del mes<input data-bot="promo" value="${BOTTXT.promo}"></label>
-      <div class="f2"><label>Colonias con envío gratis<input data-bot="zonas" placeholder="Las pone usted" value="${BOTTXT.zonas}"></label><label>Costo del envío en las demás (L)<input data-bot="envio" inputmode="decimal" placeholder="Lo pone usted" value="${BOTTXT.envio}"></label></div>
+      <label>Link de PedidosYa (para quien pide a domicilio)<input data-bot="pya" placeholder="Lo pone usted" value="${BOTTXT.pya}"></label>
       <div class="scrollx"><table class="tbl"><thead><tr><th>Sucursal</th><th>Dirección que da el bot</th><th>Teléfono</th></tr></thead>
         <tbody>${BR.map(b => `<tr><td><i class="dot" style="background:${col(b.c)}"></i>${b.n}${b.auto ? `<div class="hint">con autoservicio</div>` : ""}</td><td>${b.dir}</td><td class="num">${b.tel}</td></tr>`).join("")}</tbody></table></div>
-      <p class="hint">Hoy ese bloque de 4 direcciones se pega a mano en los comentarios: en TikTok se pegó más de 16 veces en una semana. El bot contesta solo a quien escribe al WhatsApp, y el link del perfil y un comentario fijado llevan a la gente ahí. Los comentarios de TikTok no los contesta: TikTok no lo permite.</p></div></section>
+      <p class="hint">Hoy cada sucursal tiene su número y su menú por palabras (menú, horario, ubicación), que manda información fija pero no toma pedidos ni sabe qué sucursal le queda al cliente. Y en TikTok el bloque de 4 direcciones se pega a mano en los comentarios: en TikTok se pegó más de 16 veces en una semana. El bot contesta solo a quien escribe al WhatsApp, y el link del perfil y un comentario fijado llevan a la gente ahí. Los comentarios de TikTok no los contesta: TikTok no lo permite.</p></div></section>
   </div>`;
 }
 
 function vPedidos() {
-  const cols = [["nuevo","Nuevos"],["cocina","En cocina"],["camino","En camino o listos"],["entregado","Entregados hoy"]];
-  const next = {nuevo: ["cocina","Pasar a cocina"], cocina: ["camino","Salió el motorista"], camino: ["entregado","Entregado"]};
+  const cols = [["nuevo","Nuevos"],["cocina","En cocina"],["listo","Listos para recoger"],["entregado","Entregados hoy"]];
+  const next = {nuevo: ["cocina","Pasar a cocina"], cocina: ["listo","Marcar listo"], listo: ["entregado","Entregado"]};
   const os = ORD.filter(inB);
-  const motoRows = MOTOS.filter(inB).map(m => { const ms = ORD.filter(o => o.moto === m.id); const ef = ms.filter(o => o.pay === "Efectivo" && o.st === "entregado").reduce((a, o) => a + oTot(o), 0);
-    return `<tr><td><b>${m.n}</b><div class="hint">${bn(m.b)}</div></td><td class="r num">${ms.filter(o => o.st === "entregado").length}</td><td class="r num">${ms.filter(o => o.st === "camino").length}</td><td class="r num">${L(ef)}</td><td class="r"><button class="btn sm" data-cuadre="${m.id}">Cuadrar</button></td></tr>`; }).join("");
-  return `${PH("Pedidos de WhatsApp", "Cada pedido cae ya armado en la cocina de la sucursal que le toca. Lo lleva su motorista o el cliente pasa a recoger.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
-  <div class="stack">
+  return `${PH("Pedidos de WhatsApp", "Cada pedido cae ya armado en la cocina de la sucursal que le toca. El cliente pasa a recoger sin hacer fila; el domicilio sigue por PedidosYa.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
   <div class="${KMODE ? "kmode" : ""}"><div class="board">${cols.filter(c => !KMODE || c[0] === "nuevo" || c[0] === "cocina").map(([k, t]) => { const list = os.filter(o => o.st === k);
-    return `<div class="col"><h3>${t}<span>${list.length}</span></h3>${list.map(o => `<div class="tk"><div class="t"><b>#${o.id}</b>${o.st === "entregado" ? `<span class="status s-gray"><i></i>Entregado</span>` : `<span class="hint ${o.min > 30 ? "late" : ""}">hace ${o.min} min</span>`}</div>
+    return `<div class="col"><h3>${t}<span>${list.length}</span></h3>${list.map(o => `<div class="tk"><div class="t"><b>#${o.id}</b>${o.st === "entregado" ? `<span class="status s-gray"><i></i>Entregado</span>` : `<span class="hint ${o.min > 25 && o.st === "listo" ? "late" : ""}">hace ${o.min} min</span>`}</div>
       <ul>${o.items.map(i => `<li><span>${i.q} × ${i.n}</span>${KMODE ? "" : `<span class="num">${L(i.p * i.q)}</span>`}</li>`).join("")}</ul>
-      ${KMODE ? `<div class="m">${o.dom ? "Domicilio" : "Para recoger"} · ${o.who} · ${bo(o.b).s}</div>` : `<div class="m"><span>${o.who}</span><span>· ${bo(o.b).s}</span><span>· ${o.zona}</span>${o.moto ? `<span>· ${motoN(o.moto)}</span>` : ""}<span class="status ${o.pay === "Transferencia" ? "s-ok" : "s-amber"}"><i></i>${o.pay}</span><b class="num" style="margin-left:auto">${L(oTot(o))}</b></div>`}
-      ${next[o.st] ? `<div class="a"><button class="btn sm ${o.st === "nuevo" ? "red" : ""}" data-mv="${o.id}">${o.st === "cocina" && !o.dom ? "Listo para recoger" : next[o.st][1]}</button></div>` : ""}</div>`).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div></div>
-  <section class="card"><header>${CT("i-bike","#FE9339")}<h2>Motoristas</h2><div class="r">efectivo que traen de vuelta</div></header><div class="scrollx"><table class="tbl">
-    <thead><tr><th>Motorista</th><th class="r">Entregados</th><th class="r">En camino</th><th class="r">Efectivo cobrado</th><th></th></tr></thead><tbody>${motoRows}</tbody></table></div></section>
-  </div>
-  <p class="hint" style="margin-top:14px">Cuando el motorista sale, el bot le escribe solo al cliente: "Su pedido va en camino". Nombres, colonias y pedidos son de ejemplo.</p>`;
+      ${KMODE ? `<div class="m">${o.who} · ${bo(o.b).s}</div>` : `<div class="m"><span>${o.who}</span><span>· ${bo(o.b).s}</span><span class="status ${o.pay === "Transferencia" ? "s-ok" : "s-amber"}"><i></i>${o.pay}</span><b class="num" style="margin-left:auto">${L(oTot(o))}</b></div>`}
+      ${next[o.st] ? `<div class="a">${o.st === "listo" && !KMODE ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${o.who.split(" ")[0]}, su pedido #${o.id} de Mag Pollo ya está listo en ${bn(o.b)}. ¡Lo esperamos!`, o.tel)}">${icon("i-wa")}Avisar</a>` : ""}<button class="btn sm ${o.st === "nuevo" ? "red" : ""}" data-mv="${o.id}">${next[o.st][1]}</button></div>` : ""}</div>`).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div></div>
+  <p class="hint" style="margin-top:14px">Cuando un pedido pasa a "Listo", el bot le escribe solo al cliente. El botón "Avisar" es para recordarle si no ha llegado. Nombres y pedidos son de ejemplo.</p>`;
 }
 
 function vCaja() {
   const b0 = SUC === "all" ? "cal" : SUC;
   const rows = CAJA.filter(inB).sort((a, b) => a.d - b.d || BR.indexOf(bo(a.b)) - BR.indexOf(bo(b.b)));
   const lbl = d => d === 1 ? "Ayer" : DAYS[(today - d + 7) % 7];
-  return `${PH("Cierre de caja", "Cada noche el cajero de cada sucursal cuenta desde el celular. El panel compara con lo vendido, más el efectivo de los motoristas, y avisa si no cuadra.")}
+  return `${PH("Cierre de caja", "Cada noche el cajero de cada sucursal cuenta desde el celular. El panel compara con lo vendido y avisa si no cuadra.")}
   <div class="g2">
     <section class="card"><header>${CT("i-cash","#3BA755")}<h2>Últimos 6 días</h2><div class="r">${scope()}</div></header><div class="scrollx"><table class="tbl">
       <thead><tr><th>Día</th>${SUC === "all" ? "<th>Sucursal</th>" : ""}<th class="r">Efectivo esperado</th><th class="r">Contado</th><th>Resultado</th></tr></thead>
@@ -562,12 +552,12 @@ function vCaja() {
       <div class="f2"><label>Efectivo contado (L)<input id="cef" inputmode="decimal" placeholder="0"></label><label>Gastos pagados de caja (L)<input id="cga" inputmode="decimal" placeholder="0"></label></div>
       <div id="cres"></div>
       <button class="btn pri" id="cok">Guardar cierre</button>
-      <p class="hint">El efectivo esperado sale de las ventas en mostrador y autoservicio, más lo que cobraron los motoristas en efectivo.</p>
+      <p class="hint">El efectivo esperado sale de las ventas en mostrador, autoservicio y pedidos que se pagan al recoger. Lo de PedidosYa lo deposita la app.</p>
     </div></section>
   </div>`;
 }
 function cajaCalc() {
-  const b = $("#cb").value; const exp = Math.round(SALES.filter(x => x.b === b && x.ch !== "Delivery").reduce((a, x) => a + x.total, 0) * .62);
+  const b = $("#cb").value; const exp = Math.round(SALES.filter(x => x.b === b && x.ch !== "PedidosYa").reduce((a, x) => a + x.total, 0) * .62);
   const ef = +($("#cef").value || 0), ga = +($("#cga").value || 0); const d = ef + ga - exp; const k = Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber";
   $("#cres").innerHTML = `<div class="res" style="background:var(--sunk)"><span>Efectivo esperado</span><span class="big">${L(exp)}</span></div>` + (ef ? `<div class="res" style="background:var(--${k}-bg);color:var(--${k})"><span>${k === "ok" ? "Cuadra" : d < 0 ? "Faltan" : "Sobran"}</span><span class="big">${k === "ok" ? "✓" : L(Math.abs(d))}</span></div>` : "");
 }
@@ -606,13 +596,13 @@ function vPromos() {
   const byCh = CH.map(c => [c, s.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]).filter(([, v]) => v);
   const items = MENU.map(m => [m, s.filter(x => x.it === m.id).reduce((a, x) => a + x.qty, 0), s.filter(x => x.it === m.id).reduce((a, x) => a + x.total, 0)]).sort((a, b) => b[2] - a[2]);
   const mxI = Math.max(...items.map(i => i[2]));
-  return `${PH("Promos y canales", "Qué promo se vende más y por dónde entra cada venta: mostrador, autoservicio, delivery o WhatsApp.")}
+  return `${PH("Promos y canales", "Qué promo se vende más y por dónde entra cada venta: mostrador, autoservicio, PedidosYa o WhatsApp.")}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Ventas últimos 7 días</span><b class="num">${L(wk)}</b><small>${scope()}</small></div>
       <div class="kpi"><span>Promo 24 alitas (L399)</span><b class="num">${items.find(i => i[0].id === "ali")[1]}</b><small>vendidas hoy</small></div>
       <div class="kpi"><span>Pechuga a L99 y L109</span><b class="num">${items.filter(i => i[0].id === "pec" || i[0].id === "pep").reduce((a, i) => a + i[1], 0)}</b><small>vendidas hoy · termina el sábado</small></div>
-      <div class="kpi"><span>Entró por WhatsApp</span><b class="num">${Math.round(s.filter(x => x.ch === "Delivery" || x.ch === "WhatsApp para recoger").reduce((a, x) => a + x.total, 0) / tot * 100)}%</b><small>delivery y para recoger</small></div>
+      <div class="kpi"><span>Entró por WhatsApp</span><b class="num">${Math.round(s.filter(x => x.ch === "WhatsApp para recoger").reduce((a, x) => a + x.total, 0) / tot * 100)}%</b><small>pedidos para recoger que tomó el bot</small></div>
     </div></section>
     <div class="g2">
       <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Lo más vendido hoy</h2></header><div class="bars">${items.map(([m, q, v]) => `<div class="hb"><b>${m.s} · ${L(m.p)}${m.real ? "" : " <span class=\"hint\">(precio de ejemplo)</span>"}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
@@ -655,10 +645,8 @@ document.addEventListener("click", e => {
   const sb = e.target.closest("[data-s]"); if (sb) { SUC = sb.dataset.s; const y = window.scrollY; render(); window.scrollTo(0, y); return; }
   const cv = e.target.closest("[data-c]"); if (cv) { e.preventDefault(); CSEL = +cv.dataset.c; go("whatsapp"); return; }
   const d = e.target.closest("[data-done]"); if (d) { DONE.add(d.dataset.done); setTimeout(render, 300); }
-  const m = e.target.closest("[data-mv]"); if (m) { const o = ORD.find(x => x.id === +m.dataset.mv); const nx = {nuevo: "cocina", cocina: "camino", camino: "entregado"}[o.st];
-    if (nx === "camino" && o.dom && !o.moto) o.moto = MOTOS.find(x => x.b === o.b).id; o.st = nx; o.min = 0;
-    toast(nx === "camino" ? (o.dom ? `#${o.id} salió con ${motoN(o.moto)}. El bot le avisó a ${o.who.split(" ")[0]} (demo)` : `#${o.id} listo. El bot le avisó a ${o.who.split(" ")[0]} (demo)`) : nx === "cocina" ? `#${o.id} pasó a cocina` : `#${o.id} entregado`); render(); }
-  const cu = e.target.closest("[data-cuadre]"); if (cu) toast(`Efectivo de ${motoN(cu.dataset.cuadre)} cuadrado (demo)`);
+  const m = e.target.closest("[data-mv]"); if (m) { const o = ORD.find(x => x.id === +m.dataset.mv); const nx = {nuevo: "cocina", cocina: "listo", listo: "entregado"}[o.st]; o.st = nx; o.min = 0;
+    toast(nx === "listo" ? `#${o.id} listo. El bot le avisó a ${o.who.split(" ")[0]} (demo)` : nx === "cocina" ? `#${o.id} pasó a cocina` : `#${o.id} entregado`); render(); }
   if (e.target.closest("#kmode")) { KMODE = !KMODE; render(); }
   if (e.target.closest("#cok")) toast("Cierre guardado (demo)");
   if (e.target.closest("#cavisar")) toast(`Mensaje enviado a la lista de ${$("#cdad").value} (demo)`);
@@ -667,7 +655,7 @@ document.addEventListener("click", e => {
 document.addEventListener("input", e => {
   const t = e.target;
   if (t.id === "q") { const q = t.value.trim().toLowerCase().replace("#", ""); const r = $("#results"); if (!q) { r.hidden = true; return; }
-    const hits = [...ORD.filter(o => String(o.id).includes(q) || o.who.toLowerCase().includes(q)).map(o => `<a href="#pedidos" data-v="pedidos"><span>Pedido #${o.id} · ${o.who}</span><small>${bo(o.b).s} · ${o.zona}</small></a>`),
+    const hits = [...ORD.filter(o => String(o.id).includes(q) || o.who.toLowerCase().includes(q)).map(o => `<a href="#pedidos" data-v="pedidos"><span>Pedido #${o.id} · ${o.who}</span><small>${bo(o.b).s} · para recoger</small></a>`),
       ...CONV.filter(c => c.who.toLowerCase().includes(q) || c.q.toLowerCase().includes(q)).map(c => `<a href="#whatsapp" data-c="${c.id}"><span>${c.who}</span><small>WhatsApp · ${c.tag}</small></a>`)].slice(0, 8);
     r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; return; }
   if (t.dataset.bot) { BOTTXT[t.dataset.bot] = t.value; try { localStorage.setItem("mgp-bot", JSON.stringify(BOTTXT)); } catch (er) {} return; }

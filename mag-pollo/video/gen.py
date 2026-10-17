@@ -39,7 +39,7 @@ SLUG = "mag-pollo-vertical"
 SCENES = [("intro", 0, 3), ("fame", 3, 6), ("asks", 6, 10), ("paste", 10, 14), ("prop", 14, 19), ("meet", 19, 22), ("bot", 22, 29),
           ("pa", 29, 33), ("pb", 33, 37), ("pc", 37, 40), ("why", 40, 44), ("us", 44, 48), ("end", 48, 52)]
 # panel screenshots: (scene, file, css height of the page, stops = css y at the top of the screen)
-SHOTS = [("pa", "panel-hoy.jpg", 2792, [342, 650, 1820]), ("pb", "panel-whatsapp.jpg", 2489, [344, 650]),
+SHOTS = [("pa", "panel-hoy.jpg", 2792, [342, 650, 1820]), ("pb", "panel-whatsapp.jpg", 2497, [344, 650]),
          ("pc", "panel-inventario.jpg", 2855, [360, 1085])]
 SCR_W = 872  # inner screen width in the frame; the shots are 390 css px wide
 TOTAL = K(52)
@@ -173,27 +173,27 @@ def build():
              '<div>📍 Plaza La Guardia <span>· 3154-8195</span></div><div>📍 MAG POLLO Costas <span>· 3154-8697</span></div>')
     head = ('<div class="wa-h"><span class="bk">‹</span><div class="wa-av"><img src="assets/logo.jpg"></div>'
             '<div><b>Mag Pollo</b><span>en línea</span></div></div>')
-    order = ('<div class="oc-in"><div class="oc-k">Pedido #4208</div><div class="oc-t">A domicilio</div>'
-             '<div class="oc-s">Res. Santa Mónica · lo prepara Plaza Prisma</div>'
+    order = ('<div class="oc-in"><div class="oc-k">Pedido #4208</div><div class="oc-t">Para recoger</div>'
+             '<div class="oc-s">Plaza Prisma · listo en 15 minutos</div>'
              '<div class="oc-r"><span>1 × Promo 24 alitas</span><b>L399</b></div>'
              '<div class="oc-s" style="margin-top:6px">papas familiar · refresco 1.1 L</div></div>')
     msgs = [("m1", '<div class="wb out">precio de las 24 alitas? y donde quedan<small>6:40 p. m.</small></div>'),
             ("t1", '<div class="typ"><i></i><i></i><i></i></div>'),
             ("m2", '<div class="wb in">¡Hola! 24 alitas + papas fritas familiar + refresco 1.1 L por L399, todo el mes. ¿Desde qué colonia nos escribe?<small>6:40 p. m.</small></div>'),
-            ("m3", '<div class="wb out">res. santa monica, me la traen?<small>6:41 p. m.</small></div>'),
+            ("m3", '<div class="wb out">res. santa monica, paso a recogerla<small>6:41 p. m.</small></div>'),
             ("t2", '<div class="typ"><i></i><i></i><i></i></div>'),
-            ("m4", '<div class="wb in">Le queda cerca Plaza Prisma, blv. del norte. Sí se la llevamos 🛵<small>6:41 p. m.</small></div>'),
+            ("m4", '<div class="wb in">Le queda cerca Plaza Prisma, blv. del norte. Se la tenemos lista sin hacer fila 🍗<small>6:41 p. m.</small></div>'),
             ("m5", f'<div class="ocard">{order}</div>'),
-            ("m6", '<div class="wb in">¡Listo! Ya está en la cocina de Plaza Prisma. Le aviso cuando salga.<small>6:42 p. m.</small></div>')]
+            ("m6", '<div class="wb in">¡Listo! Ya está en la cocina de Plaza Prisma. Le aviso cuando esté lista.<small>6:42 p. m.</small></div>')]
     wa = (f'<div class="wa">{head}<div class="wa-msgs">' + "".join(f'<div class="slot" id="{i}">{h}</div>' for i, h in msgs)
           + '</div><div class="wa-in">Mensaje</div></div>')
     whyl = ["Su menú, sus promos y sus 4 sucursales, no una plantilla.", "Su equipo no aprende nada nuevo: todo pasa en WhatsApp.",
             "Nosotros lo instalamos y lo cambiamos con cada promo.", "Cuando abran El Progreso, se agrega el mismo día."]
     why_html = "".join(f'<div class="wl" id="wl{i}"><i>✓</i><span>{t}</span></div>' for i, t in enumerate(whyl))
     autos = [("Contestar cada WhatsApp al instante", "precio, promo del mes y la sucursal más cercana"),
-             ("Mandar cada pedido a la cocina correcta", "de sus 4 sucursales, con su propio motorista"),
+             ("Mandar cada pedido a la cocina correcta", "de sus 4 sucursales, listo para recoger sin fila"),
              ("Avisar al proveedor cuando algo se acaba", "pollo, alitas, papas, aceite"),
-             ("Cuadrar la caja y el efectivo de los motoristas", "cada noche, en cada sucursal")]
+             ("Cuadrar la caja de cada sucursal", "cada noche, contra lo que se vendió")]
     auto_html = "".join(f'<div class="ar" id="ar{i}"><i>{i + 1}</i><b>{t}</b><span>{d}</span></div>' for i, (t, d) in enumerate(autos))
     scr = {sid: f'<div class="scr" id="scr-{sid}"><div class="in"><img id="img-{sid}" src="assets/{f}"></div></div>' for sid, f, _, _ in SHOTS}
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
