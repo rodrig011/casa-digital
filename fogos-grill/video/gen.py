@@ -62,9 +62,9 @@ def cm(text, i):
 
 
 CSS_F = r'''
-/* their logo is a sticker on dark brown: a dark round card, shown at its own size */
-.ilogo{width:300px;height:300px;background:#1A0F0C;}
-.ilogo img{object-fit:contain;object-position:50% 50%;}
+/* their real brand is the lit sign over their door (from their TikTok profile photo), shown as a wide card */
+.ilogo{width:820px;height:auto;overflow:hidden;padding:0;border-radius:40px;background:#1A0F0C;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 40px 100px rgba(0,0,0,.6);}
+.ilogo img{display:block;position:static;width:100%;height:auto;object-fit:contain;transform:none;}
 .wa-av{background:#1A0F0C;}
 .wa-av img{object-fit:cover;}
 .iname{font-size:84px !important;line-height:1.05;}
@@ -217,7 +217,7 @@ def build():
           <div class="tk" id="pk2" style="top:1570px"><div class="every"><img src="assets/plato.jpg">
             <p>Y en cada video, el mismo número<span class="num">WhatsApp {WA}</span></p></div></div>'''
 
-    head = ('<div class="wa-h"><span class="bk">‹</span><div class="wa-av"><img src="assets/logo.png"></div>'
+    head = ('<div class="wa-h"><span class="bk">‹</span><div class="wa-av"><img src="assets/local.jpg"></div>'
             '<div><b>Fogos Grill</b><span>en línea</span></div></div>')
     menu = ('<div class="oc-in menuc"><div class="oc-k">Menú · Fogos Grill</div><div class="oc-t">Asados y parrilla</div>'
             '<div class="mr"><img src="assets/plato.jpg"><div>Pollo chuco<span>pechuga y ala, tajadas, repollo y aderezo</span></div><b>L130</b></div></div>'
