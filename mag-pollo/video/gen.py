@@ -451,6 +451,9 @@ rise("#u3 .w", K(44.9), { st: .03 });
 tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(44.5));
 float("#cta", K(45.4), K(48) - K(45.4));
 
+// every scene fades out softly just before its bar line, so nothing is chopped and nothing overlaps
+$scenes.forEach(([id, s, e]) => { if (id !== "end") tl.to("#cam-" + id, { opacity: 0, y: -24, filter: "blur(10px)", duration: .7, ease: "power2.in" }, e - .75); });
+
 '''
 
 if __name__ == "__main__":
