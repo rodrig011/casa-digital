@@ -41,9 +41,9 @@ MUSIC = arg("--music", os.path.join(SRC, "musica.mp3"))
 P0 = float(arg("--p0", gen6.P0))
 BAR = 4 * 60 / float(arg("--bpm", 0)) if "--bpm" in sys.argv else gen6.BAR
 K = lambda k: round(P0 + BAR * k, 3)
-SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("path", 11, 16), ("meet", 16, 18), ("bot", 18, 25),
-          ("web", 25, 29), ("owner", 29, 33), ("us", 33, 37), ("end", 37, 41)]
-TOTAL = K(41)
+SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("prob", 11, 15), ("path", 15, 20), ("meet", 20, 22),
+          ("bot", 22, 29), ("web", 29, 33), ("owner", 33, 40), ("us", 40, 45), ("end", 45, 49)]
+TOTAL = K(49)
 WA = "9844-8314"
 ADDR = "Col. Trejo, esquina de la 11 calle y 23 avenida, cerca del City Mall"
 BIO = ["🔥 Asados y parrilla en San Pedro Sula", "🍖 Ordená comida 👇", f"📲 WhatsApp {WA}"]
@@ -120,8 +120,31 @@ CSS_F = r'''
 .pg-map{margin:18px 22px 0;border-radius:14px;overflow:hidden;height:220px;}
 .pg-map img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;}
 .pg-f{padding:12px 22px 30px;font-size:13px;color:#A1A1A6;line-height:1.4;}
-/* the owner panel card */
-.pn{position:absolute;left:90px;top:830px;width:900px;background:linear-gradient(180deg,#161618,#0F0F10);border-radius:40px;padding:36px 40px 40px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 60px 140px rgba(0,0,0,.7);}
+/* the problem, from their own profile */
+.pb{position:absolute;left:90px;top:860px;width:900px;background:linear-gradient(180deg,#161618,#111113);border-radius:40px;padding:40px 44px;box-shadow:0 0 0 1px rgba(255,69,58,.3),0 50px 120px rgba(0,0,0,.6);}
+.pb .k{font-size:23px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8E8E93;}
+.pr{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:30px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.pr:last-child{border-bottom:0;padding-bottom:6px;}
+.pr span{font-size:38px;font-weight:500;color:#F5F5F7;line-height:1.2;}
+.pr b{flex:none;font-size:30px;font-weight:600;color:#FF6B5E;background:rgba(255,69,58,.12);padding:12px 22px;border-radius:999px;}
+/* why us */
+.wy3{position:absolute;left:90px;width:900px;display:flex;gap:26px;align-items:flex-start;background:linear-gradient(180deg,#161618,#111113);border-radius:32px;padding:30px 34px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 80px rgba(0,0,0,.5);}
+.wy3 i{flex:none;width:64px;height:64px;border-radius:50%;background:rgba(242,181,68,.14);color:#F2B544;font-style:normal;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(242,181,68,.4);}
+.wy3 b{display:block;font-size:36px;font-weight:600;color:#F5F5F7;letter-spacing:-.02em;}
+.wy3 span{display:block;font-size:27px;color:#8E8E93;margin-top:6px;line-height:1.3;}
+/* the owner panel card: today's orders, then which video sold */
+.pv{position:absolute;left:40px;right:40px;top:90px;}
+.ol{margin-top:14px;}
+.or{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.or b{display:block;font-size:31px;font-weight:600;color:#F5F5F7;}
+.or span{display:block;font-size:24px;color:#8E8E93;margin-top:4px;}
+.or em{font-style:normal;font-size:23px;font-weight:600;padding:9px 18px;border-radius:999px;}
+.or em.n{color:#53BDEB;background:rgba(83,189,235,.12);}.or em.c{color:#F2B544;background:rgba(242,181,68,.12);}.or em.l{color:#5FD38A;background:rgba(95,211,138,.12);}
+.tip{margin-top:50px;display:flex;gap:22px;align-items:flex-start;background:rgba(242,181,68,.08);border-radius:26px;padding:26px 28px;box-shadow:0 0 0 1px rgba(242,181,68,.35);}
+.tip i{flex:none;width:58px;height:58px;border-radius:16px;background:#F2B544;color:#0B0B0C;font-style:normal;font-size:32px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.tip .kk{font-size:21px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#E3A94A;}
+.tip p{font-size:35px;line-height:1.3;color:#F5F5F7;font-weight:500;margin-top:6px;}
+.pn{position:absolute;left:60px;top:820px;width:960px;height:960px;background:linear-gradient(180deg,#161618,#0F0F10);border-radius:40px;padding:36px 40px 40px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 60px 140px rgba(0,0,0,.7);}
 .pn .k{font-size:23px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8E8E93;}
 .pn .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px;}
 .pn .kp div{background:rgba(255,255,255,.04);border-radius:24px;padding:22px 22px 20px;box-shadow:0 0 0 1px rgba(255,255,255,.06);}
@@ -129,11 +152,11 @@ CSS_F = r'''
 .pn .kp b{display:block;font-size:64px;font-weight:600;letter-spacing:-.04em;margin-top:10px;color:#F5F5F7;font-variant-numeric:tabular-nums;}
 .pn .kp .ok b{color:#5FD38A;}
 .pn h5{margin-top:34px;font-size:23px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#E3A94A;}
-.vb{display:grid;grid-template-columns:96px 1fr;gap:22px;align-items:center;margin-top:22px;}
-.vb img{width:96px;height:96px;border-radius:18px;object-fit:cover;}
-.vb .t{display:flex;justify-content:space-between;font-size:30px;font-weight:600;color:#F5F5F7;}
-.vb .t span{color:#8E8E93;font-weight:500;font-size:26px;}
-.vb .bar{height:14px;border-radius:7px;background:rgba(255,255,255,.08);margin-top:14px;overflow:hidden;}
+.vb{display:grid;grid-template-columns:130px 1fr;gap:26px;align-items:center;margin-top:34px;}
+.vb img{width:130px;height:130px;border-radius:22px;object-fit:cover;}
+.vb .t{display:flex;justify-content:space-between;font-size:36px;font-weight:600;color:#F5F5F7;}
+.vb .t span{color:#8E8E93;font-weight:500;font-size:30px;}
+.vb .bar{height:18px;border-radius:9px;background:rgba(255,255,255,.08);margin-top:14px;overflow:hidden;}
 .vb .bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#D8261C,#F2B544);transform-origin:left;}
 '''
 
@@ -214,8 +237,17 @@ def build():
     vbars = [("Pollo chuco", "plato", 11, 1.0), ("Parrillada para dos", "parrillada", 5, .45), ("Entraña al carbón", "entrana", 3, .27)]
     vb_html = "".join(f'<div class="vb" id="vb{i}"><img src="assets/{f}.jpg"><div><div class="t">{n}<span>{c} pedidos</span></div>'
                       f'<div class="bar"><i id="vbb{i}" style="width:{w * 100:g}%"></i></div></div></div>' for i, (n, f, c, w) in enumerate(vbars))
-    whys = ["Lo armamos con su menú y su dirección.", "Funciona en su WhatsApp de siempre.", "Soporte por WhatsApp, en español."]
-    whys_html = "".join(f'<div class="wy2" id="wy{i}"><i>✓</i><span>{words(t)}</span></div>' for i, t in enumerate(whys))
+    orders = [("#241 · 2 × Pollo chuco", "Para llevar · 12:40 pm", "l", "Listo"),
+              ("#242 · Parrillada para dos", "A domicilio · 1:05 pm", "c", "En cocina"),
+              ("#243 · 3 × Pollo chuco", "Para comer aquí · 1:12 pm", "n", "Nuevo"),
+              ("Reserva · mesa para 6", "Beer garden · sábado 7:00 pm", "l", "Confirmada"),
+              ("Reserva · mesa para 4", "Beer garden · sábado 8:00 pm", "n", "Nueva")]
+    ol = "".join(f'<div class="or" id="or{i}"><div><b>{a}</b><span>{b}</span></div><em class="{c}">{d}</em></div>' for i, (a, b, c, d) in enumerate(orders))
+    whys = [("Lo dejamos listo con su menú", f"Su WhatsApp {WA}, su dirección, su mapa y sus precios."),
+            ("Usted no cambia nada", "Sigue en la parrilla: el bot contesta y usted mira el panel."),
+            ("Cero clientes sin respuesta", "Cada pregunta termina en un pedido o una reserva."),
+            ("Soporte por WhatsApp, en español", "Si algo falla, nos escribe y lo arreglamos.")]
+    whys_html = "".join(f'<div class="wy3" id="wy{i}" style="top:{780 + i * 200}px"><i>✓</i><div><b>{a}</b><span>{b}</span></div></div>' for i, (a, b) in enumerate(whys))
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
 
     body = "\n".join([
@@ -245,6 +277,19 @@ def build():
             <div class="lgrp" id="ag2"><div class="h1" id="a3">{words("Cada pregunta")}</div><div class="h1" id="a4">{gold("es un pedido.")}</div></div>
           </div>
           <div class="foot" id="afoot">Comentarios reales en su TikTok @fogosbeergarden</div>'''),
+        scene("prob", f'''
+          <div class="sp sp-red" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
+          <div class="pb" id="pb"><div class="k">Su TikTok hoy · @fogosbeergarden</div>
+            <div class="pr" id="pr0"><span>Menú con precios publicado</span><b>No hay</b></div>
+            <div class="pr" id="pr1"><span>Link para pedir en su perfil</span><b>No hay</b></div>
+            <div class="pr" id="pr2"><span>Comentarios contestados por la cuenta</span><b>0 de 57</b></div></div>
+          <div class="left">
+            <div class="eb" id="q0" style="color:#FF6B5E">El problema</div>
+            <div class="h1 m" id="q1">{words("Quieren pedir,")}</div>
+            <div class="h1 m" id="q2">{gold("pero no hay por dónde.")}</div>
+            <div class="sub" id="q3">{words("Cada pregunta sin respuesta es una venta que se va a otro lado.")}</div>
+          </div>
+          <div class="foot" id="qfoot">Revisado en su TikTok el 17 de octubre de 2026</div>'''),
         scene("path", f'''
           <div class="sp sp-green" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
           {path}
@@ -283,26 +328,28 @@ def build():
           <div class="demo" id="wdemo">Página de ejemplo · fotos, dirección y precio reales</div>'''),
         scene("owner", f'''
           <div class="sp sp-red" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
-          <div class="pn" id="pn"><div class="k">Panel Fogos Grill · esta semana</div>
-            <div class="kp"><div id="kp0"><span>Pedidos por WhatsApp</span><b id="nk0">0</b></div>
-              <div id="kp1"><span>Mesas reservadas</span><b id="nk1">0</b></div>
-              <div class="ok" id="kp2"><span>Sin contestar</span><b>0</b></div></div>
-            <h5 id="pnh">Qué video trajo clientes</h5>{vb_html}</div>
+          <div class="pn" id="pn"><div class="k">Panel Fogos Grill · hoy</div>
+            <div class="pv" id="pva">
+              <div class="kp"><div id="kp0"><span>Pedidos por WhatsApp</span><b id="nk0">0</b></div>
+                <div id="kp1"><span>Mesas reservadas</span><b id="nk1">0</b></div>
+                <div class="ok" id="kp2"><span>Sin contestar</span><b>0</b></div></div>
+              <h5>Pedidos y reservas</h5><div class="ol">{ol}</div></div>
+            <div class="pv" id="pvb">
+              <h5 style="margin-top:6px">Qué video trajo clientes · esta semana</h5>{vb_html}
+              <div class="tip" id="tip"><i>!</i><div><div class="kk">Sugerencia del panel</div><p>El video del pollo chuco trajo 11 pedidos. Suba otro del pollo chuco este viernes.</p></div></div></div></div>
           <div class="left">
-            <div class="eb g" id="o0">Panel del dueño</div>
-            <div class="h1 m" id="o1">{words("Y usted ve")}</div>
-            <div class="h1 m" id="o2">{gold("qué video vende.")}</div>
-            <div class="sub" id="o3">{words("Cada pedido y cada reserva queda anotado, con el video que lo trajo.")}</div>
+            <div class="lgrp" id="og1"><div class="eb g" id="o0">Panel del dueño</div><div class="h1 m" id="o1">{words("Cada pedido y reserva,")}</div><div class="h1 m" id="o2">{gold("en su celular.")}</div></div>
+            <div class="lgrp" id="og2"><div class="eb g" id="o3">Y lo más útil</div><div class="h1 m" id="o4">{words("Le dice")}</div><div class="h1 m" id="o5">{gold("qué video vende.")}</div></div>
           </div>
-          <div class="demo" id="odemo">Datos de ejemplo</div>'''),
+          <div class="demo" id="odemo">Panel de ejemplo · datos de ejemplo</div>'''),
         scene("us", f'''
           <div class="sp sp-gold" style="left:900px;top:-200px;width:1400px;height:1400px"></div>
           <div class="left">
-            <div class="eb g" id="u0">Casa Digital</div>
-            <div class="h1 m" id="u1">{words("Escríbanos y le mostramos")}</div>
-            <div class="h1 m" id="u2">{gold("exactamente cómo.")}</div>
-            <div class="whys2">{whys_html}</div>
+            <div class="eb g" id="u0">Por qué Casa Digital</div>
+            <div class="h1 m" id="u1">{words("Usted cocina.")}</div>
+            <div class="h1 m" id="u2">{gold("Nosotros contestamos.")}</div>
           </div>
+          {whys_html}
           <div class="cta2" id="cta">
             <div class="ic">{gen3.HOUSE}</div>
             <div class="t">Casa Digital</div>
@@ -339,7 +386,7 @@ def build():
     scenes_js = json.dumps([[i, K(a), K(b)] for i, a, b in SCENES])
     j6 = gen6.JS
     helpers = TG.JS_T[:TG.JS_T.index("// 1 · intro")]
-    js = (j6[:j6.index("// 1 · intro")] + helpers + JS_F + j6[j6.index("// 11 · outro"):]
+    js = (j6[:j6.index("// 1 · intro")] + helpers + JS_F + re.sub(r"K\((\d+(?:\.\d+)?)\)", lambda m: f"K({float(m.group(1)) + 8:g})", j6[j6.index("// 11 · outro"):])
           ).replace("$scenes", scenes_js).replace("$P0", str(P0)).replace("$BAR", str(BAR))
     html = (gen3.HTML.replace("$title", "Casa Digital x Fogos Grill").replace("$css", css).replace("$body", body)
             .replace("$js", js).replace("$total", str(TOTAL)).replace('data-fade-out="2.5"', 'data-fade-out="4"'))
@@ -369,53 +416,67 @@ rise("#afoot", K(7.8), { d: 1.2 });
 out("#ag1", K(9.4) - .8);
 rise("#a3 .w", K(9.4)); rise("#a4 .w", K(9.4) + .45, { d: 1.8 });
 
-// 4 · step 1: every video sends people to their WhatsApp (5 bars)
-rise("#pp0", K(11), { d: 1.2 }); rise("#pp1 .w", K(11) + .3); rise("#pp2 .w", K(11) + .6); rise("#pp3 .w", K(11) + .9, { d: 1.8 });
-tl.fromTo("#pk0", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(11.5));
-tl.fromTo("#wabtng", { opacity: 0 }, { opacity: 1, duration: .6, yoyo: true, repeat: 3, ease: "sine.inOut" }, K(12.4));
-tl.fromTo("#pk1", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(13.3));
-tl.fromTo("#pk2", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(14.6));
-rise("#pdemo", K(12), { d: 1.2 });
+// 4 · the problem, from their own profile (4 bars)
+rise("#q0", K(11), { d: 1.2 }); rise("#q1 .w", K(11) + .3); rise("#q2 .w", K(11) + .6, { d: 1.8 });
+rise("#q3 .w", K(12.2), { st: .03 });
+tl.fromTo("#pb", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(11) + .3);
+[11.6, 12.2, 12.8].forEach((k, i) => rise("#pr" + i, K(k), { y: 20, d: 1.2 }));
+rise("#qfoot", K(12), { d: 1.2 });
 
-// 5 · their WhatsApp
-rise("#mp", K(16), { d: 1.4 });
-rise("#me1 .w", K(16) + .3, { d: 1.8, st: .12 });
-rise("#me2 .w", K(16.7), { d: 2, st: .12 });
+// 5 · step 1: every video sends people to their WhatsApp (5 bars)
+rise("#pp0", K(15), { d: 1.2 }); rise("#pp1 .w", K(15) + .3); rise("#pp2 .w", K(15) + .6); rise("#pp3 .w", K(15) + .9, { d: 1.8 });
+tl.fromTo("#pk0", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(15.5));
+tl.fromTo("#wabtng", { opacity: 0 }, { opacity: 1, duration: .6, yoyo: true, repeat: 3, ease: "sine.inOut" }, K(16.4));
+tl.fromTo("#pk1", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(17.3));
+tl.fromTo("#pk2", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(18.6));
+rise("#pdemo", K(16), { d: 1.2 });
 
-// 6 · the bot: address and map, menu with the real price, a table booked (7 bars)
-tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(18));
-tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(25) - K(19), ease: "sine.inOut" }, K(19));
-rise("#bdemo", K(18.5), { d: 1.2 });
-rise("#b10", K(18), { d: 1.2 }); rise("#b11 .w", K(18) + .3); rise("#b12 .w", K(18) + .6);
-show("m1", K(18.5)); show("t1", K(19)); dots("t1", K(19) + .3); hide("t1", K(19.5)); show("m2", K(19.5)); show("m3", K(20.1));
-out("#bg1", K(20.7) - .8);
-rise("#b20", K(20.7), { d: 1.2 }); rise("#b21 .w", K(20.7) + .3); rise("#b22 .w", K(20.7) + .6);
-show("m4", K(20.9)); show("t2", K(21.4)); dots("t2", K(21.4) + .3); hide("t2", K(21.9)); show("m5", K(21.9));
-out("#bg2", K(23.1) - .8);
-rise("#b30", K(23.1), { d: 1.2 }); rise("#b31 .w", K(23.1) + .3); rise("#b32 .w", K(23.1) + .6);
-show("m6", K(23)); show("t3", K(23.5)); dots("t3", K(23.5) + .3); hide("t3", K(24)); show("m7", K(24)); show("m8", K(24.5));
+// 6 · their WhatsApp
+rise("#mp", K(20), { d: 1.4 });
+rise("#me1 .w", K(20) + .3, { d: 1.8, st: .12 });
+rise("#me2 .w", K(20.7), { d: 2, st: .12 });
 
-// 7 · the page for the bio link, scrolled slowly
-tl.fromTo("#phs", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(25));
-tl.to("#phs", { rotationY: 4, rotationX: 0, duration: K(29) - K(26), ease: "sine.inOut" }, K(26));
-tl.fromTo("#pgin", { y: 0 }, { y: -150, duration: K(28.6) - K(26.4), ease: "sine.inOut" }, K(26.4));
-rise("#w0", K(25), { d: 1.2 }); rise("#w1 .w", K(25) + .3); rise("#w2 .w", K(25) + .6, { d: 1.8 });
-rise("#w3 .w", K(26), { st: .03 });
-rise("#wdemo", K(25.5), { d: 1.2 });
+// 7 · the bot: address and map, menu with the real price, a table booked (7 bars)
+tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(22));
+tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(29) - K(23), ease: "sine.inOut" }, K(23));
+rise("#bdemo", K(22.5), { d: 1.2 });
+rise("#b10", K(22), { d: 1.2 }); rise("#b11 .w", K(22) + .3); rise("#b12 .w", K(22) + .6);
+show("m1", K(22.4)); show("t1", K(22.8)); dots("t1", K(22.8) + .3); hide("t1", K(23.3)); show("m2", K(23.3)); show("m3", K(23.9));
+out("#bg1", K(24.7) - .8);
+rise("#b20", K(24.7), { d: 1.2 }); rise("#b21 .w", K(24.7) + .3); rise("#b22 .w", K(24.7) + .6);
+show("m4", K(24.9)); show("t2", K(25.4)); dots("t2", K(25.4) + .3); hide("t2", K(25.9)); show("m5", K(25.9));
+out("#bg2", K(27.1) - .8);
+rise("#b30", K(27.1), { d: 1.2 }); rise("#b31 .w", K(27.1) + .3); rise("#b32 .w", K(27.1) + .6);
+show("m6", K(27)); show("t3", K(27.5)); dots("t3", K(27.5) + .3); hide("t3", K(28)); show("m7", K(28)); show("m8", K(28.5));
 
-// 8 · the owner sees orders, bookings and which video sold
-rise("#o0", K(29), { d: 1.2 }); rise("#o1 .w", K(29) + .3); rise("#o2 .w", K(29) + .6, { d: 1.8 });
-rise("#o3 .w", K(30), { st: .03 });
-tl.fromTo("#pn", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(29) + .3);
-count("nk0", 0, 19, K(29.6), n => String(n), 1.6); count("nk1", 0, 7, K(29.6), n => String(n), 1.6);
-[30.2, 30.6, 31].forEach((k, i) => { rise("#vb" + i, K(k), { y: 20, d: 1.2 }); tl.fromTo("#vbb" + i, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: FINE }, K(k) + .2); });
-rise("#odemo", K(29.5), { d: 1.2 });
+// 8 · the page for the bio link, scrolled slowly
+tl.fromTo("#phs", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(29));
+tl.to("#phs", { rotationY: 4, rotationX: 0, duration: K(33) - K(30), ease: "sine.inOut" }, K(30));
+tl.fromTo("#pgin", { y: 0 }, { y: -150, duration: K(32.6) - K(30.4), ease: "sine.inOut" }, K(30.4));
+rise("#w0", K(29), { d: 1.2 }); rise("#w1 .w", K(29) + .3); rise("#w2 .w", K(29) + .6, { d: 1.8 });
+rise("#w3 .w", K(30), { st: .03 });
+rise("#wdemo", K(29.5), { d: 1.2 });
 
-// 9 · Casa Digital
-rise("#u0", K(33), { d: 1.2 }); rise("#u1 .w", K(33) + .3); rise("#u2 .w", K(33) + .7, { d: 1.8 });
-[33.9, 34.4, 34.9].forEach((k, i) => rise("#wy" + i + " .w, #wy" + i + " i", K(k), { st: .04, d: 1.3 }));
-tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(33.5));
-float("#cta", K(34.4), K(37) - K(34.4));
+// 9 · the owner panel, long enough to read: today's orders and bookings, then which video sold (7 bars)
+tl.fromTo("#pn", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(33) + .3);
+rise("#o0", K(33), { d: 1.2 }); rise("#o1 .w", K(33) + .3); rise("#o2 .w", K(33) + .6, { d: 1.8 });
+count("nk0", 0, 19, K(33.6), n => String(n), 1.6); count("nk1", 0, 7, K(33.6), n => String(n), 1.6);
+[34, 34.4, 34.8, 35.3, 35.7].forEach((k, i) => rise("#or" + i, K(k), { y: 20, d: 1.2 }));
+tl.set("#pvb", { opacity: 0 }, 0);
+out("#pva", K(36.8) - .7, .8);
+tl.to("#pvb", { opacity: 1, duration: .1 }, K(36.8));
+out("#og1", K(36.8) - .8);
+rise("#o3", K(36.8), { d: 1.2 }); rise("#o4 .w", K(36.8) + .3); rise("#o5 .w", K(36.8) + .6, { d: 1.8 });
+[36.9, 37.3, 37.7].forEach((k, i) => { rise("#vb" + i, K(k), { y: 20, d: 1.2 }); tl.fromTo("#vbb" + i, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: FINE }, K(k) + .2); });
+tl.fromTo("#tip", { opacity: 0, y: 40, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: SOFT }, K(38.3));
+rise("#odemo", K(33.5), { d: 1.2 });
+
+// 10 · why Casa Digital, then the contact
+rise("#u0", K(40), { d: 1.2 }); rise("#u1 .w", K(40) + .3); rise("#u2 .w", K(40) + .7, { d: 1.8 });
+[40.6, 41.1, 41.6, 42.1].forEach((k, i) => tl.fromTo("#wy" + i, { opacity: 0, y: 40, filter: "blur(12px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.4, ease: SOFT }, K(k)));
+out("#wy0, #wy1, #wy2, #wy3", K(43.3) - .7, .8);
+tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(43.3));
+float("#cta", K(44), K(45) - K(44));
 
 '''
 
