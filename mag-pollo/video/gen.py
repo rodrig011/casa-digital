@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Mag Pollo pitch video (2026-10-17), vertical 1080x1920 for WhatsApp.
+"""Mag Pollo pitch video v2 (2026-10-17), vertical 1080x1920 for WhatsApp.
 
-Same pitch and editing as the official videos (Toreto's Grill vertical, Coco Chicken v5, Bocha's v3):
-dark, slow, soft lights, full phrases on top with gold keywords, the visual below, every scene on a bar
-line, Clientia Tech outro. No question method, no clips of the owner, nothing from Coco Chicken (rivals).
-
-Story, all from their own TikTok @magpollohn (see redes/investigacion-redes.md in the project folder):
-their own menu photos and four branches -> real comments asking price, place and delivery -> they answer
-every one by hand, the same four-branch block pasted 16+ times -> a link in the bio and a pinned comment
-take people to one WhatsApp (the bot does NOT answer TikTok comments) -> the bot gives the real L399
-promo, finds the nearest branch and sends the order to that kitchen -> own delivery per branch ->
-the owner panel with the four branches and each promo -> their own "prontooo" for El Progreso ->
-Casa Digital -> outro. Conversations, deliveries and panel numbers are examples, labelled on screen.
+rodrigo on v1 (gen-v1.py): "no quedó claro, no mostraste bien el panel, ni qué problema solucionamos,
+ni por qué deberían contratarnos". v2 keeps the same look (dark, soft lights, full phrases with gold
+keywords, Clientia Tech outro) and tells it in four labelled parts:
+1 El problema: real comments, the four-branch block they paste by hand 16+ times, five phone numbers.
+2 La solución: link in the bio + pinned comment -> one WhatsApp (the bot does NOT answer TikTok comments),
+  the bot with the real L399 promo, nearest branch, order to that kitchen; delivery per branch.
+3 Su panel: three big screens of the owner panel (Hoy, Pedidos en vivo, Qué hacer hoy).
+4 Por qué nosotros: made for their four branches, nothing new to learn, we install and keep it up to date,
+  a new branch the same day, and the result. Then Casa Digital and the outro.
+Everything about them comes from their own TikTok @magpollohn; conversations and panel numbers are
+examples, labelled on screen. No question method, no clips of the owner, nothing from Coco Chicken.
 
 Music: src/musica.mp3. Cuts land on bars: MUSIC_P0 (first downbeat, s) and MUSIC_BAR (bar length, s)
-set the grid; the defaults are "Stylish" by FASSounds (110 BPM), the song rodrigo picked on 2026-10-17. Helpers come from coco-chicken/video and
-toretos-grill/video/gen.py, like bochas-grill/video/gen.py.
+set the grid; the defaults are "Stylish" by FASSounds (110 BPM), the song rodrigo picked on 2026-10-17.
+Helpers come from coco-chicken/video and toretos-grill/video/gen.py, like bochas-grill/video/gen.py.
 """
 import importlib.util, json, os, re, shutil, sys
 
@@ -36,10 +36,10 @@ K = lambda k: round(P0 + BAR * k, 3)
 SRC = os.path.join(HERE, "src")
 OUT = os.path.join(HERE, "build")
 SLUG = "mag-pollo-vertical"
-SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("paste", 11, 14), ("meet", 14, 18), ("bot", 18, 25),
-          ("moto", 25, 29), ("owner", 29, 34), ("grow", 34, 38), ("us", 38, 42), ("end", 42, 46)]
-TOTAL = K(46)
-OUTRO_SHIFT = 42 - 37  # gen6's outro starts on bar 37
+SCENES = [("intro", 0, 3), ("fame", 3, 6), ("asks", 6, 10), ("paste", 10, 14), ("meet", 14, 18), ("bot", 18, 25),
+          ("moto", 25, 28), ("p1", 28, 32), ("p2", 32, 36), ("p3", 36, 39), ("why", 39, 44), ("us", 44, 48), ("end", 48, 52)]
+TOTAL = K(52)
+OUTRO_SHIFT = 48 - 37  # gen6's outro starts on bar 37
 
 
 def gold(t):
@@ -119,6 +119,42 @@ CSS_M = r'''
 .map .row.nw{color:#F2B544;font-weight:600;}
 .map .row.nw i{background:#F2B544;box-shadow:0 0 18px rgba(242,181,68,.8);}
 .map .row em{font-style:normal;font-size:22px;color:#8E8E93;margin-left:auto;}
+
+/* v2: the four labelled parts */
+.chip{display:flex;width:max-content;align-self:flex-start;align-items:center;gap:16px;margin-bottom:30px;padding:12px 26px 12px 12px;border-radius:999px;font-size:26px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;}
+.chip b{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;color:#0B0B0C;}
+.chip.red{color:#FF8A80;background:rgba(255,69,58,.10);box-shadow:0 0 0 1px rgba(255,69,58,.4);}.chip.red b{background:#FF6B5E;}
+.chip.green{color:#7BE3A2;background:rgba(37,211,102,.10);box-shadow:0 0 0 1px rgba(37,211,102,.4);}.chip.green b{background:#25D366;}
+.chip.gold{color:#F2B544;background:rgba(242,181,68,.10);box-shadow:0 0 0 1px rgba(242,181,68,.4);}.chip.gold b{background:#F2B544;}
+.lgrp .chip{margin-bottom:26px;}
+.tabs{display:flex;gap:10px;margin-top:22px;padding:6px;border-radius:16px;background:rgba(255,255,255,.05);}
+.tabs span{flex:1;text-align:center;font-size:24px;font-weight:600;color:#8E8E93;padding:12px 0;border-radius:12px;}
+.tabs span.on{background:rgba(242,181,68,.16);color:#F2B544;}
+.chs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px;}
+.ch{padding:18px 16px;border-radius:18px;background:rgba(255,255,255,.05);text-align:center;}
+.ch b{display:block;font-size:40px;font-weight:600;font-variant-numeric:tabular-nums;}
+.ch span{display:block;font-size:19px;color:#8E8E93;margin-top:4px;}
+.od{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.od b{display:block;font-size:34px;font-weight:600;}
+.od span{display:block;font-size:24px;color:#8E8E93;margin-top:4px;}
+.od .st{font-size:24px;font-weight:600;padding:10px 18px;border-radius:999px;white-space:nowrap;margin:0;}
+.od .st.ok{color:#5FD38A;background:rgba(95,211,138,.12);}.od .st.go{color:#F2B544;background:rgba(242,181,68,.12);}
+.zero{display:flex;align-items:center;justify-content:space-between;margin-top:22px;padding:22px 28px;border-radius:22px;background:rgba(37,211,102,.08);box-shadow:0 0 0 2px rgba(37,211,102,.4);}
+.zero span{font-size:28px;font-weight:600;color:#C7F5D6;}
+.zero b{font-size:72px;font-weight:600;color:#25D366;line-height:1;}
+.ac{display:grid;grid-template-columns:64px 1fr;gap:6px 20px;align-items:start;margin-top:22px;padding:24px;border-radius:24px;background:rgba(255,255,255,.04);}
+.ac i{grid-row:span 2;width:64px;height:64px;border-radius:18px;background:rgba(242,181,68,.12);display:flex;align-items:center;justify-content:center;font-size:34px;font-style:normal;}
+.ac b{display:block;font-size:30px;font-weight:600;line-height:1.25;}
+.ac span{display:block;font-size:23px;color:#8E8E93;margin-top:6px;}
+.ac em{grid-column:2;justify-self:start;margin-top:12px;font-style:normal;font-size:24px;font-weight:700;color:#0B0B0C;background:#F2B544;padding:12px 22px;border-radius:999px;}
+.whyl{position:absolute;left:90px;right:90px;top:640px;}
+.wl{display:flex;align-items:flex-start;gap:24px;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.wl i{flex:none;width:52px;height:52px;border-radius:50%;background:rgba(242,181,68,.14);color:#F2B544;display:flex;align-items:center;justify-content:center;font-size:28px;font-style:normal;font-weight:700;}
+.wl span{font-size:40px;line-height:1.25;font-weight:500;color:#F5F5F7;letter-spacing:-.015em;}
+.result{position:absolute;left:90px;right:90px;top:1400px;padding:36px 40px;border-radius:36px;background:linear-gradient(180deg,#1b1710,#110f0b);box-shadow:0 0 0 2px rgba(242,181,68,.45),0 50px 120px rgba(0,0,0,.6);}
+.result .k{font-size:22px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#F2B544;}
+.result p{font-size:44px;line-height:1.35;font-weight:500;margin-top:14px;color:#F5F5F7;}
+.result p b{font-weight:600;background:linear-gradient(100deg,#FFE7B3 0%,#F2B544 55%,#D98E1C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
 '''
 
 # vertical positions (after the Toreto's vertical rules)
@@ -127,6 +163,9 @@ CSS_MV = r'''
 #asks .cms{top:840px;height:980px;}
 #moto .riders{top:820px;}
 #moto .rd{grid-template-columns:1fr 150px 230px;}
+#paste .left .sub{margin-top:22px;}
+.pnl{top:800px;}
+#p2 .pnl,#p3 .pnl{top:760px;}
 '''
 
 
@@ -186,6 +225,21 @@ def build():
                       for i, (n, w, v) in enumerate(branches))
     promos = [("Pechuga con tajadas L99", "212 hoy", True), ("24 alitas L399", "64 hoy", False), ("4 en 1", "48 hoy", False)]
     pr_html = "".join(f'<div class="pr{" top" if t else ""}" id="pr{i}"><b>{n}</b><span>{v}</span></div>' for i, (n, v, t) in enumerate(promos))
+    def tabs(i):
+        t = "".join(f'<span class="{"on" if k == i else ""}">{n}</span>' for k, n in enumerate(["Hoy", "Pedidos", "Qué hacer"]))
+        return f'<div class="hd"><div class="t"><img src="assets/logo.jpg">Panel Mag Pollo</div><span>Hoy · 7:00 pm</span></div><div class="tabs">{t}</div>'
+    chans = [("Mostrador", "38%"), ("Autoservicio", "22%"), ("Delivery", "24%"), ("WhatsApp", "16%")]
+    ch_html = "".join(f'<div class="ch" id="ch{i}"><b>{v}</b><span>{n}</span></div>' for i, (n, v) in enumerate(chans))
+    orders = [("#4208", "Plaza Prisma · Delivery", "En cocina · 6 min", "go"), ("#4207", "Plaza Calpules · Autoservicio", "✓ Entregado", "ok"),
+              ("#4206", "Plaza La Guardia · Para recoger", "Listo 7:15", "go"), ("#4205", "Costas · Delivery", "En camino", "go")]
+    ord_html = "".join(f'<div class="od" id="od{i}"><div><b>{a}</b><span>{b}</span></div><div class="st {c}">{t}</div></div>' for i, (a, b, t, c) in enumerate(orders))
+    acts = [("🔥", "Pechuga L99: 212 vendidas hoy", "La más vendida de la semana", "Repetir el sábado"),
+            ("🛵", "Plaza Prisma: 3 deliveries de más de 40 min", "Hoy entre 6 y 7 pm", "Ver motoristas"),
+            ("📉", "Costas vende menos los lunes", "Las últimas 4 semanas", "Crear promo lunes")]
+    act_html = "".join(f'<div class="ac" id="ac{i}"><i>{e}</i><div><b>{t}</b><span>{d}</span></div><em>{c}</em></div>' for i, (e, t, d, c) in enumerate(acts))
+    whyl = ["Su menú, sus promos y sus 4 sucursales, no una plantilla.", "Su equipo no aprende nada nuevo: todo pasa en WhatsApp.",
+            "Nosotros lo instalamos y lo cambiamos con cada promo.", "Cuando abran El Progreso, se agrega el mismo día."]
+    why_html = "".join(f'<div class="wl" id="wl{i}"><i>✓</i><span>{t}</span></div>' for i, t in enumerate(whyl))
     whys = ["Lo armamos con sus 4 sucursales.", "Funciona en su WhatsApp de siempre.", "Soporte por WhatsApp, en español."]
     whys_html = "".join(f'<div class="wy2" id="wy{i}"><i>✓</i><span>{words(t)}</span></div>' for i, t in enumerate(whys))
     mark_paths = "".join(f'<path d="{d}"/>' for d in MARK["paths"])
@@ -207,15 +261,15 @@ def build():
             <div class="eb" id="f0">TikTok · @magpollohn</div>
             <div class="h1" id="f1">{words("Cuatro sucursales")}</div>
             <div class="h1" id="f2">{words("en San Pedro,")}</div>
-            <div class="h1" id="f3">{gold("y la gente pregunta.")}</div>
+            <div class="h1" id="f3">{gold("y mucha gente preguntando.")}</div>
             <div class="stats">{stats_html}</div>
           </div>'''),
         scene("asks", f'''
           <div class="sp sp-gold"></div>
           <div class="cms">{cms}</div>
           <div class="left">
-            <div class="lgrp" id="ag1"><div class="eb" id="a0">Comentarios reales</div><div class="h1" id="a1">{words("Dónde están,")}</div><div class="h1" id="a2">{words("cuánto cuesta,")}</div></div>
-            <div class="lgrp" id="ag2"><div class="h1" id="a3">{words("si hacen envíos,")}</div><div class="h1" id="a4">{gold("cuándo llegan.")}</div></div>
+            <div class="lgrp" id="ag1"><div class="chip red" id="a0"><b>1</b>El problema</div><div class="h1 m" id="a1">{words("Todos los días")}</div><div class="h1 m" id="a2">{words("les preguntan lo mismo.")}</div></div>
+            <div class="lgrp" id="ag2"><div class="chip red" id="a0b"><b>1</b>El problema</div><div class="h1 m" id="a3">{words("Y cada respuesta")}</div><div class="h1 m" id="a4">{gold("la escribe una persona.")}</div></div>
           </div>
           <div class="foot" id="afoot">Comentarios reales en su TikTok @magpollohn</div>'''),
         scene("paste", f'''
@@ -225,10 +279,9 @@ def build():
             <div class="a">🏠 Visítanos:{block}</div></div>
           <div class="copies" id="copies"><b><span id="nc">1</span></b><span>veces, a mano</span></div>
           <div class="left">
-            <div class="eb g" id="p0">Ustedes sí contestan</div>
-            <div class="h1 m" id="p1">{words("La misma respuesta,")}</div>
-            <div class="h1 m" id="p2">{gold("pegada una y otra vez.")}</div>
-            <div class="sub" id="p3">{words("En sus comentarios pegaron este bloque de las cuatro sucursales por lo menos 16 veces.")}</div>
+            <div class="lgrp" id="pg1"><div class="chip red" id="p0"><b>1</b>El problema</div><div class="h1 m" id="p1">{words("La misma respuesta,")}</div><div class="h1 m" id="p2">{gold("pegada 16 veces.")}</div>
+              <div class="sub" id="p3">{words("Y el cliente tiene cinco números distintos para escribir.")}</div></div>
+            <div class="lgrp" id="pg2"><div class="chip red" id="p0b"><b>1</b>El problema</div><div class="h1 m" id="p4">{words("Mientras alguien pega direcciones,")}</div><div class="h1 m" id="p5">{gold("nadie toma pedidos.")}</div></div>
           </div>'''),
         scene("meet", f'''
           <div class="sp sp-green"></div>
@@ -239,65 +292,80 @@ def build():
           <div class="nums" id="nums"><span>9730-5423</span><span>3154-8175</span><span>3154-8195</span><span>3154-8697</span><span>8842-5808</span></div>
           <div class="one" id="one"><span>Un solo WhatsApp</span></div>
           <div class="left">
-            <div class="eb g" id="e0">Del TikTok al WhatsApp</div>
-            <div class="h1 m" id="e1">{words("Un link en su perfil,")}</div>
-            <div class="h1 m" id="e2">{gold("un WhatsApp que")}</div>
-            <div class="h1 m" id="e3">{gold("contesta solo.")}</div>
+            <div class="chip green" id="e0"><b>2</b>La solución</div>
+            <div class="h1 m" id="e1">{words("Un solo WhatsApp")}</div>
+            <div class="h1 m" id="e2">{gold("que contesta y toma")}</div>
+            <div class="h1 m" id="e3">{gold("pedidos solo.")}</div>
           </div>
           <div class="demo" id="edemo">Ejemplo · los cinco números son los que ustedes publican</div>'''),
         scene("bot", f'''
           <div class="sp sp-green"></div>
           <div class="ph-stage">{gen3.phone(wa, "phw", dark=True)}</div>
           <div class="left">
-            <div class="lgrp" id="bg1"><div class="eb g" id="b10">Al instante, a cualquier hora</div><div class="h1" id="b11">{words("Contesta el precio")}</div><div class="h1" id="b12">{gold("con la promo real.")}</div></div>
-            <div class="lgrp" id="bg2"><div class="eb g" id="b20">Según la colonia del cliente</div><div class="h1" id="b21">{words("Busca la sucursal")}</div><div class="h1" id="b22">{gold("más cercana.")}</div></div>
-            <div class="lgrp" id="bg3"><div class="eb g" id="b30">Sin pasar mensajes de un teléfono a otro</div><div class="h1" id="b31">{words("Y manda el pedido")}</div><div class="h1" id="b32">{gold("a esa cocina.")}</div></div>
+            <div class="lgrp" id="bg1"><div class="chip green" id="b10"><b>2</b>Al instante, a cualquier hora</div><div class="h1" id="b11">{words("Contesta el precio")}</div><div class="h1" id="b12">{gold("con la promo real.")}</div></div>
+            <div class="lgrp" id="bg2"><div class="chip green" id="b20"><b>2</b>Según la colonia del cliente</div><div class="h1" id="b21">{words("Busca la sucursal")}</div><div class="h1" id="b22">{gold("más cercana.")}</div></div>
+            <div class="lgrp" id="bg3"><div class="chip green" id="b30"><b>2</b>Sin copiar nada a mano</div><div class="h1" id="b31">{words("Y manda el pedido")}</div><div class="h1" id="b32">{gold("a esa cocina.")}</div></div>
           </div>
           <div class="demo" id="bdemo">Conversación de ejemplo · la promo de L399 es la suya</div>'''),
         scene("moto", f'''
           <div class="sp sp-red"></div>
           <div class="riders" id="riders"><div class="k">Delivery ahora · 6:50 pm</div>{ride_rows}</div>
           <div class="left">
-            <div class="eb g" id="w0">Su delivery propio</div>
-            <div class="h1 m" id="w1">{words("Cada pedido,")}</div>
-            <div class="h1 m" id="w2">{words("con su sucursal")}</div>
-            <div class="h1 m" id="w3">{gold("y su hora.")}</div>
-            <div class="sub" id="w4">{words("Cuando el pedido sale, el cliente recibe un mensaje solo. Nadie tiene que llamar a preguntar.")}</div>
+            <div class="chip green" id="w0"><b>2</b>Su delivery propio</div>
+            <div class="h1 m" id="w1">{words("Cada pedido sale")}</div>
+            <div class="h1 m" id="w2">{gold("de la sucursal correcta.")}</div>
+            <div class="sub" id="w4">{words("Y cuando sale, el cliente recibe un mensaje solo. Nadie tiene que llamar a preguntar.")}</div>
           </div>
           <div class="demo" id="wdemo">Ejemplo</div>'''),
-        scene("owner", f'''
+        scene("p1", f'''
           <div class="sp sp-gold"></div>
-          <div class="pnl" id="pnl"><div class="hd"><div class="t"><img src="assets/logo.jpg">Panel Mag Pollo</div><span>Hoy · 7:00 pm</span></div>
-            <div class="kpi"><b>L<span id="kv">0</span></b><span>vendido hoy</span></div>
+          <div class="pnl" id="pnl1">{tabs(0)}
+            <div class="kpi"><b>L<span id="kv">0</span></b><span>vendido hoy · 4 sucursales</span></div>
             <div class="sec">Por sucursal</div>{br_html}
-            <div class="sec">Promos</div>{pr_html}</div>
+            <div class="sec">Por canal</div><div class="chs">{ch_html}</div></div>
           <div class="left">
-            <div class="lgrp" id="cg1"><div class="eb g" id="c0">Panel Mag Pollo</div><div class="h1 m" id="c1">{words("Sus cuatro sucursales,")}</div><div class="h1 m" id="c2">{gold("en su celular.")}</div></div>
-            <div class="lgrp" id="cg2"><div class="eb g" id="c3">Mostrador, autoservicio, delivery y WhatsApp</div><div class="h1 m" id="c4">{words("Y qué promo")}</div><div class="h1 m" id="c5">{gold("se vendió más.")}</div></div>
+            <div class="chip gold" id="q10"><b>3</b>Su panel</div>
+            <div class="h1 m" id="q11">{words("Desde su celular,")}</div>
+            <div class="h1 m" id="q12">{gold("cuánto vendió cada sucursal.")}</div>
+            <div class="sub" id="q13">{words("Mostrador, autoservicio, delivery y WhatsApp, todo junto y al minuto.")}</div>
           </div>
-          <div class="demo" id="cdemo">Panel demo · datos de ejemplo</div>'''),
-        scene("grow", f'''
+          <div class="demo" id="q1demo">Panel demo · datos de ejemplo</div>'''),
+        scene("p2", f'''
+          <div class="sp sp-green"></div>
+          <div class="pnl" id="pnl2">{tabs(1)}{ord_html}
+            <div class="zero"><span>Clientes esperando respuesta</span><b>0</b></div></div>
+          <div class="left">
+            <div class="chip gold" id="q20"><b>3</b>Su panel</div>
+            <div class="h1 m" id="q21">{words("Cada pedido,")}</div>
+            <div class="h1 m" id="q22">{gold("en vivo.")}</div>
+            <div class="sub" id="q23">{words("Qué sucursal lo hace, cuánto lleva y si ya salió. Y ningún cliente esperando respuesta.")}</div>
+          </div>
+          <div class="demo" id="q2demo">Panel demo · datos de ejemplo</div>'''),
+        scene("p3", f'''
+          <div class="sp sp-gold"></div>
+          <div class="pnl" id="pnl3">{tabs(2)}{act_html}</div>
+          <div class="left">
+            <div class="chip gold" id="q30"><b>3</b>Su panel</div>
+            <div class="h1 m" id="q31">{words("Y le dice")}</div>
+            <div class="h1 m" id="q32">{gold("qué hacer hoy.")}</div>
+          </div>
+          <div class="demo" id="q3demo">Panel demo · datos de ejemplo</div>'''),
+        scene("why", f'''
           <div class="sp sp-red"></div>
-          <div class="rep" id="rep">{cm("cuando para El Progreso?", 0, "gq")}
-            <div class="ans" id="gans"><div class="h"><img src="assets/logo.jpg">Respuesta de Mag Pollo</div><p>“Prontooo!! 🤫”</p></div></div>
-          <div class="map" id="map"><div class="k">Su WhatsApp · sucursales</div>
-            <div class="row" id="mr0"><i></i>Plaza Calpules<em>SPS</em></div><div class="row" id="mr1"><i></i>Plaza Prisma<em>SPS</em></div>
-            <div class="row" id="mr2"><i></i>Plaza La Guardia<em>SPS</em></div><div class="row" id="mr3"><i></i>Costas<em>SPS</em></div>
-            <div class="row nw" id="mr4"><i></i>El Progreso<em>nueva</em></div></div>
+          <div class="whyl">{why_html}</div>
+          <div class="result" id="result"><div class="k">Lo que gana Mag Pollo</div><p>Cero clientes sin respuesta.<br>Cero respuestas pegadas a mano.<br><b>Usted ve todo desde su celular.</b></p></div>
           <div class="left">
-            <div class="eb g" id="g0">Cuando abran la quinta</div>
-            <div class="h1 m" id="g1">{words("La nueva sucursal")}</div>
-            <div class="h1 m" id="g2">{gold("entra el mismo día.")}</div>
-            <div class="sub" id="g3">{words("Mismo WhatsApp, mismo panel. Solo se agrega a la lista.")}</div>
-          </div>
-          <div class="demo" id="gdemo">Comentario y respuesta reales · lista de ejemplo</div>'''),
+            <div class="chip gold" id="y0"><b>4</b>Por qué nosotros</div>
+            <div class="h1 m" id="y1">{words("Hecho para")}</div>
+            <div class="h1 m" id="y2">{gold("Mag Pollo.")}</div>
+          </div>'''),
         scene("us", f'''
           <div class="sp sp-gold"></div>
           <div class="left">
             <div class="eb g" id="u0">Casa Digital</div>
-            <div class="h1 m" id="u1">{words("Escríbanos y le mostramos")}</div>
-            <div class="h1 m" id="u2">{gold("exactamente cómo.")}</div>
-            <div class="whys2">{whys_html}</div>
+            <div class="h1 m" id="u1">{words("Se lo mostramos")}</div>
+            <div class="h1 m" id="u2">{gold("funcionando con su menú.")}</div>
+            <div class="sub" id="u3">{words("Una llamada de 15 minutos, sin compromiso.")}</div>
           </div>
           <div class="cta2" id="cta">
             <div class="ic">{gen3.HOUSE}</div>
@@ -355,30 +423,32 @@ rise("#ipres .w", K(.9), { d: 1.6, st: .12 });
 tl.fromTo("#ilogo", { opacity: 0, scale: .9, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(1.3));
 tl.fromTo("#iname", { opacity: 0, y: 30, filter: "blur(20px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.4, ease: SOFT }, K(1.7));
 
-// 2 · their own menu photos, four branches
-rise("#f0", K(3), { d: 1.2 }); rise("#f1 .w", K(3) + .2); rise("#f2 .w", K(3) + .55); rise("#f3 .w", K(3) + .9, { d: 1.8 });
+// 2 · their own menu photos, four branches (3 bars)
+rise("#f0", K(3), { d: 1.2 }); rise("#f1 .w", K(3) + .2); rise("#f2 .w", K(3) + .5); rise("#f3 .w", K(3) + .8, { d: 1.8 });
 tl.fromTo("#hist", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(3) + .3);
-tl.fromTo("#hist img", { scale: 1.05 }, { scale: 1, duration: K(7) - K(3), ease: "none" }, K(3));
+tl.fromTo("#hist img", { scale: 1.05 }, { scale: 1, duration: K(6) - K(3), ease: "none" }, K(3));
 tl.set("#hi1, #hi2, #hi3", { opacity: 0 }, 0);
-[4.2, 5.2, 6.2].forEach((k, i) => tl.fromTo("#hi" + (i + 1), { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "sine.inOut" }, K(k)));
-[4.4, 4.9, 5.4].forEach((k, i) => rise("#st" + i, K(k), { y: 30, d: 1.4 }));
+[3.9, 4.6, 5.3].forEach((k, i) => tl.fromTo("#hi" + (i + 1), { opacity: 0 }, { opacity: 1, duration: 1, ease: "sine.inOut" }, K(k)));
+[3.8, 4.2, 4.6].forEach((k, i) => rise("#st" + i, K(k), { y: 30, d: 1.4 }));
 
-// 3 · real comments
-rise("#a0", K(7), { d: 1.2 }); rise("#a1 .w", K(7) + .3); rise("#a2 .w", K(7) + .6);
-[7.3, 7.8, 8.3, 8.8].forEach((k, i) => rise("#cm" + i, K(k), { y: 40, d: 1.6 }));
-rise("#afoot", K(7.8), { d: 1.2 });
-out("#ag1", K(9.4) - .8);
-rise("#a3 .w", K(9.4)); rise("#a4 .w", K(9.4) + .45, { d: 1.8 });
+// 3 · PROBLEM: real comments, every answer written by a person (4 bars)
+rise("#a0", K(6), { d: 1.2 }); rise("#a1 .w", K(6) + .3); rise("#a2 .w", K(6) + .6);
+[6.3, 6.8, 7.3, 7.8].forEach((k, i) => rise("#cm" + i, K(k), { y: 40, d: 1.6 }));
+rise("#afoot", K(6.8), { d: 1.2 });
+out("#ag1", K(8.2) - .8);
+rise("#a0b", K(8.2), { d: 1 }); rise("#a3 .w", K(8.2)); rise("#a4 .w", K(8.2) + .45, { d: 1.8 });
 
-// 4 · the same block, pasted by hand
-rise("#p0", K(11), { d: 1.2 }); rise("#p1 .w", K(11) + .3); rise("#p2 .w", K(11) + .6, { d: 1.8 });
-rise("#p3 .w", K(11.8), { st: .03 });
-tl.fromTo("#paste", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(11) + .3);
-rise("#copies", K(12), { y: 30, d: 1.4 });
-count("nc", 1, 16, K(12) + .3, n => String(n), 2.6);
+// 4 · PROBLEM: the same block pasted by hand, nobody takes orders meanwhile (4 bars)
+rise("#p0", K(10), { d: 1.2 }); rise("#p1 .w", K(10) + .3); rise("#p2 .w", K(10) + .6, { d: 1.8 });
+rise("#p3 .w", K(10.8), { st: .03 });
+tl.fromTo("#paste", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(10) + .3);
+rise("#copies", K(10.8), { y: 30, d: 1.4 });
+count("nc", 1, 16, K(10.8) + .3, n => String(n), 2.4);
+out("#pg1", K(12.3) - .8);
+rise("#p0b", K(12.3), { d: 1 }); rise("#p4 .w", K(12.3)); rise("#p5 .w", K(12.3) + .45, { d: 1.8 });
 
-// 5 · link in the bio, pinned comment, five numbers become one WhatsApp
-rise("#e0", K(14), { d: 1.2 }); rise("#e1 .w", K(14) + .3); rise("#e2 .w", K(14) + .7); rise("#e3 .w", K(14) + 1, { d: 1.8 });
+// 5 · SOLUTION: bio link, pinned comment, five numbers become one WhatsApp (4 bars)
+rise("#e0", K(14), { d: 1.2 }); rise("#e1 .w", K(14) + .3); rise("#e2 .w", K(14) + .6); rise("#e3 .w", K(14) + .9, { d: 1.8 });
 tl.fromTo("#bio", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(14) + .3);
 tl.fromTo("#lnk", { scale: 1 }, { scale: 1.06, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, K(15));
 tl.fromTo("#pin", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.6, ease: SOFT }, K(15.3));
@@ -387,7 +457,7 @@ tl.to("#nums span", { opacity: 0, scale: .8, filter: "blur(8px)", duration: .9, 
 tl.fromTo("#one", { opacity: 0, scale: .85 }, { opacity: 1, scale: 1, duration: 1.4, ease: SOFT }, K(17.2));
 rise("#edemo", K(14.6), { d: 1.2 });
 
-// 6 · the bot: the real L399 promo, nearest branch, that kitchen (7 bars)
+// 6 · SOLUTION: the bot, the real L399 promo, nearest branch, that kitchen (7 bars)
 tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(18));
 tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(25) - K(19), ease: "sine.inOut" }, K(19));
 rise("#bdemo", K(18.5), { d: 1.2 });
@@ -400,41 +470,47 @@ out("#bg2", K(23.1) - .8);
 rise("#b30", K(23.1), { d: 1.2 }); rise("#b31 .w", K(23.1) + .3); rise("#b32 .w", K(23.1) + .6);
 show("m5", K(22.9)); show("m6", K(23.7));
 
-// 7 · own delivery per branch
-rise("#w0", K(25), { d: 1.2 }); rise("#w1 .w", K(25) + .3); rise("#w2 .w", K(25) + .6); rise("#w3 .w", K(25) + .9, { d: 1.8 });
-rise("#w4 .w", K(26.2), { st: .03 });
+// 7 · SOLUTION: own delivery from the right branch (3 bars)
+rise("#w0", K(25), { d: 1.2 }); rise("#w1 .w", K(25) + .3); rise("#w2 .w", K(25) + .6, { d: 1.8 });
+rise("#w4 .w", K(25.9), { st: .03 });
 tl.fromTo("#riders", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(25) + .3);
-[25.6, 25.9, 26.2, 26.5].forEach((k, i) => rise("#rd" + i, K(k), { y: 20, d: 1.2 }));
-tl.fromTo("#rd0", { scale: 1 }, { scale: 1.025, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, K(27.4));
-rise("#wdemo", K(25.6), { d: 1.2 });
+[25.5, 25.8, 26.1, 26.4].forEach((k, i) => rise("#rd" + i, K(k), { y: 20, d: 1.2 }));
+rise("#wdemo", K(25.5), { d: 1.2 });
 
-// 8 · the owner panel: four branches and each promo (5 bars)
-tl.fromTo("#pnl", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(29) + .2);
-count("kv", 0, 53500, K(29.4), n => n.toLocaleString("en-US"), 2.4);
-document.querySelectorAll(".br .bar i").forEach((el, i) => tl.fromTo(el, { scaleX: 0 }, { scaleX: +el.dataset.w, duration: 1.8, ease: FINE }, K(29.8) + i * .2));
-rise(".br", K(29.6), { y: 20, d: 1.2, st: .15 });
-rise(".pr", K(31.4), { y: 20, d: 1.2, st: .2 });
-tl.fromTo("#pr0", { scale: 1 }, { scale: 1.03, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, K(32.6));
-rise("#c0", K(29), { d: 1.2 }); rise("#c1 .w", K(29) + .3); rise("#c2 .w", K(29) + .6, { d: 1.8 });
-out("#cg1", K(31.4) - .8);
-rise("#c3", K(31.4), { d: 1.2 }); rise("#c4 .w", K(31.4) + .3); rise("#c5 .w", K(31.4) + .6, { d: 1.8 });
-rise("#cdemo", K(29.5), { d: 1.2 });
+// 8 · PANEL 1: sales per branch and channel (4 bars)
+rise("#q10", K(28), { d: 1.2 }); rise("#q11 .w", K(28) + .3); rise("#q12 .w", K(28) + .6, { d: 1.8 });
+rise("#q13 .w", K(29), { st: .03 });
+tl.fromTo("#pnl1", { opacity: 0, y: 80, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2.2, ease: SOFT }, K(28) + .2);
+count("kv", 0, 53500, K(28.5), n => n.toLocaleString("en-US"), 2.4);
+rise("#pnl1 .br", K(28.7), { y: 20, d: 1.2, st: .15 });
+document.querySelectorAll("#pnl1 .br .bar i").forEach((el, i) => tl.fromTo(el, { scaleX: 0 }, { scaleX: +el.dataset.w, duration: 1.8, ease: FINE }, K(28.9) + i * .2));
+rise("#pnl1 .ch", K(30.2), { y: 20, d: 1.2, st: .15 });
+rise("#q1demo", K(28.5), { d: 1.2 });
 
-// 9 · their own "prontooo" for El Progreso
-rise("#g0", K(34), { d: 1.2 }); rise("#g1 .w", K(34) + .3); rise("#g2 .w", K(34) + .6, { d: 1.8 });
-rise("#g3 .w", K(35), { st: .03 });
-rise("#gq0", K(34.3), { y: 40, d: 1.6 });
-tl.fromTo("#gans", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1.4, ease: SOFT }, K(35));
-tl.fromTo("#map", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.6, ease: SOFT }, K(35.6));
-rise("#map .row:not(.nw)", K(35.9), { y: 16, d: 1, st: .15 });
-tl.fromTo("#mr4", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 1.2, ease: SOFT }, K(36.6));
-rise("#gdemo", K(34.6), { d: 1.2 });
+// 9 · PANEL 2: every order live, nobody waiting (4 bars)
+rise("#q20", K(32), { d: 1.2 }); rise("#q21 .w", K(32) + .3); rise("#q22 .w", K(32) + .6, { d: 1.8 });
+rise("#q23 .w", K(33), { st: .03 });
+tl.fromTo("#pnl2", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(32) + .2);
+rise("#pnl2 .od", K(32.6), { y: 20, d: 1.2, st: .3 });
+tl.fromTo("#pnl2 .zero", { opacity: 0, scale: .96 }, { opacity: 1, scale: 1, duration: 1.4, ease: SOFT }, K(34));
+rise("#q2demo", K(32.5), { d: 1.2 });
 
-// 10 · Casa Digital, call to action
-rise("#u0", K(38), { d: 1.2 }); rise("#u1 .w", K(38) + .3); rise("#u2 .w", K(38) + .7, { d: 1.8 });
-[38.9, 39.4, 39.9].forEach((k, i) => rise("#wy" + i + " .w, #wy" + i + " i", K(k), { st: .04, d: 1.3 }));
-tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(38.5));
-float("#cta", K(39.4), K(42) - K(39.4));
+// 10 · PANEL 3: what to do today (3 bars)
+rise("#q30", K(36), { d: 1.2 }); rise("#q31 .w", K(36) + .3); rise("#q32 .w", K(36) + .6, { d: 1.8 });
+tl.fromTo("#pnl3", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(36) + .2);
+rise("#pnl3 .ac", K(36.5), { y: 24, d: 1.3, st: .45 });
+rise("#q3demo", K(36.5), { d: 1.2 });
+
+// 11 · WHY US (5 bars)
+rise("#y0", K(39), { d: 1.2 }); rise("#y1 .w", K(39) + .3); rise("#y2 .w", K(39) + .6, { d: 1.8 });
+[39.6, 40.3, 41, 41.7].forEach((k, i) => rise("#wl" + i, K(k), { y: 24, d: 1.4 }));
+tl.fromTo("#result", { opacity: 0, y: 60, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: 1.8, ease: SOFT }, K(42.4));
+
+// 12 · Casa Digital, call to action (4 bars)
+rise("#u0", K(44), { d: 1.2 }); rise("#u1 .w", K(44) + .3); rise("#u2 .w", K(44) + .7, { d: 1.8 });
+rise("#u3 .w", K(44.9), { st: .03 });
+tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(44.5));
+float("#cta", K(45.4), K(48) - K(45.4));
 
 '''
 
