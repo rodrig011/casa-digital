@@ -1,0 +1,20 @@
+{
+  "name": "restaurante-whatsapp-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot de WhatsApp y panel del dueño para restaurantes (Casa Digital by Clientia Tech)",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test.js",
+    "usuario": "node usuarios.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
+    "express": "5.2.1",
+    "twilio": "6.1.1"
+  }
+}

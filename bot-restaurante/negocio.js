@@ -1,0 +1,85 @@
+// Datos de cada restaurante: negocios/<cliente>.json (menú, precios, sucursales, horario, domicilio).
+// El bot nunca inventa: todo lo que dice del negocio sale de este archivo.
+// Lo que el cliente no ha confirmado (por ejemplo un horario) se deja vacío y el bot dice que una persona lo confirma.
+const fs = require("fs");
+const path = require("path");
+
+const norm = s => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const L = n => "L " + (+n || 0).toLocaleString("es-HN", { maximumFractionDigits: 2 });
+
+function preparar(n) {
+  const errores = [];
+  if (!n || typeof n !== "object") throw new Error("El archivo del negocio no es un objeto JSON.");
+  if (!n.nombre) errores.push("falta nombre");
+  if (!Array.isArray(n.sucursales) || !n.sucursales.length) errores.push("falta al menos una sucursal");
+  if (!Array.isArray(n.menu) || !n.menu.length) errores.push("falta el menú");
+  const items = [];
+  const ids = new Set();
+  for (const c of n.menu || []) for (const it of c.items || []) {
+    if (!it.id || !it.nombre || !(+it.precio >= 0)) { errores.push(`producto incompleto en ${c.categoria}: ${JSON.stringify(it)}`); continue; }
+    if (ids.has(it.id)) errores.push(`id repetido: ${it.id}`);
+    ids.add(it.id);
+    items.push({ ...it, precio: +it.precio, categoria: c.categoria, num: items.length + 1 });
+  }
+  const sids = new Set();
+  for (const s of n.sucursales || []) { if (!s.id || !s.nombre) errores.push("sucursal sin id o nombre"); if (sids.has(s.id)) errores.push(`sucursal repetida: ${s.id}`); sids.add(s.id); }
+  if (errores.length) throw new Error("Revise el archivo del negocio: " + errores.join("; "));
+
+  const sucursal = q => {
+    const t = norm(q);
+    if (!t) return null;
+    return n.sucursales.find(s => norm(s.id) === t || norm(s.nombre) === t) || n.sucursales.find(s => t.length > 2 && (norm(s.nombre).includes(t) || t.includes(norm(s.nombre)))) || null;
+  };
+  // a product by its number in the list, its id, or its name in the customer's words.
+  // "combo de 3 piezas" -> Combo 3 piezas (numbers in the name must match); "un combo" matches several equally -> null
+  const STOP = new Set(["de", "del", "la", "el", "los", "las", "con", "y", "un", "una", "unas", "unos", "para", "por", "favor", "porfa", "quiero", "me", "da", "deme", "dame"]);
+  const tokens = s => norm(s).replace(/[^\w\s]/g, " ").split(/\s+/).filter(w => w && !STOP.has(w)).map(w => (w.length > 3 ? w.replace(/(es|s)$/, "") : w));
+  const item = q => {
+    const t = norm(q).replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+    if (!t) return null;
+    if (/^#?\d+$/.test(t)) return items[+t.replace("#", "") - 1] || null;
+    const exacto = items.find(i => norm(i.id) === t || norm(i.nombre) === t);
+    if (exacto) return exacto;
+    const qt = new Set(tokens(t)), qn = [...qt].filter(w => /^\d+$/.test(w));
+    let mejor = [], max = 0;
+    for (const i of items) {
+      const nt = tokens(i.nombre), alfa = nt.filter(w => !/^\d+$/.test(w)), nums = nt.filter(w => /^\d+$/.test(w));
+      if (qn.length && nums.length && !nums.every(x => qt.has(x))) continue;
+      const hits = alfa.filter(w => qt.has(w)).length;
+      if (!hits) continue;
+      const sc = hits / alfa.length + (nums.length && nums.every(x => qt.has(x)) ? 0.5 : 0);
+      if (sc > max + 1e-9) { max = sc; mejor = [i]; } else if (Math.abs(sc - max) < 1e-9) mejor.push(i);
+    }
+    return mejor.length === 1 ? mejor[0] : null;
+  };
+  return {
+    ...n,
+    color: n.color || "#C8102E",
+    pago: n.pago || "",
+    domicilio: n.domicilio || { propio: false, apps: [] },
+    items, sucursal, item,
+    variasSucursales: n.sucursales.length > 1,
+  };
+}
+
+function cargarNegocio(archivo) {
+  const f = path.resolve(__dirname, archivo || "negocios/ejemplo.json");
+  return preparar(JSON.parse(fs.readFileSync(f, "utf8")));
+}
+
+// "2 × Combo 2 piezas (sin picante)" lines and the total, from [{ id, cantidad, nota }]
+function cuenta(negocio, lineas) {
+  const out = [];
+  for (const l of lineas || []) {
+    const it = negocio.items.find(i => i.id === l.id);
+    if (!it) continue;
+    const cantidad = Math.max(1, Math.min(99, Math.round(+l.cantidad || 1)));
+    const prev = out.find(o => o.id === it.id && (o.nota || "") === (l.nota || ""));
+    if (prev) { prev.cantidad += cantidad; prev.subtotal = prev.cantidad * it.precio; continue; }
+    out.push({ id: it.id, nombre: it.nombre, precio: it.precio, cantidad, subtotal: cantidad * it.precio, ...(l.nota ? { nota: String(l.nota).slice(0, 120) } : {}) });
+  }
+  return { lineas: out, total: out.reduce((a, l) => a + l.subtotal, 0) };
+}
+const lineaTexto = l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${L(l.subtotal)}`;
+
+module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, norm, L };

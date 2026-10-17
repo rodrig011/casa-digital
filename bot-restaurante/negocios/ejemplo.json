@@ -1,0 +1,30 @@
+{
+  "_nota": "DATOS DE EJEMPLO. Para cada cliente se copia este archivo (negocios/<cliente>.json) y se llena SOLO con lo que el cliente confirmó: menú y precios, sucursales, horario. Lo que no esté confirmado se deja vacío y el bot dice que una persona lo confirma.",
+  "nombre": "Pollo de Ejemplo",
+  "color": "#C8102E",
+  "sucursales": [
+    { "id": "centro", "nombre": "Centro", "direccion": "Dirección de ejemplo, Barrio Centro", "telefono": "+504 0000-0001", "whatsapp": "", "horario": "Lunes a domingo, 10:00 a. m. a 9:00 p. m.", "mapa": "" },
+    { "id": "norte", "nombre": "Zona Norte", "direccion": "Dirección de ejemplo, Colonia Norte", "telefono": "+504 0000-0002", "whatsapp": "", "horario": "", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Combos", "items": [
+      { "id": "c2", "nombre": "Combo 2 piezas", "precio": 115, "desc": "2 piezas, papas y refresco" },
+      { "id": "c3", "nombre": "Combo 3 piezas", "precio": 150, "desc": "3 piezas, papas y refresco" },
+      { "id": "fam", "nombre": "Combo familiar 8 piezas", "precio": 420, "desc": "8 piezas, 2 papas grandes y refresco de 2 litros" }
+    ] },
+    { "categoria": "Extras", "items": [
+      { "id": "papas", "nombre": "Papas grandes", "precio": 45 },
+      { "id": "ref", "nombre": "Refresco 2 litros", "precio": 55 }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "Se paga al recoger en la sucursal.",
+  "tiempoPreparacion": "20 a 30 minutos",
+  "domicilio": {
+    "propio": false,
+    "apps": [
+      { "nombre": "PedidosYa", "url": "" },
+      { "nombre": "Bip Bip", "url": "" }
+    ]
+  }
+}

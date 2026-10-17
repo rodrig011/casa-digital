@@ -1,0 +1,55 @@
+# Render Blueprint del bot de un restaurante. En Render: New > Blueprint, este repositorio,
+# Blueprint path: bot-restaurante/render.yaml
+# Para cada cliente nuevo: copie este archivo (render-<cliente>.yaml), cambie "name" y NEGOCIO.
+services:
+  - type: web
+    name: restaurante-bot
+    runtime: node
+    region: virginia            # el más cercano a Honduras y a Twilio (us1)
+    plan: 0.5c-512mb            # plan pagado más pequeño. El gratis se duerme y Twilio no espera.
+    rootDir: bot-restaurante
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    disk:                       # aquí viven pedidos.json, sessions.json y usuarios.json
+      name: datos
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: America/Tegucigalpa
+      - key: DATA_DIR
+        value: /var/data
+      - key: NEGOCIO               # archivo con el menú y las sucursales del cliente
+        value: negocios/ejemplo.json
+      - key: TWILIO_SANDBOX
+        value: "true"
+      - key: SKIP_TWILIO_SIGNATURE
+        value: "false"
+      - key: LEADS_TOKEN
+        generateValue: true
+      - key: PANEL_SECRET          # firma las sesiones del panel; cambiarlo cierra todas las sesiones
+        generateValue: true
+      - key: PANEL_USUARIOS        # opcional: "correo|Nombre|hash", una por línea (npm run usuario -- linea ...)
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      - key: TWILIO_ALERT_CONTENT_SID
+        sync: false
+      - key: OWNER_WHATSAPP
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY     # modo IA (opcional): vacío = el bot contesta con el menú
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: BOT_IA                # "off" apaga el modo IA sin borrar la clave
+        value: "on"

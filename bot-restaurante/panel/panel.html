@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Panel del restaurante</title>
+<style>
+:root{--bg:#F3F4F6;--card:#fff;--line:#E5E7EB;--line2:#D1D5DB;--tx:#111827;--tx2:#4B5563;--tx3:#6B7280;--acc:#C8102E;--ok:#15803D;--ok-bg:#DCFCE7;--warn:#B45309;--warn-bg:#FEF3C7;--info:#1D4ED8;--info-bg:#DBEAFE;--mute-bg:#F3F4F6;--sh:0 1px 2px rgba(16,24,40,.06);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1115;--card:#171A20;--line:#262A33;--line2:#353A45;--tx:#EEF0F3;--tx2:#B4BAC4;--tx3:#8A919C;--ok:#4ADE80;--ok-bg:#12301E;--warn:#FBBF24;--warn-bg:#33270C;--info:#93C5FD;--info-bg:#15243F;--mute-bg:#1F232B;--sh:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1115;--card:#171A20;--line:#262A33;--line2:#353A45;--tx:#EEF0F3;--tx2:#B4BAC4;--tx3:#8A919C;--ok:#4ADE80;--ok-bg:#12301E;--warn:#FBBF24;--warn-bg:#33270C;--info:#93C5FD;--info-bg:#15243F;--mute-bg:#1F232B;--sh:none;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100svh}
+aside{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100svh;display:flex;flex-direction:column;gap:4px}
+.marca{font-weight:700;font-size:16px;padding:4px 10px 18px;letter-spacing:-.01em}.marca small{display:block;font-weight:500;font-size:12px;color:var(--tx3)}
+.nav{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--tx2);font-weight:500}
+.nav:hover{background:var(--mute-bg)}.nav[aria-current="page"]{background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);font-weight:600}
+.nav .n{margin-left:auto;min-width:22px;height:20px;border-radius:10px;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;padding:0 6px}
+.nav .n:empty{display:none}
+.pie{margin-top:auto;font-size:12px;color:var(--tx3);padding:0 10px;display:grid;gap:6px}.pie a{color:var(--tx2)}
+main{min-width:0;padding:20px 24px 90px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+.top .sp{flex:1}
+select,.btn{height:36px;border:1px solid var(--line2);background:var(--card);border-radius:8px;padding:0 12px;color:var(--tx);font:inherit}
+.btn{display:inline-flex;align-items:center;gap:6px;font-weight:600;text-decoration:none}.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.vivo{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:6px}.vivo i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}.vivo.off i{background:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh)}
+.kpi{padding:14px 16px}.kpi b{display:block;font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.kpi span{font-size:12px;color:var(--tx3);font-weight:500}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:12px}
+.card h2{font-size:14px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:650}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--tx3);font-weight:600}tr:last-child td{border-bottom:0}td.r,th.r{text-align:right}
+.vacio{padding:28px 16px;text-align:center;color:var(--tx3)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.col h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);margin:0 0 8px;display:flex;justify-content:space-between}
+.ped{padding:12px 14px;margin-bottom:10px;display:grid;gap:6px}
+.ped .l1{display:flex;justify-content:space-between;gap:8px;font-weight:650}.ped .l1 span{color:var(--tx3);font-weight:500;font-size:12px;white-space:nowrap}
+.ped ul{margin:0;padding:0;list-style:none;color:var(--tx2)}.ped li{overflow-wrap:anywhere}
+.ped .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--tx2);flex-wrap:wrap}
+.ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:32px;padding:0 10px;font-size:13px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;font-size:12px;font-weight:600;white-space:nowrap}
+.t-nuevo{background:var(--info-bg);color:var(--info)}.t-cocina{background:var(--warn-bg);color:var(--warn)}.t-listo{background:var(--ok-bg);color:var(--ok)}.t-entregado,.t-atendido,.t-cancelado{background:var(--mute-bg);color:var(--tx3)}
+.cocina{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.cocina .ped{font-size:16px;padding:16px}.cocina .ped ul{color:var(--tx);font-size:17px;font-weight:550}.cocina .ped .l1{font-size:18px}
+.cocina .ped.nuevo{border-left:4px solid var(--info)}.cocina .ped.cocina-e{border-left:4px solid var(--warn)}
+.cocina .btn{height:44px;font-size:15px;flex:1;justify-content:center}
+.wa{color:var(--acc);font-weight:600;text-decoration:none}
+.fila{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.fila:last-child{border-bottom:0}.fila div{flex:1;min-width:0}.fila small{display:block;color:var(--tx3)}
+.ayuda{font-size:13px;color:var(--tx3);margin:-8px 0 14px}
+.tabs{display:none}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}aside{display:none}main{padding:16px 16px 96px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}
+  .board{grid-template-columns:1fr}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
+  .tabs .nav{gap:3px;font-size:12px;padding:10px 2px;justify-content:center;white-space:nowrap}
+  .tabs .nav .n{margin-left:0;min-width:17px;height:17px;font-size:11px;padding:0 5px}
+  th,td{padding:9px 12px}
+}
+@media (hover:none){.nav:hover{background:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="marca" id="marca">Panel<small>Casa Digital</small></div>
+    <nav id="nav1"></nav>
+    <div class="pie"><span id="quien"></span><a href="/panel/salir">Salir</a></div>
+  </aside>
+  <main>
+    <div class="top">
+      <h1 id="titulo">Hoy</h1>
+      <span class="sp"></span>
+      <span class="vivo" id="vivo"><i></i>Actualizado</span>
+      <select id="suc" aria-label="Sucursal"><option value="">Todas las sucursales</option></select>
+    </div>
+    <div id="vista"></div>
+  </main>
+</div>
+<nav class="tabs" id="nav2"></nav>
+<script>
+const VISTAS = [["hoy", "Hoy"], ["pedidos", "Pedidos"], ["cocina", "Cocina"], ["personas", "Por atender"], ["menu", "Menú"]];
+const CORTO = { personas: "Atender" };
+const ESTADO_TXT = { nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", entregado: "Entregado", cancelado: "Cancelado", atendido: "Atendido" };
+let N = null, P = [], vista = "hoy", vistos = null, sonido = false;
+try { vista = localStorage.getItem("vista") || "hoy"; } catch {}
+if (!VISTAS.some(v => v[0] === vista)) vista = "hoy";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const L = n => "L " + (+n || 0).toLocaleString("es-HN", { maximumFractionDigits: 2 });
+const hora = iso => new Date(iso).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
+const dia = iso => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/Tegucigalpa" });
+const hoy = () => dia(new Date().toISOString());
+const hace = iso => { const m = Math.round((Date.now() - new Date(iso)) / 6e4); return m < 1 ? "ahora" : m < 60 ? `hace ${m} min` : `hace ${Math.floor(m / 60)} h ${m % 60} min`; };
+const wa = tel => `https://wa.me/${String(tel).replace(/\D/g, "")}`;
+
+function filtrados() { const s = $("#suc").value; return P.filter(p => !s || p.sucursalId === s || p.sucursal === (N.sucursales.find(x => x.id === s) || {}).nombre); }
+const pedidos = () => filtrados().filter(p => p.tipo === "pedido");
+
+function nav() {
+  const pend = pedidos().filter(p => p.estado === "nuevo").length, per = filtrados().filter(p => p.tipo === "persona" && p.estado === "nuevo").length;
+  const cuenta = { cocina: pend || "", personas: per || "" };
+  const html = corto => VISTAS.map(([k, t]) => `<button class="nav" data-v="${k}" ${k === vista ? 'aria-current="page"' : ""}>${corto ? CORTO[k] || t : t}<span class="n">${cuenta[k] || ""}</span></button>`).join("");
+  $("#nav1").innerHTML = html(); $("#nav2").innerHTML = html(true);
+  document.querySelectorAll(".nav[data-v]").forEach(b => b.onclick = () => { vista = b.dataset.v; try { localStorage.setItem("vista", vista); } catch {} pintar(); });
+}
+
+function tarjeta(p, grande) {
+  const sig = { nuevo: [["cocina", "A cocina"]], cocina: [["listo", "Listo"]], listo: [["entregado", "Entregado"]] }[p.estado] || [];
+  const extra = p.estado === "nuevo" ? [["cancelado", "Cancelar"]] : [];
+  return `<div class="card ped ${grande ? (p.estado === "cocina" ? "cocina-e" : p.estado) : ""}">
+    <div class="l1">${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}<span>${hora(p.fecha)} · ${hace(p.fecha)}</span></div>
+    <ul>${(p.lineas || []).map(l => `<li>${l.cantidad} × ${esc(l.nombre)}${l.nota ? ` <em>(${esc(l.nota)})</em>` : ""}</li>`).join("")}</ul>
+    <div class="l3"><span>${grande ? "" : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado]}</span> `}<b>${L(p.total)}</b> · ${esc(p.sucursal)}</span><span>Recoge: ${esc(p.hora || "—")}</span></div>
+    <div class="acc">${sig.concat(extra).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("")}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
+  </div>`;
+}
+
+function pintar() {
+  if (!N) return;
+  nav();
+  $("#titulo").textContent = VISTAS.find(v => v[0] === vista)[1];
+  const v = $("#vista");
+  const ps = pedidos();
+  if (vista === "hoy") {
+    const h = ps.filter(p => dia(p.fecha) === hoy() && p.estado !== "cancelado");
+    const total = h.reduce((a, p) => a + p.total, 0);
+    const porSuc = N.sucursales.map(s => { const x = h.filter(p => p.sucursal === s.nombre); return [s.nombre, x.length, x.reduce((a, p) => a + p.total, 0)]; });
+    const prod = {}; h.forEach(p => (p.lineas || []).forEach(l => { prod[l.nombre] = prod[l.nombre] || [0, 0]; prod[l.nombre][0] += l.cantidad; prod[l.nombre][1] += l.subtotal; }));
+    const top = Object.entries(prod).sort((a, b) => b[1][0] - a[1][0]).slice(0, 6);
+    const espera = filtrados().filter(p => p.tipo === "persona" && p.estado === "nuevo").length;
+    v.innerHTML = `<div class="kpis">
+      <div class="card kpi"><b>${h.length}</b><span>Pedidos por WhatsApp hoy</span></div>
+      <div class="card kpi"><b>${L(total)}</b><span>Vendido por WhatsApp hoy</span></div>
+      <div class="card kpi"><b>${ps.filter(p => p.estado === "nuevo" || p.estado === "cocina").length}</b><span>En preparación</span></div>
+      <div class="card kpi"><b>${espera}</b><span>Clientes esperando a una persona</span></div></div>
+      <div class="grid2">
+        <div class="card"><h2>Lo más pedido hoy</h2>${top.length ? `<table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Venta</th></tr>${top.map(([n, [c, s]]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay pedidos hoy.</div>`}</div>
+        <div class="card"><h2>Por sucursal</h2><table><tr><th>Sucursal</th><th class="r">Pedidos</th><th class="r">Venta</th></tr>${porSuc.map(([n, c, s]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table></div>
+      </div>`;
+  } else if (vista === "pedidos") {
+    const cols = [["nuevo", "Nuevos"], ["cocina", "En cocina"], ["listo", "Listos para recoger"], ["entregado", "Entregados hoy"]];
+    v.innerHTML = `<div class="board">${cols.map(([e, t]) => { const x = ps.filter(p => p.estado === e && (e !== "entregado" || dia(p.fecha) === hoy())); return `<div class="col"><h3>${t}<span>${x.length}</span></h3>${x.map(p => tarjeta(p)).join("") || `<div class="card vacio">Nada aquí</div>`}</div>`; }).join("")}</div>`;
+  } else if (vista === "cocina") {
+    const x = ps.filter(p => p.estado === "nuevo" || p.estado === "cocina").sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    v.innerHTML = `<p class="ayuda">Pantalla para la cocina: déjela abierta en una tablet. Al marcar <b>Listo</b>, al cliente le llega un WhatsApp para que pase a recoger. <button class="btn" id="son" style="height:28px;margin-left:6px">${sonido ? "🔔 Sonido activado" : "🔕 Activar sonido"}</button></p>
+      <div class="cocina">${x.map(p => tarjeta(p, true)).join("") || `<div class="card vacio" style="grid-column:1/-1">No hay pedidos pendientes.</div>`}</div>`;
+    $("#son").onclick = () => { sonido = !sonido; if (sonido) beep(); pintar(); };
+  } else if (vista === "personas") {
+    const x = filtrados().filter(p => p.tipo === "persona").slice(0, 100);
+    v.innerHTML = `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
+      <div class="card">${x.map(p => `<div class="fila"><div><a class="wa" href="${wa(p.tel)}" target="_blank" rel="noopener">${esc(p.tel)}</a><small>${esc(p.motivo || "Pidió hablar con una persona")} · ${esc(p.sucursal)} · ${hace(p.fecha)}</small></div>${p.estado === "nuevo" ? `<button class="btn" data-n="${esc(p.n)}" data-e="atendido">Atendido</button>` : `<span class="tag t-atendido">Atendido</span>`}</div>`).join("") || `<div class="vacio">Nadie está esperando.</div>`}</div>`;
+  } else {
+    const cats = [...new Set(N.menu.map(i => i.categoria))];
+    v.innerHTML = `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Para cambiar un precio o agregar un producto, avísele a Casa Digital y queda actualizado el mismo día.</p>
+      <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
+  }
+  v.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => cambiar(b.dataset.n, b.dataset.e, b));
+}
+
+async function cambiar(n, estado, b) {
+  b.disabled = true;
+  try {
+    const r = await fetch(`/api/pedidos/${encodeURIComponent(n)}/estado`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado }) });
+    if (r.status === 401) return location.href = "/panel/entrar";
+    if (!r.ok) throw new Error();
+    const p = await r.json(); P = P.map(x => x.n === p.n ? p : x); pintar();
+  } catch { b.disabled = false; alert("No se pudo guardar. Revise la conexión e intente otra vez."); }
+}
+
+function beep() { try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.2, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .6); o.start(); o.stop(c.currentTime + .6); } catch {} }
+
+async function cargar() {
+  try {
+    const r = await fetch("/api/pedidos", { cache: "no-store" });
+    if (r.status === 401) return location.href = "/panel/entrar";
+    P = await r.json();
+    const nuevos = new Set(P.filter(p => p.tipo === "pedido" && p.estado === "nuevo").map(p => p.n));
+    if (vistos && sonido && [...nuevos].some(n => !vistos.has(n))) beep();
+    vistos = nuevos;
+    $("#vivo").className = "vivo"; $("#vivo").lastChild.textContent = "Actualizado " + new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
+    pintar();
+  } catch { $("#vivo").className = "vivo off"; $("#vivo").lastChild.textContent = "Sin conexión, reintentando"; }
+}
+
+(async () => {
+  const r = await fetch("/api/negocio", { cache: "no-store" });
+  if (r.status === 401) return location.href = "/panel/entrar";
+  N = await r.json();
+  document.title = `Panel · ${N.nombre}`;
+  document.documentElement.style.setProperty("--acc", N.color);
+  $("#marca").innerHTML = `${esc(N.nombre)}<small>Panel del dueño${N.modoIA ? " · bot con IA" : ""}</small>`;
+  $("#quien").textContent = N.usuario;
+  $("#suc").innerHTML += N.sucursales.map(s => `<option value="${esc(s.id)}">${esc(s.nombre)}</option>`).join("");
+  if (N.sucursales.length < 2) $("#suc").style.display = "none";
+  try { $("#suc").value = localStorage.getItem("suc") || ""; } catch {}
+  $("#suc").onchange = () => { try { localStorage.setItem("suc", $("#suc").value); } catch {} pintar(); };
+  await cargar();
+  setInterval(cargar, 8000);
+  setInterval(() => { if (!document.hidden) pintar(); }, 60000);
+})();
+</script>
+</body>
+</html>
