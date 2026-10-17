@@ -394,6 +394,17 @@ const RES = [
   {d:"Sábado", h:"7:00 pm", who:"Gabriela T. (cumpleaños)", n:8, st:"Confirmada", nota:"Asados y bebidas"},
   {d:"Domingo", h:"1:00 pm", who:"Familia Paz", n:6, st:"Confirmada", nota:""}];
 TIKTOKS.forEach((t, i) => { t.ped = Math.round(t.v / 1000 * (0.25 + rnd() * .25)); t.ven = t.ped * 96; });
+// sales per day, last 7 days (d = 1 is yesterday), from the lunches count
+const DAYSALES = d => Math.round(ALM30[30 - d] * 80 * 2.35 / 10) * 10;
+// till closings, last 7 days: counter cash + the cash the riders bring back
+const CAJA = []; for (let d = 1; d <= 7; d++) { const v = DAYSALES(d); const loc = Math.round(v * .42 / 5) * 5, mot = Math.round(v * .19 / 5) * 5;
+  let diff = 0; if (d === 1) diff = -240; else if (d === 5) diff = -160; else if (rnd() < .3) diff = Math.round((rnd() - .5) * 6) * 5;
+  CAJA.push({d, v, loc, mot, ef: loc + mot, cont: loc + mot + diff, diff, who: d === 1 ? "Cajera turno noche" : pick(["Cajera turno tarde","Cajera turno noche","Encargado"])}); }
+// customers: people and companies that order lunches (demo); stamp card proposal: 10 lunches, the next one free
+const CLI = [
+  {n:"Taller Sánchez", t:"Empresa", z:"Col. Trejo", s:0, tot:31, last:0, rtn:true},{n:"Ferretería del Norte", t:"Empresa", z:"Barrio Guamilito", s:0, tot:22, last:2, rtn:true}];
+for (let i = 0; i < 14; i++) CLI.push({n: NAMES[(i + 3) % NAMES.length], t:"Persona", z: pick(ZONAS), tot: 2 + Math.floor(rnd() * 18), last: Math.floor(rnd() * 26)}); CLI.forEach(c => c.s = c.tot % 10);
+const TOTAL_CLI = 846;
 
 // ---------- state ----------
 let VIEW = "hoy", KMODE = false, CSEL = 1, FDRAFT = {cli:"", rtn:"", items:[["Almuerzo",1,80]]};
@@ -407,14 +418,15 @@ const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</spa
 const mn = id => MENU.find(m => m.id === id);
 const motoN = id => (MOTOS.find(m => m.id === id) || {n:""}).n;
 
-const NAV = [["hoy","Inicio","i-home"],["whatsapp","WhatsApp","i-chat"],["pedidos","Pedidos","i-bike"],["inventario","Inventario","i-box"],["facturas","Facturas","i-doc"],["reservas","Reservas","i-cal"],["tiktok","TikTok","i-play"]];
-const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bike","#FE9339"],inventario:["i-box","#B78300"],facturas:["i-doc","#5A6872"],reservas:["i-cal","#9050E9"],tiktok:["i-play","#181818"]};
+const NAV = [["hoy","Inicio","i-home"],["whatsapp","WhatsApp","i-chat"],["pedidos","Pedidos","i-bike"],["caja","Caja","i-cash"],["inventario","Inventario","i-box"],["ventas","Ventas","i-chart"],["clientes","Clientes","i-users"],["facturas","Facturas","i-doc"],["reservas","Reservas","i-cal"],["tiktok","TikTok","i-play"]];
+const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bike","#FE9339"],caja:["i-cash","#3BA755"],inventario:["i-box","#B78300"],ventas:["i-chart","#0B827C"],clientes:["i-users","#9050E9"],facturas:["i-doc","#5A6872"],reservas:["i-cal","#9050E9"],tiktok:["i-play","#181818"]};
 function nav() {
   const nuevos = ORD.filter(o => o.st === "nuevo").length; const pers = CONV.filter(c => c.st === "persona").length;
-  $("#nav").innerHTML = NAV.map(([id, t]) => { const c = id === "pedidos" ? nuevos : id === "whatsapp" ? pers : 0;
+  const badCaja = CAJA.filter(c => c.d <= 2 && c.diff < -100).length;
+  $("#nav").innerHTML = NAV.map(([id, t]) => { const c = id === "pedidos" ? nuevos : id === "whatsapp" ? pers : id === "caja" ? badCaja : 0;
     return `<a href="#${id}" class="${VIEW === id ? "on" : ""}" data-v="${id}">${t}${c ? `<span class="c">${c}</span>` : ""}</a>`; }).join("");
 }
-const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Dirección, horario, precios publicados y vistas de TikTok son los reales de Toretos Grill. Ventas, conversaciones, pedidos e inventario son datos de ejemplo.</div>
+const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Dirección, horario, precios publicados y vistas de TikTok son los reales de Toretos Grill. Ventas, conversaciones, pedidos, caja, clientes e inventario son datos de ejemplo.</div>
   <div class="ph"><div class="tile" style="background:${TILE[VIEW][1]}">${icon(TILE[VIEW][0])}</div><div><div class="ey">Toreto's Grill · colonia La Ideal</div><h1>${title}</h1></div><div class="r">${extra}</div></div><div class="subline">${sub}</div>`;
 
 // ---------- views ----------
@@ -455,7 +467,9 @@ function RECS() {
   const late = ORD.filter(o => o.st === "camino" && o.min > 30); late.forEach(o => r.push({id:"l" + o.id, t:"amber", i:"i-clock", h:`Pedido #${o.id} lleva ${o.min} min en camino`, p:`${motoN(o.moto)} va a ${o.zona}. Avisarle a ${o.who} cuánto falta.`, a:`<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${o.id}" href="${waLink(`Hola ${o.who.split(" ")[0]}, su pedido #${o.id} de Toreto's Grill va en camino. Ya casi llega. ¡Gracias por esperar!`, o.tel)}">${icon("i-wa")}Avisar</a>`}));
   r.push({id:"res", t:"blue", i:"i-cal", h:"Grupo de 12 quiere reservar el viernes", p:"Marlon S. preguntó por WhatsApp. El bot se lo pasó a usted porque son más de 10 personas.", a:`<button class="btn sm" data-v="reservas">Responder</button>`});
   r.push({id:"fac", t:"blue", i:"i-doc", h:"Taller Sánchez pidió factura con RTN", p:"12 almuerzos. El RTN ya lo dio por WhatsApp.", a:`<button class="btn sm" data-v="facturas">Hacer factura</button>`});
+  const cj = CAJA.find(c => c.d === 1); if (cj.diff < -100) r.push({id:"caja", t:"red", i:"i-cash", h:`La caja de anoche cerró con ${L(-cj.diff)} de menos`, p:`Cerró la ${cj.who.toLowerCase()}. Esperado ${L(cj.ef)} (mostrador ${L(cj.loc)} + motoristas ${L(cj.mot)}), contado ${L(cj.cont)}.`, a:`<button class="btn sm" data-v="caja">Revisar</button>`});
   r.push({id:"moto", t:"ok", i:"i-bike", h:"Motorista 1 vuelve con efectivo de 2 entregas", p:"El panel ya sabe cuánto tiene que traer. Al volver se cuadra con un clic.", a:`<button class="btn sm" data-v="pedidos">Ver motoristas</button>`});
+  r.push({id:"promo", t:"ok", i:"i-send", h:`${Math.round(TOTAL_CLI * .28)} clientes no piden hace 2 semanas`, p:"Mandarles el almuerzo de L80 por WhatsApp antes de las 11 am, desde Clientes.", a:`<button class="btn sm" data-v="clientes">Preparar</button>`});
   return r;
 }
 function hourChart() {
@@ -526,6 +540,7 @@ function vInventario() {
         <thead><tr><th>Hora</th><th>A quién</th><th>Qué se le pidió</th><th>Respuesta</th></tr></thead>
         <tbody>${AVISOS.map(a => `<tr><td class="num">${a.h}</td><td>${PROV.find(x => x.id === a.p).n}</td><td>${a.t}</td><td><span class="status ${a.r.startsWith("Confirm") ? "s-ok" : "s-amber"}"><i></i>${a.r}</span></td></tr>`).join("")}</tbody></table></div></section>
     </div>
+    ${manana()}
     <section class="card"><header>${CT("i-send","#0B827C")}<h2>Proveedores</h2><div class="r">escriba el WhatsApp de cada uno una vez</div></header><div class="scrollx"><table class="tbl prov">
       <thead><tr><th>Proveedor</th><th>Le compra</th><th>WhatsApp</th><th>Aviso automático</th><th>Ahora</th><th></th></tr></thead>
       <tbody>${PROV.map(pv => { const f = INS.filter(i => i[4] === pv.id && i[2] < i[3]); const c = PCFG[pv.id];
@@ -536,6 +551,16 @@ function vInventario() {
         <td class="r">${txt ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${provWa(pv.id, txt)}">${icon("i-wa")}Avisar ahora</a>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
       <div class="pad" style="border-top:1px solid var(--line)"><p class="hint" style="margin:0">Cantidades, nombres de proveedores y avisos son de ejemplo.</p></div></section>
   </div>`;
+}
+
+// tomorrow's order: average of the last 4 same weekdays + 5%, turned into what each lunch uses
+function manana() {
+  const wd = (today + 1) % 7; const same = ALM30.filter((_, i) => (today - 30 + i + 70) % 7 === wd); const alm = Math.ceil(same.reduce((a, x) => a + x, 0) / same.length * 1.05);
+  const rows = [["Carne de res y chuleta", Math.ceil(alm * .28), "lb", "carne"], ["Pollo", Math.ceil(alm * .2), "lb", "pollo"], ["Tortillas", Math.ceil(alm * 2 / 12), "docenas", "tortilla"], ["Carbón", Math.ceil(alm / 30), "sacos", "carbon"]];
+  return `<section class="card"><header>${CT("i-box","#B78300")}<h2>Pedido para mañana, ${DAYS[wd]}</h2><div class="r">se esperan ${alm} almuerzos · promedio de los últimos ${same.length} ${DAYS[wd]}${DAYS[wd].endsWith("s") ? "" : "s"} + 5%</div></header>
+    <div class="scrollx"><table class="tbl"><thead><tr><th>Insumo</th><th>Proveedor</th><th class="r">Pedir</th><th></th></tr></thead>
+    <tbody>${rows.map(([n, q, u, pv]) => `<tr><td>${n}</td><td>${PROV.find(x => x.id === pv).n}</td><td class="r num"><b>${q} ${u}</b></td><td class="r"><a class="btn sm wa" target="_blank" rel="noopener" href="${provWa(pv, `Buenas, le escribe Toreto's Grill. Pedido para mañana ${DAYS[wd]}: ${q} ${u} de ${n.toLowerCase()}. ¿Nos confirma? Gracias.`)}">${icon("i-wa")}Mandar</a></td></tr>`).join("")}</tbody></table></div>
+    <div class="pad" style="border-top:1px solid var(--line)"><p class="hint" style="margin:0">Cuánto usa cada almuerzo se ajusta con ustedes la primera semana; estas cantidades son de ejemplo.</p></div></section>`;
 }
 
 const ISV = .15;
@@ -582,9 +607,86 @@ function vTiktok() {
   <p class="hint" style="margin-top:14px">En su cuenta, los videos donde el Colocho habla de precio o de algo real, como el del almuerzo de L80, pasan de 100 mil vistas; los de producto quedan entre 2 mil y 11 mil.</p>`;
 }
 
+function cajaTag(c) { return Math.abs(c.diff) < 30 ? `<span class="status s-ok"><i></i>Cuadró</span>` : c.diff < 0 ? `<span class="status s-red"><i></i>Faltan ${L(-c.diff)}</span>` : `<span class="status s-amber"><i></i>Sobran ${L(c.diff)}</span>`; }
+const motoCash = id => ORD.filter(o => o.moto === id && o.pay === "Efectivo" && o.st === "entregado").reduce((a, o) => a + o.items.reduce((q, i) => q + i.p * i.q, 0), 0);
+function vCaja() {
+  const lbl = d => d === 1 ? "Ayer" : DAYS[(today - d + 7) % 7];
+  const mt = MOTOS.reduce((a, m) => a + motoCash(m.id), 0);
+  return `${PH("Cierre de caja", "Cada noche se cuenta desde el celular: lo del mostrador y lo que traen los motoristas. El panel lo compara con lo vendido y avisa si no cuadra.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Caja de anoche</span><b class="num" style="color:var(--${CAJA[0].diff < -30 ? "red" : "ok"})">${CAJA[0].diff < -30 ? "Faltan " + L(-CAJA[0].diff) : "Cuadró"}</b><small>esperado ${L(CAJA[0].ef)} · contado ${L(CAJA[0].cont)}</small></div>
+      <div class="kpi"><span>Efectivo de motoristas hoy</span><b class="num">${L(mt)}</b><small>${MOTOS.length} motoristas · se cuadra al volver</small></div>
+      <div class="kpi"><span>Días que cuadró</span><b class="num">${CAJA.filter(c => Math.abs(c.diff) < 30).length} de 7</b><small>última semana</small></div>
+      <div class="kpi"><span>Faltante de la semana</span><b class="num">${L(-CAJA.filter(c => c.diff < 0).reduce((a, c) => a + c.diff, 0))}</b><small>suma de los días que faltó</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-cash","#3BA755")}<h2>Últimos 7 días</h2><div class="r">mostrador + motoristas</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Día</th><th class="r">Mostrador</th><th class="r">Motoristas</th><th class="r">Contado</th><th>Resultado</th></tr></thead>
+        <tbody>${CAJA.map(c => `<tr><td>${lbl(c.d)}<div class="hint">${c.who}</div></td><td class="r num">${L(c.loc)}</td><td class="r num">${L(c.mot)}</td><td class="r num">${L(c.cont)}</td><td>${cajaTag(c)}</td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header>${CT("i-check","#3BA755")}<h2>Cerrar caja de hoy</h2></header><div class="pad form" id="cform">
+        <div class="f2"><label>Efectivo contado en caja (L)<input id="cef" inputmode="decimal" placeholder="0"></label><label>Gastos pagados de caja (L)<input id="cga" inputmode="decimal" placeholder="0"></label></div>
+        <label>Efectivo que entregaron los motoristas (L)<input id="cmo" inputmode="decimal" value="${mt}"></label>
+        <div id="cres"></div>
+        <button class="btn pri" id="cok">Guardar cierre</button>
+        <p class="hint">El efectivo esperado sale de las ventas en el local que se pagaron en efectivo y de los pedidos a domicilio que cobró cada motorista. Las transferencias no entran en la caja.</p>
+      </div></section>
+    </div>
+  </div>`;
+}
+function cajaCalc() {
+  const tot = SALES.reduce((a, x) => a + x.total, 0); const loc = Math.round(SALES.filter(x => x.ch !== "Domicilio").reduce((a, x) => a + x.total, 0) * .7);
+  const mo = +($("#cmo").value || 0), ef = +($("#cef").value || 0), ga = +($("#cga").value || 0); const exp = loc + MOTOS.reduce((a, m) => a + motoCash(m.id), 0); const d = ef + mo + ga - exp;
+  $("#cres").innerHTML = `<div class="res" style="background:var(--sunk)"><span>Efectivo esperado</span><span class="big">${L(exp)}</span></div>` + (ef ? `<div class="res" style="background:var(--${Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber"}-bg);color:var(--${Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber"})"><span>${Math.abs(d) < 30 ? "Cuadra" : d < 0 ? "Faltan" : "Sobran"}</span><span class="big">${Math.abs(d) < 30 ? "✓" : L(Math.abs(d))}</span></div>` : "");
+}
+
+function vVentas() {
+  const wk = CAJA.reduce((a, c) => a + c.v, 0); const tot = SALES.reduce((a, x) => a + x.total, 0) || 1;
+  const byCh = CH.map(c => [c, SALES.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]);
+  const items = MENU.map(m => [m.s, SALES.filter(x => x.it === m.id).reduce((a, x) => a + x.qty, 0), SALES.filter(x => x.it === m.id).reduce((a, x) => a + x.total, 0)]).sort((a, b) => b[2] - a[2]);
+  const mxI = Math.max(...items.map(i => i[2])); const mxD = Math.max(...CAJA.map(c => c.v));
+  const alm7 = ALM30.slice(23).reduce((a, x) => a + x, 0);
+  return `${PH("Ventas", "Por canal, por plato y por día. Sale solo de los pedidos de WhatsApp y de la caja: nadie tiene que pasar nada a un cuaderno.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas últimos 7 días</span><b class="num">${L(wk)}</b><small><span class="up">▲ 6%</span> vs. la semana anterior</small></div>
+      <div class="kpi"><span>Almuerzos en 7 días</span><b class="num">${alm7.toLocaleString("en-US")}</b><small>de L80 · promedio ${Math.round(alm7 / 7)} al día</small></div>
+      <div class="kpi"><span>Ticket promedio hoy</span><b class="num">${L(tot / SALES.length)}</b><small>${SALES.length} ventas hasta las 2:00 pm</small></div>
+      <div class="kpi"><span>A domicilio hoy</span><b class="num">${Math.round(byCh[2][1] / tot * 100)}%</b><small>${L(byCh[2][1])} con sus motoristas</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Hoy por canal</h2></header><div class="bars">${byCh.map(([c, v]) => `<div class="hb"><b>${c}<em class="num">${L(v)} · ${Math.round(v / tot * 100)}%</em></b><div class="trk"><i style="width:${v / tot * 100}%;background:${col(CHC[c])}"></i></div></div>`).join("")}</div></section>
+      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Lo más vendido hoy</h2></header><div class="bars">${items.map(([n, q, v]) => `<div class="hb"><b>${n}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
+    </div>
+    <section class="card"><header>${CT("i-cash","#0B827C")}<h2>Últimos 7 días</h2></header><div class="bars">${CAJA.map(c => `<div class="hb"><b>${c.d === 1 ? "Ayer" : DAYS[(today - c.d + 7) % 7]}<em class="num">${L(c.v)} · ${ALM30[30 - c.d]} almuerzos</em></b><div class="trk"><i style="width:${c.v / mxD * 100}%;background:var(--c3)"></i></div></div>`).join("")}</div></section>
+  </div>`;
+}
+
+function vClientes() {
+  return `${PH("Clientes y promos", "Cada persona que escribe al WhatsApp queda en su lista, con lo que pide y cada cuánto. Desde aquí se les manda el almuerzo del día.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Clientes en la lista</span><b class="num">${TOTAL_CLI.toLocaleString("en-US")}</b><small>con número de WhatsApp</small></div>
+      <div class="kpi"><span>Empresas que piden almuerzos</span><b class="num">23</b><small>con RTN para su factura</small></div>
+      <div class="kpi"><span>No piden hace 2 semanas</span><b class="num">${Math.round(TOTAL_CLI * .28)}</b><small>buen público para una promo</small></div>
+      <div class="kpi"><span>A un almuerzo del gratis</span><b class="num">${Math.round(TOTAL_CLI * .07)}</b><small>tarjeta: 10 almuerzos, el siguiente gratis (propuesta)</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-users","#9050E9")}<h2>Clientes</h2><div class="r">muestra</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Cliente</th><th>Zona</th><th>Tarjeta</th><th class="r">Pedidos</th><th class="r">Último</th></tr></thead>
+        <tbody>${CLI.map(c => `<tr><td>${c.n}${c.t === "Empresa" ? ` <span class="status s-blue">Empresa · RTN</span>` : ""}</td><td>${c.z}</td><td>${c.t === "Empresa" ? `<span class="hint">factura mensual</span>` : `<span class="stamps">${[...Array(10)].map((_, i) => `<i class="${i < c.s ? "on" : ""}"></i>`).join("")}</span>`}</td><td class="r num">${c.tot}</td><td class="r">${c.last ? "hace " + c.last + " d" : "hoy"}</td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header>${CT("i-send","#9050E9")}<h2>Mandar una promo</h2></header><div class="pad form">
+        <label>A quién<select id="pa"><option value="all">Todos (${TOTAL_CLI.toLocaleString("en-US")})</option><option value="dorm">No piden hace 2 semanas (${Math.round(TOTAL_CLI * .28)})</option><option value="emp">Empresas (23)</option></select></label>
+        <label>Mensaje<textarea id="pm">¡Buenas! Hoy en Toreto's Grill hay almuerzo de L80 (arroz, frijoles, ensalada y carne o pollo) hasta las 3 pm. ¿Se lo llevamos? 🔥</textarea></label>
+        <button class="btn red" id="psend">${icon("i-send")}Programar envío</button>
+        <p class="hint">WhatsApp cobra cada mensaje de promoción; el panel muestra el costo antes de enviar. Solo se escribe a quien aceptó recibir promos. Nombres y cantidades son de ejemplo.</p></div></section>
+    </div>
+  </div>`;
+}
+
 // ---------- render & events ----------
-const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, inventario: vInventario, facturas: vFacturas, reservas: vReservas, tiktok: vTiktok};
-function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); window.scrollTo(0, 0); }
+const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, caja: vCaja, inventario: vInventario, ventas: vVentas, clientes: vClientes, facturas: vFacturas, reservas: vReservas, tiktok: vTiktok};
+function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); if (VIEW === "caja") cajaCalc(); window.scrollTo(0, 0); }
 function rerenderKeep(el) { const id = el.id, sel = el.dataset ? Object.entries(el.dataset)[0] : null, pos = el.selectionStart; const y = window.scrollY; nav(); $("#main").innerHTML = VIEWS[VIEW](); window.scrollTo(0, y);
   const n = id ? document.getElementById(id) : sel ? document.querySelector(`[data-${sel[0].replace(/[A-Z]/g, m => "-" + m.toLowerCase())}="${sel[1]}"]`) : null; if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } }
 function go(v) { if (!VIEWS[v]) return; const rs = $("#results"); if (rs) { rs.hidden = true; $("#q").value = ""; } VIEW = v; KMODE = false; history.replaceState(null, "", "#" + v); render(); }
@@ -596,6 +698,8 @@ document.addEventListener("click", e => {
     if (nx === "camino" && o.dom && !o.moto) o.moto = MOTOS[o.id % 2].id; o.st = nx; o.min = 0;
     toast(nx === "camino" ? (o.dom ? `#${o.id} salió con ${motoN(o.moto)}. El bot le avisó a ${o.who.split(" ")[0]} (demo)` : `#${o.id} listo. El bot le avisó a ${o.who.split(" ")[0]} (demo)`) : nx === "cocina" ? `#${o.id} pasó a cocina` : `#${o.id} entregado`); render(); }
   const cu = e.target.closest("[data-cuadre]"); if (cu) toast(`Efectivo de ${motoN(cu.dataset.cuadre)} cuadrado (demo)`);
+  if (e.target.closest("#cok")) { if (!$("#cef").value) { toast("Escriba el efectivo contado"); return; } toast("Cierre de caja guardado (demo)"); $("#cef").value = ""; $("#cga").value = ""; cajaCalc(); }
+  if (e.target.closest("#psend")) { const n = {all: TOTAL_CLI, dorm: Math.round(TOTAL_CLI * .28), emp: 23}[$("#pa").value]; toast(`Promo programada para ${n.toLocaleString("en-US")} clientes (demo)`); }
   const cf = e.target.closest("[data-conf]"); if (cf) { RES[+cf.dataset.conf].st = "Confirmada"; toast("Reserva confirmada. El bot le avisó al cliente (demo)"); render(); }
   if (e.target.closest("#kmode")) { KMODE = !KMODE; render(); }
   if (e.target.closest("#fadd")) { FDRAFT.items.push(["Almuerzo", 1, 80]); render(); }
@@ -609,8 +713,10 @@ document.addEventListener("input", e => {
   if (t.id === "q") { const q = t.value.trim().toLowerCase().replace("#", ""); const r = $("#results"); if (!q) { r.hidden = true; return; }
     const hits = [...ORD.filter(o => String(o.id).includes(q) || o.who.toLowerCase().includes(q)).map(o => `<a href="#pedidos" data-v="pedidos"><span>Pedido #${o.id} · ${o.who}</span><small>${o.zona}</small></a>`),
       ...CONV.filter(c => c.who.toLowerCase().includes(q) || c.q.toLowerCase().includes(q)).map(c => `<a href="#whatsapp" data-v="whatsapp"><span>${c.who}</span><small>WhatsApp · ${c.tag}</small></a>`),
+      ...CLI.filter(c => c.n.toLowerCase().includes(q)).map(c => `<a href="#clientes" data-v="clientes"><span>${c.n}</span><small>Cliente · ${c.z}</small></a>`),
       ...FACT.filter(f => f.cli.toLowerCase().includes(q) || f.n.includes(q)).map(f => `<a href="#facturas" data-v="facturas"><span>${f.cli}</span><small>Factura ${f.n.slice(-5)}</small></a>`)].slice(0, 8);
     r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; return; }
+  if (t.id === "cef" || t.id === "cga" || t.id === "cmo") { cajaCalc(); return; }
   if (t.dataset.bot) { BOTTXT[t.dataset.bot] = t.value; try { localStorage.setItem("tgp-bot", JSON.stringify(BOTTXT)); } catch (er) {} return; }
   if (t.id === "fcli" || t.id === "frtn") { FDRAFT[t.id === "fcli" ? "cli" : "rtn"] = t.value; rerenderKeep(t); return; }
   if (t.dataset.fq) { const q = Math.max(0, Math.round(+t.value || 0)); FDRAFT.items[+t.dataset.fq][1] = q; rerenderKeep(t); return; }

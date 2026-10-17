@@ -2,10 +2,10 @@
 
 *Casa Digital, una línea de Clientia Tech · Investigación del 15 de octubre de 2026 · Nada se ha enviado todavía*
 
-**Video oficial (el que hay que mandar):** [toretos-grill-casa-digital-vertical.mp4](toretos-grill-casa-digital-vertical.mp4) (vertical 1080×1920 para celular, la edición original con "Still Buggin" y cierre de Clientia Tech).
-**Video horizontal:** [toretos-grill-casa-digital.mp4](toretos-grill-casa-digital.mp4) (1920×1080, 2:04, mismo video para compu).
+**Video oficial (el que hay que mandar):** [toretos-grill-casa-digital-v4-vertical.mp4](toretos-grill-casa-digital-v4-vertical.mp4) (vertical 1080×1920, 1:51, canción "Stylish"). Es el video de antes con la parte de solución que pidió rodrigo el 17-oct: va en cuatro partes marcadas (1 El problema, 2 La solución, 3 Su panel, 4 Por qué nosotros) y la escena nueva "Por eso les proponemos esto. Creamos un sistema que automatiza Toreto's", con lo que automatiza, y cuatro pantallas reales del panel nuevo.
+**Versión anterior (por si se quiere volver):** [toretos-grill-casa-digital-vertical.mp4](toretos-grill-casa-digital-vertical.mp4) (vertical, "Still Buggin") y [toretos-grill-casa-digital.mp4](toretos-grill-casa-digital.mp4) (horizontal, 2:04).
 **Descartados (rodrigo, 2026-10-15):** v2 y v3, el pitch de preguntas del método nuevo. Quedan guardados (toretos-grill-casa-digital-v2.mp4, -v3.mp4) solo por si acaso; no mandarlos.
-**Panel demo:** [toretos-grill-panel.html](toretos-grill-panel.html) (un solo archivo, funciona en compu y celular; capturas en `capturas-panel/`)
+**Panel demo:** [toretos-grill-panel.html](toretos-grill-panel.html) (un solo archivo, funciona en compu y celular; capturas en `capturas-panel/`). Desde el 17-oct tiene lo mismo que el de Coco Chicken: Caja, Ventas, Clientes y promos, y pedido para mañana. El panel anterior quedó en `panel-anteriores/`.
 
 Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos, 278 comentarios y 49 respuestas del propio negocio) y del video y la captura que mandó rodrigo. Detalle y fuentes en `redes/investigacion-redes.md` (en la carpeta del proyecto). Lo inferido o de ejemplo está marcado.
 
@@ -46,10 +46,13 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 1. **Inicio:** ventas de hoy, almuerzos vendidos, WhatsApp sin contestar (0) y domicilios en camino. Acciones de un clic ("la carne no llega a la cena → escribirle a la carnicería", "pedido lleva 32 min en camino → avisarle al cliente"). Medidor de su meta de 1,000 almuerzos al día.
 2. **WhatsApp:** cada conversación, si la contestó el bot o pasó al dueño, y lo que el bot sabe (dirección, horario, menú de hoy, costo de envío), editable.
 3. **Pedidos y motoristas:** tablero Nuevo → En cocina → En camino → Entregado y pantalla de cocina. Cada entrega queda anotada con lo que cobró el motorista; al volver, el efectivo se cuadra con un clic.
-4. **Inventario y proveedores:** carne, chuleta, costilla, pollo, chorizo, carbón, gas, plátano, lechuga, arroz, frijoles, tortillas. Cuando algo baja del mínimo, el bot le escribe solo al proveedor.
-5. **Facturas:** con RTN, ISV 15%, se mandan por WhatsApp. Demo sin valor fiscal; las reales necesitan el CAI del SAR.
-6. **Reservas y eventos:** grupos, cumpleaños y eventos como el Car Meet.
-7. **TikTok:** cuánto vendió cada video con un código ("diga COLOCHO80 al pedir"). Vistas reales; pedidos de ejemplo.
+4. **Inventario y proveedores:** carne, chuleta, costilla, pollo, chorizo, carbón, gas, plátano, lechuga, arroz, frijoles, tortillas. Cuando algo baja del mínimo, el bot le escribe solo al proveedor. Calcula el pedido de mañana (carne, pollo, tortillas, carbón) con el promedio del mismo día de las últimas semanas.
+5. **Caja:** cierre de cada noche desde el celular, lo del mostrador más el efectivo de los motoristas; avisa si no cuadra y guarda los últimos 7 días.
+6. **Ventas:** por canal (en el local, para llevar, domicilio), lo más vendido y cada día de la semana.
+7. **Clientes y promos:** cada persona y empresa que escribe al WhatsApp queda en su lista; se les manda el almuerzo del día. Tarjeta de 10 almuerzos y el siguiente gratis (propuesta nuestra, no es una promo suya).
+8. **Facturas:** con RTN, ISV 15%, se mandan por WhatsApp. Demo sin valor fiscal; las reales necesitan el CAI del SAR.
+9. **Reservas y eventos:** grupos, cumpleaños y eventos como el Car Meet.
+10. **TikTok:** cuánto vendió cada video con un código ("diga COLOCHO80 al pedir"). Vistas reales; pedidos de ejemplo.
 
 **Lo que no hacemos:** tocar sus videos (ya funcionan), inventar fotos ni volver a meterlos a una app de delivery.
 
@@ -61,7 +64,9 @@ Todo lo que digo del negocio sale de su TikTok @toretosgrills (perfil, 11 videos
 
 ## 5. El video
 
-Escenas: intro con su logo → "El Colocho ya tiene a la gente" con su video fijado (el que mandó rodrigo) → 4 comentarios reales ("donde estan ubicados?", "y pa domicilio", "Dan factura con rtn ?", "No contestan whats") y "Y él contesta uno por uno" → "Su WhatsApp, que contesta solo" → conversación en un iPhone (dirección, horario y almuerzo de L80 reales; pedido a domicilio de ejemplo) → teléfono, cocina y panel conectados, con el aviso "su pedido va en camino con el motorista" → el panel real → "Cero clientes sin respuesta" → sus motoristas con el efectivo de cada uno cuadrado (ejemplo) → el carbón se acaba y el proveedor ya sabe → su meta de 1,000 almuerzos al día, con su frase real → Casa Digital → by Clientia Tech. Lo de ejemplo está marcado en pantalla.
+**v4 (oficial):** las mismas escenas de abajo, en cuatro partes marcadas. Cambia: "Su WhatsApp, que contesta solo" se reemplazó por la escena de solución ("Por eso les proponemos esto. Creamos un sistema que automatiza Toreto's": su WhatsApp contesta y toma pedidos; la cocina y el motorista reciben cada pedido; la caja y el efectivo se cuadran solos; el proveedor sabe antes de que se acabe; y usted lo ve todo en un solo panel). El panel pasa por cuatro pantallas reales (Inicio, Pedidos, Caja, Clientes).
+
+Escenas del video anterior: intro con su logo → "El Colocho ya tiene a la gente" con su video fijado (el que mandó rodrigo) → 4 comentarios reales ("donde estan ubicados?", "y pa domicilio", "Dan factura con rtn ?", "No contestan whats") y "Y él contesta uno por uno" → "Su WhatsApp, que contesta solo" → conversación en un iPhone (dirección, horario y almuerzo de L80 reales; pedido a domicilio de ejemplo) → teléfono, cocina y panel conectados, con el aviso "su pedido va en camino con el motorista" → el panel real → "Cero clientes sin respuesta" → sus motoristas con el efectivo de cada uno cuadrado (ejemplo) → el carbón se acaba y el proveedor ya sabe → su meta de 1,000 almuerzos al día, con su frase real → Casa Digital → by Clientia Tech. Lo de ejemplo está marcado en pantalla.
 
 ## 6. Contacto (borradores, nada enviado)
 
