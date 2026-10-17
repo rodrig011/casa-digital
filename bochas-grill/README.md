@@ -2,14 +2,16 @@
 
 - `marca.md`: investigación y propuesta (copia de la carpeta del proyecto `restaurantes/bochas-grill/`). `redes/investigacion-redes.md`: fuentes y conteos de sus comentarios.
 - `panel/`: panel del dueño para las 5 sucursales. `python3 panel/build.py` arma `panel/dist/bochas-grill-panel.html` con el logo adentro.
-- `video/gen.py`: video vertical 1080×1920 (2:04), con el mismo pitch y la misma edición del video vertical de Toreto's (frases completas, fondo negro con luces): su historia, comentarios reales, bot de WhatsApp, inventario, espera por sucursal, encuesta, panel, franquicia y contacto.
+- `panel/anteriores/`: el panel anterior (v1), para volver a él si hace falta.
+- `video/gen.py`: video v4 vertical 1080×1920 (1:51, música "Stylish" en `src/musica-stylish.mp3`, copia de `musica/stylish-fassounds.mp3` del proyecto), en 4 partes numeradas: el problema, la solución ("Por eso le proponemos un sistema que automatiza sus cinco sucursales"), su panel y por qué nosotros. Se basa en `mag-pollo/video/gen.py`.
+- `video/gen-v3.py`: la v3 (2:04, "Still Buggin" en `src/musica.mp3`), mismo estilo sin la sección de solución.
 - `video/gen-v2-preguntas.py`: la versión con el guion de preguntas; rodrigo la rechazó, queda de registro. Usa `coco-chicken/video/` (gen2, gen3, gen6, clientia-mark.json y `deps/`) y `toretos-grill/video/gen.py`.
 - `video/gen-v0-pip.py`: primera versión con ventana de sus TikTok y subtítulos cortos; rodrigo rechazó esa edición, queda solo de registro.
 
 ```bash
 cd coco-chicken/video && mkdir -p deps && cd deps && npm init -y && npm i gsap @fontsource/archivo-black @fontsource/inter-tight
 npm i -g hyperframes@0.8.150 && hyperframes browser ensure
-# en bochas-grill/video/src/ van musica.mp3 ("Still Buggin"); las fotos hist*.jpg, villa.jpg, plato.jpg y panel-m.jpg ya están en el repo
+# en bochas-grill/video/src/ van musica-stylish.mp3 (v4) y musica.mp3 ("Still Buggin", v3); las fotos hist*.jpg, villa.jpg, plato.jpg y panel-m.jpg ya están en el repo
 cd bochas-grill/video && python3 gen.py && cd build/bochas-grill-vertical && hyperframes render . -o ../bochas-grill-vertical.mp4 -q high
 ```
 
