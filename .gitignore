@@ -7,3 +7,5 @@ __pycache__/
 bochas-grill/video/build/
 bochas-grill/video/src/*.mp4
 bochas-grill/video/src/musica.mp3
+mag-pollo/video/build/
+mag-pollo/video/src/musica.mp3
