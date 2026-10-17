@@ -610,7 +610,14 @@ def remap_js():
         if sc == "asks":
             part += 'rise("#a0b", K(8.400), { d: 1 }); rise("#afoot", K(7), { d: 1.2 });\n'
         out.append(part)
-    return "".join(out)
+    js = "".join(out)
+    # no dry cuts: every scene fades out just before the next bar, and the next one rises on the bar
+    fs = 'tl.set("#fstage", { opacity: 0 }, K(6.000));'
+    assert fs in js
+    js = js.replace(fs, 'tl.to("#fstage", { opacity: 0, duration: .6, ease: "power2.in" }, K(6) - .65);')
+    return js + """
+$scenes.forEach(([id, s, e]) => { if (id !== "end") tl.to("#cam-" + id, { opacity: 0, duration: .6, ease: "power2.in" }, e - .65); });
+"""
 
 
 if __name__ == "__main__":
