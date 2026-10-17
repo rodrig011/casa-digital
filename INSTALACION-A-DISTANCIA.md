@@ -14,7 +14,7 @@ Todo el sistema vive en internet, no en el restaurante: el bot y el panel corren
 ### 0. Antes del primer cliente (una sola vez, solo Rodrigo)
 
 1. Probar el bot completo con el sandbox de Twilio y una clave real de Claude, de punta a punta. Hasta hoy **nunca se probó con Twilio real ni con clave real**. Guía: [steelworks/bot/README.md](steelworks/bot/README.md), pasos 1 a 6.
-2. Adaptar el bot al restaurante. El único bot que existe en código es el de Steel Works (cotiza portones). Para un restaurante hay que cambiar la conversación (`engine.js` e `ia.js`): menú con precios, sucursales, horarios, pedidos para recoger, pasar a una persona. Los paneles de Coco Chicken, Toreto's y Bochas hoy son **demos** con datos de ejemplo; hay que conectarlos al servidor como el de Steel Works.
+2. Llenar el archivo del cliente. El bot de restaurantes ya existe: [bot-restaurante/](bot-restaurante/README.md) (menú, pedidos para recoger, sucursales, panel con pantalla de cocina y aviso de "pedido listo" al cliente). Para cada cliente solo se copia `negocios/ejemplo.json` y se llena con su menú y sucursales confirmados.
 
 ### 1. Lo que se le pide al cliente por WhatsApp (día 1)
 
@@ -37,7 +37,7 @@ Por WhatsApp video o Zoom, con el dueño en su celular o computadora:
 
 ### 3. Rodrigo publica el servidor (mismo día, solo él)
 
-1. En Render: **New > Blueprint**, este repositorio, el `render.yaml` del cliente. Se llena con la subcuenta de Twilio, el número, el celular del dueño y la clave de Claude.
+1. En Render: **New > Blueprint**, este repositorio, el `render.yaml` del cliente (copia de `bot-restaurante/render.yaml` con su nombre y su archivo de negocio). Se llena con la subcuenta de Twilio, el número, el celular del dueño y la clave de Claude.
 2. Crear la plantilla de avisos al dueño en Twilio (Content Template Builder, categoría Utility) y esperar que Meta la apruebe.
 3. Dar de alta a cada persona del panel en **Render > Shell**:
    `npm run usuario -- agregar correo@negocio.hn "Nombre"`
