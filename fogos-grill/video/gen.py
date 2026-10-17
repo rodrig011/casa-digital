@@ -7,10 +7,12 @@ Tech outro. No question method.
 
 Story, all from their own TikTok @fogosbeergarden: their own clips (storefront, plate, beer garden, grill)
 and their numbers -> real comments asking where they are, the menu with prices, delivery, a phone number
--> step 1: every video sends people to their WhatsApp (bio link, pinned comment, the number in each video;
+-> the solution: a system that runs the restaurant by itself (bot, page, panel) -> first, every video sends
+people to their WhatsApp (bio link, pinned comment, the number in each video;
 a WhatsApp bot can't answer TikTok comments, rodrigo 2026-10-17) -> their WhatsApp answers by itself:
 address, map, menu with the real L130 price, a beer-garden table booked -> a simple page with menu, map and
-reservations for the bio link -> the owner sees orders, bookings and which video sold -> Casa Digital ->
+reservations for the bio link -> the real owner panel (same base as Coco Chicken's): today, WhatsApp orders,
+beer-garden bookings, suppliers warned by themselves -> why Casa Digital ->
 outro. Conversations, page and panel numbers are examples, labelled on screen.
 
 Music: `--music path.mp3 --bpm N --p0 S` (first downbeat in seconds; a bar is 4 beats). Without them it
@@ -41,9 +43,11 @@ MUSIC = arg("--music", os.path.join(SRC, "musica.mp3"))
 P0 = float(arg("--p0", gen6.P0))
 BAR = 4 * 60 / float(arg("--bpm", 0)) if "--bpm" in sys.argv else gen6.BAR
 K = lambda k: round(P0 + BAR * k, 3)
-SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("prob", 11, 15), ("path", 15, 20), ("meet", 20, 22),
-          ("bot", 22, 29), ("web", 29, 33), ("owner", 33, 40), ("us", 40, 45), ("end", 45, 49)]
-TOTAL = K(49)
+SCENES = [("intro", 0, 3), ("fame", 3, 7), ("asks", 7, 11), ("prob", 11, 15), ("sol", 15, 19), ("path", 19, 23),
+          ("bot", 23, 30), ("web", 30, 33), ("owner", 33, 42), ("us", 42, 46), ("end", 46, 50)]
+TOTAL = K(50)
+# the real owner panel (fogos-grill/panel), phone-width screenshots cropped to the part each beat shows
+PANEL = ["hoy", "pedidos", "reservas", "inventario"]
 WA = "9844-8314"
 ADDR = "Col. Trejo, esquina de la 11 calle y 23 avenida, cerca del City Mall"
 BIO = ["🔥 Asados y parrilla en San Pedro Sula", "🍖 Ordená comida 👇", f"📲 WhatsApp {WA}"]
@@ -132,6 +136,15 @@ CSS_F = r'''
 .wy3 i{flex:none;width:64px;height:64px;border-radius:50%;background:rgba(242,181,68,.14);color:#F2B544;font-style:normal;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(242,181,68,.4);}
 .wy3 b{display:block;font-size:36px;font-weight:600;color:#F5F5F7;letter-spacing:-.02em;}
 .wy3 span{display:block;font-size:27px;color:#8E8E93;margin-top:6px;line-height:1.3;}
+/* the solution: three numbered parts */
+.so{position:absolute;left:90px;width:900px;display:flex;gap:28px;align-items:flex-start;background:linear-gradient(180deg,#161618,#111113);border-radius:34px;padding:34px 36px;box-shadow:0 0 0 1px rgba(242,181,68,.25),0 30px 80px rgba(0,0,0,.5);}
+.so i{flex:none;width:76px;height:76px;border-radius:22px;background:#F2B544;color:#0B0B0C;font-style:normal;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.so b{display:block;font-size:40px;font-weight:600;color:#F5F5F7;letter-spacing:-.02em;}
+.so span{display:block;font-size:29px;color:#A1A1A6;margin-top:8px;line-height:1.3;}
+/* the real panel, in a frame big enough to read */
+.pf{position:absolute;left:60px;top:800px;width:960px;height:980px;border-radius:40px;overflow:hidden;background:#F3F3F3;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 60px 140px rgba(0,0,0,.7);}
+.pfi{position:absolute;inset:0;opacity:0;}
+.pfi img{display:block;width:960px;}
 /* the owner panel card: today's orders, then which video sold */
 .pv{position:absolute;left:40px;right:40px;top:90px;}
 .ol{margin-top:14px;}
@@ -172,7 +185,7 @@ def build():
     shutil.copy(os.path.join(DEPS, "@fontsource", "archivo-black", "files", "archivo-black-latin-400-normal.woff2"), A("fonts", "display.woff2"))
     for w in (300, 400, 500, 600, 700):
         shutil.copy(os.path.join(DEPS, "@fontsource", "inter-tight", "files", f"inter-tight-latin-{w}-normal.woff2"), A("fonts", f"it-{w}.woff2"))
-    for n in ("fogos.mp4", "logo.png", "local.jpg", "mapa.jpg", "plato.jpg", "parrillada.jpg", "entrana.jpg"):
+    for n in ["fogos.mp4", "logo.png", "local.jpg", "mapa.jpg", "plato.jpg"] + [f"pv-{v}.jpg" for v in PANEL]:
         shutil.copy(os.path.join(SRC, n), A(n))
     json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
                "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
@@ -234,15 +247,11 @@ def build():
             '<div class="pg-map"><img src="assets/mapa.jpg"></div>'
             f'<div class="pg-f">{ADDR}<br>Todos los días desde las 11:30 am · WhatsApp {WA}</div>'
             '</div></div>')
-    vbars = [("Pollo chuco", "plato", 11, 1.0), ("Parrillada para dos", "parrillada", 5, .45), ("Entraña al carbón", "entrana", 3, .27)]
-    vb_html = "".join(f'<div class="vb" id="vb{i}"><img src="assets/{f}.jpg"><div><div class="t">{n}<span>{c} pedidos</span></div>'
-                      f'<div class="bar"><i id="vbb{i}" style="width:{w * 100:g}%"></i></div></div></div>' for i, (n, f, c, w) in enumerate(vbars))
-    orders = [("#241 · 2 × Pollo chuco", "Para llevar · 12:40 pm", "l", "Listo"),
-              ("#242 · Parrillada para dos", "A domicilio · 1:05 pm", "c", "En cocina"),
-              ("#243 · 3 × Pollo chuco", "Para comer aquí · 1:12 pm", "n", "Nuevo"),
-              ("Reserva · mesa para 6", "Beer garden · sábado 7:00 pm", "l", "Confirmada"),
-              ("Reserva · mesa para 4", "Beer garden · sábado 8:00 pm", "n", "Nueva")]
-    ol = "".join(f'<div class="or" id="or{i}"><div><b>{a}</b><span>{b}</span></div><em class="{c}">{d}</em></div>' for i, (a, b, c, d) in enumerate(orders))
+    sols = [("Su WhatsApp contesta solo", "Menú, precios, ubicación, pedidos y reservas, al instante y a cualquier hora."),
+            ("Una página con su menú", "Para el link de su perfil: precios, mapa y botón de WhatsApp."),
+            ("Un panel para usted", "Pedidos, reservas, caja e inventario. Le avisa solo al proveedor.")]
+    sols_html = "".join(f'<div class="so" id="so{i}" style="top:{860 + i * 320}px"><i>{i + 1}</i><div><b>{a}</b><span>{b}</span></div></div>' for i, (a, b) in enumerate(sols))
+    pf_html = "".join(f'<div class="pfi" id="pfi{i}"><img id="pfimg{i}" src="assets/pv-{v}.jpg"></div>' for i, v in enumerate(PANEL))
     whys = [("Lo dejamos listo con su menú", f"Su WhatsApp {WA}, su dirección, su mapa y sus precios."),
             ("Usted no cambia nada", "Sigue en la parrilla: el bot contesta y usted mira el panel."),
             ("Cero clientes sin respuesta", "Cada pregunta termina en un pedido o una reserva."),
@@ -290,28 +299,30 @@ def build():
             <div class="sub" id="q3">{words("Cada pregunta sin respuesta es una venta que se va a otro lado.")}</div>
           </div>
           <div class="foot" id="qfoot">Revisado en su TikTok el 17 de octubre de 2026</div>'''),
+        scene("sol", f'''
+          <div class="sp sp-gold" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
+          <div class="left">
+            <div class="eb g" id="s0">La solución</div>
+            <div class="h1 m" id="s1">{words("Por eso le proponemos")}</div>
+            <div class="h1 m" id="s2">{gold("un sistema automático.")}</div>
+            <div class="sub" id="s3">{words("Lo creamos para automatizar su restaurante, en tres partes:")}</div>
+          </div>
+          {sols_html}'''),
         scene("path", f'''
           <div class="sp sp-green" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
           {path}
           <div class="left">
-            <div class="eb g" id="pp0">Paso 1 · De TikTok a WhatsApp</div>
+            <div class="eb g" id="pp0">Primero · De TikTok a WhatsApp</div>
             <div class="h1 m" id="pp1">{words("Cada video")}</div>
             <div class="h1 m" id="pp2">{words("lleva directo")}</div>
             <div class="h1 m" id="pp3">{gold("a su WhatsApp.")}</div>
           </div>
           <div class="demo" id="pdemo">Ejemplo · su perfil y su número son reales</div>'''),
-        scene("meet", f'''
-          <div class="sp sp-green" style="left:260px;top:-300px;width:1400px;height:1400px"></div>
-          <div class="center">
-            <div class="wa-pill" id="mp"><i></i>WhatsApp · {WA}</div>
-            <div class="h1" id="me1" style="font-size:124px">{words("Y ahí, su WhatsApp")}</div>
-            <div class="h1" id="me2" style="font-size:124px">{gold("contesta solo.")}</div>
-          </div>'''),
         scene("bot", f'''
           <div class="sp sp-green" style="left:950px;top:-250px;width:1400px;height:1400px"></div>
           <div class="ph-stage">{gen3.phone(wa, "phw", dark=True)}</div>
           <div class="left">
-            <div class="lgrp" id="bg1"><div class="eb g" id="b10">Al instante, a cualquier hora</div><div class="h1" id="b11">{words("Dice dónde están,")}</div><div class="h1" id="b12">{gold("con el mapa.")}</div></div>
+            <div class="lgrp" id="bg1"><div class="eb g" id="b10">1 · Su WhatsApp, al instante</div><div class="h1" id="b11">{words("Dice dónde están,")}</div><div class="h1" id="b12">{gold("con el mapa.")}</div></div>
             <div class="lgrp" id="bg2"><div class="eb g" id="b20">Con sus precios</div><div class="h1" id="b21">{words("Manda el menú")}</div><div class="h1" id="b22">{gold("y toma el pedido.")}</div></div>
             <div class="lgrp" id="bg3"><div class="eb g" id="b30">Para el beer garden</div><div class="h1" id="b31">{words("Y aparta")}</div><div class="h1" id="b32">{gold("la mesa.")}</div></div>
           </div>
@@ -320,7 +331,7 @@ def build():
           <div class="sp sp-gold" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
           <div class="ph-stage" id="wstage">{gen3.phone(page, "phs", dark=True)}</div>
           <div class="left">
-            <div class="eb g" id="w0">El link de su perfil</div>
+            <div class="eb g" id="w0">2 · El link de su perfil</div>
             <div class="h1 m" id="w1">{words("Una página")}</div>
             <div class="h1 m" id="w2">{gold("con su menú.")}</div>
             <div class="sub" id="w3">{words("Precios, mapa, reservas y el botón de WhatsApp, todo en un solo lugar.")}</div>
@@ -328,20 +339,14 @@ def build():
           <div class="demo" id="wdemo">Página de ejemplo · fotos, dirección y precio reales</div>'''),
         scene("owner", f'''
           <div class="sp sp-red" style="left:900px;top:-300px;width:1400px;height:1400px"></div>
-          <div class="pn" id="pn"><div class="k">Panel Fogos Grill · hoy</div>
-            <div class="pv" id="pva">
-              <div class="kp"><div id="kp0"><span>Pedidos por WhatsApp</span><b id="nk0">0</b></div>
-                <div id="kp1"><span>Mesas reservadas</span><b id="nk1">0</b></div>
-                <div class="ok" id="kp2"><span>Sin contestar</span><b>0</b></div></div>
-              <h5>Pedidos y reservas</h5><div class="ol">{ol}</div></div>
-            <div class="pv" id="pvb">
-              <h5 style="margin-top:6px">Qué video trajo clientes · esta semana</h5>{vb_html}
-              <div class="tip" id="tip"><i>!</i><div><div class="kk">Sugerencia del panel</div><p>El video del pollo chuco trajo 11 pedidos. Suba otro del pollo chuco este viernes.</p></div></div></div></div>
+          <div class="pf" id="pf">{pf_html}</div>
           <div class="left">
-            <div class="lgrp" id="og1"><div class="eb g" id="o0">Panel del dueño</div><div class="h1 m" id="o1">{words("Cada pedido y reserva,")}</div><div class="h1 m" id="o2">{gold("en su celular.")}</div></div>
-            <div class="lgrp" id="og2"><div class="eb g" id="o3">Y lo más útil</div><div class="h1 m" id="o4">{words("Le dice")}</div><div class="h1 m" id="o5">{gold("qué video vende.")}</div></div>
+            <div class="lgrp" id="og1"><div class="eb g" id="o0">3 · Su panel de dueño</div><div class="h1 m" id="o1">{words("Todo su negocio,")}</div><div class="h1 m" id="o2">{gold("en su celular.")}</div></div>
+            <div class="lgrp" id="og2"><div class="eb g" id="o3">Pedidos</div><div class="h1 m" id="o4">{words("Los pedidos llegan")}</div><div class="h1 m" id="o5">{gold("ya armados.")}</div></div>
+            <div class="lgrp" id="og3"><div class="eb g" id="o6">Reservas</div><div class="h1 m" id="o7">{words("Las mesas del beer garden,")}</div><div class="h1 m" id="o8">{gold("confirmadas solas.")}</div></div>
+            <div class="lgrp" id="og4"><div class="eb g" id="o9">Inventario</div><div class="h1 m" id="o10">{words("Y le avisa solo")}</div><div class="h1 m" id="o11">{gold("al proveedor.")}</div></div>
           </div>
-          <div class="demo" id="odemo">Panel de ejemplo · datos de ejemplo</div>'''),
+          <div class="demo" id="odemo">El panel real que le dejamos · datos de ejemplo</div>'''),
         scene("us", f'''
           <div class="sp sp-gold" style="left:900px;top:-200px;width:1400px;height:1400px"></div>
           <div class="left">
@@ -386,7 +391,7 @@ def build():
     scenes_js = json.dumps([[i, K(a), K(b)] for i, a, b in SCENES])
     j6 = gen6.JS
     helpers = TG.JS_T[:TG.JS_T.index("// 1 · intro")]
-    js = (j6[:j6.index("// 1 · intro")] + helpers + JS_F + re.sub(r"K\((\d+(?:\.\d+)?)\)", lambda m: f"K({float(m.group(1)) + 8:g})", j6[j6.index("// 11 · outro"):])
+    js = (j6[:j6.index("// 1 · intro")] + helpers + JS_F + re.sub(r"K\((\d+(?:\.\d+)?)\)", lambda m: f"K({float(m.group(1)) + 9:g})", j6[j6.index("// 11 · outro"):])
           ).replace("$scenes", scenes_js).replace("$P0", str(P0)).replace("$BAR", str(BAR))
     html = (gen3.HTML.replace("$title", "Casa Digital x Fogos Grill").replace("$css", css).replace("$body", body)
             .replace("$js", js).replace("$total", str(TOTAL)).replace('data-fade-out="2.5"', 'data-fade-out="4"'))
@@ -423,60 +428,73 @@ tl.fromTo("#pb", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0
 [11.6, 12.2, 12.8].forEach((k, i) => rise("#pr" + i, K(k), { y: 20, d: 1.2 }));
 rise("#qfoot", K(12), { d: 1.2 });
 
-// 5 · step 1: every video sends people to their WhatsApp (5 bars)
-rise("#pp0", K(15), { d: 1.2 }); rise("#pp1 .w", K(15) + .3); rise("#pp2 .w", K(15) + .6); rise("#pp3 .w", K(15) + .9, { d: 1.8 });
-tl.fromTo("#pk0", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(15.5));
-tl.fromTo("#wabtng", { opacity: 0 }, { opacity: 1, duration: .6, yoyo: true, repeat: 3, ease: "sine.inOut" }, K(16.4));
-tl.fromTo("#pk1", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(17.3));
-tl.fromTo("#pk2", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(18.6));
-rise("#pdemo", K(16), { d: 1.2 });
+// 5 · the solution: a system in three parts (4 bars)
+rise("#s0", K(15), { d: 1.2 }); rise("#s1 .w", K(15) + .3); rise("#s2 .w", K(15) + .65, { d: 1.8 });
+rise("#s3 .w", K(15.9), { st: .03 });
+[16.3, 16.9, 17.5].forEach((k, i) => tl.fromTo("#so" + i, { opacity: 0, y: 40, filter: "blur(12px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.4, ease: SOFT }, K(k)));
 
-// 6 · their WhatsApp
-rise("#mp", K(20), { d: 1.4 });
-rise("#me1 .w", K(20) + .3, { d: 1.8, st: .12 });
-rise("#me2 .w", K(20.7), { d: 2, st: .12 });
+// 6 · first, every video sends people to their WhatsApp (4 bars)
+rise("#pp0", K(19), { d: 1.2 }); rise("#pp1 .w", K(19) + .3); rise("#pp2 .w", K(19) + .6); rise("#pp3 .w", K(19) + .9, { d: 1.8 });
+tl.fromTo("#pk0", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(19.4));
+tl.fromTo("#wabtng", { opacity: 0 }, { opacity: 1, duration: .6, yoyo: true, repeat: 3, ease: "sine.inOut" }, K(20.1));
+tl.fromTo("#pk1", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(20.8));
+tl.fromTo("#pk2", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.8, ease: SOFT }, K(21.7));
+rise("#pdemo", K(19.8), { d: 1.2 });
 
 // 7 · the bot: address and map, menu with the real price, a table booked (7 bars)
-tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(22));
-tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(29) - K(23), ease: "sine.inOut" }, K(23));
-rise("#bdemo", K(22.5), { d: 1.2 });
-rise("#b10", K(22), { d: 1.2 }); rise("#b11 .w", K(22) + .3); rise("#b12 .w", K(22) + .6);
-show("m1", K(22.4)); show("t1", K(22.8)); dots("t1", K(22.8) + .3); hide("t1", K(23.3)); show("m2", K(23.3)); show("m3", K(23.9));
-out("#bg1", K(24.7) - .8);
-rise("#b20", K(24.7), { d: 1.2 }); rise("#b21 .w", K(24.7) + .3); rise("#b22 .w", K(24.7) + .6);
-show("m4", K(24.9)); show("t2", K(25.4)); dots("t2", K(25.4) + .3); hide("t2", K(25.9)); show("m5", K(25.9));
-out("#bg2", K(27.1) - .8);
-rise("#b30", K(27.1), { d: 1.2 }); rise("#b31 .w", K(27.1) + .3); rise("#b32 .w", K(27.1) + .6);
-show("m6", K(27)); show("t3", K(27.5)); dots("t3", K(27.5) + .3); hide("t3", K(28)); show("m7", K(28)); show("m8", K(28.5));
+tl.fromTo("#phw", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(23));
+tl.to("#phw", { rotationY: 4, rotationX: 0, duration: K(30) - K(24), ease: "sine.inOut" }, K(24));
+rise("#bdemo", K(23.5), { d: 1.2 });
+rise("#b10", K(23), { d: 1.2 }); rise("#b11 .w", K(23) + .3); rise("#b12 .w", K(23) + .6);
+show("m1", K(23.4)); show("t1", K(23.8)); dots("t1", K(23.8) + .3); hide("t1", K(24.3)); show("m2", K(24.3)); show("m3", K(24.9));
+out("#bg1", K(25.7) - .8);
+rise("#b20", K(25.7), { d: 1.2 }); rise("#b21 .w", K(25.7) + .3); rise("#b22 .w", K(25.7) + .6);
+show("m4", K(25.9)); show("t2", K(26.4)); dots("t2", K(26.4) + .3); hide("t2", K(26.9)); show("m5", K(26.9));
+out("#bg2", K(28.1) - .8);
+rise("#b30", K(28.1), { d: 1.2 }); rise("#b31 .w", K(28.1) + .3); rise("#b32 .w", K(28.1) + .6);
+show("m6", K(28)); show("t3", K(28.5)); dots("t3", K(28.5) + .3); hide("t3", K(29)); show("m7", K(29)); show("m8", K(29.5));
 
-// 8 · the page for the bio link, scrolled slowly
-tl.fromTo("#phs", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.4, ease: SOFT }, K(29));
-tl.to("#phs", { rotationY: 4, rotationX: 0, duration: K(33) - K(30), ease: "sine.inOut" }, K(30));
-tl.fromTo("#pgin", { y: 0 }, { y: -150, duration: K(32.6) - K(30.4), ease: "sine.inOut" }, K(30.4));
-rise("#w0", K(29), { d: 1.2 }); rise("#w1 .w", K(29) + .3); rise("#w2 .w", K(29) + .6, { d: 1.8 });
-rise("#w3 .w", K(30), { st: .03 });
-rise("#wdemo", K(29.5), { d: 1.2 });
+// 8 · the page for the bio link, scrolled slowly (3 bars)
+tl.fromTo("#phs", { y: 700, rotationY: -16, rotationX: 6 }, { y: 0, rotationY: -6, rotationX: 2, duration: 2.2, ease: SOFT }, K(30));
+tl.to("#phs", { rotationY: 4, rotationX: 0, duration: K(33) - K(31), ease: "sine.inOut" }, K(31));
+tl.fromTo("#pgin", { y: 0 }, { y: -150, duration: K(32.7) - K(31), ease: "sine.inOut" }, K(31));
+rise("#w0", K(30), { d: 1.2 }); rise("#w1 .w", K(30) + .3); rise("#w2 .w", K(30) + .6, { d: 1.8 });
+rise("#w3 .w", K(30.7), { st: .03 });
+rise("#wdemo", K(30.4), { d: 1.2 });
 
-// 9 · the owner panel, long enough to read: today's orders and bookings, then which video sold (7 bars)
-tl.fromTo("#pn", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(33) + .3);
-rise("#o0", K(33), { d: 1.2 }); rise("#o1 .w", K(33) + .3); rise("#o2 .w", K(33) + .6, { d: 1.8 });
-count("nk0", 0, 19, K(33.6), n => String(n), 1.6); count("nk1", 0, 7, K(33.6), n => String(n), 1.6);
-[34, 34.4, 34.8, 35.3, 35.7].forEach((k, i) => rise("#or" + i, K(k), { y: 20, d: 1.2 }));
-tl.set("#pvb", { opacity: 0 }, 0);
-out("#pva", K(36.8) - .7, .8);
-tl.to("#pvb", { opacity: 1, duration: .1 }, K(36.8));
-out("#og1", K(36.8) - .8);
-rise("#o3", K(36.8), { d: 1.2 }); rise("#o4 .w", K(36.8) + .3); rise("#o5 .w", K(36.8) + .6, { d: 1.8 });
-[36.9, 37.3, 37.7].forEach((k, i) => { rise("#vb" + i, K(k), { y: 20, d: 1.2 }); tl.fromTo("#vbb" + i, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: FINE }, K(k) + .2); });
-tl.fromTo("#tip", { opacity: 0, y: 40, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: SOFT }, K(38.3));
+// 9 · the real owner panel, read section by section (9 bars): today, orders, bookings, suppliers
+tl.fromTo("#pf", { opacity: 0, y: 60, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 2, ease: SOFT }, K(33) + .2);
 rise("#odemo", K(33.5), { d: 1.2 });
+tl.set("#pfimg0", { y: 0 }, 0);
+tl.set("#pfi0", { opacity: 1 }, K(33));
+tl.to("#pfimg0", { y: -665, duration: 1.7, ease: "sine.inOut" }, K(33.9));
+tl.to("#pfimg0", { y: -1349, duration: 1.7, ease: "sine.inOut" }, K(34.9));
+tl.set("#pfimg1", { y: -295 }, 0);
+tl.to("#pfi1", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(36) - .2);
+tl.set("#pfi0", { opacity: 0 }, K(36) + .6);
+tl.to("#pfimg1", { y: -369, duration: 1.7, ease: "sine.inOut" }, K(36.7));
+tl.set("#pfimg2", { y: -49 }, 0);
+tl.to("#pfi2", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(38) - .2);
+tl.set("#pfi1", { opacity: 0 }, K(38) + .6);
+tl.to("#pfimg2", { y: -689, duration: 1.7, ease: "sine.inOut" }, K(38.8));
+tl.set("#pfimg3", { y: -37 }, 0);
+tl.to("#pfi3", { opacity: 1, duration: .7, ease: "sine.inOut" }, K(40) - .2);
+tl.set("#pfi2", { opacity: 0 }, K(40) + .6);
+tl.to("#pfimg3", { y: -615, duration: 1.7, ease: "sine.inOut" }, K(40.8));
+rise("#o0", K(33), { d: 1.2 }); rise("#o1 .w", K(33) + .3); rise("#o2 .w", K(33) + .6, { d: 1.8 });
+out("#og1", K(36) - .8);
+rise("#o3", K(36), { d: 1.2 }); rise("#o4 .w", K(36) + .3); rise("#o5 .w", K(36) + .6, { d: 1.8 });
+out("#og2", K(38) - .8);
+rise("#o6", K(38), { d: 1.2 }); rise("#o7 .w", K(38) + .3); rise("#o8 .w", K(38) + .6, { d: 1.8 });
+out("#og3", K(40) - .8);
+rise("#o9", K(40), { d: 1.2 }); rise("#o10 .w", K(40) + .3); rise("#o11 .w", K(40) + .6, { d: 1.8 });
 
-// 10 · why Casa Digital, then the contact
-rise("#u0", K(40), { d: 1.2 }); rise("#u1 .w", K(40) + .3); rise("#u2 .w", K(40) + .7, { d: 1.8 });
-[40.6, 41.1, 41.6, 42.1].forEach((k, i) => tl.fromTo("#wy" + i, { opacity: 0, y: 40, filter: "blur(12px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.4, ease: SOFT }, K(k)));
-out("#wy0, #wy1, #wy2, #wy3", K(43.3) - .7, .8);
-tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(43.3));
-float("#cta", K(44), K(45) - K(44));
+// 10 · why Casa Digital, then the contact (4 bars)
+rise("#u0", K(42), { d: 1.2 }); rise("#u1 .w", K(42) + .3); rise("#u2 .w", K(42) + .7, { d: 1.8 });
+[42.4, 42.8, 43.2, 43.6].forEach((k, i) => tl.fromTo("#wy" + i, { opacity: 0, y: 40, filter: "blur(12px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.4, ease: SOFT }, K(k)));
+out("#wy0, #wy1, #wy2, #wy3", K(44.7) - .7, .8);
+tl.fromTo("#cta", { opacity: 0, y: 90, scale: .95 }, { opacity: 1, y: 0, scale: 1, duration: 2.2, ease: SOFT }, K(44.7));
+float("#cta", K(45.2), K(46) - K(45.2));
 
 '''
 
