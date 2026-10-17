@@ -437,6 +437,11 @@ def build():
 
 
 JS_M = r'''
+// every scene fades out softly before its cut and the next one fades in on the bar: nothing vanishes in one frame
+$scenes.forEach(([id, s, e]) => {
+  if (id !== "intro") tl.fromTo("#cam-" + id, { opacity: 0 }, { opacity: 1, duration: .6, ease: "sine.out", immediateRender: false }, s);
+  if (id !== "end") tl.to("#cam-" + id, { opacity: 0, filter: "blur(6px)", duration: .8, ease: "power2.in" }, e - .82);
+});
 // 1 · intro
 rise("#icd", 0.4, { d: 2 });
 rise("#ipres .w", K(.9), { d: 1.6, st: .12 });
