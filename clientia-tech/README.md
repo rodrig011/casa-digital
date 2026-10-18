@@ -13,4 +13,4 @@ node clientia-tech/build.mjs
 
 Se publica sola en GitHub Pages con `.github/workflows/pagina-clientia.yml` cada vez que cambia algo aquí en `main` (solo esta página, nada más del repositorio).
 
-Pendiente: una foto real de Rodrigo para la sección "Quién soy" (hoy va el símbolo de la marca en su lugar).
+La foto de "Quién soy" es `src/img/rodrigo.webp` (recorte 4:5 de la foto que mandó Rodrigo).

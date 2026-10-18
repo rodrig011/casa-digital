@@ -238,20 +238,22 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 /* the slider track is a real control: its two-tone fill is the passed part, not decoration */
 
 /* ---------- about ---------- */
-.yo{padding:clamp(120px,14vw,200px) var(--m);display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
-.yo .datos{grid-column:1 / span 2;font-size:var(--s-small);display:grid;gap:18px;align-content:start;padding-top:.4em}
+.yo{padding:clamp(120px,14vw,200px) var(--m);display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start}
+.yo .foto{grid-column:1 / span 4;margin:0;background:#5A5D63;overflow:hidden}
+.yo .foto img{width:100%;transform:scale(1.06);transition:transform 1.4s var(--ease)}
+.yo .foto.in img{transform:scale(1)}
+.yo .texto{grid-column:6 / -1;display:grid;gap:clamp(40px,5vw,72px)}
+.yo .bio{font-size:clamp(1.5rem,.9rem + 1.5vw,2.25rem);line-height:1.2;letter-spacing:-.02em}
+.yo .bio p+p{margin-top:1em;color:var(--soft)}
+.yo .bio strong{font-weight:800}
+.yo .datos{font-size:var(--s-small);display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:18px 48px}
 .yo .datos b{display:block;font-weight:700}
 .yo .datos a{white-space:nowrap}
-.yo .bio{grid-column:3 / -1;font-size:clamp(1.5rem,.9rem + 1.5vw,2.25rem);line-height:1.2;letter-spacing:-.02em}
-.yo .bio p+p{margin-top:1em;color:var(--soft)}
-.yo .cap{float:left;width:3.6em;height:3.6em;margin:.12em .5em 0 0;background:var(--navy);display:grid;place-items:center}
-.yo .cap img{width:52%}
-.yo .bio strong{font-weight:800}
-@media (max-width:760px){
-  .yo{display:flex;flex-direction:column-reverse;gap:40px}
+@media (max-width:860px){
+  .yo{display:block}
+  .yo .foto{max-width:420px;margin-bottom:40px}
   .yo .bio{font-size:1.375rem;line-height:1.25}
-  .yo .cap{width:4.5em;height:4.5em}
-  .yo .datos{grid-template-columns:repeat(3,1fr);gap:12px;font-size:.875rem}
+  .yo .datos{grid-template-columns:1fr 1fr;gap:16px}
 }
 
 /* ---------- faq ---------- */
@@ -382,14 +384,17 @@ footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-sp
 </section>
 
 <section class="yo" id="quien" aria-label="Quién soy">
-  <div class="datos rv">
-    <div><b>Hondureño</b>Estudio ingeniería en EE. UU.</div>
-    <div><b>Atiendo yo</b>En español, por WhatsApp o videollamada.</div>
-    <div><b>WhatsApp</b><a class="link" href="{{WA}}" target="_blank" rel="noopener">+1 (765) 543-4251</a></div>
-  </div>
-  <div class="bio rv" style="--i:1">
-    <p><span class="cap"><img src="{{LOGO}}" alt="" width="40" height="46"></span><strong>Rodrigo Herrera.</strong> Soy hondureño y estudio ingeniería en Estados Unidos. Clientia Tech es mi empresa: hago los sistemas yo mismo, desde el código hasta la instalación, y lo que aprendo allá lo pongo a trabajar para restaurantes y negocios de Honduras.</p>
-    <p>Cuando usted escribe, le contesto yo. Antes de pagar nada, se lo enseño funcionando con su propio menú en una videollamada.</p>
+  <figure class="foto rv"><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, fundador de Clientia Tech, de traje azul" loading="lazy"></figure>
+  <div class="texto">
+    <div class="bio rv" style="--i:1">
+      <p><strong>Rodrigo Herrera.</strong> Soy hondureño y estudio ingeniería en Estados Unidos. Clientia Tech es mi empresa: hago los sistemas yo mismo, desde el código hasta la instalación, y lo que aprendo allá lo pongo a trabajar para restaurantes y negocios de Honduras.</p>
+      <p>Cuando usted escribe, le contesto yo. Antes de pagar nada, se lo enseño funcionando con su propio menú en una videollamada.</p>
+    </div>
+    <div class="datos rv" style="--i:2">
+      <div><b>Hondureño</b>Estudio ingeniería en EE. UU.</div>
+      <div><b>Atiendo yo</b>En español, por WhatsApp o videollamada.</div>
+      <div><b>WhatsApp</b><a class="link" href="{{WA}}" target="_blank" rel="noopener">+1 (765) 543-4251</a></div>
+    </div>
   </div>
 </section>
 
@@ -424,7 +429,7 @@ footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-sp
 
   // ---- reveal on scroll ----
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
-  document.querySelectorAll(".rv,.grande").forEach(el => io.observe(el));
+  document.querySelectorAll(".rv,.grande,.foto").forEach(el => io.observe(el));
 
   // ---- hero frame: shutter, then the chat loop ----
   const fr = document.querySelector(".frame");
