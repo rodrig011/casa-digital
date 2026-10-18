@@ -1,0 +1,34 @@
+# Publica la página de Clientia Tech (clientia-tech/index.html) en GitHub Pages.
+# Una sola vez: Settings > Pages > Source: "GitHub Actions".
+name: Página Clientia Tech
+on:
+  push:
+    branches: [main]
+    paths: ["clientia-tech/**", ".github/workflows/pagina-clientia.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Armar el sitio (solo la página, nada más del repositorio)
+        run: |
+          mkdir -p _sitio
+          cp clientia-tech/index.html _sitio/index.html
+          touch _sitio/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _sitio
+      - id: deploy
+        uses: actions/deploy-pages@v4
