@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel El Pollo Loco</title>
+<meta name="theme-color" content="#F5F3EF">
+<script>try{if(localStorage.getItem("epl-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+<style>
+/* El Pollo Loco's desk, the same CRM-style layout as the other restaurant panels: global header,
+   app tabs, record-style page header, dense cards and list views. One busy counter in Tegucigalpa,
+   so the line, the kitchen screen and the pieces left get their own place. Demo data, clearly marked. */
+:root{
+  --bg:#F3F3F3; --band:#B0C4DF; --card:#FFFFFF; --sunk:#F3F3F3; --th:#F3F3F3; --line:#E5E5E5; --line2:#C9C9C9; --tx:#181818; --tx2:#444444; --tx3:#706E6B;
+  --brand:#0176D3; --brand-d:#014486; --brand-bg:#EEF4FF;
+  --red:#BA0517; --red-bg:#FEDED8; --ok:#2E844A; --ok-bg:#CDEFC4; --blue:#0176D3; --blue-bg:#EEF4FF; --amber:#8C4B02; --amber-bg:#FEF1CD; --yel:#FE9339; --wa:#2E844A;
+  --c1:#0176D3; --c2:#FE9339; --c3:#3BA755;
+  --hover:#F3F3F3; --sel:#EEF4FF; --shadow:0 2px 2px 0 rgba(0,0,0,.1);
+  --body:"Salesforce Sans",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#1B1B1B; --band:#16325C; --card:#242424; --sunk:#2B2B2B; --th:#2B2B2B; --line:#3A3A3A; --line2:#4A4A4A; --tx:#F3F3F3; --tx2:#C9C9C9; --tx3:#A0A0A0;
+  --brand:#1B96FF; --brand-d:#78B0FD; --brand-bg:#0B2A4E;
+  --red:#FE5C4C; --red-bg:#4A1410; --ok:#45C65A; --ok-bg:#163A1F; --blue:#1B96FF; --blue-bg:#0B2A4E; --amber:#FFBA45; --amber-bg:#3D2A06;
+  --c1:#1B96FF; --c2:#FE9339; --c3:#45C65A;
+  --hover:#2E2E2E; --sel:#0B2A4E; --shadow:none;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+html{-webkit-text-size-adjust:100%;}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 13px/1.5 var(--body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+button,input,select,textarea{font:inherit;color:inherit;}
+button{cursor:pointer;background:none;border:0;padding:0;}
+a{color:inherit;text-decoration:none;}
+svg{display:block;}
+:focus-visible{outline:0;box-shadow:0 0 3px var(--brand);border-radius:4px;}
+.num{font-variant-numeric:tabular-nums;}
+.ic{width:16px;height:16px;flex:none;}
+
+/* global header */
+.gh{position:sticky;top:0;z-index:30;background:var(--card);box-shadow:0 2px 3px rgba(0,0,0,.08);}
+.gh-top{display:flex;align-items:center;gap:14px;height:50px;padding:0 16px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand img{width:32px;height:32px;border-radius:4px;object-fit:cover;background:#2a1a12;}
+.search{flex:1;max-width:520px;margin:0 auto;position:relative;}
+.search input{width:100%;height:32px;border:1px solid var(--line2);border-radius:4px;background:var(--card);padding:0 10px 0 32px;font-size:13px;}
+.search svg{position:absolute;left:10px;top:8px;color:var(--tx3);}
+.tb-r{display:flex;align-items:center;gap:4px;}
+.iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--tx3);border:1px solid transparent;}
+@media (hover:hover) and (pointer:fine){.iconbtn:hover{border-color:var(--line2);color:var(--brand);}}
+.theme .sun{display:none;} :root[data-theme="dark"] .theme .sun{display:block;} :root[data-theme="dark"] .theme .moon{display:none;}
+.avatar{width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-left:4px;}
+.gh-nav{display:flex;align-items:stretch;height:40px;padding:0 16px;border-top:1px solid var(--line);gap:0;overflow-x:auto;scrollbar-width:none;}
+.gh-nav::-webkit-scrollbar{display:none;}
+.appname{display:flex;align-items:center;gap:10px;padding-right:20px;margin-right:6px;font-size:16px;font-weight:400;white-space:nowrap;}
+.appname .grid{width:20px;height:20px;display:grid;grid-template-columns:repeat(3,4px);gap:3px;}
+.appname .grid i{width:4px;height:4px;border-radius:50%;background:var(--tx3);}
+#nav{display:flex;}
+#nav a{display:flex;align-items:center;gap:6px;padding:0 12px;white-space:nowrap;color:var(--tx2);border-bottom:3px solid transparent;border-top:3px solid transparent;position:relative;}
+#nav a.on{border-bottom-color:var(--brand);color:var(--tx);font-weight:700;background:var(--sel);}
+@media (hover:hover) and (pointer:fine){#nav a:hover{background:var(--hover);color:var(--tx);}}
+#nav a .c{font-size:11px;font-weight:700;border-radius:10px;padding:0 6px;background:var(--red);color:#fff;line-height:16px;}
+.band{position:absolute;left:0;right:0;top:0;height:170px;background:var(--band);z-index:-1;}
+main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:0 auto;}
+.app{position:relative;isolation:isolate;}
+
+.results{position:absolute;left:0;right:0;top:36px;background:var(--card);border:1px solid var(--line2);border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.16);padding:4px 0;max-height:60vh;overflow:auto;z-index:40;}
+.results a{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;}
+.results a:hover{background:var(--hover);}
+.results small{color:var(--tx3);}
+.results .empty{padding:10px 12px;}
+/* demo notice */
+.notice{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:4px;padding:8px 12px;margin-bottom:12px;color:var(--tx2);font-size:12px;box-shadow:var(--shadow);}
+.notice b{color:var(--tx);}
+
+/* record-style page header */
+.ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.ph .tile{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none;}
+.ph .tile svg{width:22px;height:22px;}
+.ph .ey{font-size:12px;color:var(--tx3);line-height:1.2;}
+.ph h1{margin:0;font:700 18px/1.25 var(--body);}
+.ph .sub{display:none;}
+.ph .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.subline{margin:-4px 0 12px 2px;color:var(--tx2);font-size:12px;}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:4px;overflow:hidden;background:var(--card);}
+.seg button{height:32px;padding:0 12px;font-size:13px;color:var(--brand);border-left:1px solid var(--line2);white-space:nowrap;}
+.seg button:first-child{border-left:0;}
+.seg button.on{background:var(--brand);color:#fff;}
+@media (hover:hover) and (pointer:fine){.seg button:not(.on):hover{background:var(--hover);}}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);min-width:0;}
+.card > header{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap;}
+.card > header h2{margin:0;font:700 14px var(--body);}
+.card > header .r{margin-left:auto;color:var(--tx3);font-size:12px;display:flex;gap:8px;align-items:center;}
+.ct{width:24px;height:24px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none;}
+.ct svg{width:14px;height:14px;}
+.pad{padding:12px 16px 16px;}
+.stack{display:grid;gap:12px;}
+.g2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.status{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:15px;font-size:12px;font-weight:400;white-space:nowrap;background:var(--hover);color:var(--tx);}
+.status i{display:none;}
+.s-ok{background:var(--ok-bg);color:#056764;} .s-red{background:var(--red-bg);color:var(--red);} .s-amber{background:var(--amber-bg);color:var(--amber);} .s-blue{background:var(--blue-bg);color:var(--blue);} .s-gray{background:var(--hover);color:var(--tx2);}
+:root[data-theme="dark"] .s-ok{color:var(--ok);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:4px;font-size:13px;font-weight:400;border:1px solid var(--line2);background:var(--card);color:var(--brand);white-space:nowrap;}
+.btn:active{background:var(--hover);}
+.btn.pri,.btn.red{background:var(--brand);color:#fff;border-color:var(--brand);}
+.btn.wa{color:var(--brand);}
+.btn.wa svg{color:#2E844A;}
+.btn.sm{height:28px;padding:0 10px;font-size:12px;}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:var(--hover);}.btn.pri:hover,.btn.red:hover{background:var(--brand-d);border-color:var(--brand-d);}}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+
+/* highlights (KPIs) */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);}
+.kpi{padding:12px 16px 14px;border-left:1px solid var(--line);}
+.kpi:first-child{border-left:0;}
+.kpi span{color:var(--tx3);font-size:12px;}
+.kpi b{display:block;font:300 28px/1.15 var(--body);margin:2px 0 2px;font-variant-numeric:tabular-nums;}
+.kpi small{font-size:12px;color:var(--tx3);}
+.up{color:var(--ok);font-weight:700;} .down{color:var(--red);font-weight:700;}
+
+/* recommended actions */
+.recs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+.rec{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);}
+.rec:last-child{border-bottom:0;}
+.rec .ico{width:28px;height:28px;border-radius:4px;display:grid;place-items:center;color:#fff!important;}
+.rec .ico svg{width:16px;height:16px;}
+.rec b{font-weight:400;color:var(--brand);}
+.rec p{margin:1px 0 0;color:var(--tx3);font-size:12px;}
+.rec.done{opacity:.55;} .rec.done b{text-decoration:line-through;}
+
+/* charts */
+.chart{padding:4px 16px 6px;position:relative;border-top:1px solid var(--line);}
+.chart svg{width:100%;height:auto;overflow:visible;}
+.chart text{fill:var(--tx3);font:400 11px var(--body);}
+.chart .gl{stroke:var(--line);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);padding:0 16px 12px;}
+.tip{position:absolute;pointer-events:none;background:#032D60;color:#fff;border-radius:4px;padding:6px 10px;font-size:12px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px;z-index:5;}
+.tip b{display:block;font-size:13px;}
+.bars{display:grid;gap:12px;padding:12px 16px 16px;border-top:1px solid var(--line);}
+.hb b{display:flex;justify-content:space-between;font-weight:400;margin-bottom:4px;gap:10px;}
+.hb b em{font-style:normal;color:var(--tx3);}
+.trk{height:8px;border-radius:2px;background:var(--hover);overflow:hidden;display:flex;}
+.trk i{display:block;height:100%;}
+
+/* list views */
+.tbl{width:100%;border-collapse:collapse;border-top:1px solid var(--line);}
+.tbl th{font-size:12px;font-weight:700;color:var(--tx2);text-align:left;padding:6px 16px;background:var(--th);border-bottom:1px solid var(--line);white-space:nowrap;text-transform:none;}
+.tbl td{padding:8px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:0;}
+@media (hover:hover) and (pointer:fine){.tbl tbody tr:hover td{background:var(--hover);}}
+.tbl .r{text-align:right;}
+.scrollx{overflow-x:auto;}
+
+/* kanban */
+.board{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px;}
+.col{background:var(--card);border:1px solid var(--line);border-radius:4px;min-height:200px;box-shadow:var(--shadow);}
+.col h3{margin:0;padding:10px 12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--th);border-radius:4px 4px 0 0;}
+.col h3 span{font-weight:400;color:var(--tx3);}
+.col > .tk:first-of-type{margin-top:10px;}
+.tk{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin:0 10px 10px;}
+.tk .t{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.tk .t b{font-size:13px;color:var(--brand);font-weight:400;}
+.tk ul{margin:6px 0;padding:0;list-style:none;font-size:13px;}
+.tk li{display:flex;justify-content:space-between;gap:8px;padding:1px 0;}
+.tk .m{font-size:12px;color:var(--tx3);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.tk .a{display:flex;gap:8px;margin-top:8px;}
+.tk .a .btn{flex:1;}
+.late{color:var(--red);font-weight:700;}
+.empty{padding:20px 12px;text-align:center;color:var(--tx3);font-size:12px;}
+.kmode .board{grid-template-columns:repeat(2,minmax(280px,1fr));}
+.kmode .tk .t b{font-size:20px;font-weight:700;color:var(--tx);} .kmode .tk ul{font-size:17px;font-weight:700;}
+
+/* forms */
+.form{display:grid;gap:12px;}
+.tin{width:130px;height:28px;border-radius:4px;border:1px solid var(--line2);background:var(--card);color:var(--tx);padding:0 8px;font-size:13px;}
+.tin:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;white-space:nowrap;}
+.sw input{position:absolute;opacity:0;width:1px;height:1px;}
+.sw i{width:34px;height:20px;border-radius:10px;background:var(--line2);position:relative;transition:background .15s;flex:none;}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s;}
+.sw input:checked + i{background:var(--brand);}
+.sw input:checked + i::after{transform:translateX(14px);}
+.sw input:focus-visible + i{box-shadow:0 0 0 2px var(--brand);}
+@media (max-width:640px){.prov thead{display:none;}.prov,.prov tbody,.prov tr,.prov td{display:block;width:100%;}
+.prov tr{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;}
+.prov tr:last-child{border-bottom:0;}.prov td{padding:0;border:0;}.prov td.r{text-align:left;}
+.prov td:nth-child(2){grid-column:1/-1;color:var(--tx2);margin-top:-6px;}.prov .tin{width:100%;}
+.avi td:nth-child(1){grid-column:2;grid-row:1;color:var(--tx3);}.avi td:nth-child(2){grid-column:1;grid-row:1;margin:0;color:var(--tx);font-weight:700;}
+.avi td:nth-child(3),.avi td:nth-child(4){grid-column:1/-1;}.avi .status{white-space:normal;height:auto;padding:2px 8px;}}
+.mo{display:none;}
+@media (max-width:640px){.resv thead{display:none;}.resv,.resv tbody{display:block;width:100%;}
+.resv tr{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:center;}
+.resv tr:last-child{border-bottom:0;}.tbl.resv td{padding:0;border:0;}.resv td:nth-child(2){font-weight:700;}
+.resv td:nth-child(4),.resv td:nth-child(5){grid-column:1/-1;color:var(--tx2);}.resv td:nth-child(6){grid-column:1/3;}.resv .mo{display:inline;}.resv td:nth-child(5){display:none;}}
+.form > *,.f2 > *{min-width:0;}
+.form label{display:grid;gap:2px;font-size:12px;color:var(--tx2);}
+.form input,.form select,.form textarea{width:100%;min-width:0;height:32px;border-radius:4px;border:1px solid var(--line2);background:var(--card);padding:0 10px;font-size:13px;}
+.form textarea{height:96px;padding:8px 10px;resize:vertical;}
+.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.res{border-radius:4px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);}
+.big{font:300 24px var(--body);font-variant-numeric:tabular-nums;}
+
+.stamps{display:flex;gap:4px;}
+.stamps i{width:14px;height:14px;border-radius:50%;border:1px solid var(--line2);}
+.stamps i.on{background:var(--brand);border-color:var(--brand);}
+.hint{font-size:12px;color:var(--tx3);}
+.toasts{position:fixed;left:50%;top:60px;transform:translateX(-50%);display:grid;gap:8px;z-index:90;}
+.toast{background:#2E844A;color:#fff;padding:10px 16px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.2);min-width:280px;}
+
+@media (max-width:1100px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr;}}
+@media (max-width:860px){
+  .search{display:none;}
+  .gh-top{justify-content:space-between;}
+  .appname{display:none;}
+  .gh-nav{padding:0 4px;}
+  .kpis{grid-template-columns:1fr 1fr;}
+  .kpi:nth-child(3){border-left:0;} .kpi:nth-child(-n+2){border-bottom:1px solid var(--line);}
+  .ph .r{margin-left:0;width:100%;}
+  .seg{width:100%;} .seg button{flex:1;padding:0 6px;}
+  .board{grid-template-columns:repeat(4,minmax(240px,82vw));}
+  .kmode .board{grid-template-columns:repeat(2,minmax(260px,86vw));}
+  .f2{grid-template-columns:1fr;}
+  .tbl th,.tbl td{padding:8px 10px;}
+  .rec{grid-template-columns:28px 1fr;}
+  .rec > div:last-child{grid-column:2;}
+  main{padding:8px 8px 64px;}
+}
+.chat{display:grid;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line);background:var(--sunk);}
+.msg{max-width:88%;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.4;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08);}
+.msg.in{background:var(--card);justify-self:start;border-top-left-radius:2px;}
+.msg.out{background:#D9FDD3;color:#111;justify-self:end;border-top-right-radius:2px;}
+:root[data-theme="dark"] .msg.out{background:#144D37;color:#E9EDEF;}
+.msg small{display:block;font-size:11px;color:var(--tx3);margin-top:2px;text-align:right;}
+.msg.out small{color:#55705A;}
+:root[data-theme="dark"] .msg.out small{color:#9FC4AE;}
+.convs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+.conv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer;}
+.conv:last-child{border-bottom:0;}
+.conv.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--brand);}
+@media (hover:hover) and (pointer:fine){.conv:hover{background:var(--hover);}}
+.conv b{font-weight:700;} .conv p{margin:0;color:var(--tx3);font-size:12px;grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tbl input.tin{width:90px;text-align:right;}
+.city{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 16px;border-bottom:1px solid var(--line);}
+.city:last-child{border-bottom:0;}
+.city .trk{grid-column:1/-1;}
+@media (max-width:640px){.tbl .sw span{display:none;}}
+.brand img{width:64px;height:32px;object-fit:contain;background:#000;border-radius:4px;}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-4-6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M10 9l5 3-5 3z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.4a.5.5 0 000-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.5-.3z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+</svg>
+
+<header class="gh">
+  <div class="gh-top">
+    <div class="brand"><img src="data:image/jpeg;base64,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" alt="El Pollo Loco"></div>
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" placeholder="Buscar pedidos, conversaciones y piezas" autocomplete="off"><div class="results" id="results" hidden></div></div>
+    <div class="tb-r">
+      <button class="iconbtn theme" id="tema" aria-label="Cambiar tema"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
+      <span class="avatar" title="Dueño">PL</span>
+    </div>
+  </div>
+  <div class="gh-nav"><div class="appname"><span class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>El Pollo Loco</div><nav id="nav" aria-label="Secciones"></nav></div>
+</header>
+<div class="app">
+  <div class="band"></div>
+  <main id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+
+<script>
+"use strict";
+// ---------- real facts (their own TikTok @elpolloloco504 and the printed menu they show in it) ----------
+const ADDR = "Plaza Paseo Verde, frente a la Universidad Católica, Tegucigalpa";
+const WA = "9773-0804";   // "Contáctanos" on their printed menu
+const HOURS = "Abierto de lunes a domingo hasta las 9:00 pm";
+const MENU = [ // prices from their printed menu and the board over the counter (video of 22-ago-2026)
+  {n:"Pechuga y ala con tajadas",s:"Pechuga y ala",p:160},{n:"Pierna y muslo con tajadas",s:"Pierna y muslo",p:140},
+  {n:"1/2 pechuga con tajadas",s:"1/2 pechuga",p:110},{n:"1/2 ala con tajadas",s:"1/2 ala",p:95},{n:"1/2 muslo con tajadas",s:"1/2 muslo",p:90},
+  {n:"1/2 pierna con tajadas",s:"1/2 pierna",p:80},{n:"Chicken tenders combo",s:"Tenders combo",p:145},{n:"Tacos con papas",s:"Tacos con papas",p:120},
+  {n:"Medio pollo",s:"Medio pollo",p:140},{n:"Refresco 2 L",s:"Refresco 2 L",p:75}];
+const TIKTOKS = [ // what each video shows and its real views on @elpolloloco504
+  {t:"Respuesta: \"hacen esperar demasiado a la gente\"",v:172300,code:"FILA"},{t:"Cómo llegar a la casa del pollo chuco en Tegucigalpa",v:119600,code:"MAPA"},
+  {t:"Cómo pedir para llevar",v:70500,code:"LLEVAR"},{t:"Cómo pedir por PedidosYa",v:57900,code:"PYA"},
+  {t:"17 sábado te esperamos",v:51000,code:"SABADO"},{t:"Tu plato de pollo chuco como a ti te guste",v:25500,code:"SALSAS"},
+  {t:"Mi primer día en marketing",v:24600,code:"MARKETING"},{t:"No estás triste, solo ocupás un pollo chuco",v:19700,code:"TRISTE"},
+  {t:"Gran apertura del nuevo espacio",v:16900,code:"APERTURA"},{t:"Abiertos toda la semana morazánica",v:16000,code:"FERIADO"}];
+const ASKS = [ // verbatim comments on their TikTok asking how to order (none got a number back)
+  "a que número se puede ordenar","no tienen número para hacer pedidossss !!!!!","TIENEN UN NUMERO FIJO PARA PEDIR??",
+  "Nunca responden ese teléfono.","No responde llamadas y no aparece en PedidosYa","Hola algún número de contacto que me puedan compartir por favor"];
+const ZONAS_TT = [ // verbatim comments from people PedidosYa doesn't reach
+  ["Villa Olímpica","A mi no me sale porque soy de la zona de la Villa Olímpica 🥹"],["Col. Palmira","busquen quien les haga los envíos. los necesito aquí en colonia Palmira"],
+  ["UNAH","Queremos un pollo chuco de esos tan deliciosos por la UNAH"],["Siguatepeque","tienen domicilio en sigua?"]];
+
+// ---------- deterministic demo data ----------
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const pick = a => a[Math.floor(rnd() * a.length)];
+const L = n => "L" + Math.round(n).toLocaleString("en-US");
+const PL = d => d.endsWith("s") ? d : d + "s";
+const DAYS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const now = new Date(); const today = now.getDay();
+const WK = [1.4,.8,.85,.85,.95,1.2,1.45]; // weekends are their busiest days
+const BASE = 210;                         // orders per day, average (example)
+const CH = ["Mostrador","WhatsApp para recoger","PedidosYa"]; // home delivery is through PedidosYa ("Solo pedido ya", their own replies)
+const CHC = {"Mostrador":"--c3","WhatsApp para recoger":"--c1","PedidosYa":"--c2"};
+const HRS = [...Array(10)].map((_, i) => 11 + i); // 11..20
+const curH = 18; // the demo always shows the day at 6 pm
+const SHAPE = {11:.5,12:1.8,13:1.7,14:.9,15:.5,16:.6,17:1.1,18:1.6,19:1.4,20:.8};
+const SHSUM = Object.values(SHAPE).reduce((a, x) => a + x, 0);
+function order(ch) { const items = []; const k = ch === "Mostrador" ? 1 + Math.floor(rnd() * 3) : 1 + Math.floor(rnd() * 3);
+  for (let j = 0; j < k; j++) { const it = rnd() < .35 ? MENU[0] : rnd() < .5 ? MENU[1] : pick(MENU.slice(2, 9)); const ex = items.find(x => x.n === it.n); ex ? ex.q++ : items.push({n: it.n, p: it.p, q: 1}); }
+  if (rnd() < .3) items.push({n: "Refresco 2 L", p: 75, q: 1});
+  return items; }
+const tot = items => items.reduce((a, i) => a + i.p * i.q, 0);
+const HIST = []; for (let d = 28; d >= 1; d--) { const wd = (today - d % 7 + 7) % 7; const o = Math.round(BASE * WK[wd] * (0.9 + rnd() * .2)); HIST.push({d, wd, o, ventas: o * 300 * (0.94 + rnd() * .12)}); }
+const SALES = [];
+HRS.filter(h => h <= curH).forEach(h => { const n = Math.round(BASE * WK[today] * SHAPE[h] / SHSUM * (0.85 + rnd() * .3));
+  for (let i = 0; i < n; i++) { const r = rnd(); const ch = r < .7 ? "Mostrador" : r < .84 ? "WhatsApp para recoger" : "PedidosYa"; const items = order(ch); SALES.push({h, ch, items, total: tot(items)}); } });
+// the line at the counter right now, and how long the comanda takes (example)
+const FILA = {gente: 17, espera: 22, comandas: 31, waHoy: SALES.filter(s => s.ch === "WhatsApp para recoger").length};
+// orders the bot took on WhatsApp, picked up at the WhatsApp window without standing in line
+const NAMES = ["Karla M.","José L.","Dania R.","Kevin A.","Marlon S.","Yessenia P.","Óscar F.","Gabriela T.","Wilmer C.","Ana Lucía B.","Héctor Z.","Sofía H.","Brayan O.","Lourdes E.","Fernando G.","Cindy V.","Mario R.","Paola N."];
+const NOTAS = ["salsas aparte","poca salsa","tajadas costeñas","sin encurtido","",""];
+const PICK = []; let oid = 1180;
+for (let i = 0; i < 11; i++) { const src = i % 3 === 2 ? "Mostrador" : "WhatsApp"; const items = order(src === "Mostrador" ? "Mostrador" : "WhatsApp para recoger");
+  const st = i < 3 ? "nuevo" : i < 7 ? "cocina" : i < 9 ? "listo" : "entregado";
+  PICK.push({id: ++oid, who: NAMES[i], tel: "9" + Math.floor(1000000 + rnd() * 8999999), src, nota: pick(NOTAS), items,
+    hora: src === "WhatsApp" ? ["6:15","6:20","6:25","6:30","6:40"][i % 5] + " pm" : "",
+    pay: src === "Mostrador" ? "Pagado en caja" : rnd() < .5 ? "Pagado por transferencia" : "Paga al recoger",
+    min: st === "nuevo" ? 1 + Math.floor(rnd() * 4) : st === "cocina" ? 5 + Math.floor(rnd() * 12) : 12 + Math.floor(rnd() * 20), st}); }
+// pechuga ran out at 5:30 pm: the newest comandas no longer carry it
+PICK.filter(p => p.st === "nuevo" || (p.st === "cocina" && p.min < 25)).forEach(p => p.items.forEach(i => { if (/pechuga/i.test(i.n)) { i.n = i.n.startsWith("1/2") ? "1/2 muslo con tajadas" : "Pierna y muslo con tajadas"; i.p = i.n.startsWith("1/2") ? 90 : 140; } }));
+const CONV = [
+  {id:1, who:"Daniela R.", h:"5:58 pm", q:"a que número se puede ordenar? y el precio del pollo chuco", st:"pedido", tag:"Pedido",
+    msgs:[["in","a que número se puede ordenar? y el precio del pollo chuco"],["out","¡Hola! 🐔 Aquí mismo puede pedir.\nPierna y muslo con tajadas: L140 (con papas L150)\nPechuga y ala: se acabó por hoy, vuelve a las 6:30 pm\n¿Cuántos le preparo y a qué hora pasa?"],["in","2 de pierna y muslo, uno con las salsas aparte. paso 6:30"],["out","Listo ✅ Pedido #1194 para recoger a las 6:30 pm: 2 pierna y muslo con tajadas (uno con salsas aparte), L280.\nPase directo a la ventanilla de WhatsApp, sin hacer fila. Le aviso cuando esté listo."]]},
+  {id:2, who:"Wendy C.", h:"5:51 pm", q:"Hacen envío a la colonia Palmira?", st:"bot", tag:"Domicilio",
+    msgs:[["in","Hacen envío a la colonia Palmira?"],["out","El domicilio es por PedidosYa 🛵 Si su colonia no aparece, es porque queda fuera de la zona de reparto.\nLo anotamos: Palmira. Y si prefiere pasar, se lo tenemos listo sin hacer fila en Plaza Paseo Verde."]]},
+  {id:3, who:"Kevin A.", h:"5:44 pm", q:"Donde están ubicados?", st:"bot", tag:"Ubicación",
+    msgs:[["in","Donde están ubicados?"],["out","Estamos en Plaza Paseo Verde, frente a la Universidad Católica, Tegucigalpa 📍\nAbrimos de lunes a domingo hasta las 9:00 pm. ¿Le mando la ubicación en el mapa?"]]},
+  {id:4, who:"Gabriela T.", h:"5:40 pm", q:"hay pechuga todavía?", st:"pedido", tag:"Pieza agotada",
+    msgs:[["in","hay pechuga todavía?"],["out","La pechuga se nos acabó por hoy 🙏 Tenemos pierna y muslo con tajadas a L140, o 1/2 muslo a L90.\n¿Le preparo uno?"],["in","pierna y muslo entonces, con costeñas"],["out","Listo ✅ Pedido #1191: pierna y muslo con tajadas costeñas, L150. Ya está en la pantalla de cocina."]]},
+  {id:5, who:"Marlon S.", h:"5:22 pm", q:"Cuál es el horario", st:"bot", tag:"Horario",
+    msgs:[["in","Cuál es el horario"],["out","Abrimos de lunes a domingo y cerramos a las 9:00 pm 🕘 Por PedidosYa aparecemos desde las 11:45 am."]]},
+  {id:6, who:"Carlos E.", h:"4:51 pm", q:"Necesito 30 platos para un cumpleaños el sábado", st:"persona", tag:"Pedido grande",
+    msgs:[["in","Necesito 30 platos para un cumpleaños el sábado"],["out","¡Con gusto! Los pedidos grandes los preparamos aparte para no atrasar la fila. Le paso con el encargado para dejarle hora y menú. Un momento 🙌"],["out","(Pasado a una persona · aviso al celular del dueño)"]]}];
+const BOTTXT = {agot: "", pya: ""};
+try { Object.assign(BOTTXT, JSON.parse(localStorage.getItem("epl-bot") || "{}")); } catch (e) {}
+// till closings, last 7 days
+const CAJA = []; for (let d = 0; d < 7; d++) { const h = HIST[27 - d]; const ef = Math.round(h.ventas * .6 / 5) * 5; let diff = 0;
+  if (d === 1) diff = -310; else if (rnd() < .25) diff = Math.round((rnd() - .5) * 8) * 5;
+  CAJA.push({d, ef, tj: Math.round(h.ventas * .22 / 5) * 5, cont: ef + diff, diff, who: pick(["Cajera turno mañana","Cajera turno tarde","Encargado"])}); }
+// pieces and supplies: [name, unit, stock, minimum, supplier, per-hour use at 6 pm]
+const INS = [
+  ["Pechuga","piezas",0,40,"pollo",11],["Ala","piezas",14,40,"pollo",9],["Pierna","piezas",72,40,"pollo",8],["Muslo","piezas",65,40,"pollo",8],
+  ["Chicken tenders","porciones",22,15,"pollo",3],["Guineo verde (tajadas)","unid.",120,150,"verdu",30],["Plátano (tajadas costeñas)","unid.",18,30,"verdu",5],
+  ["Repollo","unid.",9,6,"verdu",1],["Aceite","galones",3,4,"aceite",.5],["Envases de duroport","unid.",160,200,"desech",28]];
+const PROV = [
+  {id:"pollo", n:"Proveedor de pollo", what:"Pechuga, ala, pierna, muslo y tenders"},{id:"verdu", n:"Verdulería", what:"Guineo, plátano y repollo"},
+  {id:"aceite", n:"Aceite", what:"Aceite para freír"},{id:"desech", n:"Desechables", what:"Envases, bolsas y vasos"}];
+const AVISOS = [
+  {h:"9:05 am", p:"pollo", t:"Pedido de hoy: 180 piezas mixtas", r:"Confirmó: llega a las 10:00"},
+  {h:"5:30 pm", p:"pollo", t:"Pechuga: se acabó, necesitamos 40 para la noche", r:"Confirmó: llegan a las 6:30 pm"},
+  {h:"5:10 pm", p:"verdu", t:"Plátano para costeñas: quedan 18, necesitamos 60", r:"Visto, sin respuesta todavía"},
+  {h:"5:35 pm", p:"aceite", t:"Aceite: quedan 3 galones, necesitamos 8", r:"Confirmó: mañana a las 8:00"}];
+// where people write from (example counts this month; the comments under ZONAS_TT are real)
+const ZONAS = [["Col. Palmira",46,"fuera de PedidosYa"],["Villa Olímpica",31,"fuera de PedidosYa"],["UNAH / Ciudad Universitaria",28,"fuera de PedidosYa"],["Col. Kennedy",19,"en PedidosYa"],["Siguatepeque",12,"otra ciudad"],["Comayagüela",11,"en PedidosYa"]];
+TIKTOKS.forEach((t, i) => { t.ped = Math.round(t.v / 1000 * (.7 + rnd() * .6) * (i < 4 ? 1 : .6)); t.ven = t.ped * 230; });
+
+// ---------- state ----------
+let VIEW = "hoy", KMODE = false, CSEL = 1;
+const AGOT = new Set(["Pechuga"]); // pieces marked as sold out: the bot stops offering them
+const PCFG = {}; PROV.forEach(p => PCFG[p.id] = {tel: "", auto: true});
+try { const sv = JSON.parse(localStorage.getItem("epl-prov") || "{}"); Object.keys(sv).forEach(k => PCFG[k] && Object.assign(PCFG[k], sv[k])); } catch (e) {}
+const savePC = () => { try { localStorage.setItem("epl-prov", JSON.stringify(PCFG)); } catch (e) {} };
+const DONE = new Set();
+const col = v => `var(${v})`;
+const $ = s => document.querySelector(s);
+const toast = t => { const e = document.createElement("div"); e.className = "toast"; e.textContent = t; $("#toasts").append(e); setTimeout(() => e.remove(), 2600); };
+const waLink = (txt, tel) => "https://wa.me/" + (tel ? "504" + tel : "") + "?text=" + encodeURIComponent(txt);
+const icon = (id, cls = "ic") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+const first = n => n.split(" ")[0];
+
+const NAV = [["hoy","Inicio","i-home"],["whatsapp","WhatsApp","i-chat"],["pedidos","Pedidos y cocina","i-bag"],["piezas","Piezas y proveedores","i-box"],["caja","Caja","i-cash"],["ventas","Ventas","i-chart"],["zonas","Zonas que piden","i-pin"],["tiktok","TikTok","i-play"]];
+function nav() {
+  const waiting = PICK.filter(p => p.st === "nuevo").length;
+  const low = INS.filter(i => i[2] < i[3]).length;
+  const badCaja = CAJA.filter(c => c.d > 0 && c.d < 3 && c.diff < -100).length;
+  $("#nav").innerHTML = NAV.map(([id, t]) => { const c = id === "pedidos" ? waiting : id === "piezas" ? low : id === "caja" ? badCaja : id === "whatsapp" ? CONV.filter(x => x.st === "persona").length : 0;
+    return `<a href="#${id}" class="${VIEW === id ? "on" : ""}" data-v="${id}">${t}${c ? `<span class="c">${c}</span>` : ""}</a>`; }).join("");
+}
+const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bag","#FE9339"],piezas:["i-box","#B78300"],caja:["i-cash","#3BA755"],ventas:["i-chart","#0B827C"],zonas:["i-pin","#BA0517"],tiktok:["i-play","#181818"]};
+const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Dirección, horario, WhatsApp, precios del menú, comentarios citados y vistas de TikTok son los reales de El Pollo Loco. Ventas, conversaciones, pedidos, fila, caja y piezas son datos de ejemplo.</div>
+  <div class="ph"><div class="tile" style="background:${TILE[VIEW][1]}">${icon(TILE[VIEW][0])}</div><div><div class="ey">El Pollo Loco · ${ADDR}</div><h1>${title}</h1></div>${extra ? `<div class="r">${extra}</div>` : ""}</div><div class="subline">${sub}</div>`;
+const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</span>`;
+
+// ---------- views ----------
+function vHoy() {
+  const t = SALES.reduce((a, x) => a + x.total, 0); const ped = SALES.length;
+  const prev = HIST.filter(h => h.wd === today).slice(-1)[0].ventas * HRS.filter(h => h <= curH).reduce((q, h) => q + SHAPE[h], 0) / SHSUM;
+  const ch = Math.round((t / prev - 1) * 100);
+  const recs = RECS();
+  return `${PH(`Hoy, ${DAYS[today]}`, `6:00 pm · ${HOURS} · WhatsApp ${WA}`)}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas de hoy</span><b class="num">${L(t)}</b><small><span class="${ch >= 0 ? "up" : "down"}">${ch >= 0 ? "▲" : "▼"} ${Math.abs(ch)}%</span> vs. el ${DAYS[today]} pasado a esta hora</small></div>
+      <div class="kpi"><span>Pedidos</span><b class="num">${ped}</b><small>${FILA.waHoy} por WhatsApp, recogidos sin hacer fila</small></div>
+      <div class="kpi"><span>Espera en la fila ahora</span><b class="num late">${FILA.espera} min</b><small>${FILA.gente} personas · ${FILA.comandas} comandas en cocina</small></div>
+      <div class="kpi"><span>Mensajes que contestó el bot</span><b class="num">96</b><small>0 sin respuesta · ${FILA.waHoy} terminaron en pedido</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-warn","#FE9339")}<h2>Acciones recomendadas</h2><div class="r">${recs.filter(r => !DONE.has(r.id)).length} pendientes</div></header>
+        <ul class="recs">${recs.map(r => `<li class="rec ${DONE.has(r.id) ? "done" : ""}"><div class="ico" style="background:${{red:"#EA001E",amber:"#FE9339",blue:"#0176D3",ok:"#3BA755"}[r.t]}">${icon(r.i)}</div><div><b>${r.h}</b><p>${r.p}</p></div><div>${r.a}</div></li>`).join("")}</ul></section>
+      <section class="card"><header>${CT("i-chart","#0176D3")}<h2>Ventas por hora</h2><div class="r">hasta las 6:00 pm</div></header>${hourChart()}
+        <div class="legend">${CH.map(c => `<span><i class="dot" style="background:${col(CHC[c])}"></i>${c}</span>`).join("")}</div></section>
+    </div>
+    <div class="g3">
+      <section class="card"><header>${CT("i-bag","#FE9339")}<h2>Cocina ahora</h2></header><div class="pad" style="display:grid;gap:10px">
+        ${[["nuevo","Comandas nuevas"],["cocina","En cocina"],["listo","Listos en ventanilla"]].map(([k, n]) => `<div style="display:flex;justify-content:space-between"><span class="hint">${n}</span><b>${PICK.filter(p => p.st === k).length}</b></div>`).join("")}
+        <a class="btn sm" href="#pedidos" data-v="pedidos">Ver pedidos</a></div></section>
+      <section class="card"><header>${CT("i-clock","#D4504C")}<h2>La fila</h2></header><div class="pad" style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between"><span class="hint">Espera promedio hoy</span><b class="num">${FILA.espera - 6} min</b></div>
+        <div class="trk"><i style="width:${FILA.espera / 40 * 100}%;background:var(--c2)"></i></div>
+        <div style="display:flex;justify-content:space-between"><span class="hint">Pedidos que se saltaron la fila</span><b class="num">${FILA.waHoy}</b></div>
+        <a class="btn sm" href="#pedidos" data-v="pedidos">Pantalla de cocina</a></div></section>
+      <section class="card"><header>${CT("i-box","#B78300")}<h2>Por acabarse</h2></header><div class="pad" style="display:grid;gap:10px">
+        ${INS.filter(i => i[2] < i[3]).slice(0, 4).map(([n, u, s]) => `<div style="display:flex;justify-content:space-between"><span class="hint">${n}${AGOT.has(n) ? " · <b style='color:var(--red)'>agotada</b>" : ""}</span><b class="num late">${s} ${u}</b></div>`).join("")}
+        <a class="btn sm" href="#piezas" data-v="piezas">Ver piezas</a></div></section>
+    </div>
+  </div>`;
+}
+function cajaTag(c) { return Math.abs(c.diff) < 30 ? `<span class="status s-ok"><i></i>Cuadró</span>` : c.diff < 0 ? `<span class="status s-red"><i></i>Faltan ${L(-c.diff)}</span>` : `<span class="status s-amber"><i></i>Sobran ${L(c.diff)}</span>`; }
+function forecast(d = 1) { const wd = (today + d) % 7; const same = HIST.filter(h => h.wd === wd); const avg = same.reduce((a, h) => a + h.o, 0) / same.length; return {wd, avg, piezas: Math.ceil(avg * .95 * 1.1 / 10) * 10, guineo: Math.ceil(avg * 1.2 * 1.1 / 10) * 10}; }
+const faltas = pid => INS.filter(i => i[4] === pid && i[2] < i[3]).map(([n, u, s, m]) => ({n, u, left: s, ask: m * 2 - s}));
+function provMsg(pid) { const f = faltas(pid); if (!f.length) return "";
+  return "Buenas, le escribe El Pollo Loco. Se nos está acabando:\n" + f.map(x => `• ${x.n}: quedan ${x.left} ${x.u}, necesitamos ${x.ask} ${x.u}`).join("\n") + "\n¿A qué hora nos lo puede traer? Gracias."; }
+const provWa = (pid, txt) => waLink(txt, PCFG[pid].tel.replace(/\D/g, ""));
+function RECS() {
+  const r = [];
+  const pa = AVISOS[1]; if (PCFG.pollo.auto) r.push({id: "pech", t: "amber", i: "i-send", h: "Pechuga agotada desde las 5:30 pm", p: `El bot dejó de ofrecerla y ofrece pierna y muslo. Le escribió al proveedor de pollo a las ${pa.h}: ${pa.r.toLowerCase()}.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="pech" href="${provWa("pollo", provMsg("pollo"))}">${icon("i-wa")}Escribirle</a>`});
+  const big = CONV.find(x => x.st === "persona"); r.push({id: "big", t: "red", i: "i-chat", h: "Pedido de 30 platos para el sábado esperando respuesta", p: `${big.who} escribió a las ${big.h}. El bot lo pasó a usted para preparar aparte y no atrasar la fila.`, a: `<button class="btn sm" data-v="whatsapp" data-cs="${big.id}">Contestar</button>`});
+  PICK.filter(p => p.st === "listo" && p.min > 15 && p.src === "WhatsApp").forEach(p => r.push({id: "l" + p.id, t: "amber", i: "i-clock", h: `Pedido #${p.id} listo en ventanilla hace ${p.min} min`, p: `${p.who} no ha pasado a recoger. El bot le puede recordar.`, a: `<a class="btn sm wa" target="_blank" rel="noopener" data-done="l${p.id}" href="${waLink(`Hola ${first(p.who)}, su pedido #${p.id} de El Pollo Loco ya está listo en la ventanilla de WhatsApp. ¡Lo esperamos!`, p.tel)}">${icon("i-wa")}Avisar</a>`}));
+  const f = forecast(1); r.push({id: "m", t: "blue", i: "i-box", h: `Para mañana ${DAYS[f.wd]}: pedir ${f.piezas} piezas de pollo y ${f.guineo} guineos`, p: `Calculado con los últimos 4 ${PL(DAYS[f.wd])}, más 10% de colchón.`, a: `<button class="btn sm" data-v="piezas">Ver detalle</button>`});
+  const c = CAJA.find(x => x.d === 1 && x.diff < -100); if (c) r.push({id: "caja", t: "red", i: "i-cash", h: `La caja de ayer cerró con ${L(-c.diff)} de menos`, p: `Cerró ${c.who.toLowerCase()}. Efectivo esperado ${L(c.ef)}, contado ${L(c.cont)}.`, a: `<button class="btn sm" data-v="caja">Revisar</button>`});
+  r.push({id: "zona", t: "ok", i: "i-pin", h: "46 personas de la Col. Palmira escribieron este mes", p: "PedidosYa no llega hasta allá. Es la primera zona para buscar quién haga envíos.", a: `<button class="btn sm" data-v="zonas">Ver zonas</button>`});
+  return r;
+}
+function hourChart() {
+  const W = 640, H = 220, pl = 36, pb = 24, bw = (W - pl) / HRS.length;
+  const data = HRS.map(h => CH.map(c => SALES.filter(x => x.h === h && x.ch === c).reduce((a, x) => a + x.total, 0)));
+  const mx = Math.max(1000, ...data.map(d => d.reduce((a, x) => a + x, 0))); const step = Math.ceil(mx / 4 / 500) * 500;
+  let g = ""; for (let i = 0; i <= 4; i++) { const y = H - pb - (H - pb - 10) * (i * step) / (step * 4); g += `<line class="gl" x1="${pl}" x2="${W}" y1="${y}" y2="${y}"/><text x="${pl - 6}" y="${y + 4}" text-anchor="end">${i ? (i * step / 1000).toFixed(1) + "k" : 0}</text>`; }
+  HRS.forEach((h, i) => { let y0 = H - pb; data[i].forEach((v, j) => { const hh = (H - pb - 10) * v / (step * 4); y0 -= hh; g += `<rect x="${pl + i * bw + bw * .18}" y="${y0}" width="${bw * .64}" height="${Math.max(0, hh)}" rx="2" fill="${col(CHC[CH[j]])}" data-tip="${h > 12 ? h - 12 : h}:00 · ${CH[j]}|${L(v)}"/>`; });
+    if (i % 2 === 0) g += `<text x="${pl + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${h > 12 ? h - 12 + "pm" : h + (h === 12 ? "pm" : "am")}</text>`; });
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por hora">${g}</svg></div>`;
+}
+
+function vWhatsapp() {
+  const c = CONV.find(x => x.id === CSEL) || CONV[0];
+  const tag = x => x.st === "persona" ? `<span class="status s-amber"><i></i>Pasó al dueño</span>` : x.st === "pedido" ? `<span class="status s-blue"><i></i>Pedido tomado</span>` : `<span class="status s-ok"><i></i>Contestó el bot</span>`;
+  return `${PH("WhatsApp " + WA, "El número de su menú impreso, contestado al instante. El bot da precios, ubicación y horario, toma el pedido para recoger y lo manda a la pantalla de cocina.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Conversaciones hoy</span><b class="num">102</b><small>hasta las 6:00 pm</small></div>
+      <div class="kpi"><span>Contestadas por el bot</span><b class="num">96</b><small>en menos de 1 minuto</small></div>
+      <div class="kpi"><span>Pedidos tomados por el bot</span><b class="num">${FILA.waHoy}</b><small>para recoger · el domicilio sigue por PedidosYa</small></div>
+      <div class="kpi"><span>Sin contestar</span><b class="num" style="color:var(--ok)">0</b><small>nadie se queda esperando</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chat","#2E844A")}<h2>${c.who}</h2><div class="r">${tag(c)}</div></header>
+        <div class="chat">${c.msgs.map(([d, t]) => `<div class="msg ${d}">${t}<small>${c.h}${d === "out" ? " · bot" : ""}</small></div>`).join("")}</div>
+        ${c.st === "persona" ? `<div class="pad" style="border-top:1px solid var(--line)"><a class="btn pri" target="_blank" rel="noopener" href="${waLink("Hola Carlos, con gusto le preparamos los 30 platos para el sábado. ¿A qué hora pasa por ellos y cuántos de pechuga y cuántos de pierna?", "")}">${icon("i-wa")}Contestar yo</a></div>` : ""}</section>
+      <section class="card"><header>${CT("i-chat","#2E844A")}<h2>Conversaciones</h2><div class="r">las mismas preguntas que dejan en TikTok</div></header>
+        <ul class="convs">${CONV.map(x => `<li class="conv ${x.id === c.id ? "on" : ""}" data-c="${x.id}"><b>${x.who}</b><span class="hint">${x.h}</span><p>${x.q}</p><div style="grid-column:1/-1;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap"><span class="status s-gray">${x.tag}</span>${tag(x)}</div></li>`).join("")}</ul></section>
+    </div>
+    <div class="g2">
+      <section class="card"><header>${CT("i-check","#2E844A")}<h2>Lo que el bot sabe</h2><div class="r">si cambia algo, se cambia aquí y el bot ya lo dice así</div></header><div class="pad form">
+        <div class="f2"><label>Dirección<input value="${ADDR}" readonly></label><label>Horario<input value="Lunes a domingo, cierra 9:00 pm" readonly></label></div>
+        <label>Piezas agotadas hoy (el bot deja de ofrecerlas)<input data-bot="agot" placeholder="Ninguna" value="${BOTTXT.agot || [...AGOT].join(", ")}"></label>
+        <label>Link de PedidosYa (para quien pide a domicilio)<input data-bot="pya" placeholder="Lo pone usted" value="${BOTTXT.pya}"></label>
+        <div class="scrollx"><table class="tbl"><thead><tr><th>Del menú</th><th class="r">Precio</th></tr></thead>
+          <tbody>${MENU.slice(0, 8).map(m => `<tr><td>${m.n}</td><td class="r num">${L(m.p)}</td></tr>`).join("")}</tbody></table></div></div></section>
+      <section class="card"><header>${CT("i-play","#181818")}<h2>Lo que hoy preguntan en TikTok</h2><div class="r">comentarios reales</div></header><div class="pad" style="display:grid;gap:8px">
+        ${ASKS.map(a => `<div class="msg in" style="max-width:100%">${a}<small>comentario en @elpolloloco504</small></div>`).join("")}
+        <p class="hint">Diez personas pidieron en sus comentarios un número para pedir y ninguna recibió uno. Con el número de WhatsApp en el perfil y en un comentario fijado, esas preguntas llegan al bot. Los comentarios de TikTok no los contesta el bot: TikTok no lo permite.</p></div></section>
+    </div>
+  </div>`;
+}
+
+function vPedidos() {
+  const cols = [["nuevo","Comandas nuevas"],["cocina","En cocina"],["listo","Listos en ventanilla"],["entregado","Entregados"]];
+  const next = {nuevo: ["cocina","Pasar a cocina"], cocina: ["listo","Marcar listo"], listo: ["entregado","Entregado"]};
+  return `${PH("Pedidos y cocina", "Cada comanda, de caja o de WhatsApp, aparece en la pantalla de cocina con su número y lo que el cliente pidió (salsas aparte, costeñas). Se acabaron los papelitos.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
+  <div class="${KMODE ? "kmode" : ""}"><div class="board">${cols.filter(c => !KMODE || c[0] === "nuevo" || c[0] === "cocina").map(([k, t]) => { const list = PICK.filter(p => p.st === k);
+    return `<div class="col"><h3>${t}<span>${list.length}</span></h3>${list.map(p => `<div class="tk"><div class="t"><b>#${p.id}</b>${p.st === "entregado" ? `<span class="status s-gray"><i></i>Entregado</span>` : `<span class="hint ${p.min > 15 && p.st !== "listo" ? "late" : ""}">hace ${p.min} min</span>`}</div>
+      <ul>${p.items.map(i => `<li><span>${i.q} × ${i.n}</span>${KMODE ? "" : `<span class="num">${L(i.p * i.q)}</span>`}</li>`).join("")}</ul>
+      ${p.nota ? `<div class="hint" style="margin:-2px 0 6px;color:var(--amber);font-weight:700">${p.nota}</div>` : ""}
+      <div class="m"><span class="status ${p.src === "WhatsApp" ? "s-ok" : "s-gray"}"><i></i>${p.src === "WhatsApp" ? "WhatsApp · recoge " + p.hora : "Caja"}</span>${KMODE ? "" : `<span>${p.who}</span><span class="status ${p.pay.startsWith("Pagado") ? "s-ok" : "s-amber"}"><i></i>${p.pay}</span><b class="num" style="margin-left:auto">${L(tot(p.items))}</b>`}</div>
+      ${next[p.st] ? `<div class="a">${p.st === "listo" && !KMODE && p.src === "WhatsApp" ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(p.who)}, su pedido #${p.id} de El Pollo Loco ya está listo en la ventanilla de WhatsApp. ¡Lo esperamos!`, p.tel)}">${icon("i-wa")}Avisar</a>` : ""}<button class="btn sm ${p.st === "nuevo" ? "red" : ""}" data-mv="${p.id}">${next[p.st][1]}</button></div>` : ""}</div>`).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div></div>
+  <p class="hint" style="margin-top:14px">Los pedidos de WhatsApp traen hora de recogida y se entregan en una ventanilla aparte, sin hacer la fila de caja. Cuando un pedido pasa a "Listo", el bot le escribe solo al cliente; el botón "Avisar" es para recordarle.</p>`;
+}
+
+function vPiezas() {
+  const f = forecast(1);
+  const msg = `Buenas, pedido de El Pollo Loco para mañana ${DAYS[f.wd]}:\n• Pollo: ${f.piezas} piezas mixtas\nGracias.`;
+  const fin = ([n, u, s, m, p, r]) => { if (!s) return `<span class="late">agotada</span>`; const hrs = s / r; if (hrs > 3) return `<span class="hint">alcanza para hoy</span>`; const t = 18 + hrs; const hh = Math.floor(t), mm = Math.round((t - hh) * 60 / 5) * 5; return `<span class="late">se acaba ~${hh - 12}:${String(mm % 60).padStart(2, "0")} pm</span>`; };
+  return `${PH("Piezas y proveedores", "Cuántas piezas quedan y a qué hora se acaban al ritmo de hoy. Cuando algo baja del mínimo, el bot le escribe solo al proveedor; si se agota, deja de ofrecerla en WhatsApp.")}
+  <div class="stack">
+    <div class="g2">
+      <section class="card"><header>${CT("i-box","#B78300")}<h2>Piezas e insumos</h2><div class="r">en rojo: debajo del mínimo</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Qué</th><th class="r">Hay</th><th class="r">Mínimo</th><th>Al ritmo de hoy</th><th></th></tr></thead>
+        <tbody>${INS.map(i => { const [n, u, s, m] = i; return `<tr><td>${n}</td><td class="r num ${s < m ? "late" : ""}">${s} ${u}</td><td class="r num">${m} ${u}</td><td>${fin(i)}</td><td class="r">${["Pechuga","Ala","Pierna","Muslo","Chicken tenders"].includes(n) ? `<label class="sw"><input type="checkbox" data-agot="${n}" ${AGOT.has(n) ? "checked" : ""}><i></i><span>${AGOT.has(n) ? "Agotada" : "Hay"}</span></label>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+        <div class="pad" style="border-top:1px solid var(--line)"><p class="hint">Así nadie hace la fila para enterarse en caja de que ya no hay. Si marca una pieza como agotada, el bot ofrece otra.</p></div></section>
+      <section class="card"><header>${CT("i-box","#B78300")}<h2>Pedido para mañana, ${DAYS[f.wd]}</h2><div class="r">promedio de los últimos 4 ${PL(DAYS[f.wd])} + 10%</div></header>
+        <table class="tbl"><thead><tr><th>Qué</th><th class="r">Platos esperados</th><th class="r">Pedir</th></tr></thead>
+        <tbody><tr><td>Pollo (piezas mixtas)</td><td class="r num">${f.avg.toFixed(0)}</td><td class="r num"><b>${f.piezas} piezas</b></td></tr>
+        <tr><td>Guineo verde</td><td class="r num">${f.avg.toFixed(0)}</td><td class="r num"><b>${f.guineo} unid.</b></td></tr></tbody></table>
+        <div class="pad" style="border-top:1px solid var(--line)"><a class="btn wa" target="_blank" rel="noopener" href="${provWa("pollo", msg)}">${icon("i-wa")}Mandar pedido al proveedor de pollo</a></div></section>
+    </div>
+    <section class="card"><header>${CT("i-send","#0B827C")}<h2>Proveedores</h2><div class="r">aviso automático cuando algo baja del mínimo</div></header><div class="scrollx"><table class="tbl prov">
+      <thead><tr><th>Proveedor</th><th>Le compra</th><th>WhatsApp</th><th>Aviso automático</th><th>Ahora</th><th></th></tr></thead>
+      <tbody>${PROV.map(pv => { const fl = faltas(pv.id); const c = PCFG[pv.id]; const txt = provMsg(pv.id);
+        const st = fl.length ? `<span class="status s-red"><i></i>Falta ${fl.map(x => x.n.replace(/ \(.*\)/, "").toLowerCase()).join(" y ")}</span>` : `<span class="status s-ok"><i></i>Todo arriba del mínimo</span>`;
+        return `<tr><td><b>${pv.n}</b></td><td>${pv.what}</td><td><input class="tin" data-ptel="${pv.id}" id="pt-${pv.id}" inputmode="tel" placeholder="Número" value="${c.tel}"></td>
+        <td><label class="sw"><input type="checkbox" data-pauto="${pv.id}" ${c.auto ? "checked" : ""}><i></i><span>${c.auto ? "Activo" : "Apagado"}</span></label></td><td>${st}</td>
+        <td class="r">${txt ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${provWa(pv.id, txt)}">${icon("i-wa")}Avisar ahora</a>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+      <div class="pad" style="border-top:1px solid var(--line)"><p class="hint">Escriba el WhatsApp de cada proveedor una vez. Con el aviso automático, el bot le manda el pedido en cuanto algo baja del mínimo y anota la respuesta aquí abajo. Proveedores y avisos son de ejemplo.</p></div></section>
+    <section class="card"><header>${CT("i-clock","#5A6872")}<h2>Avisos a proveedores hoy</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl prov avi">
+      <thead><tr><th>Hora</th><th>A quién</th><th>Qué se le pidió</th><th>Respuesta</th></tr></thead>
+      <tbody>${AVISOS.map(a => `<tr><td class="num">${a.h}</td><td>${PROV.find(x => x.id === a.p).n}</td><td>${a.t}</td><td><span class="status ${a.r.startsWith("Confirm") ? "s-ok" : "s-amber"}"><i></i>${a.r}</span></td></tr>`).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+function vCaja() {
+  const lbl = d => d === 1 ? "Ayer" : DAYS[(today - d + 7) % 7];
+  return `${PH("Cierre de caja", "Cada noche la cajera cuenta desde el celular. El panel compara con lo que se vendió y avisa si no cuadra.")}
+  <div class="g2">
+    <section class="card"><header>${CT("i-cash","#3BA755")}<h2>Últimos 6 días</h2></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Día</th><th class="r">Efectivo esperado</th><th class="r">Contado</th><th>Cerró</th><th>Resultado</th></tr></thead>
+      <tbody>${CAJA.filter(c => c.d > 0).map(c => `<tr><td>${lbl(c.d)}</td><td class="r num">${L(c.ef)}</td><td class="r num">${L(c.cont)}</td><td>${c.who}</td><td>${cajaTag(c)}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="card"><header>${CT("i-check","#3BA755")}<h2>Cerrar caja de hoy</h2></header><div class="pad form">
+      <div class="f2"><label>Efectivo contado (L)<input id="cef" inputmode="decimal" placeholder="0"></label><label>Gastos pagados de caja (L)<input id="cga" inputmode="decimal" placeholder="0"></label></div>
+      <div id="cres"></div>
+      <button class="btn pri" id="cok">Guardar cierre</button>
+      <p class="hint">El efectivo esperado sale de las ventas en caja y de los pedidos de WhatsApp que se pagan al recoger. Lo de PedidosYa se cuadra aparte con el depósito de la app.</p>
+    </div></section>
+  </div>`;
+}
+function cajaCalc() {
+  const exp = Math.round(SALES.filter(x => x.ch !== "PedidosYa").reduce((a, x) => a + x.total, 0) * .64);
+  const ef = +($("#cef").value || 0), ga = +($("#cga").value || 0); const d = ef + ga - exp; const k = Math.abs(d) < 30 ? "ok" : d < 0 ? "red" : "amber";
+  $("#cres").innerHTML = `<div class="res" style="background:var(--sunk)"><span>Efectivo esperado</span><span class="big">${L(exp)}</span></div>` + (ef ? `<div class="res" style="background:var(--${k}-bg);color:var(--${k})"><span>${k === "ok" ? "Cuadra" : d < 0 ? "Faltan" : "Sobran"}</span><span class="big">${k === "ok" ? "✓" : L(Math.abs(d))}</span></div>` : "");
+}
+
+function vVentas() {
+  const wk = HIST.slice(21).reduce((q, h) => q + h.ventas, 0); const wo = HIST.slice(21).reduce((q, h) => q + h.o, 0);
+  const t = SALES.reduce((a, x) => a + x.total, 0) || 1;
+  const byCh = CH.map(c => [c, SALES.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]);
+  const items = MENU.map(m => { let q = 0, v = 0; SALES.forEach(s => s.items.filter(i => i.n === m.n).forEach(i => { q += i.q; v += i.q * i.p; })); return [m, q, v]; }).filter(i => i[1]).sort((a, b) => b[2] - a[2]);
+  const mxI = Math.max(...items.map(i => i[2]));
+  return `${PH("Ventas", "Por canal y por plato, sin sacar cuentas a mano.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas últimos 7 días</span><b class="num">${L(wk)}</b><small>${wo.toLocaleString("en-US")} pedidos</small></div>
+      <div class="kpi"><span>Ticket promedio</span><b class="num">${L(wk / wo)}</b><small>por pedido</small></div>
+      <div class="kpi"><span>Por WhatsApp hoy</span><b class="num">${L(byCh[1][1])}</b><small>${Math.round(byCh[1][1] / t * 100)}% de las ventas, sin fila</small></div>
+      <div class="kpi"><span>Por PedidosYa hoy</span><b class="num">${L(byCh[2][1])}</b><small>${Math.round(byCh[2][1] / t * 100)}% de las ventas</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Hoy por canal</h2></header><div class="bars">${byCh.map(([c, v]) => `<div class="hb"><b>${c}<em class="num">${L(v)} · ${Math.round(v / t * 100)}%</em></b><div class="trk"><i style="width:${v / t * 100}%;background:${col(CHC[c])}"></i></div></div>`).join("")}</div></section>
+      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Lo más vendido hoy</h2><div class="r">precios de su menú</div></header><div class="bars">${items.map(([m, q, v]) => `<div class="hb"><b>${m.s} · ${L(m.p)}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
+    </div>
+  </div>`;
+}
+
+function vZonas() {
+  const mx = ZONAS[0][1];
+  return `${PH("Zonas que piden", "Cada persona que escribe dice de dónde es. Aquí se ve dónde hay gente queriendo su pollo chuco y PedidosYa no llega.")}
+  <div class="stack">
+    <div class="g2">
+      <section class="card"><header>${CT("i-pin","#BA0517")}<h2>Desde dónde escriben</h2><div class="r">este mes · ejemplo</div></header><div style="border-top:1px solid var(--line)">${ZONAS.map(([c, n, s]) => `<div class="city"><b>${c} <span class="status ${s === "en PedidosYa" ? "s-ok" : s === "otra ciudad" ? "s-gray" : "s-amber"}" style="margin-left:6px">${s}</span></b><span class="num">${n} personas</span><div class="trk"><i style="width:${n / mx * 100}%;background:var(--red)"></i></div></div>`).join("")}</div></section>
+      <section class="card"><header>${CT("i-play","#181818")}<h2>Lo que ya dicen en TikTok</h2><div class="r">comentarios reales</div></header><div class="pad" style="display:grid;gap:8px">
+        ${ZONAS_TT.map(([z, t]) => `<div class="msg in" style="max-width:100%"><b>${z}</b> · ${t}<small>comentario en @elpolloloco504</small></div>`).join("")}</div></section>
+    </div>
+    <section class="card"><header>${CT("i-send","#BA0517")}<h2>Avisar cuando lleguen</h2></header><div class="pad form">
+      <label>Zona<select id="zz">${ZONAS.map(([c, n]) => `<option value="${n}">${c} (${n} personas)</option>`).join("")}</select></label>
+      <label>Mensaje<textarea id="zm">¡Hola! Usted nos preguntó por envíos a su zona. Ya llegamos 🐔 Pida aquí mismo su pollo chuco.</textarea></label>
+      <button class="btn red" id="zsend">${icon("i-send")}Programar aviso</button>
+      <p class="hint">Solo se le escribe a quien preguntó por su zona. WhatsApp cobra cada mensaje de aviso; el panel muestra el costo antes de enviar.</p></div></section>
+  </div>`;
+}
+
+function vTiktok() {
+  const ts = TIKTOKS.slice().sort((a, b) => b.ven - a.ven); const mx = ts[0].ven;
+  return `${PH("Ventas por video de TikTok", `Cada video dice "pedí al WhatsApp ${WA} y decí el código". El bot lo anota y aquí se ve cuánto vendió cada video.`)}
+  <section class="card"><header>${CT("i-play","#181818")}<h2>Videos de @elpolloloco504</h2><div class="r">vistas reales · pedidos de ejemplo</div></header><div class="scrollx"><table class="tbl">
+    <thead><tr><th>Video</th><th>Código</th><th class="r">Vistas</th><th class="r">Pedidos</th><th style="min-width:160px">Ventas</th></tr></thead>
+    <tbody>${ts.map(t => `<tr><td>${t.t}</td><td><span class="status s-gray">${t.code}</span></td><td class="r num">${(t.v / 1000).toFixed(1)}K</td><td class="r num">${t.ped}</td><td><div style="display:flex;gap:10px;align-items:center"><div class="trk" style="flex:1"><i style="width:${t.ven / mx * 100}%;background:var(--c1)"></i></div><span class="num">${L(t.ven)}</span></div></td></tr>`).join("")}</tbody></table></div></section>
+  <p class="hint" style="margin-top:14px">Hoy no se sabe cuál video vende. Los que más se ven son los de la fila (172K), cómo llegar (120K) y cómo pedir (71K): la gente quiere saber cómo comprarles. Con los códigos se ve cuál trae pedidos de verdad.</p>`;
+}
+
+// ---------- render & events ----------
+const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, piezas: vPiezas, caja: vCaja, ventas: vVentas, zonas: vZonas, tiktok: vTiktok};
+function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); if (VIEW === "caja") cajaCalc(); window.scrollTo(0, 0); }
+function go(v) { if (!VIEWS[v]) return; const rs = $("#results"); if (rs) { rs.hidden = true; $("#q").value = ""; } VIEW = v; KMODE = false; history.replaceState(null, "", "#" + v); render(); }
+document.addEventListener("click", e => {
+  const cs = e.target.closest("[data-cs]"); if (cs) CSEL = +cs.dataset.cs;
+  const v = e.target.closest("[data-v]"); if (v) { e.preventDefault(); go(v.dataset.v); return; }
+  const cv = e.target.closest("[data-c]"); if (cv) { CSEL = +cv.dataset.c; const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+  const d = e.target.closest("[data-done]"); if (d) { DONE.add(d.dataset.done); setTimeout(render, 300); }
+  const m = e.target.closest("[data-mv]"); if (m) { const p = PICK.find(x => x.id === +m.dataset.mv); const nx = {nuevo: "cocina", cocina: "listo", listo: "entregado"}[p.st]; p.st = nx; p.min = 0;
+    toast(nx === "listo" ? (p.src === "WhatsApp" ? `#${p.id} listo. El bot le avisó a ${first(p.who)} (demo)` : `#${p.id} listo`) : nx === "cocina" ? `#${p.id} pasó a cocina` : `#${p.id} entregado`); render(); }
+  if (e.target.closest("#kmode")) { KMODE = !KMODE; render(); }
+  if (e.target.closest("#cok")) { if (!$("#cef").value) { toast("Escriba el efectivo contado"); return; } toast("Cierre de hoy guardado (demo)"); $("#cef").value = ""; $("#cga").value = ""; cajaCalc(); }
+  if (e.target.closest("#zsend")) toast(`Aviso programado para ${$("#zz").value} personas (demo)`);
+  if (e.target.closest("#tema")) { const dk = document.documentElement.dataset.theme === "dark"; if (dk) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = "dark"; try { localStorage.setItem("epl-tema", dk ? "light" : "dark"); } catch (er) {} }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "q") { const q = e.target.value.trim().toLowerCase().replace("#", ""); const r = $("#results"); if (!q) { r.hidden = true; return; }
+    const hits = [...PICK.filter(p => String(p.id).includes(q) || p.who.toLowerCase().includes(q)).map(p => `<a href="#pedidos" data-v="pedidos"><span>Pedido #${p.id} · ${p.who}</span><small>${p.src}</small></a>`),
+      ...CONV.filter(x => x.who.toLowerCase().includes(q) || x.q.toLowerCase().includes(q)).map(x => `<a href="#whatsapp" data-v="whatsapp" data-cs="${x.id}"><span>${x.who}</span><small>WhatsApp</small></a>`),
+      ...INS.filter(i => i[0].toLowerCase().includes(q)).map(i => `<a href="#piezas" data-v="piezas"><span>${i[0]}</span><small>quedan ${i[2]} ${i[1]}</small></a>`)].slice(0, 8);
+    r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; }
+  if (e.target.id === "cef" || e.target.id === "cga") cajaCalc();
+  if (e.target.dataset.bot) { BOTTXT[e.target.dataset.bot] = e.target.value; try { localStorage.setItem("epl-bot", JSON.stringify(BOTTXT)); } catch (er) {} }
+  if (e.target.dataset.ptel) { PCFG[e.target.dataset.ptel].tel = e.target.value; savePC(); const id = e.target.id, pos = e.target.selectionStart; render(); const i = document.getElementById(id); i.focus(); i.setSelectionRange(pos, pos); }
+});
+document.addEventListener("change", e => {
+  if (e.target.dataset.agot) { const n = e.target.dataset.agot; e.target.checked ? AGOT.add(n) : AGOT.delete(n); BOTTXT.agot = [...AGOT].join(", "); toast(e.target.checked ? `${n} agotada: el bot deja de ofrecerla` : `${n} disponible otra vez`); const y = window.scrollY; render(); window.scrollTo(0, y); }
+  if (e.target.dataset.pauto) { const pv = e.target.dataset.pauto; PCFG[pv].auto = e.target.checked; savePC(); toast(e.target.checked ? `Aviso automático a ${PROV.find(x => x.id === pv).n} activado` : `Aviso automático a ${PROV.find(x => x.id === pv).n} apagado`); render(); } });
+document.addEventListener("pointerover", e => { const r = e.target.closest("[data-tip]"); const old = document.querySelector(".tip"); if (old) old.remove(); if (!r) return;
+  const ch = r.closest(".chart"); const bb = r.getBoundingClientRect(), cb = ch.getBoundingClientRect(); const [a, b] = r.dataset.tip.split("|");
+  const t = document.createElement("div"); t.className = "tip"; t.innerHTML = `<b>${b}</b>${a}`; t.style.left = (bb.left + bb.width / 2 - cb.left) + "px"; t.style.top = (bb.top - cb.top) + "px"; ch.append(t); });
+const h0 = location.hash.slice(1); if (VIEWS[h0]) VIEW = h0;
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (VIEWS[h] && h !== VIEW) go(h); });
+render();
+</script>
+</body>
+</html>
