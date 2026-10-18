@@ -38,4 +38,6 @@ let html = leer(aqui, "src", "index.html").toString()
 
 if (/\{\{/.test(html)) throw new Error("Quedó un {{...}} sin reemplazar");
 writeFileSync(join(aqui, "index.html"), html);
+// copia en la raíz del repositorio: GitHub Pages ("Deploy from a branch", main / root) sirve este archivo en clientiatech.com
+writeFileSync(join(aqui, "..", "index.html"), html);
 console.log(`clientia-tech/index.html: ${(html.length / 1024).toFixed(0)} KB`);

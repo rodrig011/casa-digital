@@ -11,6 +11,6 @@ node clientia-tech/build.mjs
 - La demostración del chat corre el motor real del bot (`bot-restaurante/engine.js` y `negocio.js`) con `negocios/ejemplo.json`. Si el bot cambia, se vuelve a correr `build.mjs`.
 - WhatsApp del botón: +1 (765) 543-4251, con el mensaje "Hola Rodrigo, vi la página de Clientia Tech. Mi negocio es: ".
 
-Se publica sola en GitHub Pages con `.github/workflows/pagina-clientia.yml` cada vez que cambia algo aquí en `main` (solo esta página, nada más del repositorio).
+Sale en **https://clientiatech.com**. GitHub Pages está en "Deploy from a branch" (main, raíz), así que `build.mjs` también escribe `index.html` en la raíz del repositorio (con `CNAME` y `.nojekyll`). Si algún día se cambia Pages a "GitHub Actions", se publica sola con `.github/workflows/pagina-clientia.yml` cada vez que cambia algo aquí en `main` (solo esta página, nada más del repositorio).
 
 La foto de "Quién soy" es `src/img/rodrigo.webp` (recorte 4:5 de la foto que mandó Rodrigo).
