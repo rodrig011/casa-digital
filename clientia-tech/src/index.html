@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clientia Tech · Bots de WhatsApp para restaurantes de Honduras</title>
+<meta name="description" content="Rodrigo Herrera, de Clientia Tech: bot de WhatsApp que toma pedidos a cualquier hora y panel del dueño para restaurantes y negocios de Honduras. Pruébelo en la página.">
+<meta property="og:title" content="Clientia Tech · Ningún cliente sin respuesta">
+<meta property="og:description" content="Bot de WhatsApp y panel del dueño para restaurantes de Honduras. Pruebe el bot en la página.">
+<meta name="theme-color" content="#0A1230">
+<link rel="icon" href="{{LOGO_FAVICON}}">
+<style>
+@font-face{font-family:"Hanken Grotesk";font-style:normal;font-weight:400 800;font-display:swap;src:url({{FONT}}) format("woff2")}
+:root{
+  --bg:#F4F6FA;--surface:#E5EAF3;--ink:#0A1230;--soft:#3D4763;--navy:#0A1230;--deep:#16245A;--pale:#D9E2FF;--paper:#FFFFFF;
+  --accent:#1F5BFF;--accent-press:#1849D6;--on-dark:#F4F6FA;--on-dark-soft:#B7C1DD;
+  --m:clamp(16px,2.4vw,32px);
+  --s-small:clamp(.875rem,.85rem + .1vw,.9375rem);
+  --s-body:clamp(1.0625rem,1rem + .3vw,1.25rem);
+  --s-lead:clamp(1.25rem,1.1rem + .7vw,1.625rem);
+  --s-head:clamp(2.25rem,1.4rem + 3.6vw,4.5rem);
+  --s-display:clamp(3rem,1rem + 8.4vw,9rem);
+  --ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--s-body)/1.5 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-weight:800;letter-spacing:-.035em;line-height:.98;text-wrap:balance}
+::selection{background:var(--accent);color:#fff}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.wrap{padding-inline:var(--m)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* buttons: one shape on the whole page (fully round) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:52px;padding:0 1.6em;border-radius:999px;background:var(--accent);color:#fff;font:700 var(--s-body)/1 inherit;font-family:inherit;text-decoration:none;border:0;cursor:pointer;transition:transform .16s var(--ease),background-color .2s}
+.btn:hover{background:var(--accent-press)}
+.btn:active{transform:scale(.97)}
+.btn svg{width:1.15em;height:1.15em;flex:none}
+.link{font-weight:600;text-decoration:underline;text-underline-offset:.22em;text-decoration-thickness:2px;transition:color .2s}
+.link:hover{color:var(--accent)}
+
+/* ---------- top bar ---------- */
+.bar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;gap:24px;padding:22px var(--m)}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.marca .sim{width:34px;height:34px;background:var(--navy);display:grid;place-items:center;border-radius:9px}
+.marca .sim img{width:20px;height:auto}
+.bar nav{margin-left:auto;display:flex;gap:28px;font-size:15px;font-weight:500}
+.bar nav a{text-decoration:none;transition:color .2s}
+.bar nav a:hover{color:var(--accent)}
+.bar .btn{min-height:44px;font-size:15px;padding:0 1.2em}
+@media (max-width:860px){.bar nav{display:none}.bar .btn{margin-left:auto}}
+
+/* ---------- hero ---------- */
+.hero{min-height:100svh;display:grid;grid-template-rows:1fr auto;padding:110px var(--m) 36px;position:relative}
+.hero h1{align-self:center;font-size:clamp(3rem,.5rem + 11vw,11rem);letter-spacing:-.05em;line-height:.92;max-width:100%}
+.hero h1 .l{display:block;white-space:nowrap}
+.frame{display:inline-block;vertical-align:baseline;width:2.3em;height:.76em;margin:0 .14em 0 0;position:relative;overflow:hidden;background:#0B141A;transform:translateY(.02em)}
+.hero-pie{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:end}
+.hero-pie p{grid-column:1 / span 6;font-size:var(--s-lead);line-height:1.35;max-width:34ch}
+.hero-pie .acc{grid-column:8 / -1;display:flex;gap:28px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+
+/* the moving chat inside the headline (dark WhatsApp look) */
+.mini{position:absolute;inset:0;white-space:normal;font:500 clamp(11px,.1em,16px)/1.3 "Hanken Grotesk",system-ui,sans-serif;letter-spacing:0;padding:.7em .8em;display:flex;flex-direction:column;justify-content:flex-end;gap:.45em}
+.mini .b{max-width:82%;padding:.45em .7em;border-radius:.6em;color:#E9EDEF;opacity:0;transform:translateY(8px)}
+.mini .in{background:#202C33;align-self:flex-start}
+.mini .out{background:#005C4B;align-self:flex-end}
+.mini .b::before{content:attr(data-t)}
+.mini .b::after{content:attr(data-h);display:block;font-size:.78em;color:#AEBAC1;margin-top:.15em;text-align:right}
+.mini.go .b1{animation:bub 7s var(--ease) infinite}
+.mini.go .b2{animation:bub2 7s var(--ease) infinite}
+@keyframes bub{0%{opacity:0;transform:translateY(8px)}6%,86%{opacity:1;transform:none}94%,100%{opacity:0;transform:translateY(-6px)}}
+@keyframes bub2{0%,22%{opacity:0;transform:translateY(8px)}30%,86%{opacity:1;transform:none}94%,100%{opacity:0;transform:translateY(-6px)}}
+.shutter{clip-path:inset(0 100% 0 0)}
+.shutter.open{clip-path:inset(0 0 0 0);transition:clip-path 1.1s var(--ease)}
+
+@media (max-width:760px){
+  .hero{padding-top:96px}
+  .hero h1{font-size:13.2vw;line-height:.95}
+  .hero h1 .frame{display:block;width:100%;height:auto;aspect-ratio:3/2;margin:.18em 0 .16em}
+  .hero h1 .frame .mini{font-size:15px;padding:16px;gap:8px}
+  .hero-pie{display:block}
+  .hero-pie p{font-size:1.125rem;margin-bottom:22px}
+  .hero-pie .acc{justify-content:flex-start;gap:20px}
+  .hero-pie .btn{width:100%}
+}
+
+/* ---------- reveal ---------- */
+.sube{animation:sube .8s var(--ease) both;animation-delay:calc(.5s + var(--i,0) * 90ms)}
+@keyframes sube{from{opacity:0;transform:translateY(20px)}}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:calc(var(--i,0) * 80ms)}
+.rv.in{opacity:1;transform:none}
+.nojs .rv{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.sube{animation:none}.rv{transform:none;transition:opacity .3s}.shutter{clip-path:none}.mini .b{opacity:1;transform:none;animation:none!important}}
+
+/* ---------- live demo ---------- */
+.demo{padding:clamp(110px,14vw,200px) var(--m) clamp(110px,12vw,180px);display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start}
+.demo .txt{grid-column:1 / span 4;position:sticky;top:40px}
+.demo h2{font-size:var(--s-head)}
+.demo .txt p{margin-top:24px;max-width:36ch}
+.demo .txt .nota{font-size:var(--s-small);color:var(--soft);margin-top:18px}
+.demo .tel{grid-column:5 / span 4}
+.demo .coc{grid-column:9 / span 4}
+@media (max-width:1020px){.demo .txt{grid-column:1 / -1;position:static}.demo .tel{grid-column:1 / span 7}.demo .coc{grid-column:8 / -1}}
+@media (max-width:760px){.demo{display:block}.demo .tel{margin-top:36px}.demo .coc{margin-top:28px}}
+
+/* phone chat: the product's own look (data-ui) */
+.wa{background:#0B141A;color:#E9EDEF;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;height:min(640px,80svh);font:400 15px/1.38 "Hanken Grotesk",system-ui,sans-serif;letter-spacing:0}
+.wa-top{background:#202C33;display:flex;align-items:center;gap:12px;padding:14px 16px}
+.wa-top .av{width:38px;height:38px;border-radius:50%;background:#C8102E;display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+.wa-top b{display:block;font-size:16px}
+.wa-top small{color:#8696A0;font-size:13px}
+.wa-log{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.msg{max-width:86%;padding:8px 10px 6px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;animation:pop .28s var(--ease)}
+.msg.in{background:#202C33;align-self:flex-start;border-top-left-radius:3px}
+.msg.out{background:#005C4B;align-self:flex-end;border-top-right-radius:3px}
+.msg .h{display:block;text-align:right;font-size:11.5px;color:#8696A0;margin-top:2px}
+.msg.out .h{color:#9FD6C9}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.ops{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:92%}
+.ops button{background:#202C33;color:#53BDEB;border:0;border-radius:18px;padding:9px 13px;font:600 14px/1.2 inherit;font-family:inherit;cursor:pointer;transition:background-color .15s,transform .12s}
+.ops button:hover{background:#2A3942}
+.ops button:active{transform:scale(.96)}
+.wa-in{display:flex;gap:8px;padding:10px;background:#0B141A}
+.wa-in input{flex:1;min-width:0;height:46px;border-radius:23px;border:0;background:#2A3942;color:#E9EDEF;padding:0 16px;font:400 16px inherit;font-family:inherit}
+.wa-in input::placeholder{color:#8696A0}
+.wa-in button{width:46px;height:46px;border-radius:50%;border:0;background:#00A884;color:#fff;display:grid;place-items:center;cursor:pointer;transition:transform .12s}
+.wa-in button:active{transform:scale(.92)}
+.wa-in svg{width:20px;height:20px}
+
+/* kitchen screen: the panel's own look (data-ui) */
+.kit{background:#F3F4F6;color:#111827;border-radius:18px;padding:18px;font:400 14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:0;min-height:300px}
+.kit-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.kit-h b{font-size:20px;font-weight:650}
+.kit-h span{font-size:12px;color:#4B5563;display:flex;align-items:center;gap:6px}
+.kit-h span i{width:8px;height:8px;border-radius:50%;background:#15803D;display:inline-block}
+.kit-vacio{background:#E9EBEF;border-radius:12px;padding:28px 16px;text-align:center;color:#4B5563}
+.ped{background:#fff;border:1px solid #E5E7EB;border-left:4px solid #1D4ED8;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:grid;gap:6px;animation:pop .4s var(--ease)}
+.ped.listo{border-left-color:#15803D}
+.ped .l1{display:flex;justify-content:space-between;gap:8px;font-weight:650;font-size:16px}
+.ped .l1 span{color:#4B5563;font-weight:500;font-size:12px;white-space:nowrap}
+.ped ul{margin:0;padding:0;list-style:none;font-size:16px;font-weight:550}
+.ped .l3{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:#4B5563}
+.ped button{height:42px;border:0;border-radius:8px;background:#C8102E;color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer;transition:transform .12s}
+.ped button:active{transform:scale(.98)}
+.ped .ok{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:12px;background:#DCFCE7;color:#15803D;font-size:12px;font-weight:600;justify-self:start}
+.kit-pie{font-size:12.5px;color:#4B5563;margin-top:8px}
+
+/* ---------- colour fields ---------- */
+.campos{display:grid}
+.campo{min-height:76svh;padding:clamp(40px,5vw,72px) var(--m) clamp(32px,4vw,56px);display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto 1fr auto;gap:0 24px}
+.campo p{grid-column:8 / span 4;grid-row:1;max-width:34ch}
+.campo h2{grid-column:1 / span 9;grid-row:3;font-size:clamp(3rem,1rem + 7.6vw,8.5rem);line-height:.9;letter-spacing:-.05em}
+.campo.mir p{grid-column:2 / span 4}
+.campo.mir h2{grid-column:4 / -1;text-align:right}
+.c1{background:var(--navy);color:var(--on-dark)}
+.c2{background:var(--surface)}
+.c3{background:var(--deep);color:var(--on-dark)}
+.c4{background:var(--pale)}
+@media (max-width:760px){
+  .campo{min-height:64svh;display:flex;flex-direction:column;justify-content:space-between;gap:40px}
+  .campo h2{font-size:13vw}
+  .campo.mir h2{text-align:left}
+  .campo.mir p{text-align:right;align-self:flex-end}
+}
+
+/* ---------- panel pictures ---------- */
+.fotos{padding:clamp(110px,14vw,200px) 0 0;overflow:hidden}
+.fotos .cab{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;padding-inline:var(--m)}
+.fotos h2{grid-column:1 / span 7;font-size:var(--s-head)}
+.fotos .cab p{grid-column:9 / span 4;align-self:end;max-width:34ch}
+.grande{margin:clamp(48px,6vw,88px) 0 0 calc(var(--m) + 8.33vw);background:var(--surface);overflow:hidden}
+.grande img{width:100%;transform:scale(1.04);transition:transform 1.6s var(--ease)}
+.grande.in img{transform:scale(1)}
+.tira{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;padding:clamp(40px,5vw,72px) var(--m) 0;align-items:start}
+.tira figure{margin:0}
+.tira figure:nth-child(1){grid-column:1 / span 3;margin-top:120px}
+.tira figure:nth-child(2){grid-column:5 / span 3}
+.tira figure:nth-child(3){grid-column:9 / span 3;margin-top:200px}
+.tira img{width:100%;background:var(--surface)}
+figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
+.credito{padding:24px var(--m) 0;font-size:var(--s-small);color:var(--soft)}
+@media (max-width:760px){
+  .fotos .cab{display:block}.fotos .cab p{margin-top:20px}
+  .grande{margin-left:var(--m)}
+  .tira{grid-template-columns:1fr 1fr;gap:16px}
+  .tira figure:nth-child(n){grid-column:auto;margin:0}
+  .tira figure:nth-child(2){margin-top:64px}
+  .tira figure:nth-child(3){display:none}
+}
+
+/* ---------- how it works (slider) ---------- */
+.pasos{margin-top:clamp(110px,14vw,200px);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(78svh,auto) auto}
+.pasos .izq{background:var(--navy);color:var(--on-dark);padding:clamp(40px,5vw,72px) var(--m) 64px}
+.pasos .der{background:var(--surface);display:grid;place-items:center;padding:48px var(--m)}
+.pasos h2{font-size:var(--s-lead);font-weight:700;letter-spacing:-.01em;line-height:1.3;color:var(--on-dark-soft);max-width:30ch}
+.clause{margin-top:clamp(32px,6vw,96px);display:grid}
+.clause>div{grid-area:1/1;transition:opacity .25s ease}
+.clause>div[hidden]{display:block;opacity:0;pointer-events:none;visibility:hidden}
+.clause h3{font-size:clamp(2.5rem,1rem + 3.9vw,4.75rem);line-height:.95;letter-spacing:-.045em}
+.clause p{margin-top:24px;max-width:38ch;color:var(--on-dark)}
+.frag{display:grid;width:100%;max-width:460px}
+.frag>*{grid-area:1/1;transition:opacity .25s ease;align-self:center;justify-self:center}
+.frag>[hidden]{display:block;opacity:0;visibility:hidden}
+.frag img{max-height:62svh;width:auto;max-width:100%}
+.frag .w{max-width:420px;width:100%}
+.slider{grid-column:1 / -1;padding:28px var(--m) 8px}
+.riel{position:relative;height:40px}
+.riel::before,.riel i{content:"";position:absolute;left:0;top:16px;height:8px;background:#AEB8D0;right:0}
+.riel i{right:auto;width:var(--p,0%);background:var(--ink);transition:width .2s var(--ease)}
+.slider input{position:absolute;inset:0;width:100%;appearance:none;-webkit-appearance:none;background:transparent;height:40px;margin:0;cursor:pointer}
+.slider input::-webkit-slider-runnable-track{height:8px;background:transparent}
+.slider input::-moz-range-track{height:8px;background:transparent}
+.slider input::-webkit-slider-thumb{-webkit-appearance:none;width:32px;height:32px;margin-top:-12px;background:var(--accent);border:0;border-radius:50%}
+.slider input::-moz-range-thumb{width:32px;height:32px;background:var(--accent);border:0;border-radius:50%}
+.etapas{display:grid;grid-template-columns:repeat(4,1fr);margin-top:6px;font-size:var(--s-small)}
+.etapas button{background:none;border:0;padding:6px 0;text-align:left;font:inherit;color:var(--soft);cursor:pointer;transition:color .2s}
+.etapas button:hover{color:var(--accent)}
+.etapas button:nth-child(2){text-align:center;padding-right:8%}
+.etapas button:nth-child(3){text-align:center;padding-left:8%}
+.etapas button:last-child{text-align:right}
+.etapas button[aria-current="step"]{color:var(--ink);font-weight:700}
+@media (max-width:860px){
+  .pasos{display:flex;flex-direction:column}
+  .pasos .der{order:1;min-height:46svh;padding:32px var(--m)}
+  .slider{order:2;padding:20px var(--m) 24px}
+  .slider input::-webkit-slider-thumb{width:40px;height:40px;margin-top:-16px}
+  .etapas{grid-template-columns:1fr 1fr;gap:4px 12px}
+  .etapas button,.etapas button:nth-child(n){text-align:left;padding:6px 0}
+  .pasos .izq{order:3;padding-bottom:56px}
+  .clause{margin-top:32px}
+  .clause h3{font-size:10vw}
+}
+/* the slider track is a real control: its two-tone fill is the passed part, not decoration */
+
+/* ---------- about ---------- */
+.yo{padding:clamp(120px,14vw,200px) var(--m);display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.yo .datos{grid-column:1 / span 2;font-size:var(--s-small);display:grid;gap:18px;align-content:start;padding-top:.4em}
+.yo .datos b{display:block;font-weight:700}
+.yo .datos a{white-space:nowrap}
+.yo .bio{grid-column:3 / -1;font-size:clamp(1.5rem,.9rem + 1.5vw,2.25rem);line-height:1.2;letter-spacing:-.02em}
+.yo .bio p+p{margin-top:1em;color:var(--soft)}
+.yo .cap{float:left;width:3.6em;height:3.6em;margin:.12em .5em 0 0;background:var(--navy);display:grid;place-items:center}
+.yo .cap img{width:52%}
+.yo .bio strong{font-weight:800}
+@media (max-width:760px){
+  .yo{display:flex;flex-direction:column-reverse;gap:40px}
+  .yo .bio{font-size:1.375rem;line-height:1.25}
+  .yo .cap{width:4.5em;height:4.5em}
+  .yo .datos{grid-template-columns:repeat(3,1fr);gap:12px;font-size:.875rem}
+}
+
+/* ---------- faq ---------- */
+.faq{padding:0 var(--m) clamp(120px,14vw,200px)}
+.fila{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;padding-top:clamp(56px,6vw,88px)}
+.fila:first-child{padding-top:0}
+.fila h2,.fila h3{grid-column:1 / span 6;font-size:clamp(1.5rem,1rem + 1.5vw,2.5rem);font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.fila h2{color:#6A7390}
+.fila p{grid-column:8 / span 5;max-width:42ch;padding-top:.3em}
+@media (max-width:760px){.fila{display:block;padding-top:56px}.fila p{margin-top:12px;padding:0}}
+
+/* ---------- contact ---------- */
+.contacto{background:var(--navy);color:var(--on-dark);min-height:100svh;padding:clamp(40px,5vw,72px) var(--m) 36px;display:grid;grid-template-rows:auto 1fr auto auto;gap:24px}
+.contacto .q{font-size:var(--s-lead);line-height:1.3;max-width:28ch}
+.numero{align-self:end;display:block;text-decoration:none;font-weight:700;font-size:clamp(2.6rem,.5rem + 9.6vw,10.5rem);letter-spacing:-.05em;line-height:.95;white-space:nowrap;transition:color .25s;margin-bottom:6vh}
+.numero:hover{color:#8FB0FF}
+.contacto .pie{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--s-small);color:var(--on-dark-soft)}
+.contacto .btn{justify-self:start}
+@media (max-width:760px){.numero{font-size:13.4vw;margin-bottom:2vh}.contacto .btn{width:100%}.contacto .pie{flex-direction:column;gap:10px}}
+
+/* ---------- footer ---------- */
+footer{background:var(--bg);overflow:hidden;padding:56px var(--m) 0;position:relative}
+footer .leg{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--s-small);color:var(--soft);position:relative;z-index:1}
+footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-spacing:-.06em;line-height:.8;white-space:nowrap;transform:translateY(22%);margin-top:20px;color:var(--navy)}
+@media (max-width:760px){footer .nombre{font-size:27vw}footer .leg{flex-direction:column;gap:8px}}
+</style>
+</head>
+<body class="nojs">
+<script>document.body.classList.remove("nojs")</script>
+
+<header class="bar">
+  <a class="marca" href="#inicio" aria-label="Clientia Tech, inicio"><span class="sim"><img src="{{LOGO}}" alt="" width="20" height="23"></span>Clientia Tech</a>
+  <nav aria-label="Secciones">
+    <a href="#pruebelo">Pruébelo</a>
+    <a href="#como">Cómo se instala</a>
+    <a href="#quien">Quién soy</a>
+    <a href="#preguntas">Preguntas</a>
+  </nav>
+  <a class="btn" href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>
+</header>
+
+<main id="inicio">
+<section class="hero">
+  <h1><span class="l">Ningún cliente</span><span class="l"><span class="frame shutter" aria-hidden="true"><span class="mini">
+      <span class="b in b1" data-t="¿Todavía tienen combos?" data-h="11:42 p. m."></span>
+      <span class="b out b2" data-t="¡Hola! Sí, ¿qué le preparamos?" data-h="11:42 p. m."></span>
+    </span></span>sin respuesta.</span></h1>
+  <div class="hero-pie">
+    <p class="sube">Bot de WhatsApp y panel del dueño para restaurantes de Honduras. Su cliente escribe a medianoche y el pedido igual llega a su cocina.</p>
+    <div class="acc sube" style="--i:1">
+      <a class="link" href="#pruebelo">Pruebe el bot aquí</a>
+      <a class="btn" href="{{WA}}" target="_blank" rel="noopener">{{WA_ICON}}Escríbame por WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<section class="demo" id="pruebelo" aria-labelledby="t-demo">
+  <div class="txt">
+    <h2 id="t-demo" class="rv">Pruébelo usted.</h2>
+    <p class="rv" style="--i:1">Este es el bot de verdad, el mismo código que corre en el servidor, con el menú de un restaurante de ejemplo. Haga un pedido para recoger: al confirmarlo, aparece en la pantalla de cocina. Toque <b>Listo</b> y vea qué le llega al cliente.</p>
+    <p class="nota rv" style="--i:2">Demostración con datos de ejemplo. Lo que escriba no sale de su teléfono.</p>
+  </div>
+  <div class="tel rv" style="--i:2">
+    <div class="wa" data-ui>
+      <div class="wa-top"><span class="av">PE</span><div><b>Pollo de Ejemplo</b><small>Bot de WhatsApp · demostración</small></div></div>
+      <div class="wa-log" id="log" aria-live="polite">
+        <noscript><div class="msg in">Para probar el bot, active JavaScript en su navegador.</div></noscript>
+      </div>
+      <form class="wa-in" id="f"><label class="sr" for="q">Escriba un mensaje</label><input id="q" autocomplete="off" placeholder="Escriba, por ejemplo: hola" enterkeyhint="send"><button aria-label="Enviar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button></form>
+    </div>
+  </div>
+  <div class="coc rv" style="--i:3">
+    <div class="kit" data-ui>
+      <div class="kit-h"><b>Cocina</b><span><i></i>En vivo</span></div>
+      <div id="kit"><div class="kit-vacio">Aquí aparecen los pedidos que confirme en el chat.</div></div>
+      <p class="kit-pie">Pantalla de cocina: una tablet o un celular viejo con el navegador abierto.</p>
+    </div>
+  </div>
+</section>
+
+<section class="campos" aria-label="Qué hace el sistema">
+  <div class="campo c1"><p class="rv">Menú con precios, sucursales, horario y cómo pedir por PedidosYa o Bip Bip. A las seis de la mañana o a medianoche, sin que nadie de su personal tenga que agarrar el teléfono.</p><h2 class="rv" style="--i:1">Contesta a toda hora.</h2></div>
+  <div class="campo c2 mir"><p class="rv">El cliente arma su pedido para recoger, escoge sucursal y hora, y el bot le da el total en lempiras. Cuando la cocina marca Listo, al cliente le llega un WhatsApp para que pase.</p><h2 class="rv" style="--i:1">Pedidos sin fila.</h2></div>
+  <div class="campo c3"><p class="rv">Desde su celular: pedidos del día, lo vendido por WhatsApp, lo más pedido y cada sucursal. Y cada pedido le llega también a usted por WhatsApp.</p><h2 class="rv" style="--i:1">Usted lo ve todo.</h2></div>
+  <div class="campo c4 mir"><p class="rv">Si el cliente pide hablar con una persona, el bot pasa la conversación a la sucursal y la deja en Por atender hasta que alguien le conteste.</p><h2 class="rv" style="--i:1">Nadie queda colgado.</h2></div>
+</section>
+
+<section class="fotos" aria-labelledby="t-fotos">
+  <div class="cab">
+    <h2 id="t-fotos" class="rv">El panel del dueño, en su celular.</h2>
+    <p class="rv" style="--i:1">Usted y las personas que autorice entran con correo y contraseña. Cada restaurante tiene su propio servidor: sus ventas no se mezclan con las de nadie.</p>
+  </div>
+  <figure class="grande rv" style="margin-bottom:0"><img src="{{IMG:d-hoy}}" width="1600" height="1000" alt="Panel del dueño, vista Hoy: pedidos por WhatsApp, total vendido, lo más pedido y ventas por sucursal" loading="lazy"></figure>
+  <div class="tira">
+    <figure class="rv"><img src="{{IMG:m-pedidos}}" width="780" height="1688" alt="Panel en el celular: pedidos nuevos y en cocina" loading="lazy"><figcaption>Pedidos: nuevos, en cocina y listos.</figcaption></figure>
+    <figure class="rv" style="--i:1"><img src="{{IMG:m-cocina}}" width="780" height="1688" alt="Pantalla de cocina en el celular" loading="lazy"><figcaption>Cocina: un toque y el cliente recibe su aviso.</figcaption></figure>
+    <figure class="rv" style="--i:2"><img src="{{IMG:m-menu}}" width="780" height="1688" alt="Menú con precios en lempiras dentro del panel" loading="lazy"><figcaption>Menú: los nombres y precios de su carta, tal cual.</figcaption></figure>
+  </div>
+  <p class="credito">Pantallazos reales del sistema, con el restaurante de ejemplo “Pollo de Ejemplo”.</p>
+</section>
+
+<section class="pasos" id="como" aria-labelledby="t-como">
+  <div class="izq">
+    <h2 id="t-como">Se instala a distancia, sin viajes ni técnicos. Mueva la barra.</h2>
+    <div class="clause" id="clause">
+      <div><h3>Primero, me manda su menú.</h3><p>Por WhatsApp: menú con precios, direcciones y horarios de cada sucursal. Lo cargo tal cual, con los nombres de sus productos. Lo que usted no confirme, el bot no lo inventa.</p></div>
+      <div hidden><h3>Luego conectamos su número.</h3><p>Una videollamada de unos 45 minutos. Usted entra a su Facebook de negocio, me agrega como administrador y me dicta un código que le llega por SMS. No se instala nada en sus computadoras.</p></div>
+      <div hidden><h3>Su cocina empieza a recibir.</h3><p>La pantalla de cocina va en una tablet o un celular viejo. Los pedidos entran solos, con sonido, y cada uno le llega también a usted.</p></div>
+      <div hidden><h3>Al final, le enseño el panel.</h3><p>Otra videollamada de unos 30 minutos para usted y su personal, grabada para quien entre después. Un precio o un horario nuevo lo cambio yo desde acá, sin que usted toque nada.</p></div>
+    </div>
+  </div>
+  <div class="der">
+    <div class="frag" id="frag">
+      <img src="{{IMG:m-menu}}" width="780" height="1688" alt="Menú cargado en el panel" loading="lazy">
+      <div class="w" hidden><div class="wa" data-ui style="height:auto">
+        <div class="wa-top"><span class="av">PE</span><div><b>Pollo de Ejemplo</b><small>Número conectado</small></div></div>
+        <div class="wa-log" style="overflow:hidden"><div class="msg out">hola<span class="h">7:02 p. m.</span></div><div class="msg in">¡Hola! Gracias por escribirle a <b>Pollo de Ejemplo</b>. Le atiendo a cualquier hora: menú y precios, pedidos para recoger y sucursales.<span class="h">7:02 p. m.</span></div></div>
+      </div></div>
+      <img src="{{IMG:d-cocina}}" width="1600" height="1000" alt="Pantalla de cocina con pedidos" loading="lazy" hidden>
+      <img src="{{IMG:m-hoy}}" width="780" height="1688" alt="Panel del dueño en el celular, vista Hoy" loading="lazy" hidden>
+    </div>
+  </div>
+  <div class="slider">
+    <label class="sr" for="paso">Paso de la instalación</label>
+    <div class="riel" id="riel"><i></i><input type="range" id="paso" min="0" max="3" step="1" value="0"></div>
+    <div class="etapas" id="etapas"><button type="button" aria-current="step">Su menú</button><button type="button">Su número</button><button type="button">Su cocina</button><button type="button">Su panel</button></div>
+  </div>
+</section>
+
+<section class="yo" id="quien" aria-label="Quién soy">
+  <div class="datos rv">
+    <div><b>Hondureño</b>Estudio ingeniería en EE. UU.</div>
+    <div><b>Atiendo yo</b>En español, por WhatsApp o videollamada.</div>
+    <div><b>WhatsApp</b><a class="link" href="{{WA}}" target="_blank" rel="noopener">+1 (765) 543-4251</a></div>
+  </div>
+  <div class="bio rv" style="--i:1">
+    <p><span class="cap"><img src="{{LOGO}}" alt="" width="40" height="46"></span><strong>Rodrigo Herrera.</strong> Soy hondureño y estudio ingeniería en Estados Unidos. Clientia Tech es mi empresa: hago los sistemas yo mismo, desde el código hasta la instalación, y lo que aprendo allá lo pongo a trabajar para restaurantes y negocios de Honduras.</p>
+    <p>Cuando usted escribe, le contesto yo. Antes de pagar nada, se lo enseño funcionando con su propio menú en una videollamada.</p>
+  </div>
+</section>
+
+<section class="faq" id="preguntas" aria-label="Preguntas">
+  <div class="fila"><h2>Preguntas de dueños</h2></div>
+  <div class="fila rv"><h3>¿Tengo que cambiar mi número de WhatsApp?</h3><p>La idea es usar el número que sus clientes ya conocen. Si WhatsApp no lo permite para ese número, se saca una línea solo para el bot y se cambia en su TikTok, Facebook y PedidosYa.</p></div>
+  <div class="fila rv"><h3>¿Tengo que comprar o instalar algo?</h3><p>No. Todo vive en internet. Para la cocina basta una tablet o un celular viejo con el navegador abierto, y el panel lo ve en su propio celular.</p></div>
+  <div class="fila rv"><h3>Vendo por PedidosYa y Bip Bip. ¿Sirve igual?</h3><p>Sí. Si no tiene repartidores propios, el bot le dice al cliente cómo pedir por esas apps y, además, le toma pedidos para recoger sin hacer fila.</p></div>
+  <div class="fila rv"><h3>¿Quién puede ver mis ventas?</h3><p>Solo las personas que usted autorice, con correo y contraseña. Cada negocio tiene su propio servidor y sus datos no se mezclan con los de otro.</p></div>
+  <div class="fila rv"><h3>¿Por qué su número es de Estados Unidos?</h3><p>Porque vivo allá mientras estudio. Por WhatsApp le contesto igual que un número de aquí, y las llamadas por WhatsApp no le cuestan nada extra.</p></div>
+  <div class="fila rv"><h3>¿Cuánto cuesta?</h3><p>Depende de cuántas sucursales tenga y de lo que necesite. Se lo digo en una llamada de diez minutos, después de ver su menú. Primero lo ve funcionando.</p></div>
+  <div class="fila rv"><h3>¿Solo trabaja con restaurantes?</h3><p>No. El mismo sistema sirve para talleres y comercios: el bot pregunta qué necesita el cliente, le da un rango inicial y le agenda la visita, y usted lo ve en su panel.</p></div>
+</section>
+
+<section class="contacto" aria-label="Contacto">
+  <p class="q rv">Escríbame el nombre de su negocio y le cuento cómo quedaría con su menú.</p>
+  <a class="numero rv" href="{{WA}}" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp al +1 765 543 4251">+1 765 543 4251</a>
+  <a class="btn rv" href="{{WA}}" target="_blank" rel="noopener">{{WA_ICON}}Escribir por WhatsApp</a>
+  <div class="pie"><span>Rodrigo Herrera · Clientia Tech</span><span>Restaurantes y negocios de Honduras</span></div>
+</section>
+</main>
+
+<footer>
+  <div class="leg"><span>© 2026 Clientia Tech. Casa Digital es nuestra línea para restaurantes.</span><span>Los pantallazos y el chat usan un restaurante de ejemplo.</span></div>
+  <div class="nombre" aria-hidden="true">Clientia Tech</div>
+</footer>
+
+<script>
+/*{{BOT}}*/
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- reveal on scroll ----
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".rv,.grande").forEach(el => io.observe(el));
+
+  // ---- hero frame: shutter, then the chat loop ----
+  const fr = document.querySelector(".frame");
+  requestAnimationFrame(() => setTimeout(() => { fr.classList.add("open"); fr.querySelector(".mini").classList.add("go"); }, 250));
+
+  // ---- the real bot engine, with the example restaurant ----
+  const N = BOT.preparar(BOT.NEGOCIO);
+  const E = BOT.createEngine(N);
+  let st = E.fresh();
+  const log = document.getElementById("log"), kit = document.getElementById("kit"), f = document.getElementById("f"), q = document.getElementById("q");
+  const hora = () => new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = s => esc(s).replace(/\*([^*\n]+)\*/g, "<b>$1</b>");
+  const bajar = () => log.scrollTo({ top: log.scrollHeight, behavior: reduce ? "auto" : "smooth" });
+  function burbuja(t, lado) {
+    const d = document.createElement("div");
+    d.className = "msg " + lado;
+    d.innerHTML = fmt(t) + `<span class="h">${hora()}</span>`;
+    log.appendChild(d);
+  }
+  function opciones(bs) {
+    log.querySelectorAll(".ops").forEach(o => o.remove());
+    if (!bs || !bs.length) return;
+    const o = document.createElement("div");
+    o.className = "ops";
+    bs.forEach(b => { const x = document.createElement("button"); x.type = "button"; x.textContent = b; x.onclick = () => enviar(b); o.appendChild(x); });
+    log.appendChild(o);
+  }
+  let espera = 0;
+  function enviar(t) {
+    t = (t || "").trim();
+    if (!t) return;
+    log.querySelectorAll(".ops").forEach(o => o.remove());
+    burbuja(t, "out");
+    bajar();
+    const r = E.handle(st, t, Date.now());
+    st = r.state;
+    const lead = st.lead; if (lead) { delete st.lead; }
+    const msgs = r.messages || [];
+    clearTimeout(espera);
+    let i = 0;
+    const sig = () => {
+      const m = msgs[i++];
+      if (!m) { if (lead) cocina(lead); return; }
+      burbuja(m.text || "", "in");
+      if (i === msgs.length) opciones(m.buttons);
+      bajar();
+      espera = setTimeout(sig, reduce ? 0 : 420);
+    };
+    espera = setTimeout(sig, reduce ? 0 : 380);
+  }
+  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value); q.value = ""; });
+
+  function cocina(p) {
+    if (p.tipo && p.tipo !== "pedido") return;
+    const v = kit.querySelector(".kit-vacio"); if (v) v.remove();
+    const lineas = p.lineas || [], total = p.total || 0;
+    const d = document.createElement("div");
+    d.className = "ped";
+    d.innerHTML = `<div class="l1">${esc(p.n || "Pedido")} · ${esc(p.nombre || "")}<span>${hora()} · ahora</span></div>
+      <ul>${lineas.map(l => `<li>${l.cantidad} × ${esc(l.nombre)}</li>`).join("")}</ul>
+      <div class="l3"><span><b>${BOT.L(total)}</b> · ${esc(p.sucursal || "")}</span><span>Recoge: ${esc(p.hora || "")}</span></div>
+      <button type="button">Listo</button>`;
+    d.querySelector("button").onclick = e => {
+      e.currentTarget.outerHTML = `<span class="ok">Listo · avisado por WhatsApp</span>`;
+      d.classList.add("listo");
+      const b = N.sucursales.find(x => x.id === p.sucursalId);
+      burbuja(`✅ ¡${(p.nombre || "Hola").split(" ")[0]}, su pedido *${p.n}* ya está listo! Puede pasar a recogerlo a *${p.sucursal}*${b && b.direccion ? ` (${b.direccion})` : ""}.\n\nTotal: ${BOT.L(p.total)}. ¡Gracias por su compra!`, "in"); // taste-skill-ignore
+      const ops = log.querySelector(".ops"); if (ops) log.appendChild(ops);
+      bajar();
+    };
+    kit.prepend(d);
+  }
+  // first greeting when the demo scrolls into view
+  const demoIO = new IntersectionObserver(es => { if (es[0].isIntersecting) { demoIO.disconnect(); const r = E.handle(st, "hola", Date.now()); st = r.state; r.messages.forEach((m, k) => { burbuja(m.text || "", "in"); if (k === r.messages.length - 1) opciones(m.buttons); }); } }, { threshold: .3 });
+  demoIO.observe(log);
+
+  // ---- installation slider ----
+  const riel = document.getElementById("riel"), rng = document.getElementById("paso"), cl = [...document.getElementById("clause").children], fg = [...document.getElementById("frag").children], et = [...document.getElementById("etapas").children];
+  function paso(n) {
+    rng.value = n;
+    riel.style.setProperty("--p", (n / 3 * 100) + "%");
+    cl.forEach((x, k) => x.hidden = k !== n);
+    fg.forEach((x, k) => x.hidden = k !== n);
+    et.forEach((x, k) => k === n ? x.setAttribute("aria-current", "step") : x.removeAttribute("aria-current"));
+  }
+  rng.addEventListener("input", () => paso(+rng.value));
+  et.forEach((b, k) => b.addEventListener("click", () => paso(k)));
+  paso(0);
+})();
+</script>
+</body>
+</html>
