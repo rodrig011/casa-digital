@@ -1,8 +1,12 @@
-# Guía del panel · [Restaurante]
+<!-- portada: Guía del panel -->
+# Su panel, paso a paso.
 
-Las imágenes son del restaurante de ejemplo; su panel se ve igual, con su nombre, su menú y sus colores.
+Todo lo que pasa en [Restaurante], en una sola pantalla: los pedidos, la cocina y los clientes que esperan una respuesta.
 
 ## Entrar
+
+Las imágenes son del restaurante de ejemplo. Su panel se ve igual, con su nombre, su menú y sus colores.
+
 
 1. Abra en el celular o la computadora la dirección que le mandamos por WhatsApp (termina en `/panel`).
 2. Escriba su correo y su contraseña. La primera vez use la temporal que le mandamos y cámbiela.
@@ -61,4 +65,3 @@ El menú y los precios que el bot les da a sus clientes. Revíselo de vez en cua
 | Alguien del personal ya no debe entrar | Avísenos y le quitamos el acceso. |
 | Olvidó la contraseña | Avísenos y le mandamos una nueva. |
 
-*Casa Digital by Clientia Tech*

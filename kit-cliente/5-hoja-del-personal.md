@@ -1,9 +1,12 @@
-# Hoja para el personal · [Restaurante]
+<!-- portada: no -->
+<!-- estilo: hoja -->
+# Pedidos por WhatsApp.
 
-Para pegar en la cocina o al lado de la caja.
+Hoja para el personal de [Restaurante]. Péguela en la cocina o al lado de la caja.
 
-## Cuando entra un pedido por WhatsApp
+## Cuando entra un pedido
 
+<!-- pasos -->
 1. Suena la pantalla de cocina y aparece en **Nuevos**.
 2. Toque **A cocina** cuando empiecen a prepararlo.
 3. Toque **Listo** cuando esté empacado. Al cliente le llega un WhatsApp para que pase a recoger.
@@ -22,4 +25,3 @@ Son clientes que pidieron hablar con una persona. Escríbales lo más pronto pos
 
 Si se acabó un producto o cambió un precio, avísele al encargado para que nos avise y lo cambiemos en el bot.
 
-*Casa Digital by Clientia Tech*
