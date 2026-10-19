@@ -29,7 +29,8 @@ const fav = logo.toString().replace(/<svg([^>]*)>/, '<svg$1><rect x="-30" y="-10
 
 const armar = archivo => leer(aqui, "src", archivo).toString()
   .replace("{{FONT}}", () => dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
-  .replace("{{FONT_ARCHIVO}}", () => dataUri(leer(aqui, "src", "fonts", "archivo-latin.woff2"), "font/woff2"))
+  .replace("{{FONT_HORAS}}", () => dataUri(leer(aqui, "src", "fonts", "big-shoulders-latin.woff2"), "font/woff2"))
+  .replace("{{FONT_TEXTO}}", () => dataUri(leer(aqui, "src", "fonts", "instrument-sans-latin.woff2"), "font/woff2"))
   .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
   .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
   .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;"))
