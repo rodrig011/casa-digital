@@ -10,6 +10,7 @@ const twilio = require("twilio");
 const { cargarNegocio, preparar } = require("./negocio");
 const { createEngine, toText } = require("./engine");
 const { createApp } = require("./server");
+const { createStore } = require("./store");
 const { createIA, MODELO } = require("./ia");
 const { hashClave } = require("./auth");
 
@@ -418,4 +419,36 @@ test("webhook: con pasarela cada pedido lleva su link; si el pago sale bien pasa
     assert.equal(vuelta.status, 200); assert.match(await vuelta.text(), /Pago recibido/);
     assert.equal((await fetch(ctx.base + "/pagos/listo/PED-1001?t=malo")).status, 403);
   } finally { ctx.srv.close(); }
+});
+
+test("store: los pedidos cerrados de más de 30 días pasan al archivo del mes, sin perder faltas ni numeración", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  let ahora = Date.parse("2026-11-20T15:00:00Z");
+  fs.writeFileSync(path.join(dir, "pedidos.json"), JSON.stringify([
+    { n: "PED-1001", tel: "+50498765432", fecha: "2026-09-05T18:00:00Z", estado: "entregado" },
+    { n: "PED-1002", tel: "+50498765432", fecha: "2026-09-20T18:00:00Z", estado: "no_vino" },
+    { n: "PED-1003", tel: "+50411112222", fecha: "2026-10-02T18:00:00Z", estado: "nuevo" },
+    { n: "PED-1004", tel: "+50498765432", fecha: "2026-10-03T18:00:00Z", estado: "cancelado" },
+    { n: "PED-1005", tel: "+50498765432", fecha: "2026-11-15T18:00:00Z", estado: "no_vino" },
+  ]));
+  const st2 = createStore(dir, { now: () => ahora });
+  assert.equal(st2.faltas("+504 9876-5432"), 2);
+  st2.seq = 1006; st2.addPedido({ n: "PED-1006", tel: "+50433334444", fecha: new Date(ahora).toISOString(), estado: "nuevo" });
+
+  const leer = f => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+  // still-open order stays even if old; recent ones stay
+  assert.deepEqual(leer("pedidos.json").map(p => p.n), ["PED-1003", "PED-1005", "PED-1006"]);
+  assert.deepEqual(leer("archivo/pedidos-2026-09.json").map(p => p.n), ["PED-1001", "PED-1002"]);
+  assert.deepEqual(leer("archivo/pedidos-2026-10.json").map(p => p.n), ["PED-1004"]);
+  assert.equal(st2.faltas("+50498765432"), 2, "la falta archivada sigue contando");
+
+  // a month later everything closed is archived; after a restart numbering and faltas continue
+  st2.updatePedido("PED-1003", { estado: "entregado" }); st2.updatePedido("PED-1006", { estado: "entregado" });
+  ahora += 40 * 86400e3;
+  st2.updatePedido("PED-1005", { visto: true });
+  assert.equal(leer("pedidos.json").length, 0);
+  assert.deepEqual(leer("archivo/pedidos-2026-10.json").map(p => p.n), ["PED-1004", "PED-1003"]);
+  const st3 = createStore(dir, { now: () => ahora });
+  assert.equal(st3.seq, 1006);
+  assert.equal(st3.faltas("+50498765432"), 2);
 });
