@@ -1,0 +1,12 @@
+{
+  "name": "kit-cliente",
+  "private": true,
+  "type": "module",
+  "description": "Genera los PDF del kit que recibe un restaurante al contratar Casa Digital",
+  "scripts": { "generar": "node generar.mjs" },
+  "dependencies": {
+    "marked": "14.1.4",
+    "playwright": "1.56.1",
+    "qrcode": "1.5.4"
+  }
+}
