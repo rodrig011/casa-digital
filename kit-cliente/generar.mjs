@@ -6,7 +6,8 @@
 //   cd kit-cliente && npm install && cd ..
 //   node kit-cliente/generar.mjs --restaurante "Pollo de Ejemplo" --dueno "Juan Pérez" \
 //     --numero "9999-9999" --instalacion "L32,000" --mensual "L3,500" --inicio "20 de octubre de 2026"
-// Solo --restaurante es obligatorio; lo que falte queda en blanco para escribirlo a mano.
+// Solo --restaurante es obligatorio; lo que falte queda en blanco para escribirlo a mano
+// (sin --numero, el cartel sale como borrador con el QR pendiente).
 // Salida: kit-cliente/pdf/<restaurante>/  (no se sube a GitHub: tiene datos del cliente)
 //
 // Diseño: el estilo de la página de Clientia Tech (azul marino, Hanken Grotesk 800, mucho aire).
@@ -275,10 +276,11 @@ const render = archivo => {
 };
 
 const cartel = async () => {
-  if (!waNum) return null;
-  const link = `https://wa.me/${waNum}?text=${encodeURIComponent("Hola, quiero hacer un pedido")}`;
-  const qr = await QRCode.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#0A1230", light: "#0000" } });
-  const visible = digitos.length === 8 ? `${digitos.slice(0, 4)}-${digitos.slice(4)}` : "+" + digitos;
+  // sin --numero sale un borrador: el recuadro del QR y el número quedan marcados como pendientes
+  const link = waNum && `https://wa.me/${waNum}?text=${encodeURIComponent("Hola, quiero hacer un pedido")}`;
+  const qr = waNum ? await QRCode.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#0A1230", light: "#0000" } })
+    : `<div class="pend"><span>Aquí va el código QR del número del bot.</span><b>Pendiente</b></div>`;
+  const visible = !waNum ? "Número pendiente" : digitos.length === 8 ? `${digitos.slice(0, 4)}-${digitos.slice(4)}` : "+" + digitos;
   return `<!doctype html><html lang="es"><meta charset="utf-8"><style>
 @font-face{font-family:H;src:url(${letra}) format("woff2");font-weight:100 900}
 @page{size:Letter;margin:0}
@@ -292,11 +294,13 @@ h1{font-size:76pt;line-height:.9;letter-spacing:-.055em;margin:7mm 0 0;font-weig
 .fila{margin-top:auto;display:flex;align-items:flex-end;gap:12mm;position:relative}
 .q{width:88mm;height:88mm;padding:8mm;background:#fff;border-radius:7mm;flex:none}
 .q svg{width:100%;height:100%;display:block}
+.pend{box-sizing:border-box;width:100%;height:100%;border:2px dashed #9DB6FF;border-radius:4mm;display:flex;flex-direction:column;gap:3mm;align-items:center;justify-content:center;text-align:center;padding:8mm;font-size:12pt;line-height:1.4;color:#3D4763}.pend b{color:#1F5BFF}
+.borrador{position:absolute;top:20mm;right:20mm;font-size:9pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#0A1230;background:#9DB6FF;padding:2mm 4mm;border-radius:99px}
 .n{font-size:40pt;font-weight:800;letter-spacing:-.03em;line-height:1;color:#fff}
 .p{font-size:12.5pt;line-height:1.45;color:#B7C1DD;margin-top:5mm}
 .pie{margin-top:14mm;border-top:1px solid rgba(244,246,250,.18);padding-top:5mm;font-size:9.5pt;color:#B7C1DD;position:relative}
 </style><body><div class="c"><div class="fant">${simbolo}</div>
-<div class="r">${esc(a.restaurante)}</div>
+${waNum ? "" : '<div class="borrador">Borrador</div>'}<div class="r">${esc(a.restaurante)}</div>
 <h1>Pedí por WhatsApp.</h1>
 <p class="s">Te contestamos al instante, a cualquier hora.</p>
 <div class="fila"><div class="q">${qr}</div><div><div class="n">${visible}</div><p class="p">Escaneá el código, escogé tu pedido y pasá a recogerlo cuando esté listo.</p></div></div>
@@ -337,5 +341,6 @@ const pdf = async (nombre, html) => {
 console.log(`Kit de ${a.restaurante} → ${salida}`);
 for (const [nombre, archivo] of docs) await pdf(nombre, render(archivo));
 const c = await cartel();
-if (c) await pdf("cartel-whatsapp", c); else console.log("  (sin --numero no se hace el cartel con QR)");
+await pdf("cartel-whatsapp", c);
+if (!waNum) console.log("  (sin --numero el cartel sale como borrador, sin QR)");
 await navegador.close();

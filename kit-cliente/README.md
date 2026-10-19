@@ -44,4 +44,4 @@ node kit-cliente/generar.mjs --restaurante "Nombre exacto" --dueno "Nombre del d
 
 El diseño sigue la página de Clientia Tech: portada azul marino, Hanken Grotesk, tarjetas y mucho aire. Los `.md` llevan comentarios como `<!-- tarjetas -->` o `<!-- banda: 30 | días gratis -->` que GitHub no muestra y que el generador usa para dibujar cada bloque; la lista completa está al principio de `generar.mjs`.
 
-Solo `--restaurante` es obligatorio. Sin `--numero` no se hace el cartel. Los PDF quedan en `kit-cliente/pdf/<restaurante>/`, que no se sube a GitHub porque lleva datos del cliente. Para cambiar el texto, se edita el `.md` y se vuelve a generar.
+Solo `--restaurante` es obligatorio. Sin `--numero` el cartel sale como borrador, con el QR marcado como pendiente. Los PDF quedan en `kit-cliente/pdf/<restaurante>/`, que no se sube a GitHub porque lleva datos del cliente. Para cambiar el texto, se edita el `.md` y se vuelve a generar.
