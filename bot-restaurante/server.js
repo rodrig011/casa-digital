@@ -3,12 +3,14 @@
 //   POST /whatsapp                 Twilio > WhatsApp sender > "When a message comes in"
 //   GET  /panel                    panel del dueño y pantalla de cocina (correo y contraseña, ver auth.js)
 //   GET  /api/pedidos              pedidos en JSON (sesión del panel, o Authorization: Bearer <LEADS_TOKEN>)
-//   POST /api/pedidos/:n/estado    { estado } nuevo | cocina | listo | entregado | cancelado | atendido (sesión del panel)
+//   POST /api/pedidos/:n/estado    { estado } por_pagar | nuevo | cocina | listo | entregado | no_vino | cancelado | atendido (sesión del panel)
 //   GET  /api/negocio              menú y sucursales para el panel (sesión del panel)
 //   GET  /                         "<restaurante> · bot activo" (chequeo de salud)
 //
 // Cada pedido se guarda en pedidos.json y se avisa por WhatsApp al dueño y a la sucursal. Cuando la cocina
 // lo marca "listo" en el panel, al cliente le llega "su pedido está listo". Configuración: .env (ver .env.example).
+// Cobro antes de cocinar (negocio.cobro): el pedido queda "por_pagar"; el cliente manda la foto del comprobante,
+// le llega al dueño, y al tocar "Pago recibido" en el panel pasa a "nuevo" (cocina). "No vino" cuenta faltas por número.
 // El restaurante (menú, precios, sucursales) está en negocios/<cliente>.json; NEGOCIO dice cuál.
 // Con ANTHROPIC_API_KEY, WhatsApp contesta en modo IA (ia.js, Claude); si la API falla contesta el menú de engine.js.
 const path = require("path");
@@ -23,7 +25,7 @@ const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
-const ESTADOS = ["nuevo", "cocina", "listo", "entregado", "cancelado", "atendido"];
+const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido"];
 
 function loadConfig(env = process.env) {
   const sandbox = on(env.TWILIO_SANDBOX);
@@ -76,8 +78,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   const numero = pre => pre + "-" + (store.seq = store.seq + 1);
+  const faltasDe = tel => store.pedidos.filter(p => p.estado === "no_vino" && digits(p.tel) === digits(tel)).length;
+  const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
-    const p = store.addPedido({ ...base, n: base.n || numero(base.tipo === "persona" ? "AS" : "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: "nuevo", convo });
+    const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
+    const p = store.addPedido({ ...base, n: base.n || numero(base.tipo === "persona" ? "AS" : "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
     log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? L(p.total) : p.motivo || ""}`);
     track(avisos.ficha(p));
     return p;
@@ -88,11 +93,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function conversar(key, text) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
-    const r = motor.handle(sess.state, text, now());
+    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key) });
     const out = r.messages.map(toText).filter(Boolean);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
     if (r.state.lead) { store.seq = r.state.seq; guardar(r.state.lead, key, sess.convo); delete r.state.lead; }
     if (r.state.handoff) { persona("", r.state.handoff, key, sess.convo); delete r.state.handoff; }
+    if (r.state.cancelar) { cancelarPorCliente(r.state.cancelar, key); delete r.state.cancelar; }
     sess.state = r.state;
     store.setSession(key, sess);
     return out;
@@ -103,7 +109,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: () => numero("PED") });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: () => numero("PED"), faltas: faltasDe(key) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
@@ -119,9 +125,28 @@ function createApp(cfg = loadConfig(), deps = {}) {
     return r.reply;
   }
 
+  // the customer cancels an order that was still waiting for payment
+  function cancelarPorCliente(n, tel) {
+    const p = store.getPedido(n);
+    if (!p || p.estado !== "por_pagar" || digits(p.tel) !== digits(tel)) return;
+    store.updatePedido(n, { estado: "cancelado", t_cancelado: now().toISOString(), por: "cliente" });
+    log(`[${n}] cancelado por el cliente antes de pagar`);
+  }
+  // a photo from a customer with an unpaid order = the payment receipt: goes to the owner and branch
+  function comprobante(from, mediaUrl) {
+    const p = porPagar(from);
+    if (!p) return null;
+    store.updatePedido(p.n, { comprobante: true, t_comprobante: now().toISOString(), ...(mediaUrl ? { comprobanteUrl: mediaUrl } : {}) });
+    track(avisos.comprobante(p, mediaUrl));
+    const sess = store.getSession(from);
+    if (sess && sess.state && sess.state.step === "pago") { sess.state.step = "post"; sess.state.pago = null; sess.state.offer = null; store.setSession(from, sess); }
+    log(`[${p.n}] comprobante recibido`);
+    return `📩 Recibimos su comprobante del pedido *${p.n}*. Lo revisamos y, en cuanto se confirme, entra a cocina. Le avisamos por aquí.`;
+  }
+
   const esDueno = from => cfg.owner && digits(from) === digits(cfg.owner);
   function pendientes() {
-    const ls = store.pedidos.filter(p => ["nuevo", "cocina"].includes(p.estado)).slice(-10).reverse();
+    const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
     return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
   }
@@ -130,10 +155,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
   app.post("/whatsapp", firma, async (req, res) => {
     const p = req.body || {};
     const from = p.From || "anon";
-    const text = Number(p.NumMedia || 0) > 0 && !p.Body ? "📷 foto" : p.Body || "";
+    const foto = Number(p.NumMedia || 0) > 0;
+    const text = foto && !p.Body ? "📷 foto" : p.Body || "";
     const tw = new twilio.twiml.MessagingResponse();
     let reply;
     if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) tw.message(pendientes().slice(0, 1590));
+    else if (foto && (reply = comprobante(from, p.MediaUrl0))) tw.message(reply);
     else if (ia && (reply = await conversarIA(from, text))) tw.message(reply.slice(0, 1590));
     else {
       // one WhatsApp message per turn keeps the order and costs one message
@@ -159,7 +186,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, cobro: negocio.cobro.activo, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -170,7 +197,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const antes = store.getPedido(req.params.n);
     if (!antes) return res.status(404).json({ error: "no existe" });
     const yaAvisado = antes.avisoListo;
-    const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
+    const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado;
+    const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo, ...(pagoRecibido ? { pagado: true, t_pagado: now().toISOString() } : {}) });
+    if (pagoRecibido && p.tipo === "pedido") track(avisos.pagado(p));
     if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(p.n, { avisoListo: true }); track(avisos.listo(p)); }
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
     res.json(p);

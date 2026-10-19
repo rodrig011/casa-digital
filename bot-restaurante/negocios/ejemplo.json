@@ -20,6 +20,13 @@
   "recoger": true,
   "pago": "Se paga al recoger en la sucursal.",
   "tiempoPreparacion": "20 a 30 minutos",
+  "cobro": {
+    "_nota": "Opcional: cobrar antes de cocinar. Se activa solo si hay transferencia o tarjeta. desde = total en lempiras desde el que se paga antes (vacío = ninguno por monto); faltas = veces que un número no vino a recoger para que pague antes siempre. tarjeta = enlace de pago de la pasarela del restaurante ({n} y {total} se cambian por el pedido y el total).",
+    "desde": "",
+    "faltas": 1,
+    "transferencia": "",
+    "tarjeta": ""
+  },
   "domicilio": {
     "propio": false,
     "apps": [

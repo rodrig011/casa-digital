@@ -263,3 +263,83 @@ test("ia: si la API falla, contesta el menú de opciones", async () => {
     assert.equal(logs.filter(l => /^\[ia\] error/.test(l)).length, 1);
   } finally { ctx.srv.close(); }
 });
+
+// ---------- cobro antes de cocinar y "No vino" ----------
+const conCobro = () => preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8")), cobro: { desde: 400, faltas: 1, transferencia: "Banco de ejemplo · Cuenta 0000 · A nombre de Pollo de Ejemplo", tarjeta: "https://pagos.example/link?ref={n}&monto={total}" } });
+
+test("motor: pedido grande o de un número que no vino se paga antes; el cliente puede cancelar", () => {
+  const NC = conCobro(), EC = createEngine(NC);
+  const correr = (ctx, ...xs) => { let st = null, r; for (const x of xs) { r = EC.handle(st, x, NOW, ctx); st = r.state; } return { st, txt: r.messages.map(toText).join("\n") }; };
+  const grande = correr({}, "hola", "2", "Centro", "3", "Confirmar pedido", "1", "Ana");
+  assert.equal(grande.st.lead.estado, "por_pagar"); assert.equal(grande.st.step, "pago");
+  assert.match(grande.txt, /https:\/\/pagos\.example\/link\?ref=PED-1001&monto=420/);
+  assert.match(grande.txt, /Banco de ejemplo/); assert.match(grande.txt, /foto del comprobante/);
+  assert.ok(!/Listo, Ana/.test(grande.txt));
+  let r = EC.handle(grande.st, "ya pagué", NOW);
+  assert.match(toText(r.messages[0]), /foto del comprobante/);
+  r = EC.handle(r.state, "Cancelar pedido", NOW);
+  assert.equal(r.state.cancelar, "PED-1001");
+
+  const chico = correr({}, "hola", "2", "Centro", "1", "Confirmar pedido", "1", "Ana");
+  assert.equal(chico.st.lead.estado, undefined); assert.match(chico.txt, /Listo, Ana/);
+  const fallo = correr({ faltas: 1 }, "hola", "2", "Centro", "1", "Confirmar pedido", "1", "Ana");
+  assert.equal(fallo.st.lead.estado, "por_pagar");
+  // without payment details the bot never asks for payment
+  const sinDatos = run("Sin cobro", "hola", "2", "Centro", "3", "Confirmar pedido", "1", "Ana");
+  assert.equal(sinDatos.lead.estado, undefined);
+});
+
+test("webhook: pedido por pagar, comprobante al dueño, pago recibido a cocina, No vino y la próxima vez paga antes", async () => {
+  const ctx = await montar(null, {}, { negocio: conCobro() });
+  try {
+    const cliente = "whatsapp:+50492223333";
+    let r;
+    for (const Body of ["hola", "2", "Centro", "3", "Confirmar pedido", "Lo antes posible", "Ana"]) r = await post(ctx, "/whatsapp", { From: cliente, Body, NumMedia: "0" });
+    assert.match(textoDe(r.xml), /Pedido PED-1001 apartado/);
+    await ctx.app.locals.idle();
+    const st = ctx.app.locals.store;
+    assert.equal(st.pedidos[0].estado, "por_pagar");
+    assert.match(ctx.sent[0].body, /Pedido por pagar PED-1001 · Centro/); assert.match(ctx.sent[0].body, /no va a cocina/);
+
+    r = await post(ctx, "/whatsapp", { From: cliente, Body: "", NumMedia: "1", MediaUrl0: "https://api.twilio.com/media/ME1" });
+    assert.match(textoDe(r.xml), /Recibimos su comprobante del pedido \*PED-1001\*/);
+    await ctx.app.locals.idle();
+    assert.match(ctx.sent.at(-1).body, /Comprobante de pago PED-1001/); assert.deepEqual(ctx.sent.at(-1).mediaUrl, ["https://api.twilio.com/media/ME1"]);
+    assert.equal(st.pedidos[0].comprobante, true);
+
+    const cookie = await entrar(ctx);
+    const estado = (n, e) => fetch(ctx.base + `/api/pedidos/${n}/estado`, { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify({ estado: e }) });
+    assert.equal((await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json()).cobro, true);
+    const antes = ctx.sent.length;
+    assert.equal((await estado("PED-1001", "nuevo")).status, 200);
+    await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, antes + 1); assert.equal(ctx.sent.at(-1).to, cliente);
+    assert.match(ctx.sent.at(-1).body, /Recibimos su pago del pedido \*PED-1001\*/);
+    assert.equal(st.pedidos[0].pagado, true);
+    await estado("PED-1001", "listo"); await estado("PED-1001", "no_vino"); await ctx.app.locals.idle();
+    assert.equal(st.pedidos[0].estado, "no_vino");
+
+    // the same number orders something small: now it pays first, and the owner is warned
+    for (const Body of ["hola", "2", "Centro", "1", "Confirmar pedido", "Lo antes posible", "Ana"]) r = await post(ctx, "/whatsapp", { From: cliente, Body, NumMedia: "0" });
+    await ctx.app.locals.idle();
+    assert.equal(st.pedidos[1].estado, "por_pagar"); assert.equal(st.pedidos[1].faltas, 1);
+    assert.match(ctx.sent.at(-1).body, /no vino a recoger 1 vez/);
+    r = await post(ctx, "/whatsapp", { From: cliente, Body: "1", NumMedia: "0" });   // "1. Cancelar pedido"
+    assert.match(textoDe(r.xml), /cancelamos ese pedido/);
+    assert.equal(st.pedidos[1].estado, "cancelado"); assert.equal(st.pedidos[1].por, "cliente");
+
+    // a photo with nothing to pay goes to the conversation as before
+    r = await post(ctx, "/whatsapp", { From: "whatsapp:+50411110000", Body: "", NumMedia: "1", MediaUrl0: "https://api.twilio.com/media/ME2" });
+    assert.ok(!/comprobante/.test(textoDe(r.xml)));
+  } finally { ctx.srv.close(); }
+});
+
+test("ia: con cobro, crear_pedido deja el pedido por pagar y devuelve los datos de pago", () => {
+  const { ejecutar } = require("./ia");
+  const NC = conCobro(), ctx = { numero: () => "PED-7", faltas: 0 };
+  const r = ejecutar(NC, "crear_pedido", { nombre: "Ana", sucursal: "centro", productos: [{ id: "fam", cantidad: 1 }], hora: "ya" }, ctx);
+  assert.equal(ctx.pedido.estado, "por_pagar"); assert.match(r.cobro, /ref=PED-7&monto=420/); assert.match(r.nota, /NO va a cocina/);
+  const ctx2 = { numero: () => "PED-8", faltas: 0 };
+  assert.equal(ejecutar(NC, "crear_pedido", { nombre: "Ana", sucursal: "centro", productos: [{ id: "c2", cantidad: 1 }], hora: "ya" }, ctx2).cobro, undefined);
+  assert.equal(ctx2.pedido.estado, undefined);
+});

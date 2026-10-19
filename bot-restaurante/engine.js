@@ -1,11 +1,13 @@
 // Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
-// createEngine(negocio).handle(state, text, now) -> { state, messages: [{ text, buttons? }] }
+// createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
+//   ctx.faltas = veces que este número no vino a recoger (server.js lo cuenta); decide si paga antes
 //
 // La idea: que ningún cliente se quede sin respuesta. El bot muestra el menú con precios, toma el
 // pedido para recoger, da sucursales y horario, explica cómo pedir a domicilio y pasa a una persona
 // cuando el cliente lo pide. Cada pedido terminado sale en state.lead y server.js lo guarda y avisa.
+// Si el negocio cobra antes (negocio.cobro), el pedido sale "por_pagar": no va a cocina hasta que se confirme el pago.
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, norm, L } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, norm, L } = require("./negocio");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
 const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|hablar con|me llamen|queja|reclamo/.test(t);
@@ -66,7 +68,7 @@ function createEngine(negocio) {
     return options.find(o => norm(o) === norm(text)) || options.find(o => t.length > 2 && norm(o).startsWith(t)) || null;
   }
 
-  function handle(state, input, now) {
+  function handle(state, input, now, ctx = {}) {
     const s = state ? JSON.parse(JSON.stringify(state)) : fresh();
     const text = (input || "").toString();
     const t = norm(text);
@@ -136,7 +138,7 @@ function createEngine(negocio) {
         if (o === "Volver al inicio") { reset(); go("inicio"); menuInicio(); break; }
         const leido = o ? { encontrados: [] } : leerPedido(text);
         if (o === "Hacer un pedido para recoger" || leido.encontrados.length || quierePedir(t)) { empezarPedido(leido.encontrados); break; }
-        go("inicio"); return handle(s, text, now);
+        go("inicio"); return handle(s, text, now, ctx);
       }
 
       case "sucursal": {
@@ -186,9 +188,27 @@ function createEngine(negocio) {
         const c = cuenta(N, d.carrito);
         const n = "PED-" + (++s.seq);
         s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(lineaTexto).join(" · ") };
+        if (requiereCobro(N, c.total, ctx.faltas || 0)) {
+          s.lead.estado = "por_pagar"; s.pago = { n, total: c.total };
+          say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(lineaTexto).join("\n")}\n*Total: ${L(c.total)}*\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.\n\nPara mandarlo a cocina, se paga antes:\n${textoCobro(N, n, c.total)}\n\nEn cuanto se confirme el pago entra a cocina y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
+          go("pago");
+          break;
+        }
         say({ text: `✅ *Listo, ${d.nombre.split(" ")[0]}.* Pedido *${n}*\n\n${c.lineas.map(lineaTexto).join("\n")}\n*Total: ${L(c.total)}*\n\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.${N.pago ? `\n${N.pago}` : ""}\n\nLe avisamos por aquí cuando esté listo.`, buttons: ["Hacer otro pedido", "Sucursales y horario"] });
         go("post");
         break;
+      }
+
+      case "pago": { // waiting for the payment of s.pago.n (the receipt photo is handled in server.js)
+        const o = pick(text, offered.length ? offered : ["Cancelar pedido"]);
+        if (o === "Cancelar pedido" || /^cancel/.test(t)) {
+          s.cancelar = s.pago.n; s.pago = null; reset(); go("post");
+          say({ text: "Listo, cancelamos ese pedido. Cuando guste nos vuelve a escribir.", buttons: ["Hacer otro pedido", "Volver al inicio"] }); break;
+        }
+        if (/pag|transfer|deposit|comprobante|listo|ya /.test(t + " ")) {
+          say({ text: `Para confirmar el pago del pedido *${s.pago.n}*, mándenos aquí la foto del comprobante. 📷`, buttons: ["Cancelar pedido"] }); break;
+        }
+        go("inicio"); return handle(s, text, now, ctx);
       }
 
       default: { // "post"
@@ -196,9 +216,9 @@ function createEngine(negocio) {
         reset(); go("inicio");
         if (o === "Volver al inicio" || !t) { menuInicio(); break; }
         if (o === "Hacer otro pedido" || o === "Hacer un pedido para recoger") { empezarPedido(); break; }
-        if (o === "Sucursales y horario") return handle(s, "3", now);
-        if (o === "Ver el menú y precios") return handle(s, "1", now);
-        return handle(s, text, now);
+        if (o === "Sucursales y horario") return handle(s, "3", now, ctx);
+        if (o === "Ver el menú y precios") return handle(s, "1", now, ctx);
+        return handle(s, text, now, ctx);
       }
     }
     return done();
