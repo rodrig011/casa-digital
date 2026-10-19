@@ -53,3 +53,13 @@ services:
         value: claude-haiku-5-5
       - key: BOT_IA                # "off" apaga el modo IA sin borrar la clave
         value: "on"
+      - key: PAGOS_PASARELA        # "tilopay" para pago con tarjeta que pasa solo a cocina (opcional)
+        sync: false
+      - key: TILOPAY_API_USER
+        sync: false
+      - key: TILOPAY_API_PASSWORD
+        sync: false
+      - key: TILOPAY_KEY
+        sync: false
+      - key: PAGOS_MONEDA
+        value: HNL

@@ -24,6 +24,7 @@ Para instalarle a un cliente desde EE. UU., ver también [INSTALACION-A-DISTANCI
 | `ia.js` | Modo IA opcional con Claude (precios siempre del archivo del cliente). |
 | `server.js` | Webhook de WhatsApp, API de pedidos y panel. |
 | `avisos.js` | Avisos al dueño y a la sucursal; "pedido listo" al cliente. |
+| `pagos.js` | Pago con tarjeta por pasarela (Tilopay): link por pedido y consulta del pago. |
 | `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. |
 | `auth.js`, `usuarios.js` | Entrada al panel con correo y contraseña. |
 | `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú. |
@@ -36,7 +37,7 @@ Necesita Node 22 o más nuevo.
 ```bash
 cd bot-restaurante
 npm install
-npm test                       # debe decir "pass 10, fail 0"
+npm test                       # debe decir "pass 12, fail 0"
 cp .env.example .env           # poner SKIP_TWILIO_SIGNATURE=true y un PANEL_SECRET
 npm run usuario -- agregar yo@correo.com "Rodrigo"
 npm start
@@ -90,7 +91,17 @@ Cómo va un pedido que se paga antes:
 3. Alguien revisa que el dinero esté en la cuenta y toca **Pago recibido**. El pedido pasa a cocina y al cliente le llega "recibimos su pago".
 4. El cliente puede tocar **Cancelar pedido** mientras no haya pagado.
 
-La confirmación del pago es a mano, en el panel. Para que se confirme sola con tarjeta hay que conectar el aviso de la pasarela que escoja el restaurante (falta hacerlo). Si en Twilio está activada la protección de archivos con clave (HTTP basic auth on media), la foto no se reenvía al dueño: el aviso llega igual sin foto.
+Con transferencia, la confirmación es a mano en el panel.
+
+**Tarjeta con confirmación automática (Tilopay).** Con `PAGOS_PASARELA=tilopay` y las claves del restaurante en Render (`TILOPAY_API_USER`, `TILOPAY_API_PASSWORD`, `TILOPAY_KEY`, ver `.env.example`):
+
+1. Cada pedido que se paga antes recibe su propio link de un solo uso, por el total exacto, con el número de pedido como referencia.
+2. El cliente paga. Tilopay avisa al bot (`/pagos/aviso/<pedido>`) y el cliente vuelve a una página "Pago recibido".
+3. El bot no confía en el aviso solo: le pregunta a Tilopay si ese link tiene un pago aprobado por el total. Si sí, el pedido pasa a cocina, al cliente le llega "recibimos su pago" y a la sucursal el pedido con "Pagado con tarjeta".
+4. Si el pago fue rechazado, al cliente le llega que no pasó y que puede intentar otra vez.
+5. Tilopay manda el aviso una sola vez, así que cada 2 minutos el bot revisa los pedidos con link de las últimas 3 horas.
+
+Pendiente antes del primer cliente real: confirmar con Tilopay que da servicio en Honduras y en lempiras, y hacer un pago de prueba para revisar los campos del pago (el bot acepta `code: "1"` o un estado "aprobado"; Tilopay no publica ese formato). Sin pasarela, `tarjeta` en el archivo del negocio sigue sirviendo para un link fijo, confirmado a mano. Si en Twilio está activada la protección de archivos con clave (HTTP basic auth on media), la foto no se reenvía al dueño: el aviso llega igual sin foto.
 
 ## 5. Lo que el dueño puede hacer por WhatsApp
 
@@ -99,6 +110,6 @@ Desde el número de `OWNER_WHATSAPP`, escribirle al bot **pedidos**: le contesta
 ## Lo que todavía no hace
 
 - Envío a domicilio propio (pedir la dirección y cobrar el envío). Hoy el bot manda a PedidosYa o Bip Bip.
-- Confirmar solo el pago con tarjeta: hoy alguien toca "Pago recibido" en el panel (ver la sección 4).
+- Pago con tarjeta: el código para Tilopay está hecho pero nunca se probó con una cuenta real (ver la sección 4). PixelPay todavía no está conectado.
 - Inventario y aviso automático a proveedores (está en los paneles de demostración, falta conectarlo aquí).
 - Nunca se ha probado con Twilio real ni con una clave real de Claude.
