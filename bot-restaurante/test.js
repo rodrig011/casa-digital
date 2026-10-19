@@ -197,6 +197,36 @@ test("panel: sin sesión manda a entrar; contraseña mala no entra", async () =>
   } finally { ctx.srv.close(); }
 });
 
+test("panel: un correo que no existe recibe el mismo mensaje que una contraseña mala", async () => {
+  const ctx = await montar(null);
+  const intento = (correo, clave) => fetch(ctx.base + "/panel/entrar", { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ correo, clave }) });
+  try {
+    const a = await intento("dueno@restaurante.hn", "otra-clave-mala"), b = await intento("nadie@gmail.com", "otra-clave-mala");
+    assert.equal(a.status, b.status);
+    const err = async r => (await r.text()).match(/class="err"[^>]*>([^<]*)/)[1];
+    assert.equal(await err(a), await err(b));
+  } finally { ctx.srv.close(); }
+});
+
+test("panel: Salir cierra la sesión en el servidor, también después de reiniciar", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-salir-"));
+  const ctx = await montar(dir);
+  let cookie;
+  try {
+    cookie = await entrar(ctx);
+    assert.equal((await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).status, 200);
+    const out = await fetch(ctx.base + "/panel/salir", { redirect: "manual", headers: { Cookie: cookie } });
+    assert.equal(out.status, 303); assert.match(out.headers.get("set-cookie"), /Max-Age=0/);
+    // someone who kept a copy of the cookie is out too
+    assert.equal((await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).status, 401);
+    assert.equal((await fetch(ctx.base + "/panel", { redirect: "manual", headers: { Cookie: cookie } })).status, 303);
+    // a new login still works
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: await entrar(ctx) } })).status, 200);
+  } finally { ctx.srv.close(); }
+  const ctx2 = await montar(dir);
+  try { assert.equal((await fetch(ctx2.base + "/panel/yo", { headers: { Cookie: cookie } })).status, 401); } finally { ctx2.srv.close(); }
+});
+
 // ---------- modo IA con un cliente de Anthropic simulado ----------
 function claudeFalso(guion) {
   const llamadas = [];

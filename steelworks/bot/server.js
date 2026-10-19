@@ -215,7 +215,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   // ---- Panel del dueño (correo y contraseña; ver auth.js) ----
   const usuarios = deps.usuarios || createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null });
-  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), log });
+  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, log });
 
   // ---- Fichas para el panel del dueño (sesión del panel o token) ----
   app.get("/leads", (req, res) => {

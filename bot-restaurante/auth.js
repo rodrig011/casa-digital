@@ -78,24 +78,40 @@ function createUsuarios({ env = "", file = null } = {}) {
 }
 
 // ---- sessions: signed cookie, tied to the current password hash ----
-function createSesiones(secret, horas = HORAS) {
+// "Salir" also ends the session on the server: its id goes on a closed list (kept in
+// DATA_DIR/sesiones-cerradas.json until it would have expired anyway), so a copied cookie stops working too.
+function createSesiones(secret, horas = HORAS, { file = null } = {}) {
   const firmar = s => crypto.createHmac("sha256", secret).update(s).digest("base64url");
   const huella = hash => crypto.createHash("sha256").update(String(hash)).digest("base64url").slice(0, 12);
+  const cerradas = new Map();
+  if (file) try { for (const [j, x] of Object.entries(JSON.parse(fs.readFileSync(file, "utf8")))) cerradas.set(j, x); } catch {}
+  const abrir = (token, ahora) => {
+    const [s, f] = String(token || "").split(".");
+    if (!s || !f) return null;
+    const a = Buffer.from(f), b = Buffer.from(firmar(s));
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    let d; try { d = JSON.parse(Buffer.from(s, "base64url").toString()); } catch { return null; }
+    return d && d.j && d.x >= ahora ? d : null;
+  };
   return {
     crear(u, ahora = Date.now()) {
-      const s = b64(JSON.stringify({ e: u.correo, h: huella(u.hash), x: ahora + horas * 36e5 }));
+      const s = b64(JSON.stringify({ e: u.correo, h: huella(u.hash), j: b64(crypto.randomBytes(12)), x: ahora + horas * 36e5 }));
       return s + "." + firmar(s);
     },
     leer(token, usuarios, ahora = Date.now()) {
-      const [s, f] = String(token || "").split(".");
-      if (!s || !f) return null;
-      const a = Buffer.from(f), b = Buffer.from(firmar(s));
-      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-      let d; try { d = JSON.parse(Buffer.from(s, "base64url").toString()); } catch { return null; }
-      if (!d || d.x < ahora) return null;
+      const d = abrir(token, ahora);
+      if (!d || cerradas.has(d.j)) return null;
       const u = usuarios.get(d.e);
       if (!u || huella(u.hash) !== d.h) return null;      // removed, or password changed
       return u;
+    },
+    cerrar(token, ahora = Date.now()) {
+      const d = abrir(token, ahora);
+      if (!d) return false;
+      for (const [j, x] of cerradas) if (x < ahora) cerradas.delete(j);
+      cerradas.set(d.j, d.x);
+      if (file) try { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(Object.fromEntries(cerradas)), { mode: 0o600 }); } catch {}
+      return true;
     },
   };
 }
@@ -149,9 +165,9 @@ ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<d
 
 // mounts /panel, /panel/entrar, /panel/salir and /panel/yo on an express app
 // (the brand color can be dark red; it is only used for the button and the focus ring)
-function montarPanel(app, { secret, usuarios, archivoPanel, marca, color, log = console.log, freno = createFreno() }) {
+function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = null, marca, color, log = console.log, freno = createFreno() }) {
   const pagina = o => paginaEntrar({ marca, color, ...o });
-  const ses = secret ? createSesiones(secret) : null;
+  const ses = secret ? createSesiones(secret, HORAS, { file: archivoSesiones }) : null;
   const seguro = res => res.set({ "Cache-Control": "no-store", "X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin" });
   const usuarioDe = req => ses ? ses.leer(cookies(req)[COOKIE], usuarios) : null;
   const ponerCookie = (req, res, v, maxAge) => res.append("Set-Cookie", `${COOKIE}=${v}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${req.secure ? "; Secure" : ""}`);
@@ -185,7 +201,7 @@ function montarPanel(app, { secret, usuarios, archivoPanel, marca, color, log = 
     log(`[panel] entró ${u.correo}`);
     res.redirect(303, "/panel");
   });
-  app.all("/panel/salir", (req, res) => { ponerCookie(req, res, "", 0); seguro(res).redirect(303, "/panel/entrar?salio=1"); });
+  app.all("/panel/salir", (req, res) => { if (ses) ses.cerrar(cookies(req)[COOKIE]); ponerCookie(req, res, "", 0); seguro(res).redirect(303, "/panel/entrar?salio=1"); });
   app.get("/panel/yo", (req, res) => {
     const u = usuarioDe(req);
     if (!u) return seguro(res).status(401).json({ error: "sin sesión" });
