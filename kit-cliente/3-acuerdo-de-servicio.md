@@ -68,6 +68,15 @@ La mensualidad cubre el uso normal de un restaurante. Si los mensajes de WhatsAp
 2. Clientia Tech no garantiza una cantidad de ventas. Lo que sí se compromete es a que cada mensaje tenga respuesta y cada pedido le llegue al Restaurante.
 3. Las respuestas del bot se revisan todos los días la primera semana. Si una respuesta sale mal, se corrige sin costo.
 
+## Aceptación
+
+Son dos casillas separadas y ninguna viene marcada. El Restaurante marca cada una con la mano antes de firmar:
+
+- [ ] Leí y acepto este Acuerdo de servicio y los Términos y condiciones de Clientia Tech (clientiatech.com/terminos.html).
+- [ ] Leí la Política de privacidad de Clientia Tech (clientiatech.com/privacidad.html) y estoy de acuerdo con cómo se tratan los datos.
+
+Este acuerdo se puede firmar a mano o con firma electrónica; las dos valen igual según la Ley sobre Firmas Electrónicas de Honduras (Decreto 149-2013). Clientia Tech guarda un registro de la aceptación con el nombre, la fecha y hora, el medio (firma a mano, firma electrónica, Stripe o WhatsApp), las casillas marcadas y la versión de cada documento, durante el servicio y cinco años después.
+
 ## Firmas
 
 | | |

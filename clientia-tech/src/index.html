@@ -277,6 +277,7 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 /* ---------- footer ---------- */
 footer{background:var(--bg);overflow:hidden;padding:56px var(--m) 0;position:relative}
 footer .leg{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--s-small);color:var(--soft);position:relative;z-index:1}
+footer .legales{display:flex;gap:18px;flex-wrap:wrap}footer .legales a{text-decoration:none;transition:color .2s}footer .legales a:hover{color:var(--accent)}
 footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-spacing:-.06em;line-height:.8;white-space:nowrap;transform:translateY(22%);margin-top:20px;color:var(--navy)}
 @media (max-width:760px){footer .nombre{font-size:27vw}footer .leg{flex-direction:column;gap:8px}}
 </style>
@@ -418,7 +419,7 @@ footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-sp
 </main>
 
 <footer>
-  <div class="leg"><span>© 2026 Clientia Tech. Casa Digital es nuestra línea para restaurantes.</span><span>Los pantallazos y el chat usan un restaurante de ejemplo.</span></div>
+  <div class="leg"><span>© 2026 Clientia Tech. Casa Digital es nuestra línea para restaurantes.</span><nav class="legales" aria-label="Legal"><a href="terminos.html">Términos</a><a href="privacidad.html">Privacidad</a><a href="cookies.html">Cookies</a><a href="reembolsos.html">Reembolsos</a><a href="legal.html">Aviso legal</a></nav><span>Los pantallazos y el chat usan un restaurante de ejemplo.</span></div>
   <div class="nombre" aria-hidden="true">Clientia Tech</div>
 </footer>
 

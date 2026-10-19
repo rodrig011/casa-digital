@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITULO}} · Clientia Tech</title>
+<meta name="description" content="{{DESCRIPCION}}">
+<meta name="theme-color" content="#0A1230">
+<link rel="icon" href="{{LOGO_FAVICON}}">
+<style>
+@font-face{font-family:"Hanken Grotesk";font-style:normal;font-weight:400 800;font-display:swap;src:url({{FONT}}) format("woff2")}
+:root{
+  --bg:#F4F6FA;--surface:#E5EAF3;--ink:#0A1230;--soft:#3D4763;--navy:#0A1230;--paper:#FFFFFF;
+  --accent:#1F5BFF;--accent-press:#1849D6;
+  --m:clamp(16px,2.4vw,32px);
+  --s-small:clamp(.875rem,.85rem + .1vw,.9375rem);
+  --s-body:clamp(1.0625rem,1rem + .3vw,1.1875rem);
+  --s-head:clamp(2.25rem,1.4rem + 3.6vw,4rem);
+  --ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--s-body)/1.6 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3,p,ul,ol{margin:0}
+h1,h2,h3{font-weight:800;letter-spacing:-.035em;line-height:1.02;text-wrap:balance}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 1.2em;border-radius:999px;background:var(--accent);color:#fff;font:700 15px/1 inherit;font-family:inherit;text-decoration:none;transition:background-color .2s}
+.btn:hover{background:var(--accent-press)}
+.bar{display:flex;align-items:center;gap:24px;padding:22px var(--m)}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.marca .sim{width:34px;height:34px;background:var(--navy);display:grid;place-items:center;border-radius:9px}
+.marca .sim img{width:20px;height:auto}
+.bar .btn{margin-left:auto}
+.doc{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,720px);gap:clamp(32px,6vw,96px);padding:clamp(40px,7vw,96px) var(--m) clamp(64px,9vw,128px)}
+.indice{position:sticky;top:24px;align-self:start;display:grid;gap:4px;font-size:var(--s-small)}
+.indice a{text-decoration:none;color:var(--soft);padding:6px 0;transition:color .2s}
+.indice a:hover{color:var(--accent)}
+.indice a[aria-current]{color:var(--ink);font-weight:700}
+.cuerpo h1{font-size:var(--s-head);max-width:14ch}
+.cuerpo .fecha{margin-top:16px;color:var(--soft);font-size:var(--s-small)}
+.cuerpo .nota{margin-top:28px;background:var(--surface);border-radius:16px;padding:20px 22px;font-size:var(--s-small)}
+.cuerpo h2{font-size:clamp(1.375rem,1.2rem + .8vw,1.875rem);margin-top:56px;scroll-margin-top:24px}
+.cuerpo h3{font-size:1.125rem;letter-spacing:-.02em;margin-top:28px}
+.cuerpo p,.cuerpo ul,.cuerpo ol{margin-top:14px;max-width:68ch}
+.cuerpo ul,.cuerpo ol{padding-left:1.25em}
+.cuerpo li+li{margin-top:8px}
+.cuerpo .link,.cuerpo p a,.cuerpo li a{font-weight:600;text-decoration:underline;text-underline-offset:.2em;text-decoration-thickness:2px}
+.cuerpo .tabla{margin-top:18px;overflow-x:auto}
+.cuerpo table{border-collapse:collapse;width:100%;font-size:var(--s-small)}
+.cuerpo th,.cuerpo td{text-align:left;vertical-align:top;padding:12px 14px;background:var(--paper)}
+.cuerpo th{background:var(--surface);font-weight:700}
+.cuerpo tr+tr td{border-top:2px solid var(--bg)}
+.cuerpo a[href^="https://wa.me"]{white-space:nowrap}
+@media (max-width:600px){.cuerpo thead{display:none}.cuerpo table,.cuerpo tbody,.cuerpo tr,.cuerpo td{display:block}.cuerpo tr{background:var(--paper);border-radius:12px;padding:6px 0;margin-bottom:10px}.cuerpo tr+tr td{border-top:0}.cuerpo td{padding:6px 16px}.cuerpo td:first-child{font-weight:700}}
+footer{padding:32px var(--m) 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--s-small);color:var(--soft)}
+footer nav{display:flex;gap:20px;flex-wrap:wrap}
+footer a{text-decoration:none}
+footer a:hover{color:var(--accent)}
+@media (max-width:860px){.doc{grid-template-columns:minmax(0,1fr)}.indice{position:static;display:flex;flex-wrap:wrap;gap:4px 18px}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="marca" href="./" aria-label="Clientia Tech, inicio"><span class="sim"><img src="{{LOGO}}" alt="" width="20" height="23"></span>Clientia Tech</a>
+  <a class="btn" href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>
+</header>
+<main class="doc">
+  <nav class="indice" aria-label="Documentos legales">{{INDICE}}</nav>
+  <article class="cuerpo">
+{{CONTENIDO}}
+  </article>
+</main>
+<footer>
+  <span>© 2026 Clientia Tech · Rodrigo Herrera</span>
+  <nav aria-label="Legal">{{INDICE_PIE}}</nav>
+</footer>
+</body>
+</html>

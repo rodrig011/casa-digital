@@ -23,7 +23,7 @@ Ejemplo ya armado con el restaurante de ejemplo, para ver cómo quedan: [ejemplo
 3. **Día 3, capacitación.** Videollamada de 30 minutos, grabarla. Mandar la guía, la hoja del personal y el cartel, y los textos de promoción para sus redes.
 4. **Primera semana.** Revisar todos los días las conversaciones y corregir respuestas.
 5. **Día 23.** Mensaje para cuadrar la reunión del día 30.
-6. **Día 30.** Reunión con los números del panel. Si sigue: acuerdo firmado + link de Stripe por la primera mitad de la instalación + suscripción de la mensualidad. Si no: apagar el bot, ofrecerle sus pedidos en Excel y salir de su Meta Business.
+6. **Día 30.** Reunión con los números del panel. Si sigue: acuerdo firmado (con sus dos casillas marcadas) + link de Stripe por la primera mitad de la instalación + suscripción de la mensualidad. Si no: apagar el bot, ofrecerle sus pedidos en Excel y salir de su Meta Business.
 7. **Día 60.** Segunda mitad de la instalación.
 
 ## Decisiones que tomé al armarlo
@@ -45,3 +45,7 @@ node kit-cliente/generar.mjs --restaurante "Nombre exacto" --dueno "Nombre del d
 El diseño sigue la página de Clientia Tech: portada azul marino, Hanken Grotesk, tarjetas y mucho aire. Los `.md` llevan comentarios como `<!-- tarjetas -->` o `<!-- banda: 30 | días gratis -->` que GitHub no muestra y que el generador usa para dibujar cada bloque; la lista completa está al principio de `generar.mjs`.
 
 Solo `--restaurante` es obligatorio. Sin `--numero` el cartel sale como borrador, con el QR marcado como pendiente. Los PDF quedan en `kit-cliente/pdf/<restaurante>/`, que no se sube a GitHub porque lleva datos del cliente. Para cambiar el texto, se edita el `.md` y se vuelve a generar.
+
+## Registro de aceptaciones
+
+Cada vez que un negocio acepta el acuerdo, se apunta una fila en una copia privada de [registro-de-aceptaciones.csv](registro-de-aceptaciones.csv) (fuera de este repositorio, porque es público): fecha y hora, negocio, persona, cómo aceptó (firma a mano, firma electrónica, Stripe o WhatsApp), las dos casillas por separado, la versión (fecha) de los términos y de la privacidad, y dónde está guardada la prueba (PDF firmado, pago de Stripe, captura del chat). En el link de pago de Stripe, activar "Exigir aceptación de los términos de servicio" con el enlace a clientiatech.com/terminos.html: Stripe guarda cuándo se marcó. Se guarda durante el servicio y cinco años después. Lo explica [clientiatech.com/legal.html](https://clientiatech.com/legal.html#registro).
