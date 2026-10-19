@@ -28,6 +28,7 @@ const { createStore } = require("./store");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
+const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido"];
@@ -56,6 +57,9 @@ function loadConfig(env = process.env) {
     // pago con tarjeta (opcional): cuenta de comercio del restaurante en la pasarela
     pasarela: { proveedor: (env.PAGOS_PASARELA || "").trim().toLowerCase(), usuario: env.TILOPAY_API_USER || "", clave: env.TILOPAY_API_PASSWORD || "", key: env.TILOPAY_KEY || "", moneda: env.PAGOS_MONEDA || "HNL" },
     pagosSecret: env.PAGOS_SECRET || env.PANEL_SECRET || "",
+    // freno por número de WhatsApp: mensajes cada 10 minutos, y respuestas con IA por día (después contesta el menú)
+    limiteMensajes: +env.LIMITE_MENSAJES || 40,
+    limiteIA: +env.LIMITE_IA_DIA || 80,
   };
 }
 
@@ -75,7 +79,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   const app = express();
   app.set("trust proxy", true);
-  app.use(express.urlencoded({ extended: false }));
+  app.disable("x-powered-by");
+  app.use(soloHttps, cabeceras());
+  app.use(express.urlencoded({ extended: false, limit: "20kb" }));
+  const limite = createLimite({ max: cfg.limiteMensajes, minutos: 10 });
+  const limiteIA = createLimite({ max: cfg.limiteIA, minutos: 24 * 60 });
 
   // only Twilio may post to the webhook (SKIP_TWILIO_SIGNATURE=true for local tests)
   function firma(req, res, next) {
@@ -232,12 +240,16 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const p = req.body || {};
     const from = p.From || "anon";
     const foto = Number(p.NumMedia || 0) > 0;
-    const text = foto && !p.Body ? "📷 foto" : p.Body || "";
+    const text = (foto && !p.Body ? "📷 foto" : String(p.Body || "")).slice(0, 1000);
     const tw = new twilio.twiml.MessagingResponse();
     let reply;
-    if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) tw.message(pendientes().slice(0, 1590));
+    // too many messages from one number: one notice, then silence until the window passes
+    if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
+      if (limite.primeraVezFuera(digits(from) || from)) { log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`); tw.message("Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí."); }
+    }
+    else if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) tw.message(pendientes().slice(0, 1590));
     else if (foto && (reply = comprobante(from, p.MediaUrl0))) tw.message(reply);
-    else if (ia && (reply = await conversarIA(from, text, baseDe(req)))) tw.message(reply.slice(0, 1590));
+    else if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, baseDe(req)))) tw.message(reply.slice(0, 1590));
     else {
       // one WhatsApp message per turn keeps the order and costs one message
       let buf = "";

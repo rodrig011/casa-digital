@@ -482,3 +482,25 @@ test("store: los pedidos cerrados de más de 30 días pasan al archivo del mes, 
   assert.equal(st3.seq, 1006);
   assert.equal(st3.faltas("+50498765432"), 2);
 });
+
+test("seguridad: cabeceras, https y freno de mensajes por número", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir, { limiteMensajes: 3 });
+  try {
+    const r = await fetch(ctx.base + "/panel/entrar");
+    assert.match(r.headers.get("content-security-policy"), /frame-ancestors 'none'/);
+    assert.equal(r.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(r.headers.get("x-powered-by"), null);
+    const h = await fetch(ctx.base + "/panel", { redirect: "manual", headers: { "X-Forwarded-Proto": "http" } });
+    assert.equal(h.status, 301); assert.match(h.headers.get("location"), /^https:\/\//);
+    const s = await fetch(ctx.base + "/", { headers: { "X-Forwarded-Proto": "https" } });
+    assert.match(s.headers.get("strict-transport-security"), /max-age=31536000/);
+
+    const de = Body => post(ctx, "/whatsapp", { From: "whatsapp:+50490001111", Body, NumMedia: "0" });
+    for (let i = 0; i < 3; i++) assert.match(textoDe((await de("hola")).xml), /\S/);
+    assert.match(textoDe((await de("hola")).xml), /muchos mensajes seguidos/);
+    assert.doesNotMatch((await de("hola")).xml, /<Message>/, "después del aviso, silencio");
+    assert.match(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50490002222", Body: "hola", NumMedia: "0" })).xml), /\S/, "otro número sigue normal");
+    assert.match(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50499990000", Body: "pedidos", NumMedia: "0" })).xml), /Pendientes|No hay pedidos/);
+  } finally { ctx.srv.close(); }
+});

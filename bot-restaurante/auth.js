@@ -122,7 +122,10 @@ function createFreno({ intentos = 5, minutos = 15 } = {}) {
   const v = k => { const e = m.get(k); if (e && e.hasta < Date.now()) { m.delete(k); return null; } return e; };
   return {
     bloqueado: (...ks) => ks.some(k => { const e = v(k); return e && e.n >= intentos; }),
-    fallo: (...ks) => ks.forEach(k => { const e = v(k) || { n: 0, hasta: Date.now() + minutos * 6e4 }; e.n++; m.set(k, e); }),
+    fallo: (...ks) => {
+      if (m.size > 5000) for (const k of [...m.keys()]) v(k);     // many random emails/IPs: drop the expired ones
+      ks.forEach(k => { const e = v(k) || { n: 0, hasta: Date.now() + minutos * 6e4 }; e.n++; m.set(k, e); });
+    },
     limpiar: (...ks) => ks.forEach(k => m.delete(k)),
   };
 }
