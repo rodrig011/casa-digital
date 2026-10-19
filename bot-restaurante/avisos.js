@@ -21,6 +21,7 @@ function fichaTexto(p) {
     titulo: `${porPagar ? "Pedido por pagar" : "Nuevo pedido"} ${p.n} · ${p.sucursal}`,
     lineas: [
       porPagar ? "⏳ Todavía no va a cocina: espera el pago" : null,
+      p.pagado && p.metodoPago === "tarjeta" ? "💳 Pagado con tarjeta" : null,
       p.faltas ? `⚠️ Este número no vino a recoger ${p.faltas === 1 ? "1 vez" : p.faltas + " veces"} antes` : null,
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       ...(p.lineas || []).map(lineaTexto),

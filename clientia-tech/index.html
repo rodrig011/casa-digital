@@ -493,12 +493,15 @@ function preparar(n) {
 //   desde: total en lempiras desde el que se cobra antes (0 = todos; vacío = ninguno por monto)
 //   faltas: cuántas veces "No vino" a recoger para que ese número tenga que pagar antes (0 = nunca)
 //   transferencia: banco, tipo y número de cuenta, a nombre de quién (lo da el dueño)
-//   tarjeta: enlace de pago de la pasarela del restaurante; {n} y {total} se cambian por el pedido y el total
+//   tarjeta: enlace de pago fijo de la pasarela del restaurante; {n} y {total} se cambian por el pedido y el total
+// Con una pasarela conectada (pagos.js, claves en Render) server.js pone pasarela: true: cada pedido lleva su propio
+// link y, cuando el pago sale bien, pasa solo a cocina.
+const LINK = "[[LINK_DE_PAGO]]";   // server.js lo cambia por el link de ese pedido
 function prepararCobro(c) {
   c = c || {};
   const num = (v, d) => (v === "" || v == null || !(+v >= 0) ? d : +v);
   const transferencia = String(c.transferencia || "").trim(), tarjeta = String(c.tarjeta || "").trim();
-  return { activo: !!(transferencia || tarjeta), desde: num(c.desde, Infinity), faltas: num(c.faltas, 0), transferencia, tarjeta };
+  return { activo: !!(transferencia || tarjeta), desde: num(c.desde, Infinity), faltas: num(c.faltas, 0), transferencia, tarjeta, pasarela: false };
 }
 // faltas = pedidos de este número que quedaron en "No vino"
 function requiereCobro(negocio, total, faltas = 0) {
@@ -510,10 +513,10 @@ function textoCobro(negocio, n, total) {
   const c = negocio.cobro;
   const link = c.tarjeta.replace(/\{n\}/g, encodeURIComponent(n)).replace(/\{total\}/g, String(total));
   return [
-    c.tarjeta ? `💳 *Con tarjeta:* ${link}` : null,
+    c.pasarela ? `💳 *Con tarjeta:* ${LINK}\nAl pagar con tarjeta, el pedido entra solo a cocina.` : c.tarjeta ? `💳 *Con tarjeta:* ${link}` : null,
     c.transferencia ? `🏦 *Por transferencia:* ${c.transferencia}` : null,
     `Monto: *${L(total)}* · Referencia: *${n}*`,
-    c.transferencia ? "Al pagar, mándenos aquí la foto del comprobante." : null,
+    c.transferencia ? `${c.pasarela ? "Si paga por transferencia, mándenos" : "Al pagar, mándenos"} aquí la foto del comprobante.` : null,
   ].filter(Boolean).join("\n");
 }
 
@@ -537,7 +540,7 @@ function cuenta(negocio, lineas) {
 }
 const lineaTexto = l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${L(l.subtotal)}`;
 
-module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, requiereCobro, textoCobro, norm, L };
+module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, requiereCobro, textoCobro, LINK, norm, L };
 
 },"./engine":function(module,exports,require){// Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }

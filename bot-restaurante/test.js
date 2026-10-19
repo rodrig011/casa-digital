@@ -343,3 +343,79 @@ test("ia: con cobro, crear_pedido deja el pedido por pagar y devuelve los datos 
   assert.equal(ejecutar(NC, "crear_pedido", { nombre: "Ana", sucursal: "centro", productos: [{ id: "c2", cantidad: 1 }], hora: "ya" }, ctx2).cobro, undefined);
   assert.equal(ctx2.pedido.estado, undefined);
 });
+
+// ---------- pago con tarjeta por pasarela (Tilopay simulado) ----------
+test("pagos: cliente de Tilopay entra con token, crea un link de un solo uso por pedido y consulta si se pagó", async () => {
+  const { createTilopay } = require("./pagos");
+  const llamadas = [];
+  let pagos = [];
+  const fetchFalso = async (url, o = {}) => {
+    llamadas.push({ url, ...o, body: o.body ? JSON.parse(o.body) : null });
+    const r = url.endsWith("/login") ? { access_token: "jwt1", token_type: "bearer", expires_in: 86400 }
+      : url.endsWith("/createLinkPayment") ? { type: "200", message: "Success", url: "https://app.tilopay.com/link/MjMw", id: 77 }
+      : { type: "200", message: "Success", detail: { id: 77 }, payments: pagos };
+    return { ok: true, status: 200, text: async () => JSON.stringify(r) };
+  };
+  const t = createTilopay({ usuario: "u", clave: "c", key: "k-1", fetch: fetchFalso });
+  const l = await t.crearLink({ n: "PED-1001", total: 420, nombre: "Ana", webhookUrl: "https://bot/pagos/aviso/PED-1001?t=x", volverUrl: "https://bot/pagos/listo/PED-1001?t=x" });
+  assert.deepEqual(l, { id: "77", url: "https://app.tilopay.com/link/MjMw" });
+  assert.deepEqual(llamadas[0].body, { apiuser: "u", password: "c" });
+  const crear = llamadas[1];
+  assert.equal(crear.headers.Authorization, "bearer jwt1");
+  assert.equal(crear.body.amount, "420.00"); assert.equal(crear.body.currency, "HNL"); assert.equal(crear.body.type, 1);
+  assert.equal(crear.body.reference, "PED-1001"); assert.equal(crear.body.key, "k-1"); assert.match(crear.body.webhook_url, /pagos\/aviso\/PED-1001/);
+  assert.deepEqual(await t.verificar("77", 420), { pagado: false, monto: 0, pagos: 0 });
+  pagos = [{ code: "0", amount: "420.00" }];
+  assert.equal((await t.verificar("77", 420)).pagado, false, "rechazado no cuenta");
+  pagos = [{ code: "1", amount: "420.00" }];
+  assert.equal((await t.verificar("77", 420)).pagado, true);
+  assert.match(llamadas.at(-1).url, /getDetailLinkPayment\/77\/k-1$/);
+  assert.equal(llamadas.filter(c => c.url.endsWith("/login")).length, 1, "el token se reutiliza");
+});
+
+test("webhook: con pasarela cada pedido lleva su link; si el pago sale bien pasa solo a cocina y avisa", async () => {
+  let pagado = false, creados = [];
+  const pasarela = {
+    proveedor: "tilopay",
+    crearLink: async a => { creados.push(a); return { id: "L" + creados.length, url: `https://app.tilopay.com/link/${a.n}` }; },
+    verificar: async () => ({ pagado, monto: pagado ? 420 : 0 }),
+  };
+  const ctx = await montar(null, { pagosSecret: "p".repeat(40) }, { negocio: conCobro(), pasarela });
+  try {
+    const cliente = "whatsapp:+50496665555";
+    let r;
+    for (const Body of ["hola", "2", "Centro", "3", "Confirmar pedido", "Lo antes posible", "Ana"]) r = await post(ctx, "/whatsapp", { From: cliente, Body, NumMedia: "0" });
+    const txt = textoDe(r.xml);
+    assert.match(txt, /Con tarjeta:\* https:\/\/app\.tilopay\.com\/link\/PED-1001/);
+    assert.match(txt, /entra solo a cocina/); assert.ok(!/LINK_DE_PAGO/.test(txt));
+    assert.equal(creados.length, 1); assert.equal(creados[0].total, 420);
+    assert.match(creados[0].webhookUrl, /^https:\/\/bot\.restaurante\.test\/pagos\/aviso\/PED-1001\?t=/);
+    const st = ctx.app.locals.store;
+    assert.equal(st.pedidos[0].pagoLink.id, "L1");
+    await ctx.app.locals.idle();
+    const ruta = creados[0].webhookUrl.replace(PUBLIC, "");
+    const aviso = body => fetch(ctx.base + ruta, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+    // a fake notice without the order's signature is refused; a notice alone never marks it paid
+    assert.equal((await fetch(ctx.base + "/pagos/aviso/PED-1001?t=falso", { method: "POST" })).status, 403);
+    const antes = ctx.sent.length;
+    assert.equal((await aviso({ code: "0", codeDescription: "Fondos insuficientes" })).status, 200);
+    await ctx.app.locals.idle();
+    assert.equal(st.pedidos[0].estado, "por_pagar");
+    assert.equal(ctx.sent.length, antes + 1); assert.equal(ctx.sent.at(-1).to, cliente);
+    assert.match(ctx.sent.at(-1).body, /no pasó \(Fondos insuficientes\)/);
+
+    pagado = true;
+    await aviso({ code: "1" }); await aviso({ code: "1" });
+    await ctx.app.locals.idle();
+    const p = st.pedidos[0];
+    assert.equal(p.estado, "nuevo"); assert.equal(p.pagado, true); assert.equal(p.metodoPago, "tarjeta"); assert.equal(p.por, "tilopay");
+    const nuevos = ctx.sent.slice(antes + 1);
+    assert.equal(nuevos.filter(m => m.to === cliente && /Recibimos su pago del pedido \*PED-1001\*/.test(m.body)).length, 1, "un solo aviso aunque lleguen dos");
+    assert.ok(nuevos.some(m => m.to === "whatsapp:+50499990000" && /Nuevo pedido PED-1001 · Centro/.test(m.body) && /Pagado con tarjeta/.test(m.body)));
+
+    const vuelta = await fetch(ctx.base + creados[0].volverUrl.replace(PUBLIC, ""));
+    assert.equal(vuelta.status, 200); assert.match(await vuelta.text(), /Pago recibido/);
+    assert.equal((await fetch(ctx.base + "/pagos/listo/PED-1001?t=malo")).status, 403);
+  } finally { ctx.srv.close(); }
+});
