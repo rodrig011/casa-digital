@@ -1,0 +1,28 @@
+{
+  "_nota": "BORRADOR (2026-10-19). Solo datos públicos de sus propias cuentas: 4 productos y precios de su menú en PedidosYa, nombres de las 3 sucursales, horario de la bio de TikTok. Antes de prender el bot hay que reemplazarlo con el menú completo, direcciones y teléfonos que mande Eduardo (lista 'lo que necesitamos'). Faltan precios de alitas, fingers, pollo con papas, combos y refrescos.",
+  "nombre": "Coco Chicken",
+  "color": "#D8261C",
+  "sucursales": [
+    { "id": "cabanas", "nombre": "Barrio Cabañas", "direccion": "", "telefono": "", "whatsapp": "", "horario": "Lunes a domingo, 9:00 a. m. a 10:00 p. m.", "mapa": "" },
+    { "id": "satelite", "nombre": "Colonia Satélite", "direccion": "", "telefono": "", "whatsapp": "", "horario": "Lunes a domingo, 9:00 a. m. a 10:00 p. m.", "mapa": "" },
+    { "id": "medina", "nombre": "Barrio Medina", "direccion": "", "telefono": "", "whatsapp": "", "horario": "Lunes a domingo, 9:00 a. m. a 10:00 p. m.", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Pollo con tajadas", "items": [
+      { "id": "pierna", "nombre": "Pierna y tajadas", "precio": 75 },
+      { "id": "cadera", "nombre": "Cadera y tajadas", "precio": 85 },
+      { "id": "ala", "nombre": "Ala y tajadas", "precio": 95 },
+      { "id": "pct", "nombre": "Pierna, cadera y tajadas", "precio": 140 }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "",
+  "tiempoPreparacion": "",
+  "domicilio": {
+    "propio": false,
+    "apps": [
+      { "nombre": "PedidosYa", "url": "" },
+      { "nombre": "Bip Bip", "url": "" }
+    ]
+  }
+}
