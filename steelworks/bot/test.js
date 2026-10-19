@@ -124,8 +124,9 @@ test("webhook: conversación completa por WhatsApp, ficha guardada y aviso al du
     const r = await post(ctx2, "/whatsapp", { From: "whatsapp:+50477770000", Body: "2" });
     assert.match(textoDe(r.xml), /puerta/i);
     ctx2.app.locals.store.flush();
-    const r2 = await (await fetch(ctx2.base + "/leads?token=secreto")).json();
+    const r2 = await (await fetch(ctx2.base + "/leads", { headers: { Authorization: "Bearer secreto" } })).json();
     assert.equal(r2.length, 2);
+    assert.equal((await fetch(ctx2.base + "/leads?token=secreto")).status, 401, "la clave nunca va en la URL");
   } finally { ctx2.srv.close(); }
 });
 

@@ -20,6 +20,7 @@ Para llamadas telefónicas ver [LLAMADAS.md](LLAMADAS.md).
 | `store.js` | Guarda conversaciones y fichas en `DATA_DIR` (`leads.json`, `sessions.json`). |
 | `voz.js` | Convierte la conversación a voz para las llamadas. |
 | `auth.js`, `usuarios.js` | Acceso al panel del dueño con correo y contraseña (ver *Panel del dueño*). |
+| `seguridad.js` | Cabeceras de seguridad, https forzado y freno de mensajes por número (ver `SEGURIDAD.md` en la raíz). |
 | `panel/` | El panel que se abre en `/panel` después de entrar (lo genera `python3 ../build.py`). |
 | `ia.js` | Modo IA opcional con Claude: entiende mensajes libres por WhatsApp (ver *Modo IA*). |
 | `test.js` | Pruebas sin Twilio: `npm test`. |

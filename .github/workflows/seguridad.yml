@@ -1,0 +1,43 @@
+# Revisión de seguridad en cada cambio (ver SEGURIDAD.md):
+#   - busca claves o contraseñas subidas por error en todo el historial (gitleaks)
+#   - revisa que las dependencias de los bots no tengan vulnerabilidades conocidas (npm audit)
+#   - corre las pruebas de los bots (login, firma de Twilio, freno de mensajes, pagos)
+name: Seguridad
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 14 * * 1"        # lunes 8 a. m. Honduras: avisos nuevos de dependencias
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  secretos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Buscar claves en el historial
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz gitleaks
+          ./gitleaks detect --source . --log-opts="--all" --redact -v
+  bots:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bot: [bot-restaurante, steelworks/bot]
+    defaults:
+      run:
+        working-directory: ${{ matrix.bot }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Dependencias sin vulnerabilidades altas
+        run: npm audit --omit=dev --audit-level=high
+      - run: npm test

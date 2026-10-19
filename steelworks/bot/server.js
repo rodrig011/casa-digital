@@ -18,6 +18,7 @@ const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const voz = require("./voz");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
+const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 
@@ -47,6 +48,9 @@ function loadConfig(env = process.env) {
     // modo IA (Claude): solo si hay clave y BOT_IA no es "off"
     anthropicKey: /^off$/i.test(String(env.BOT_IA || "").trim()) ? "" : env.ANTHROPIC_API_KEY || "",
     anthropicModel: env.ANTHROPIC_MODEL || MODELO,
+    // freno por número de WhatsApp: mensajes cada 10 minutos, y respuestas con IA por día (después contesta el menú)
+    limiteMensajes: +env.LIMITE_MENSAJES || 40,
+    limiteIA: +env.LIMITE_IA_DIA || 80,
   };
 }
 
@@ -62,7 +66,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   const app = express();
   app.set("trust proxy", true);
-  app.use(express.urlencoded({ extended: false }));
+  app.disable("x-powered-by");
+  app.use(soloHttps, cabeceras());
+  app.use(express.urlencoded({ extended: false, limit: "20kb" }));
+  const limite = createLimite({ max: cfg.limiteMensajes, minutos: 10 });
+  const limiteIA = createLimite({ max: cfg.limiteIA, minutos: 24 * 60 });
 
   // only Twilio may post to the webhooks (SKIP_TWILIO_SIGNATURE=true for local tests)
   function firma(req, res, next) {
@@ -137,12 +145,15 @@ function createApp(cfg = loadConfig(), deps = {}) {
   app.post("/whatsapp", firma, async (req, res) => {
     const p = req.body || {};
     const from = p.From || "anon";
-    const text = Number(p.NumMedia || 0) > 0 ? "📷 foto" : p.Body || "";
+    const text = (Number(p.NumMedia || 0) > 0 ? "📷 foto" : String(p.Body || "")).slice(0, 1000);
     const tw = new twilio.twiml.MessagingResponse();
     let reply;
-    if (esDueno(from) && /^(agenda|citas|pendientes|fichas)$/i.test(text.trim())) {
+    // too many messages from one number: one notice, then silence until the window passes
+    if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
+      if (limite.primeraVezFuera(digits(from) || from)) { log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`); tw.message("Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí."); }
+    } else if (esDueno(from) && /^(agenda|citas|pendientes|fichas)$/i.test(text.trim())) {
       tw.message(agenda().slice(0, 1590));
-    } else if (ia && (reply = await conversarIA(from, from, text))) {
+    } else if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, from, text))) {
       tw.message(reply.slice(0, 1590));
     } else {
       const { r } = conversar(from, from, "whatsapp", text);
@@ -220,8 +231,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   // ---- Fichas para el panel del dueño (sesión del panel o token) ----
   app.get("/leads", (req, res) => {
     if (panel.usuarioDe(req)) return res.set("Cache-Control", "no-store").json(store.leads.slice().reverse());
-    res.set("Access-Control-Allow-Origin", "*");
-    const given = (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") || String(req.query.token || "");
+    const given = (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");   // never in the URL: URLs end up in logs
     const a = Buffer.from(given), b = Buffer.from(cfg.leadsToken);
     if (!cfg.leadsToken || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(401).json({ error: "token inválido" });
     res.json(store.leads.slice().reverse());
