@@ -27,8 +27,9 @@ const logo = leer(aqui, "src", "img", "simbolo.svg");
 // favicon: the white mark on the navy square
 const fav = logo.toString().replace(/<svg([^>]*)>/, '<svg$1><rect x="-30" y="-10" width="460" height="486" rx="80" fill="#0A1230"/>');
 
-let html = leer(aqui, "src", "index.html").toString()
-  .replace("{{FONT}}", dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
+const armar = archivo => leer(aqui, "src", archivo).toString()
+  .replace("{{FONT}}", () => dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
+  .replace("{{FONT_ARCHIVO}}", () => dataUri(leer(aqui, "src", "fonts", "archivo-latin.woff2"), "font/woff2"))
   .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
   .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
   .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;"))
@@ -43,7 +44,9 @@ const publicar = (nombre, h) => {
   writeFileSync(join(aqui, "..", nombre), h);
   console.log(`clientia-tech/${nombre}: ${(h.length / 1024).toFixed(0)} KB`);
 };
-publicar("index.html", html);
+publicar("index.html", armar("index.html"));
+// test page made with the frontend-design skill (clientiatech.com/prueba.html); the home page stays as it is
+publicar("prueba.html", armar("prueba.html"));
 
 // legal pages: src/legal/<archivo> inside src/legal/plantilla.html
 const LEGAL = [
