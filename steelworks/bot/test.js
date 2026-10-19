@@ -350,6 +350,9 @@ test("panel: solo entra quien tiene correo y contraseña autorizados", async () 
     // log out clears the cookie
     const out = await fetch(ctx.base + "/panel/salir", { redirect: "manual", headers: { Cookie: cookie } });
     assert.equal(out.status, 303); assert.match(out.headers.get("set-cookie"), /Max-Age=0/);
+    // ...and ends the session on the server: a copy of the old cookie no longer opens anything
+    assert.equal((await fetch(ctx.base + "/panel", { redirect: "manual", headers: { Cookie: cookie } })).status, 303);
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: cookie } })).status, 401);
   } finally { ctx.srv.close(); }
 
   // a password change ends old sessions; 5 wrong tries lock the email

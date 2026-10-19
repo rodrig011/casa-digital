@@ -189,6 +189,7 @@ Para cambiar una contraseña, vuelva a usar `agregar` con el mismo correo.
 **Cómo protege el panel:**
 - Las contraseñas no se guardan, solo una huella (scrypt).
 - La sesión dura 12 horas. Va en una cookie firmada que el navegador no deja leer a otras páginas (HttpOnly, SameSite=Strict, Secure).
+- "Salir" también cierra la sesión en el servidor: si alguien copió la cookie, deja de servirle.
 - Después de 5 intentos fallidos, ese correo o esa conexión quedan bloqueados 15 minutos.
 - Si falta PANEL_SECRET, el panel no abre.
 
