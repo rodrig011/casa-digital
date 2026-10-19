@@ -88,7 +88,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   const numero = pre => pre + "-" + (store.seq = store.seq + 1);
-  const faltasDe = tel => store.pedidos.filter(p => p.estado === "no_vino" && digits(p.tel) === digits(tel)).length;
+  const faltasDe = tel => store.faltas(tel);
   const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;

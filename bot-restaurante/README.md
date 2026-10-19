@@ -25,7 +25,7 @@ Para instalarle a un cliente desde EE. UU., ver también [INSTALACION-A-DISTANCI
 | `server.js` | Webhook de WhatsApp, API de pedidos y panel. |
 | `avisos.js` | Avisos al dueño y a la sucursal; "pedido listo" al cliente. |
 | `pagos.js` | Pago con tarjeta por pasarela (Tilopay): link por pedido y consulta del pago. |
-| `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. |
+| `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. Los pedidos cerrados con más de 30 días pasan a `archivo/pedidos-AAAA-MM.json` para que `pedidos.json` no crezca para siempre. |
 | `auth.js`, `usuarios.js` | Entrada al panel con correo y contraseña. |
 | `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú. |
 | `test.js` | Pruebas sin Twilio ni internet: `npm test`. |
