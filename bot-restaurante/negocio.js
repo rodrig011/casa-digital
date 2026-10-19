@@ -57,9 +57,39 @@ function preparar(n) {
     color: n.color || "#C8102E",
     pago: n.pago || "",
     domicilio: n.domicilio || { propio: false, apps: [] },
+    cobro: prepararCobro(n.cobro),
     items, sucursal, item,
     variasSucursales: n.sucursales.length > 1,
   };
+}
+
+// Cobro antes de cocinar (opcional): para que un pedido grande o de alguien que ya dejó un pedido botado
+// no se cocine hasta que esté pagado. Solo se activa si el restaurante dio cómo cobrar (transferencia o enlace).
+//   desde: total en lempiras desde el que se cobra antes (0 = todos; vacío = ninguno por monto)
+//   faltas: cuántas veces "No vino" a recoger para que ese número tenga que pagar antes (0 = nunca)
+//   transferencia: banco, tipo y número de cuenta, a nombre de quién (lo da el dueño)
+//   tarjeta: enlace de pago de la pasarela del restaurante; {n} y {total} se cambian por el pedido y el total
+function prepararCobro(c) {
+  c = c || {};
+  const num = (v, d) => (v === "" || v == null || !(+v >= 0) ? d : +v);
+  const transferencia = String(c.transferencia || "").trim(), tarjeta = String(c.tarjeta || "").trim();
+  return { activo: !!(transferencia || tarjeta), desde: num(c.desde, Infinity), faltas: num(c.faltas, 0), transferencia, tarjeta };
+}
+// faltas = pedidos de este número que quedaron en "No vino"
+function requiereCobro(negocio, total, faltas = 0) {
+  const c = negocio.cobro;
+  if (!c || !c.activo) return false;
+  return total >= c.desde || (c.faltas > 0 && faltas >= c.faltas);
+}
+function textoCobro(negocio, n, total) {
+  const c = negocio.cobro;
+  const link = c.tarjeta.replace(/\{n\}/g, encodeURIComponent(n)).replace(/\{total\}/g, String(total));
+  return [
+    c.tarjeta ? `💳 *Con tarjeta:* ${link}` : null,
+    c.transferencia ? `🏦 *Por transferencia:* ${c.transferencia}` : null,
+    `Monto: *${L(total)}* · Referencia: *${n}*`,
+    c.transferencia ? "Al pagar, mándenos aquí la foto del comprobante." : null,
+  ].filter(Boolean).join("\n");
 }
 
 function cargarNegocio(archivo) {
@@ -82,4 +112,4 @@ function cuenta(negocio, lineas) {
 }
 const lineaTexto = l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${L(l.subtotal)}`;
 
-module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, norm, L };
+module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, requiereCobro, textoCobro, norm, L };

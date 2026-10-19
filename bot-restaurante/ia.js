@@ -3,9 +3,9 @@
 // por medio de herramientas, así nunca inventa un precio. Si la API falla, server.js usa el menú de siempre.
 //
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
-//   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001" });
+//   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0 });
 //   r = { reply, history, pedido?, persona? }
-const { cuenta, L } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, L } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -30,10 +30,11 @@ Cómo toma un pedido para recoger:
 - Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal donde lo recoge, " : ""}la hora en que pasa y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
+- Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
 
 Límites:
-- No prometa enlaces de pago, envíos, reservaciones ni nada que no le dé una herramienta.
+- No invente enlaces ni cuentas de pago: solo los que devuelve crear_pedido. No prometa envíos, reservaciones ni nada que no le dé una herramienta.
 - Si el cliente quiere hablar con una persona, tiene una queja, o pide algo que usted no puede resolver, use pasar_a_persona.
 - Si le escriben de algo que no tiene que ver con el restaurante, responda con amabilidad que solo puede ayudar con el menú y los pedidos.`;
 }
@@ -76,7 +77,12 @@ function ejecutar(N, name, input, ctx) {
       const s = b(input.sucursal);
       const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora: String(input.hora || "").slice(0, 60), resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · ") };
-      return { ok: true, numero: ctx.pedido.n, total: L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${L(l.subtotal)}`), sucursal: s.nombre, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
+      const base = { ok: true, numero: ctx.pedido.n, total: L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${L(l.subtotal)}`), sucursal: s.nombre };
+      if (requiereCobro(N, c.total, ctx.faltas || 0)) {
+        ctx.pedido.estado = "por_pagar";
+        return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total), nota: "Todavía NO va a cocina: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando se confirme el pago entra a cocina y se le avisa." };
+      }
+      return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
     }
     case "pasar_a_persona": {
       const s = b(input.sucursal);
@@ -107,8 +113,8 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   model = model || MODELO;
   const SYSTEM = system(negocio), TOOLS = tools(negocio);
 
-  async function turn(history, text, now, { numero } = {}) {
-    const ctx = { numero, pedido: null, persona: null };
+  async function turn(history, text, now, { numero, faltas = 0 } = {}) {
+    const ctx = { numero, faltas, pedido: null, persona: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en Honduras: ${fecha(now)}]` }] }];
     const ac = new AbortController();

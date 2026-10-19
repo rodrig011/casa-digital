@@ -36,7 +36,7 @@ Necesita Node 22 o más nuevo.
 ```bash
 cd bot-restaurante
 npm install
-npm test                       # debe decir "pass 7, fail 0"
+npm test                       # debe decir "pass 10, fail 0"
 cp .env.example .env           # poner SKIP_TWILIO_SIGNATURE=true y un PANEL_SECRET
 npm run usuario -- agregar yo@correo.com "Rodrigo"
 npm start
@@ -68,13 +68,37 @@ Igual que el bot de Steel Works: ver [steelworks/bot/README.md](../steelworks/bo
 - **El aviso "su pedido está listo"** va como texto normal: el cliente acaba de escribir, así que está dentro de las 24 horas de WhatsApp.
 - **Usuarios del panel:** en Render > Shell, `npm run usuario -- agregar correo "Nombre"`.
 
-## 4. Lo que el dueño puede hacer por WhatsApp
+## 4. Cobrar antes de cocinar (pedidos que nunca llegan)
+
+Si alguien pide para recoger y nunca llega, el pollo se pierde. Para eso está el bloque `cobro` en `negocios/<cliente>.json`:
+
+```json
+"cobro": { "desde": 500, "faltas": 1, "transferencia": "Banco …, cuenta de ahorro …, a nombre de …", "tarjeta": "" }
+```
+
+- **desde**: pedidos de ese total o más se pagan antes. Vacío = ninguno por monto; 0 = todos.
+- **faltas**: cuando la cocina toca **No vino** en el panel, ese número suma una falta. Con esa cantidad de faltas, sus próximos pedidos se pagan antes (y al dueño le sale el aviso "no vino a recoger 1 vez").
+- **transferencia**: los datos de la cuenta, tal cual los da el dueño.
+- **tarjeta**: el enlace de pago de una pasarela a nombre del restaurante (PixelPay, Tilopay; Stripe no acepta negocios de Honduras). `{n}` y `{total}` se cambian por el número de pedido y el total.
+
+Sin transferencia ni tarjeta el cobro está apagado y todo funciona como antes.
+
+Cómo va un pedido que se paga antes:
+
+1. El bot da el total con los datos de pago y pide la foto del comprobante. El pedido queda **Por pagar**: sale en el panel, no en cocina.
+2. El cliente manda la foto: al dueño y a la sucursal les llega con la foto (si la sucursal tiene WhatsApp propio).
+3. Alguien revisa que el dinero esté en la cuenta y toca **Pago recibido**. El pedido pasa a cocina y al cliente le llega "recibimos su pago".
+4. El cliente puede tocar **Cancelar pedido** mientras no haya pagado.
+
+La confirmación del pago es a mano, en el panel. Para que se confirme sola con tarjeta hay que conectar el aviso de la pasarela que escoja el restaurante (falta hacerlo). Si en Twilio está activada la protección de archivos con clave (HTTP basic auth on media), la foto no se reenvía al dueño: el aviso llega igual sin foto.
+
+## 5. Lo que el dueño puede hacer por WhatsApp
 
 Desde el número de `OWNER_WHATSAPP`, escribirle al bot **pedidos**: le contesta con los pedidos y clientes pendientes.
 
 ## Lo que todavía no hace
 
 - Envío a domicilio propio (pedir la dirección y cobrar el envío). Hoy el bot manda a PedidosYa o Bip Bip.
-- Pago en línea.
+- Confirmar solo el pago con tarjeta: hoy alguien toca "Pago recibido" en el panel (ver la sección 4).
 - Inventario y aviso automático a proveedores (está en los paneles de demostración, falta conectarlo aquí).
 - Nunca se ha probado con Twilio real ni con una clave real de Claude.

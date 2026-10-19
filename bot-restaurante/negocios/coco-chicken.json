@@ -18,6 +18,13 @@
   "recoger": true,
   "pago": "",
   "tiempoPreparacion": "",
+  "cobro": {
+    "_nota": "PROPUESTA, la decide Eduardo: pedidos de L 500 o más, y números que ya dejaron un pedido botado, pagan antes de cocinar. Queda apagado hasta que Eduardo dé su cuenta para transferencias (banco, tipo y número de cuenta, a nombre de quién) o un enlace de pago de una pasarela a nombre de Coco Chicken (PixelPay, Tilopay).",
+    "desde": 500,
+    "faltas": 1,
+    "transferencia": "",
+    "tarjeta": ""
+  },
   "domicilio": {
     "propio": false,
     "apps": [
