@@ -24,7 +24,7 @@ jobs:
       - name: Armar el sitio (solo la página, nada más del repositorio)
         run: |
           mkdir -p _sitio
-          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html _sitio/
+          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html clientia-tech/prueba.html _sitio/
           touch _sitio/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
