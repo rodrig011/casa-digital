@@ -1,4 +1,4 @@
-// Arma clientia-tech/index.html (un solo archivo) desde src/index.html:
+// Arma clientia-tech/index.html (un solo archivo) desde src/index.html, y las páginas legales desde src/legal/:
 // mete la letra, los pantallazos y el logo como data: URI, y el motor real del bot
 // (bot-restaurante/engine.js + negocio.js + negocios/ejemplo.json) para la demostración.
 // Uso: node clientia-tech/build.mjs
@@ -36,8 +36,34 @@ let html = leer(aqui, "src", "index.html").toString()
   .replace("/*{{BOT}}*/", () => BOT)
   .replace(/\{\{IMG:([\w-]+)\}\}/g, (_, n) => dataUri(leer(aqui, "src", "img", n + ".webp"), "image/webp"));
 
-if (/\{\{/.test(html)) throw new Error("Quedó un {{...}} sin reemplazar");
-writeFileSync(join(aqui, "index.html"), html);
-// copia en la raíz del repositorio: GitHub Pages ("Deploy from a branch", main / root) sirve este archivo en clientiatech.com
-writeFileSync(join(aqui, "..", "index.html"), html);
-console.log(`clientia-tech/index.html: ${(html.length / 1024).toFixed(0)} KB`);
+// each page goes to clientia-tech/ and to the repo root: GitHub Pages ("Deploy from a branch", main / root) serves the root copy at clientiatech.com
+const publicar = (nombre, h) => {
+  if (/\{\{/.test(h)) throw new Error(`Quedó un {{...}} sin reemplazar en ${nombre}`);
+  writeFileSync(join(aqui, nombre), h);
+  writeFileSync(join(aqui, "..", nombre), h);
+  console.log(`clientia-tech/${nombre}: ${(h.length / 1024).toFixed(0)} KB`);
+};
+publicar("index.html", html);
+
+// legal pages: src/legal/<archivo> inside src/legal/plantilla.html
+const LEGAL = [
+  ["terminos.html", "Términos y condiciones", "Términos", "Condiciones de uso de la página y del servicio de Clientia Tech: prueba de 30 días, pagos, cancelación y límites."],
+  ["privacidad.html", "Política de privacidad", "Privacidad", "Qué datos pide Clientia Tech, para qué, con quién trabaja, cuánto tiempo los guarda y cómo pedir que se borren."],
+  ["cookies.html", "Política de cookies", "Cookies", "La página de Clientia Tech no usa cookies; el panel del dueño usa solo una cookie de sesión."],
+  ["reembolsos.html", "Política de reembolso", "Reembolsos", "Cuándo devuelve Clientia Tech un pago y cómo pedirlo."],
+  ["legal.html", "Aviso legal", "Aviso legal", "Titular de la página, leyes revisadas, registro de aceptaciones y derechos de las imágenes."],
+];
+const plantilla = leer(aqui, "src", "legal", "plantilla.html").toString();
+for (const [archivo, titulo, corto, descripcion] of LEGAL) {
+  const enlaces = LEGAL.map(([a, , c]) => `<a href="${a}"${a === archivo ? ' aria-current="page"' : ""}>${c}</a>`).join("");
+  publicar(archivo, plantilla
+    .replace("{{CONTENIDO}}", () => leer(aqui, "src", "legal", archivo).toString())
+    .replace("{{TITULO}}", titulo)
+    .replace("{{DESCRIPCION}}", descripcion)
+    .replace("{{INDICE}}", () => enlaces)
+    .replace("{{INDICE_PIE}}", () => LEGAL.map(([a, , c]) => `<a href="${a}">${c}</a>`).join(""))
+    .replace("{{FONT}}", dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
+    .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
+    .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
+    .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;")));
+}
