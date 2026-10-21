@@ -239,10 +239,15 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 
 /* ---------- about ---------- */
 .yo{padding:clamp(120px,14vw,200px) var(--m);display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start}
-.yo .foto{grid-column:1 / span 4;margin:0;background:#5A5D63;overflow:hidden}
+.yo .socios{grid-column:1 / span 5;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.yo .socios figure{margin:0}
+.yo .foto{margin:0;background:#5A5D63;overflow:hidden}
+.yo .foto.dy{background:#C9CBD0}
 .yo .foto img{width:100%;transform:scale(1.06);transition:transform 1.4s var(--ease)}
 .yo .foto.in img{transform:scale(1)}
-.yo .texto{grid-column:6 / -1;display:grid;gap:clamp(40px,5vw,72px)}
+.yo figcaption{margin-top:12px;font-size:var(--s-small);color:var(--soft)}
+.yo figcaption b{display:block;color:var(--ink);font-weight:700;font-size:var(--s-body)}
+.yo .texto{grid-column:7 / -1;display:grid;gap:clamp(40px,5vw,72px)}
 .yo .bio{font-size:clamp(1.5rem,.9rem + 1.5vw,2.25rem);line-height:1.2;letter-spacing:-.02em}
 .yo .bio p+p{margin-top:1em;color:var(--soft)}
 .yo .bio strong{font-weight:800}
@@ -251,7 +256,7 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 .yo .datos a{white-space:nowrap}
 @media (max-width:860px){
   .yo{display:block}
-  .yo .foto{max-width:420px;margin-bottom:40px}
+  .yo .socios{max-width:520px;margin-bottom:40px;gap:12px}
   .yo .bio{font-size:1.375rem;line-height:1.25}
   .yo .datos{grid-template-columns:1fr 1fr;gap:16px}
 }
@@ -290,7 +295,7 @@ footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-sp
   <nav aria-label="Secciones">
     <a href="#pruebelo">Pruébelo</a>
     <a href="#como">Cómo se instala</a>
-    <a href="#quien">Quién soy</a>
+    <a href="#quien">Quiénes somos</a>
     <a href="#preguntas">Preguntas</a>
   </nav>
   <a class="btn" href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>
@@ -384,16 +389,19 @@ footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-sp
   </div>
 </section>
 
-<section class="yo" id="quien" aria-label="Quién soy">
-  <figure class="foto rv"><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, fundador de Clientia Tech, de traje azul" loading="lazy"></figure>
+<section class="yo" id="quien" aria-label="Quiénes somos">
+  <div class="socios">
+    <figure><div class="foto rv"><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, de Clientia Tech, de traje azul" loading="lazy"></div><figcaption><b>Rodrigo Herrera</b>Sistemas e instalación</figcaption></figure>
+    <figure><div class="foto dy rv" style="--i:1"><img src="{{IMG:dylan}}" width="800" height="1000" alt="Dylan Jiménez, de Clientia Tech, de traje negro" loading="lazy"></div><figcaption><b>Dylan Jiménez</b>Finanzas y cobros</figcaption></figure>
+  </div>
   <div class="texto">
     <div class="bio rv" style="--i:1">
-      <p><strong>Rodrigo Herrera.</strong> Soy hondureño y estudio ingeniería en Estados Unidos. Clientia Tech es mi empresa: hago los sistemas yo mismo, desde el código hasta la instalación, y lo que aprendo allá lo pongo a trabajar para restaurantes y negocios de Honduras.</p>
-      <p>Cuando usted escribe, le contesto yo. Antes de pagar nada, se lo enseño funcionando con su propio menú en una videollamada.</p>
+      <p><strong>Rodrigo y Dylan.</strong> Somos amigos y empezamos Clientia Tech juntos, con una idea sencilla: que los restaurantes y negocios de Honduras tengan las mismas herramientas que usan los grandes.</p>
+      <p>Rodrigo es hondureño, estudia ingeniería en Estados Unidos y hace los sistemas, desde el código hasta la instalación. Dylan estudia Finanzas en Harding University y cuida los números: que cada cobro sea claro y que usted sepa siempre qué está pagando y por qué.</p>
     </div>
     <div class="datos rv" style="--i:2">
-      <div><b>Hondureño</b>Estudio ingeniería en EE. UU.</div>
-      <div><b>Atiendo yo</b>En español, por WhatsApp o videollamada.</div>
+      <div><b>Le atendemos nosotros</b>En español, por WhatsApp o videollamada.</div>
+      <div><b>Antes de pagar</b>Lo ve funcionando con su propio menú.</div>
       <div><b>WhatsApp</b><a class="link" href="{{WA}}" target="_blank" rel="noopener">+1 (765) 543-4251</a></div>
     </div>
   </div>

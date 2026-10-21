@@ -121,7 +121,11 @@ h3{font-weight:600;font-size:var(--t-b);line-height:1.3}
 
 /* ---------- Rodrigo ---------- */
 .yo{padding:clamp(72px,10vw,150px) var(--m);display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,4vw,72px);align-items:center}
-.yo figure{margin:0;max-width:440px;border-radius:20px;overflow:hidden}
+.yo .socios{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:520px}
+.yo figure{margin:0}
+.yo figure img{border-radius:18px}
+.yo figcaption{margin-top:10px;font-size:var(--t-s);color:var(--suave)}
+.yo figcaption b{display:block;color:var(--tinta);font-size:var(--t-b);font-weight:600}
 .yo h2{font-size:var(--t-h);max-width:18ch}
 .yo .cuerpo>p{margin-top:18px;max-width:52ch}
 .yo ol{margin-top:28px;padding:0;list-style:none;display:grid;gap:14px;max-width:56ch;counter-reset:p}
@@ -217,14 +221,17 @@ footer nav a:hover{color:var(--noche-texto)}
 </section>
 
 <section class="yo" aria-labelledby="t-yo">
-  <figure><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, de Clientia Tech, de traje azul" loading="lazy"></figure>
+  <div class="socios">
+    <figure><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, de Clientia Tech, de traje azul" loading="lazy"><figcaption><b>Rodrigo Herrera</b>Sistemas e instalación</figcaption></figure>
+    <figure><img src="{{IMG:dylan}}" width="800" height="1000" alt="Dylan Jiménez, de Clientia Tech, de traje negro" loading="lazy"><figcaption><b>Dylan Jiménez</b>Finanzas y cobros</figcaption></figure>
+  </div>
   <div class="cuerpo">
-    <h2 id="t-yo">Detrás del bot está Rodrigo Herrera.</h2>
-    <p>Soy hondureño y estudio ingeniería en Estados Unidos. Hago estos sistemas yo mismo, del código a la instalación, y cuando usted escribe, le contesto yo. Así empezamos:</p>
+    <h2 id="t-yo">Detrás del bot están Rodrigo y Dylan.</h2>
+    <p>Somos amigos y empezamos Clientia Tech juntos. Rodrigo es hondureño, estudia ingeniería en Estados Unidos y hace los sistemas, del código a la instalación. Dylan estudia Finanzas en Harding University y cuida los números: que cada cobro sea claro y que usted sepa siempre qué paga. Así empezamos:</p>
     <ol>
-      <li><div><h3>Me manda su menú por WhatsApp.</h3><p>Con precios, sucursales y horarios.</p></div></li>
+      <li><div><h3>Nos manda su menú por WhatsApp.</h3><p>Con precios, sucursales y horarios.</p></div></li>
       <li><div><h3>Dos videollamadas.</h3><p>Una para conectar su número y otra para enseñarle el panel a usted y a su personal. No se instala nada en sus computadoras.</p></div></li>
-      <li><div><h3>30 días sin pagar nada.</h3><p>Al final vemos juntos los números. Si no le sirve, apago el bot y le entrego sus pedidos.</p></div></li>
+      <li><div><h3>30 días sin pagar nada.</h3><p>Al final vemos juntos los números. Si no le sirve, apagamos el bot y le entregamos sus pedidos.</p></div></li>
     </ol>
     <a class="wa-btn" href="{{WA}}" target="_blank" rel="noopener">{{WA_ICON}}+1 (765) 543-4251</a>
   </div>
