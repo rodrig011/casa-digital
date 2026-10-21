@@ -4,7 +4,7 @@
 
 > **Nota para Rodrigo:** es una plantilla sencilla, no la revisó un abogado. Sirve para que los dos tengan claro qué se ofrece y cómo se paga. Antes de firmar con el primer cliente que pague, conviene que la lea un abogado hondureño. Los precios los llena el generador (`--instalacion`, `--mensual`); si no los pasás, quedan en blanco para escribirlos a mano.
 
-**Entre:** Rodrigo Herrera, que trabaja con el nombre comercial **Clientia Tech** ("Clientia Tech"),
+**Entre:** **Clientia Tech** ("Clientia Tech"), nombre comercial de sus dueños fundadores Rodrigo Herrera y Dylan Jiménez, representada en este acuerdo por Rodrigo Herrera,
 
 **y:** [Restaurante], representado por [Dueño] ("el Restaurante").
 
