@@ -24,7 +24,7 @@ jobs:
       - name: Armar el sitio (la página y las demos publicadas, nada más del repositorio)
         run: |
           mkdir -p _sitio
-          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html clientia-tech/prueba.html _sitio/
+          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html clientia-tech/prueba.html clientia-tech/prueba-ibm.html _sitio/
           mkdir -p _sitio/demos
           cp steelworks/dist/steelworks-panel.html _sitio/demos/steelworks-panel.html
           touch _sitio/.nojekyll

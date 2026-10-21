@@ -30,6 +30,7 @@ const fav = logo.toString().replace(/<svg([^>]*)>/, '<svg$1><rect x="-30" y="-10
 const armar = archivo => leer(aqui, "src", archivo).toString()
   .replace("{{FONT}}", () => dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
   .replace("{{FONT_HORAS}}", () => dataUri(leer(aqui, "src", "fonts", "big-shoulders-latin.woff2"), "font/woff2"))
+  .replace(/\{\{FONTF:([\w-]+)\}\}/g, (_, n) => dataUri(leer(aqui, "src", "fonts", n + ".woff2"), "font/woff2"))
   .replace("{{FONT_TEXTO}}", () => dataUri(leer(aqui, "src", "fonts", "instrument-sans-latin.woff2"), "font/woff2"))
   .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
   .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
@@ -48,6 +49,8 @@ const publicar = (nombre, h) => {
 publicar("index.html", armar("index.html"));
 // test page made with the frontend-design skill (clientiatech.com/prueba.html); the home page stays as it is
 publicar("prueba.html", armar("prueba.html"));
+// second test page, sober corporate look in IBM Plex (clientiatech.com/prueba-ibm.html)
+publicar("prueba-ibm.html", armar("prueba-ibm.html"));
 
 // legal pages: src/legal/<archivo> inside src/legal/plantilla.html
 const LEGAL = [
