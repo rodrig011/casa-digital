@@ -194,7 +194,7 @@ Para cambiar una contraseña, vuelva a usar `agregar` con el mismo correo.
 - Después de 5 intentos fallidos, ese correo o esa conexión quedan bloqueados 15 minutos.
 - Si falta PANEL_SECRET, el panel no abre.
 
-El archivo `steelworks-panel.html` que se manda para mostrar es solo una demostración. Trae su propia pantalla de entrada (demo@steelworks.hn / acero2026) y no protege nada.
+El archivo `steelworks-panel.html` que se manda para mostrar es solo una demostración. Trae su propia pantalla de entrada (demo@steelworks.hn / hierro2026) y no protege nada.
 
 ## Pendiente con Steel Works
 

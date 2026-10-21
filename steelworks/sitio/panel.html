@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
 <title>Panel Steel Works</title>
 <meta name="theme-color" content="#F4F3F0">
+<script>window.PANEL_MODO = window.PANEL_MODO || "archivo";</script>
 <script>try{if(localStorage.getItem("swp-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+<script>if(window.PANEL_MODO==="demo"){var d=0;try{d=sessionStorage.getItem("swp-demo")==="1";}catch(e){}if(!d)document.documentElement.classList.add("gated");}</script>
 <style>
 /* The owner's desk: everything the business runs on, one click away.
    Quotes and invoices are real documents (print to PDF), the rest is the day at a glance.
@@ -71,7 +74,7 @@ img,svg{display:block;max-width:100%;}
 .usermenu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;display:grid;}
 .usermenu .who small{color:var(--tx3);font-size:12px;}
 /* demo login (only in the demo file; the real panel logs in on the server) */
-.gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;background:var(--bg);}
+.gate{position:fixed;inset:0;z-index:100;place-items:center;padding:16px;background:var(--bg);}
 .gate form{width:min(400px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;display:grid;gap:16px;box-shadow:var(--shadow);}
 .gate .brand img{height:30px;width:auto;margin-bottom:6px;}
 .gate h1{margin:0;font:600 22px var(--body);letter-spacing:-.01em;}
@@ -84,6 +87,19 @@ img,svg{display:block;max-width:100%;}
 .gate .hint{background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:10px 12px;font-size:13px;}
 .gate .hint b{font-weight:700;}
 @media (prefers-reduced-motion:no-preference){.gate form{animation:vin .4s var(--ease-out);}}
+
+/* loading skeleton: the shape of the page while it arrives, so it never flashes white */
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,var(--hover) 25%,var(--sunk) 45%,var(--hover) 65%);background-size:300% 100%;}
+@media (prefers-reduced-motion:no-preference){.sk{animation:shim 1.3s ease-in-out infinite;}@keyframes shim{from{background-position:100% 0}to{background-position:0 0}}}
+.skel .ph .r{gap:8px;}
+.skrow{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);}
+.skrow:last-child{border-bottom:0;}
+.skchart{display:flex;align-items:flex-end;gap:7%;height:190px;padding:20px 24px 30px 52px;}
+.skchart .sk{flex:1;border-radius:4px 4px 0 0;}
+.gate{display:none;}
+.gated .gate{display:grid;}
+.gated body{overflow:hidden;}
+.gate.out{opacity:0;transition:opacity .25s ease;}
 
 /* ===== buttons ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:9px;font-weight:600;font-size:13px;border:1px solid var(--line2);background:var(--card);white-space:nowrap;transition:transform .16s var(--ease-out),background-color .15s ease,border-color .15s ease;}
@@ -455,6 +471,17 @@ main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
 </style>
 </head>
 <body>
+<div class="gate" id="gate">
+  <form id="gateForm" autocomplete="on">
+    <div class="brand"><img class="lg-n" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-blanco.svg" alt="Steel Works Honduras" width="118" height="30"><img class="lg-d" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-negro.svg" alt="Steel Works Honduras" width="118" height="30"></div>
+    <div><h1>Entrar al panel</h1><p>Solo para personas autorizadas por Steel Works.</p></div>
+    <div class="err" id="gateErr" role="alert" hidden>Correo o contraseña incorrectos.</div>
+    <label>Correo<input id="gMail" type="email" autocomplete="username" required></label>
+    <label>Contraseña<input id="gPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn pri" type="submit">Entrar</button>
+    <div class="hint">Demostración: entre con <b>demo@steelworks.hn</b> y la contraseña <b>hierro2026</b>. En el panel real solo entran los correos que el dueño autoriza, y la contraseña se revisa en el servidor.</div>
+  </form>
+</div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
   <symbol id="i-quote" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></g></symbol>
@@ -528,23 +555,17 @@ main{padding:24px clamp(16px,2.6vw,36px) 64px;min-width:0;}
     <div class="bot"><b><i></i>Asistente activo</b><span>Responde en WhatsApp las 24 horas y le pasa aquí cada cotización.</span></div>
   </aside>
   <div class="scrimside" id="scrimside"></div>
-  <main id="main"></main>
+  <main id="main"><div class="skel" aria-busy="true" aria-label="Cargando el panel">
+    <div class="ph"><div><i class="sk" style="width:220px;height:28px"></i><i class="sk" style="width:160px;height:14px;margin-top:10px"></i></div><div class="r"><i class="sk" style="width:110px;height:36px"></i><i class="sk" style="width:110px;height:36px"></i></div></div>
+    <div class="stack">
+      <section class="card"><div class="strip"><i class="sk" style="width:64px;height:24px"></i><i class="sk" style="width:min(520px,60%);height:16px"></i></div></section>
+      <section class="card"><header><i class="sk" style="width:150px;height:16px"></i></header><div class="kpis"><div class="kpi"><i class="sk" style="width:90px;height:13px"></i><i class="sk" style="width:120px;height:36px;margin:12px 0 8px"></i><i class="sk" style="width:150px;height:12px"></i></div><div class="kpi"><i class="sk" style="width:90px;height:13px"></i><i class="sk" style="width:120px;height:36px;margin:12px 0 8px"></i><i class="sk" style="width:150px;height:12px"></i></div><div class="kpi"><i class="sk" style="width:90px;height:13px"></i><i class="sk" style="width:120px;height:36px;margin:12px 0 8px"></i><i class="sk" style="width:150px;height:12px"></i></div><div class="kpi"><i class="sk" style="width:90px;height:13px"></i><i class="sk" style="width:120px;height:36px;margin:12px 0 8px"></i><i class="sk" style="width:150px;height:12px"></i></div></div></section>
+      <div class="g2"><section class="card"><header><i class="sk" style="width:180px;height:16px"></i></header><div class="skrow"><i class="sk" style="width:36px;height:36px;border-radius:10px"></i><div><i class="sk" style="width:60%;height:14px"></i><i class="sk" style="width:85%;height:12px;margin-top:8px"></i></div></div><div class="skrow"><i class="sk" style="width:36px;height:36px;border-radius:10px"></i><div><i class="sk" style="width:60%;height:14px"></i><i class="sk" style="width:85%;height:12px;margin-top:8px"></i></div></div><div class="skrow"><i class="sk" style="width:36px;height:36px;border-radius:10px"></i><div><i class="sk" style="width:60%;height:14px"></i><i class="sk" style="width:85%;height:12px;margin-top:8px"></i></div></div><div class="skrow"><i class="sk" style="width:36px;height:36px;border-radius:10px"></i><div><i class="sk" style="width:60%;height:14px"></i><i class="sk" style="width:85%;height:12px;margin-top:8px"></i></div></div></section>
+        <section class="card"><header><i class="sk" style="width:150px;height:16px"></i></header><div class="skchart"><i class="sk" style="height:58%"></i><i class="sk" style="height:72%"></i><i class="sk" style="height:66%"></i><i class="sk" style="height:84%"></i><i class="sk" style="height:90%"></i><i class="sk" style="height:18%"></i></div></section></div>
+    </div></div></main>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<div class="gate" id="gate" hidden>
-  <form id="gateForm" autocomplete="on">
-    <div class="brand"><img class="lg-n" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-blanco.svg" alt="Steel Works Honduras" width="118" height="30"><img class="lg-d" src="../logo/horizontal/steelworks-logo-horizontal-naranja-sobre-negro.svg" alt="Steel Works Honduras" width="118" height="30"></div>
-    <div><h1>Entrar al panel</h1><p>Solo para personas autorizadas por Steel Works.</p></div>
-    <div class="err" id="gateErr" role="alert" hidden>Correo o contraseña incorrectos.</div>
-    <label>Correo<input id="gMail" type="email" autocomplete="username" required></label>
-    <label>Contraseña<input id="gPass" type="password" autocomplete="current-password" required></label>
-    <button class="btn pri" type="submit">Entrar</button>
-    <div class="hint">Demostración: entre con <b>demo@steelworks.hn</b> y la contraseña <b>acero2026</b>. En el panel real solo entran los correos que el dueño autoriza, y la contraseña se revisa en el servidor.</div>
-  </form>
-</div>
-<script>window.PANEL_MODO = window.PANEL_MODO || "archivo";</script>
-<script>window.FOTOS = window.FOTOS || null;</script>
 <script>
 (function () {
 "use strict";
@@ -648,7 +669,7 @@ try { DB = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { DB = n
 if (!DB || !DB.clientes) DB = SEED();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
 const cliente = id => DB.clientes.find(c => c.id === id) || { n: "—", tel: "", dir: "", rtn: "", tipo: "" };
-const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join("").toUpperCase();
+const initials = n => n.split(/\s+/).map(x => x.replace(/[^\p{L}\p{N}]/gu, "")).filter(Boolean).slice(0, 2).map(x => x[0]).join("").toUpperCase();
 const colorOf = id => COLORS[(parseInt(String(id).replace(/\D/g, ""), 10) || 0) % COLORS.length];
 const av = (n, c) => `<span class="av" style="background:${c}" title="${esc(n)}">${esc(initials(n))}</span>`;
 const sucOK = x => !curSuc || x.suc === curSuc;
@@ -1179,15 +1200,15 @@ if (MODO === "servidor") {
   fetch("/panel/yo", { credentials: "same-origin" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(u => quien(u.nombre, u.correo)).catch(() => location.replace("/panel/entrar"));
 } else if (MODO === "demo") {
   let dentro = false; try { dentro = sessionStorage.getItem("swp-demo") === "1"; } catch (e) {}
-  const gate = $("#gate");
-  if (!dentro) { gate.hidden = false; setTimeout(() => $("#gMail").focus(), 50); }
+  const gate = $("#gate"), H = document.documentElement;
+  if (!dentro) { H.classList.add("gated"); setTimeout(() => $("#gMail").focus(), 50); }
   quien("Dueño (demo)", "demo@steelworks.hn");
   $("#gateForm").addEventListener("submit", e => {
     e.preventDefault();
-    if ($("#gMail").value.trim().toLowerCase() === "demo@steelworks.hn" && $("#gPass").value === "acero2026") { try { sessionStorage.setItem("swp-demo", "1"); } catch (e) {} gate.hidden = true; $("#gateErr").hidden = true; $("#gPass").value = ""; }
+    if ($("#gMail").value.trim().toLowerCase() === "demo@steelworks.hn" && $("#gPass").value === "hierro2026") { try { sessionStorage.setItem("swp-demo", "1"); } catch (e) {} gate.classList.add("out"); setTimeout(() => { H.classList.remove("gated"); gate.classList.remove("out"); }, MOTION ? 250 : 0); $("#gateErr").hidden = true; $("#gPass").value = ""; }
     else { $("#gateErr").hidden = false; $("#gPass").select(); }
   });
-  $("#salir").addEventListener("click", e => { e.preventDefault(); try { sessionStorage.removeItem("swp-demo"); } catch (e) {} $("#mePop").hidden = true; gate.hidden = false; $("#gMail").focus(); });
+  $("#salir").addEventListener("click", e => { e.preventDefault(); try { sessionStorage.removeItem("swp-demo"); } catch (e) {} $("#mePop").hidden = true; H.classList.add("gated"); $("#gMail").focus(); });
 } else {
   $("#salir").hidden = true;
 }
