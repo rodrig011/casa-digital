@@ -23,6 +23,18 @@ function req(n){if(n==="fs"||n==="path")return{};if(cache[n])return cache[n].exp
 const ng=req("./negocio"),en=req("./engine");
 return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine,NEGOCIO:${leer(bot, "negocios", "ejemplo.json").toString()}}})();`;
 
+// demo with AI: the page sends what the visitor types to the demo server (bot-restaurante/demo.js), which holds the
+// Anthropic key. Empty in config.json = the demo answers with the menu engine only, as before.
+const DEMO_IA = process.env.DEMO_IA_URL ?? JSON.parse(leer(aqui, "config.json")).demoIA ?? "";
+const IA = `const IA=(()=>{const url=${JSON.stringify(DEMO_IA)};let apagada=!url,id="";
+try{id=sessionStorage.getItem("ct-demo")||""}catch(e){}
+if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^\\w-]/g,"").slice(0,36);try{sessionStorage.setItem("ct-demo",id)}catch(e){}}
+if(url)fetch(url.replace(/\\/demo\\/chat$/,"/"),{mode:"no-cors"}).catch(()=>{});
+async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);
+try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sesion:id,texto}),signal:ac.signal});
+if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();return j&&j.reply?j:null}catch(e){return null}finally{clearTimeout(t)}}
+return{lista:()=>!apagada,preguntar}})();`;
+
 const logo = leer(aqui, "src", "img", "simbolo.svg");
 // favicon: the white mark on the navy square
 const fav = logo.toString().replace(/<svg([^>]*)>/, '<svg$1><rect x="-30" y="-10" width="460" height="486" rx="80" fill="#0A1230"/>');
@@ -36,7 +48,7 @@ const armar = archivo => leer(aqui, "src", archivo).toString()
   .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
   .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;"))
   .replaceAll("{{WA_ICON}}", WA_ICON)
-  .replace("/*{{BOT}}*/", () => BOT)
+  .replace("/*{{BOT}}*/", () => BOT + "\n" + IA)
   .replace(/\{\{IMG:([\w-]+)\}\}/g, (_, n) => dataUri(leer(aqui, "src", "img", n + ".webp"), "image/webp"));
 
 // each page goes to clientia-tech/ and to the repo root: GitHub Pages ("Deploy from a branch", main / root) serves the root copy at clientiatech.com

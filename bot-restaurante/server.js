@@ -29,6 +29,7 @@ const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
+const { montarDemo } = require("./demo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido"];
@@ -60,6 +61,12 @@ function loadConfig(env = process.env) {
     // freno por número de WhatsApp: mensajes cada 10 minutos, y respuestas con IA por día (después contesta el menú)
     limiteMensajes: +env.LIMITE_MENSAJES || 40,
     limiteIA: +env.LIMITE_IA_DIA || 80,
+    // demostración con IA para la página de Clientia Tech (demo.js): DEMO_IA=on y la misma ANTHROPIC_API_KEY
+    demoIA: on(env.DEMO_IA),
+    demoKey: env.ANTHROPIC_API_KEY || "",
+    demoOrigenes: String(env.DEMO_ORIGENES || "https://clientiatech.com,https://www.clientiatech.com").split(",").map(s => s.trim()).filter(Boolean),
+    demoPorVisitante: +env.DEMO_LIMITE_VISITANTE || 15,
+    demoPorDia: +env.DEMO_LIMITE_DIA || 400,
   };
 }
 
@@ -316,6 +323,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
 ${wa ? `<a href="${wa}" style="display:inline-block;background:${esc(negocio.color)};color:#fff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:12px">Volver a WhatsApp</a>` : ""}
 </main></body></html>`);
   });
+
+  if (cfg.demoIA && (cfg.demoKey || deps.demoClient)) {
+    montarDemo(app, { negocio: cargarNegocio("negocios/ejemplo.json"), apiKey: cfg.demoKey, model: cfg.anthropicModel, client: deps.demoClient, origenes: cfg.demoOrigenes, porVisitante: cfg.demoPorVisitante, porDia: cfg.demoPorDia, log });
+    log(`Demo con IA activa en /demo/chat para ${cfg.demoOrigenes.join(", ")}`);
+  }
 
   app.get("/", (req, res) => res.type("text/plain").send(`${negocio.nombre} · bot activo`));
 

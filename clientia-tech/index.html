@@ -285,6 +285,7 @@ footer .leg{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;f
 footer .legales{display:flex;gap:18px;flex-wrap:wrap}footer .legales a{text-decoration:none;transition:color .2s}footer .legales a:hover{color:var(--accent)}
 footer .nombre{font-weight:800;font-size:clamp(4rem,1rem + 19vw,22rem);letter-spacing:-.06em;line-height:.8;white-space:nowrap;transform:translateY(22%);margin-top:20px;color:var(--navy)}
 @media (max-width:760px){footer .nombre{font-size:27vw}footer .leg{flex-direction:column;gap:8px}}
+.msg.escribe{opacity:.6;font-style:italic}
 </style>
 </head>
 <body class="nojs">
@@ -872,6 +873,14 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
   }
 }
 }})();
+const IA=(()=>{const url="";let apagada=!url,id="";
+try{id=sessionStorage.getItem("ct-demo")||""}catch(e){}
+if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^\w-]/g,"").slice(0,36);try{sessionStorage.setItem("ct-demo",id)}catch(e){}}
+if(url)fetch(url.replace(/\/demo\/chat$/,"/"),{mode:"no-cors"}).catch(()=>{});
+async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);
+try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sesion:id,texto}),signal:ac.signal});
+if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();return j&&j.reply?j:null}catch(e){return null}finally{clearTimeout(t)}}
+return{lista:()=>!apagada,preguntar}})();
 (() => {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -907,12 +916,25 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
     log.appendChild(o);
   }
   let espera = 0;
-  function enviar(t) {
+  function enviar(t, escrito, mostrado) {
     t = (t || "").trim();
     if (!t) return;
     log.querySelectorAll(".ops").forEach(o => o.remove());
-    burbuja(t, "out");
-    bajar();
+    if (!mostrado) { burbuja(t, "out"); bajar(); }
+    // typed text goes to the AI demo server when there is one; if it fails, the menu engine answers
+    if (escrito && IA.lista()) {
+      const e = document.createElement("div");
+      e.className = "msg in escribe"; e.textContent = "Escribiendo…";
+      log.appendChild(e); bajar();
+      IA.preguntar(t).then(r => {
+        e.remove();
+        if (!r) return enviar(t, false, true);
+        burbuja(r.reply, "in");
+        bajar();
+        if (r.pedido) cocina(r.pedido);
+      });
+      return;
+    }
     const r = E.handle(st, t, Date.now());
     st = r.state;
     const lead = st.lead; if (lead) { delete st.lead; }
@@ -929,7 +951,7 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
     };
     espera = setTimeout(sig, reduce ? 0 : 380);
   }
-  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value); q.value = ""; });
+  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value, true); q.value = ""; });
 
   function cocina(p) {
     if (p.tipo && p.tipo !== "pedido") return;

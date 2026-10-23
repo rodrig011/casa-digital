@@ -150,6 +150,7 @@ footer .leg{margin-top:clamp(48px,7vw,96px);display:flex;justify-content:space-b
 footer nav{display:flex;flex-wrap:wrap;gap:18px}
 footer nav a{text-decoration:none}
 footer nav a:hover{color:var(--noche-texto)}
+.msg.escribe{opacity:.6;font-style:italic}
 </style>
 </head>
 <body>
@@ -698,6 +699,14 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
   }
 }
 }})();
+const IA=(()=>{const url="";let apagada=!url,id="";
+try{id=sessionStorage.getItem("ct-demo")||""}catch(e){}
+if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^\w-]/g,"").slice(0,36);try{sessionStorage.setItem("ct-demo",id)}catch(e){}}
+if(url)fetch(url.replace(/\/demo\/chat$/,"/"),{mode:"no-cors"}).catch(()=>{});
+async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);
+try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sesion:id,texto}),signal:ac.signal});
+if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();return j&&j.reply?j:null}catch(e){return null}finally{clearTimeout(t)}}
+return{lista:()=>!apagada,preguntar}})();
 (() => {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const N = BOT.preparar(BOT.NEGOCIO);
@@ -731,12 +740,25 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
     log.appendChild(o);
   }
   let espera = 0;
-  function enviar(t) {
+  function enviar(t, escrito, mostrado) {
     t = (t || "").trim();
     if (!t) return;
     log.querySelectorAll(".ops").forEach(o => o.remove());
-    burbuja(log, t, "out");
-    bajar();
+    if (!mostrado) { burbuja(log, t, "out"); bajar(); }
+    // typed text goes to the AI demo server when there is one; if it fails, the menu engine answers
+    if (escrito && IA.lista()) {
+      const e = document.createElement("div");
+      e.className = "msg in escribe"; e.textContent = "Escribiendo…";
+      log.appendChild(e); bajar();
+      IA.preguntar(t).then(r => {
+        e.remove();
+        if (!r) return enviar(t, false, true);
+        burbuja(log, r.reply, "in");
+        bajar();
+        if (r.pedido) pedido(r.pedido);
+      });
+      return;
+    }
     const r = E.handle(st, t, Date.now());
     st = r.state;
     const lead = st.lead; if (lead) delete st.lead;
@@ -753,7 +775,7 @@ return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine
     };
     espera = setTimeout(sig, reduce ? 0 : 380);
   }
-  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value); q.value = ""; });
+  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value, true); q.value = ""; });
 
   function pedido(p) {
     if (p.tipo && p.tipo !== "pedido") return;

@@ -306,6 +306,25 @@ test("ia: si la API falla, contesta el menú de opciones", async () => {
   } finally { ctx.srv.close(); }
 });
 
+test("demo de la página: contesta con IA solo a clientiatech.com, no guarda el pedido y frena el abuso", async () => {
+  const claude = claudeFalso([usar("d1", "crear_pedido", { nombre: "Ana", sucursal: "centro", productos: [{ id: "c2", cantidad: 3 }], hora: "ya" }), decir("Listo, Ana: pedido *DEMO-1001*.")]);
+  const ctx = await montar(null, { demoIA: true, demoOrigenes: ["https://clientiatech.com"], demoPorVisitante: 2, demoPorDia: 10 }, { demoClient: claude });
+  const chat = (body, origin = "https://clientiatech.com") => fetch(ctx.base + "/demo/chat", { method: "POST", headers: { "Content-Type": "application/json", Origin: origin }, body: JSON.stringify(body) });
+  try {
+    assert.equal((await chat({ sesion: "abcdefgh12", texto: "hola" }, "https://otro.com")).status, 403);
+    const r = await chat({ sesion: "abcdefgh12", texto: "3 combos del 1 a nombre de Ana" });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("access-control-allow-origin"), "https://clientiatech.com");
+    const j = await r.json();
+    assert.match(j.reply, /DEMO-1001/);
+    assert.equal(j.pedido.total, 345); assert.equal(j.pedido.n, "DEMO-1001");
+    assert.equal(ctx.app.locals.store.pedidos.length, 0);
+    assert.equal(ctx.sent.length, 0);
+    assert.equal((await chat({ sesion: "abcdefgh12", texto: "otra" })).status, 502);   // guion agotado: la página usa el menú
+    assert.equal((await chat({ sesion: "abcdefgh12", texto: "otra" })).status, 429);
+  } finally { ctx.srv.close(); }
+});
+
 // ---------- cobro antes de cocinar y "No vino" ----------
 const conCobro = () => preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8")), cobro: { desde: 400, faltas: 1, transferencia: "Banco de ejemplo · Cuenta 0000 · A nombre de Pollo de Ejemplo", tarjeta: "https://pagos.example/link?ref={n}&monto={total}" } });
 
