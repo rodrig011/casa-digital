@@ -54,10 +54,10 @@ h3{font-weight:600;font-size:1.25rem;line-height:1.3;letter-spacing:0}
 .bar .marca{display:flex;align-items:center;gap:10px;padding:0 var(--m);text-decoration:none;font-size:.875rem;letter-spacing:.01em;white-space:nowrap}
 .bar .marca img{width:16px;height:18px}
 .bar .marca b{font-weight:600}
-.bar nav{display:flex;margin-left:8px}
+.bar nav{display:flex;margin-right:auto}
 .bar nav a{display:flex;align-items:center;padding:0 16px;font-size:.875rem;color:#c6c6c6;text-decoration:none;transition:background-color 110ms,color 110ms}
 .bar nav a:hover{background:var(--g80);color:#f4f4f4}
-.bar .cta{margin-left:auto;min-height:48px;gap:24px;font-size:.875rem}
+.bar .cta{min-height:48px;gap:24px;font-size:.875rem}
 @media (max-width:900px){.bar nav{display:none}}
 @media (max-width:420px){.bar .cta span{display:none}.bar .cta{gap:0;padding:0 14px}}
 
@@ -69,7 +69,7 @@ h3{font-weight:600;font-size:1.25rem;line-height:1.3;letter-spacing:0}
 .hero .lead{margin-top:32px;font-size:var(--t-lead);font-weight:300;line-height:1.4;color:#c6c6c6;max-width:30ch}
 .hero .acc{display:flex;flex-wrap:wrap;gap:2px;margin-top:48px}
 .hero .acc .btn{min-width:260px}
-.hero .shot{grid-column:10 / span 7;align-self:end;position:relative}
+.hero .shot{grid-column:10 / span 7;align-self:end;position:relative;margin-top:24px}
 .hero .shot .marco{background:var(--g90);padding:12px 12px 0;transform-origin:50% 100%}
 .hero .shot .barra{display:flex;gap:6px;padding:0 0 10px}
 .hero .shot .barra i{width:8px;height:8px;background:var(--g70)}
@@ -245,9 +245,8 @@ h3{font-weight:600;font-size:1.25rem;line-height:1.3;letter-spacing:0}
 
 footer{background:var(--g100);color:#c6c6c6;font-size:.875rem}
 footer .w{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));column-gap:32px;padding-block:48px 32px}
-footer .marca{grid-column:1 / span 6;display:flex;align-items:center;gap:10px;color:#f4f4f4}
+footer .marca{grid-column:1 / -1;display:flex;align-items:center;gap:10px;color:#f4f4f4}
 footer .marca img{width:16px;height:18px}
-footer nav{grid-column:9 / span 8;display:flex;flex-wrap:wrap;gap:8px 24px}
 footer nav a{text-decoration:none;transition:color 110ms}footer nav a:hover{color:#fff;text-decoration:underline}
 footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 24px;color:var(--g50)}
 @media (max-width:672px){footer .marca,footer nav{grid-column:1 / -1}footer nav{margin-top:24px}}
@@ -256,6 +255,76 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
   .hero .w,.cab,.demo,.vista,.paso,.equipo,.faq,.cierre .w,footer .w{grid-template-columns:minmax(0,1fr);column-gap:0}
   .hero .w>*,.cab>*,.demo>*,.vista>*,.paso>*,.equipo>*,.faq>*,.cierre .w>*,footer .w>*{grid-column:1 / -1!important}
 }
+/* announcement strip + masthead that hides on scroll down */
+.aviso-top{background:var(--blue-10);color:var(--g100);font-size:.875rem}
+.aviso-top .w{display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap;min-height:40px;padding-block:8px}
+.aviso-top a{color:var(--blue-p);display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.aviso-top a:hover{text-decoration:underline}
+.aviso-top svg{width:16px;height:16px;transition:transform 160ms var(--e-std)}
+.aviso-top a:hover svg{transform:translateX(3px)}
+.bar{transition:transform 240ms var(--e-std)}
+.bar.oculta{transform:translateY(-100%)}
+.menu-btn{display:none;width:48px;border:0;background:none;color:#f4f4f4;cursor:pointer;place-items:center;transition:background-color 110ms}
+.menu-btn:hover{background:var(--g80)}
+.menu-btn svg{width:20px;height:20px}
+.menu{position:fixed;top:48px;left:0;right:0;z-index:19;background:var(--g100);padding:8px 0 16px;transform:translateY(-8px);opacity:0;visibility:hidden;transition:transform 240ms var(--e-std),opacity 160ms,visibility 0s 240ms}
+.menu.abierto{transform:none;opacity:1;visibility:visible;transition:transform 240ms var(--e-std),opacity 160ms}
+.menu a{display:block;padding:14px var(--m);color:#c6c6c6;text-decoration:none;font-size:1.125rem}
+.menu a:hover{background:var(--g80);color:#fff}
+@media (max-width:900px){.menu-btn{display:grid}}
+@media (min-width:901px){.menu{display:none}}
+
+/* recommended: linked cards with a picture, IBM-style */
+.reco h2{font-size:clamp(1.5rem,1.2rem + 1vw,2rem);margin-bottom:32px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
+.card{display:flex;flex-direction:column;background:var(--g10);text-decoration:none;color:var(--g100);min-height:420px;transition:background-color 110ms}
+.card:hover{background:#e8e8e8}
+.card .pic{aspect-ratio:16/10;overflow:hidden;background:var(--g100)}
+.card .pic img{width:100%;height:100%;object-fit:cover;object-position:left top;transition:transform 600ms var(--e-std)}
+.card:hover .pic img{transform:scale(1.04)}
+.card .cuerpo{padding:20px 20px 0;flex:1}
+.card .tipo{font-size:.875rem;color:var(--g60)}
+.card h3{margin-top:8px;font-weight:400;font-size:1.25rem;line-height:1.3}
+.card p{margin-top:8px;font-size:1rem;color:var(--g70)}
+.card .ir{display:flex;justify-content:flex-end;padding:20px;color:var(--blue)}
+.card .ir svg{width:20px;height:20px;transition:transform 160ms var(--e-std)}
+.card:hover .ir svg{transform:translateX(6px)}
+@media (max-width:1056px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.cards{grid-template-columns:1fr}.card{min-height:0}}
+
+/* facts band: big numbers, one line each */
+.cifras{background:var(--g100);color:#f4f4f4}
+.cifras .w{padding-block:clamp(64px,8vw,112px)}
+.cifras h2{font-size:var(--t-h2);max-width:16ch;margin-bottom:clamp(40px,5vw,64px)}
+.cifras .fila{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
+.cifras .c{background:var(--g90);padding:24px 24px 32px}
+.cifras .c b{display:block;font-weight:300;font-size:clamp(3rem,2rem + 3vw,5rem);line-height:1;letter-spacing:-.02em;color:#fff}
+.cifras .c span{display:block;margin-top:16px;color:#c6c6c6;font-size:1rem;max-width:22ch}
+@media (max-width:1056px){.cifras .fila{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.cifras .fila{grid-template-columns:1fr}}
+
+/* cookie notice, bottom left */
+.galleta{position:fixed;left:16px;bottom:16px;z-index:30;width:min(420px,calc(100vw - 32px));background:var(--white);color:var(--g100);box-shadow:0 2px 6px rgba(0,0,0,.3);transform:translateY(calc(100% + 24px));transition:transform 400ms var(--e-in)}
+.galleta.ver{transform:none}
+.galleta .gc{padding:20px 20px 16px}
+.galleta h2{font-weight:600;font-size:1rem;letter-spacing:0;line-height:1.4}
+.galleta p{margin-top:8px;font-size:.875rem;line-height:1.5;color:var(--g70)}
+.galleta p a{color:var(--blue)}
+.galleta .gb{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.galleta .gb .btn{min-height:48px;gap:12px;font-size:.875rem}
+.galleta .gb .btn.sec2{background:var(--g80);color:#fff}.galleta .gb .btn.sec2:hover{background:var(--g70)}
+@media (prefers-reduced-motion:reduce){.galleta,.bar,.menu{transition:none}}
+
+/* footer, IBM-style columns */
+footer .cols{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px;margin-top:48px}
+footer .cols h2{font-weight:600;font-size:.875rem;letter-spacing:0;color:#f4f4f4;margin-bottom:16px}
+footer .cols a,footer .cols span{display:block;padding:6px 0;text-decoration:none;color:#c6c6c6;transition:color 110ms}
+footer .cols a:hover{color:#fff;text-decoration:underline}
+footer .lugar{display:inline-flex!important;align-items:center;gap:8px;margin-top:8px;padding:10px 14px!important;background:var(--g90)}
+footer .galleta-link{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+footer .galleta-link:hover{color:#fff;text-decoration:underline}
+@media (max-width:672px){footer .cols{grid-template-columns:1fr 1fr}}
+
 /* entrance: content is visible without script; .js arms the motion */
 .js .rv{opacity:0;transform:translateY(24px);transition:opacity 400ms var(--e-in),transform 400ms var(--e-in);transition-delay:calc(var(--i,0) * 70ms)}
 .js .rv.in{opacity:1;transform:none}
@@ -276,7 +345,8 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 <body>
 <script>document.body.classList.add("js")</script>
 
-<header class="bar">
+<div class="aviso-top"><div class="w"><span>Primer mes gratis para su restaurante, sin compromiso.</span><a href="#pruebelo">Vea cómo funciona<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></a></div></div>
+<header class="bar" id="bar">
   <a class="marca" href="#inicio" aria-label="Clientia Tech, inicio"><img src="{{LOGO}}" alt="" width="16" height="18"><span><b>Clientia</b> Tech</span></a>
   <nav aria-label="Secciones">
     <a href="#pruebelo">Pruébelo</a>
@@ -285,15 +355,17 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
     <a href="#nosotros">Quiénes somos</a>
     <a href="#preguntas">Preguntas</a>
   </nav>
+  <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menú"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2 4h16v1.3H2zM2 9.4h16v1.3H2zM2 14.7h16V16H2z"/></svg></button>
   <a class="btn cta" href="{{WA}}" target="_blank" rel="noopener"><span>Escríbanos</span>{{WA_ICON}}</a>
 </header>
+<nav class="menu" id="menu" aria-label="Secciones"><a href="#pruebelo">Pruébelo</a><a href="#panel">Panel del dueño</a><a href="#instalacion">Instalación</a><a href="#nosotros">Quiénes somos</a><a href="#preguntas">Preguntas</a></nav>
 
 <main id="inicio">
 <section class="hero" id="hero">
   <div class="w">
     <div class="tx">
-      <h1><span class="ln"><span>Ningún cliente</span></span><span class="ln"><span>sin respuesta.</span></span></h1>
-      <p class="lead rv" style="--i:2">Bot de WhatsApp y panel del dueño para restaurantes de Honduras. Su cliente escribe a medianoche y el pedido igual llega a su cocina.</p>
+      <h1><span class="ln"><span>Ningún cliente</span></span><span class="ln"><span>sin respuesta</span></span></h1>
+      <p class="lead rv" style="--i:2">Un bot de WhatsApp que toma pedidos a cualquier hora, y un panel para que el dueño vea todo su negocio.</p>
       <div class="acc rv" style="--i:3">
         <a class="btn" href="#pruebelo">Pruebe el bot aquí<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></a>
         <a class="btn gh" href="{{WA}}" target="_blank" rel="noopener">Escríbanos por WhatsApp{{WA_ICON}}</a>
@@ -305,11 +377,29 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
         <picture><source media="(max-width:672px)" srcset="{{IMG:m-hoy}}" width="780" height="1688"><img src="{{IMG:d-hoy}}" width="1600" height="1000" alt="Panel del dueño, vista Hoy: pedidos por WhatsApp, total vendido, lo más pedido y ventas por sucursal"></picture>
       </div>
     </figure>
-    <div class="pie">
-      <div class="rv" style="--i:1"><b>A toda hora</b>Menú, precios, sucursales y horario, también a medianoche.</div>
-      <div class="rv" style="--i:2"><b>Pedidos sin fila</b>El cliente pide para recoger y la cocina lo recibe al instante.</div>
-      <div class="rv" style="--i:3"><b>Panel del dueño</b>Ventas del día y de cada sucursal, en su celular.</div>
-      <div class="rv" style="--i:4"><b>Instalación a distancia</b>Dos videollamadas. No se instala nada en su local.</div>
+  </div>
+</section>
+
+<section class="sec reco" aria-labelledby="t-reco">
+  <div class="w">
+    <h2 id="t-reco" class="rv">Recomendado para usted</h2>
+    <div class="cards">
+      <a class="card rv" href="{{WA}}" target="_blank" rel="noopener"><div class="pic"><img src="{{IMG:m-hoy}}" width="780" height="1688" alt="" loading="lazy"></div><div class="cuerpo"><span class="tipo">Prueba gratis</span><h3>Primer mes gratis</h3><p>Lo instalamos con su menú y lo usa 30 días. Si no le sirve, no paga nada.</p></div><span class="ir"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></span></a>
+      <a class="card rv" style="--i:1" href="#pruebelo"><div class="pic"><img src="{{IMG:d-pedidos}}" width="1600" height="1000" alt="" loading="lazy"></div><div class="cuerpo"><span class="tipo">Demostración</span><h3>Pruebe el bot</h3><p>Haga un pedido de ejemplo y véalo llegar a la pantalla de cocina.</p></div><span class="ir"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></span></a>
+      <a class="card rv" style="--i:2" href="#panel"><div class="pic"><img src="{{IMG:d-hoy}}" width="1600" height="1000" alt="" loading="lazy"></div><div class="cuerpo"><span class="tipo">Producto</span><h3>Panel del dueño</h3><p>Ventas del día, lo más pedido y cada sucursal, desde su celular.</p></div><span class="ir"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></span></a>
+      <a class="card rv" style="--i:3" href="#instalacion"><div class="pic"><img src="{{IMG:d-cocina}}" width="1600" height="1000" alt="" loading="lazy"></div><div class="cuerpo"><span class="tipo">Servicio</span><h3>Instalación a distancia</h3><p>Dos videollamadas. No se instala nada en su local.</p></div><span class="ir"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.8 3.8 10.9 4.7 15.6 9.4H2v1.2h13.6l-4.7 4.7.9.9L18 10z"/></svg></span></a>
+    </div>
+  </div>
+</section>
+
+<section class="cifras" aria-labelledby="t-cifras">
+  <div class="w">
+    <h2 id="t-cifras" class="rv">Hecho para cómo trabaja un restaurante</h2>
+    <div class="fila">
+      <div class="c rv"><b>24/7</b><span>El bot contesta a toda hora, también de madrugada.</span></div>
+      <div class="c rv" style="--i:1"><b>2</b><span>Videollamadas para dejarlo instalado.</span></div>
+      <div class="c rv" style="--i:2"><b>0</b><span>Programas que instalar en sus computadoras.</span></div>
+      <div class="c rv" style="--i:3"><b>30</b><span>Días gratis para probarlo con su menú.</span></div>
     </div>
   </div>
 </section>
@@ -317,7 +407,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 <section class="sec gris" id="pruebelo" aria-labelledby="t-demo">
   <div class="w">
     <div class="cab">
-      <h2 id="t-demo" class="rv" style="--i:1">Pruébelo usted, con el bot de verdad.</h2>
+      <h2 id="t-demo" class="rv" style="--i:1">Pruébelo usted, con el bot de verdad</h2>
       <p class="rv" style="--i:2">Es el mismo código que corre en el servidor, con el menú de un restaurante de ejemplo.</p>
     </div>
     <div class="demo">
@@ -351,7 +441,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 <section class="sec" id="panel" aria-labelledby="t-panel">
   <div class="w">
     <div class="cab">
-      <h2 id="t-panel" class="rv" style="--i:1">Su negocio, ordenado en una pantalla.</h2>
+      <h2 id="t-panel" class="rv" style="--i:1">Su negocio, ordenado en una pantalla</h2>
       <p class="rv" style="--i:2">Usted y las personas que autorice entran con correo y contraseña. Cada restaurante tiene su propio servidor: sus ventas no se mezclan con las de nadie.</p>
     </div>
     <div class="vista">
@@ -377,7 +467,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 <section class="sec gris" id="instalacion" aria-labelledby="t-ins">
   <div class="w">
     <div class="cab">
-      <h2 id="t-ins" class="rv" style="--i:1">Se instala a distancia, sin viajes ni técnicos.</h2>
+      <h2 id="t-ins" class="rv" style="--i:1">Se instala a distancia, sin viajes ni técnicos</h2>
     </div>
     <div class="prog rv" role="tablist" aria-label="Pasos de la instalación" id="prog">
       <button type="button" role="tab" aria-current="step"><span class="k">Paso 1</span><b>Su menú</b></button>
@@ -397,7 +487,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 <section class="sec" id="nosotros" aria-labelledby="t-nos">
   <div class="w">
     <div class="cab">
-      <h2 id="t-nos" class="rv" style="--i:1">Quiénes somos.</h2>
+      <h2 id="t-nos" class="rv" style="--i:1">Quiénes somos</h2>
     </div>
     <div class="equipo">
       <figure class="persona rv"><div class="f"><img src="{{IMG:rodrigo}}" width="800" height="1000" alt="Rodrigo Herrera, de Clientia Tech, de traje azul" loading="lazy"></div>
@@ -417,7 +507,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
   <div class="w">
     <div class="faq">
       <div class="cab" style="grid-column:1 / -1">
-        <h2 id="t-faq" class="rv" style="--i:1">Lo que preguntan los dueños.</h2>
+        <h2 id="t-faq" class="rv" style="--i:1">Lo que preguntan los dueños</h2>
       </div>
       <div class="lista rv">
         <details><summary>¿Tengo que cambiar mi número de WhatsApp?<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 13.5 4 7.5l.9-.9 5.1 5.1 5.1-5.1.9.9z"/></svg></summary><p>La idea es usar el número que sus clientes ya conocen. Si WhatsApp no lo permite para ese número, se saca una línea solo para el bot y se cambia en su TikTok, Facebook y PedidosYa.</p></details>
@@ -434,7 +524,7 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 
 <section class="cierre" aria-labelledby="t-cierre">
   <div class="w">
-    <h2 id="t-cierre" class="rv">Escríbanos el nombre de su negocio.</h2>
+    <h2 id="t-cierre" class="rv">Escríbanos el nombre de su negocio</h2>
     <div class="der rv" style="--i:1">
       <p>Le contamos cómo quedaría con su menú, sin compromiso.</p>
       <a class="tel-n" href="{{WA}}" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp al +1 765 543 4251">+1 (765) 543-4251</a>
@@ -446,11 +536,24 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
 
 <footer>
   <div class="w">
-    <div class="marca"><img src="{{LOGO}}" alt="" width="16" height="18"><span><b>Clientia</b> Tech · Restaurantes y negocios de Honduras</span></div>
-    <nav aria-label="Legal"><a href="terminos.html">Términos</a><a href="privacidad.html">Privacidad</a><a href="cookies.html">Cookies</a><a href="reembolsos.html">Reembolsos</a><a href="legal.html">Aviso legal</a></nav>
-    <div class="leg"><span>© 2026 Clientia Tech. Casa Digital es nuestra línea para restaurantes.</span><span>Los pantallazos y el chat usan un restaurante de ejemplo.</span></div>
+    <div class="marca"><img src="{{LOGO}}" alt="" width="16" height="18"><span><b>Clientia</b> Tech</span></div>
+    <div class="cols">
+      <div><h2>Producto</h2><a href="#pruebelo">Bot de WhatsApp</a><a href="#pruebelo">Pantalla de cocina</a><a href="#panel">Panel del dueño</a><a href="#instalacion">Instalación</a></div>
+      <div><h2>Empresa</h2><a href="#nosotros">Quiénes somos</a><a href="#preguntas">Preguntas</a><span>Casa Digital, nuestra línea para restaurantes</span></div>
+      <div><h2>Contacto</h2><a href="{{WA}}" target="_blank" rel="noopener">WhatsApp +1 (765) 543-4251</a><span class="lugar">Honduras · Español</span></div>
+      <div><h2>Legal</h2><a href="terminos.html">Términos</a><a href="privacidad.html">Privacidad</a><a href="cookies.html">Cookies</a><a href="reembolsos.html">Reembolsos</a><a href="legal.html">Aviso legal</a></div>
+    </div>
+    <div class="leg"><span>© 2026 Clientia Tech</span><button class="galleta-link" type="button" id="galletaAbrir">Aviso de cookies</button><span>Los pantallazos y el chat usan un restaurante de ejemplo.</span></div>
   </div>
 </footer>
+
+<section class="galleta" id="galleta" aria-labelledby="t-galleta" hidden>
+  <div class="gc">
+    <h2 id="t-galleta">Acerca de las cookies en este sitio</h2>
+    <p>Este sitio no usa cookies de seguimiento ni de publicidad. Solo guardamos en su navegador que ya leyó este aviso. Más detalles en nuestra <a href="cookies.html">política de cookies</a>.</p>
+  </div>
+  <div class="gb"><a class="btn sec2" href="cookies.html">Ver la política</a><button class="btn" type="button" id="galletaOk">Entendido</button></div>
+</section>
 
 <script>
 /*{{BOT}}*/
@@ -540,6 +643,26 @@ footer .leg{grid-column:1 / -1;margin-top:48px;display:flex;justify-content:spac
     cel.forEach((x, j) => x.hidden = j !== k);
     celT.textContent = b.dataset.t;
   }));
+
+  // masthead hides on scroll down, comes back on scroll up
+  const bar = document.getElementById("bar");
+  let ultimo = scrollY;
+  addEventListener("scroll", () => { const y = scrollY; bar.classList.toggle("oculta", y > ultimo && y > 240 && !menu.classList.contains("abierto")); ultimo = y; }, { passive: true });
+  // phone menu
+  const menu = document.getElementById("menu"), mb = document.getElementById("menuBtn");
+  const cerrar = () => { menu.classList.remove("abierto"); mb.setAttribute("aria-expanded", "false"); };
+  mb.addEventListener("click", () => { const a = menu.classList.toggle("abierto"); mb.setAttribute("aria-expanded", a); });
+  menu.querySelectorAll("a").forEach(a => a.addEventListener("click", cerrar));
+  addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); });
+
+  // cookie notice: shown until "Entendido"; the footer link opens it again
+  const gal = document.getElementById("galleta");
+  let visto = false; try { visto = localStorage.getItem("ct-aviso") === "1"; } catch (e) {}
+  const mostrar = () => { gal.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => gal.classList.add("ver"))); };
+  const ocultar = () => { gal.classList.remove("ver"); setTimeout(() => { gal.hidden = true; }, reduce ? 0 : 400); };
+  if (!visto) setTimeout(mostrar, 900);
+  document.getElementById("galletaOk").addEventListener("click", () => { try { localStorage.setItem("ct-aviso", "1"); } catch (e) {} ocultar(); });
+  document.getElementById("galletaAbrir").addEventListener("click", mostrar);
 
   // install steps
   const pb = [...document.querySelectorAll("#prog button")], ps = [...document.getElementById("pasos").children];
