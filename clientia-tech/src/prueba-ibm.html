@@ -291,6 +291,7 @@ footer .bot .der{margin-left:auto;color:var(--g30)}
   .msg,.ped,.tab .fx,.acord details[open] p,.pn-h .vivo i{animation:none}
   .mh,.mega,.menu-m,.gal{transition:none}
 }
+.msg.escribe{opacity:.6;font-style:italic}
 </style>
 </head>
 <body>
@@ -546,12 +547,25 @@ footer .bot .der{margin-left:auto;color:var(--g30)}
     log.appendChild(o);
   }
   let espera = 0;
-  function enviar(t) {
+  function enviar(t, escrito, mostrado) {
     t = (t || "").trim();
     if (!t) return;
     log.querySelectorAll(".ops").forEach(o => o.remove());
-    burbuja(t, "out");
-    bajar();
+    if (!mostrado) { burbuja(t, "out"); bajar(); }
+    // typed text goes to the AI demo server when there is one; if it fails, the menu engine answers
+    if (escrito && IA.lista()) {
+      const e = document.createElement("div");
+      e.className = "msg in escribe"; e.textContent = "Escribiendo…";
+      log.appendChild(e); bajar();
+      IA.preguntar(t).then(r => {
+        e.remove();
+        if (!r) return enviar(t, false, true);
+        burbuja(r.reply, "in");
+        bajar();
+        if (r.pedido) cocina(r.pedido);
+      });
+      return;
+    }
     const r = E.handle(st, t, Date.now());
     st = r.state;
     const lead = st.lead; if (lead) { delete st.lead; }
@@ -568,7 +582,7 @@ footer .bot .der{margin-left:auto;color:var(--g30)}
     };
     espera = setTimeout(sig, reduce ? 0 : 380);
   }
-  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value); q.value = ""; });
+  f.addEventListener("submit", e => { e.preventDefault(); enviar(q.value, true); q.value = ""; });
 
   function cocina(p) {
     if (p.tipo && p.tipo !== "pedido") return;

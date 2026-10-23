@@ -1,0 +1,40 @@
+# Render Blueprint de la demostración con IA de clientiatech.com (demo.js). No atiende a ningún restaurante:
+# contesta con el restaurante de ejemplo y no guarda pedidos. En Render: New > Blueprint, este repositorio,
+# Blueprint path: bot-restaurante/render-demo.yaml. Luego ponga ANTHROPIC_API_KEY en Environment y copie la
+# dirección del servicio (https://clientia-demo-ia.onrender.com) en clientia-tech/config.json > demoIA + "/demo/chat".
+services:
+  - type: web
+    name: clientia-demo-ia
+    runtime: node
+    region: virginia
+    plan: free                  # se duerme sin visitas; la página lo despierta al abrir y mientras tanto contesta el menú
+    rootDir: bot-restaurante
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: America/Tegucigalpa
+      - key: DATA_DIR
+        value: ""
+      - key: NEGOCIO
+        value: negocios/ejemplo.json
+      - key: PANEL_SECRET
+        generateValue: true
+      - key: DEMO_IA
+        value: "on"
+      - key: DEMO_ORIGENES
+        value: https://clientiatech.com,https://www.clientiatech.com
+      - key: DEMO_LIMITE_VISITANTE   # mensajes por visitante cada 10 minutos
+        value: "15"
+      - key: DEMO_LIMITE_DIA         # respuestas con IA por día en todo el sitio
+        value: "400"
+      - key: ANTHROPIC_API_KEY       # se pega solo aquí, en Render > Environment
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: BOT_IA                  # sin Twilio no hay WhatsApp en este servicio
+        value: "off"
