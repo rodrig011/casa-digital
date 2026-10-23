@@ -58,7 +58,7 @@ function preparar(n) {
     pago: n.pago || "",
     domicilio: n.domicilio || { propio: false, apps: [] },
     cobro: prepararCobro(n.cobro),
-    items, sucursal, item,
+    items, sucursal, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };
 }

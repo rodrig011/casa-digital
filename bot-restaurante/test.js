@@ -7,7 +7,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const twilio = require("twilio");
-const { cargarNegocio, preparar } = require("./negocio");
+const { cargarNegocio, preparar, cuenta } = require("./negocio");
 const { createEngine, toText } = require("./engine");
 const { createApp } = require("./server");
 const { createStore } = require("./store");
@@ -50,6 +50,15 @@ test("motor: pedido, sucursales, domicilio y persona", () => {
 
   const b = run("Con sus palabras", "buenas", "quiero 2 combos de 3 piezas y unas papas grandes", "Zona Norte", "confirmar", "Otra hora", "6:30 pm", "soy Carlos");
   assert.equal(b.lead.total, 345); assert.equal(b.lead.sucursal, "Zona Norte"); assert.equal(b.lead.nombre, "Carlos"); assert.equal(b.lead.hora, "6:30 pm");
+
+  // several products and quantities in one sentence, without commas
+  const carrito = (...xs) => cuenta(N, run("Una frase", "hola", "Ver el menú y precios", ...xs, "Centro").data.carrito).lineas.map(l => [l.id, l.cantidad]);
+  assert.deepEqual(carrito("quiero el combo 1 con 4 papas"), [["c2", 1], ["papas", 4]]);
+  assert.deepEqual(carrito("el familiar con 2 refrescos"), [["fam", 1], ["ref", 2]]);
+  assert.deepEqual(carrito("quiero 2 combo 1 y 1 refresco"), [["c2", 2], ["ref", 1]]);
+  assert.deepEqual(carrito("quiero un combo 3 piezas con 2 refrescos de 2 litros"), [["c3", 1], ["ref", 2]]);
+  assert.deepEqual(carrito("dos combos de 3 piezas"), [["c3", 2]]);
+  assert.deepEqual(carrito("1 x2, 4"), [["c2", 2], ["papas", 1]]);
 
   const c = run("Agregar y empezar de nuevo", "hola", "pedir para recoger", "centro", "5", "Agregar algo más", "papas x3", "Empezar de nuevo", "3", "1", "1", "Ana");
   assert.deepEqual(c.lead.lineas.map(l => [l.id, l.cantidad]), [["fam", 1]]);
