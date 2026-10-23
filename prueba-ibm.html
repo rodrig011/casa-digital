@@ -559,7 +559,7 @@ function preparar(n) {
     pago: n.pago || "",
     domicilio: n.domicilio || { propio: false, apps: [] },
     cobro: prepararCobro(n.cobro),
-    items, sucursal, item,
+    items, sucursal, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };
 }
@@ -658,22 +658,64 @@ function createEngine(negocio) {
     return `Por ahora no tenemos envío propio.${apps.length ? ` A domicilio puede pedirnos por:\n${lista}` : ""}\n\nTambién puede hacer su pedido aquí y pasar a recogerlo sin hacer fila.`;
   }
 
-  // "1 x2, 4", "2 del 3", "2 combos 3 piezas", "papas grandes y un refresco"
+  // "1 x2, 4", "2 del 3", "2 combos 3 piezas", "papas grandes y un refresco", "el combo 1 con 4 papas"
+  // one piece of the order -> { it, cantidad, n } (n = list number the customer used, if any)
+  const RELLENO = new Set(["x", "numero", "no", "orden", "pedido", "porcion", "solo", "nada", "mas", "tambien", "regaleme", "mandeme", "das", "mi", "favor", "y", "con"]);
+  // every word the customer wrote is explained by the product, the quantity or the list number
+  const completo = (p, r) => {
+    const nombre = new Set(N.tokens(r.it.nombre));
+    return N.tokens(p).every(w => nombre.has(w) || RELLENO.has(w) || w === String(r.cantidad) || w === r.n);
+  };
+  function uno(p) {
+    const l = p.replace(/^(?:(?:quiero|me da|me das|deme|dame|regaleme|mandeme|para mi|y|con)\s+)+/, "");
+    let m, r = null;
+    if ((m = l.match(/^(?:el |la |numero |#)?(\d+)\s*(?:x|×|\*|por)\s*(\d+)$/))) r = { it: N.item(m[1]), n: m[1], cantidad: +m[2] };
+    else if ((m = l.match(/^(\d+)\s*(?:del?|de la)\s*(?:numero |#)?(\d+)$/))) r = { it: N.item(m[2]), n: m[2], cantidad: +m[1] };
+    else if ((m = l.match(/^(?:el |la |numero |#)(\d+)$/)) || (m = p.match(/^(\d+)$/))) r = { it: N.item(m[1]), n: m[1], cantidad: 1 };
+    if (r) return r.it ? r : null;
+    // a quantity in front wins over a number that is part of the name ("2 refrescos" = two Refresco 2 litros)
+    const ops = [];
+    let it;
+    if ((m = l.match(/^(\d+)\s+(.+)$/)) && (it = N.item(m[2]))) ops.push({ it, cantidad: +m[1], n: null });
+    // "combo 1", "2 combo numero 1": a word of the product plus its number in the list
+    if ((m = l.match(/^(?:(\d+)\s+)?([a-z][a-z\s]*?)\s*(?:numero |no |#)?(\d+)$/)) && (it = N.item(m[3]))) {
+      const w = N.tokens(m[2]), nombre = N.tokens(it.nombre);
+      if (w.length && w.every(x => nombre.includes(x))) ops.push({ it, cantidad: m[1] ? +m[1] : 1, n: m[3] });
+    }
+    if ((m = l.match(/^(.+?)\s*(?:x|×)\s*(\d+)$/)) && (it = N.item(m[1]))) ops.push({ it, cantidad: +m[2], n: null });
+    if ((it = N.item(l))) ops.push({ it, cantidad: 1, n: null });
+    return ops.find(o => completo(p, o)) || ops[0] || null;
+  }
+  const conectores = s => s.replace(/^(?:con|y|mas|tambien|ademas)\s+/, "").trim();
+  // a piece with two products and no comma ("el combo 1 con 4 papas") is cut where both halves make sense,
+  // trying the longest first half first
+  function partir(p, hondo) {
+    const r = uno(p);
+    if (r && completo(p, r)) return [r];
+    const w = p.split(/\s+/);
+    if (hondo < 3) for (let i = w.length - 1; i >= 1; i--) {
+      const a = conectores(w.slice(0, i).join(" ")), b = conectores(w.slice(i).join(" "));
+      if (!a || !b) continue;
+      const ra = uno(a);
+      if (!ra || !completo(a, ra)) continue;
+      const rb = partir(b, hondo + 1);
+      if (rb) return [ra, ...rb];
+    }
+    return hondo ? null : r ? [r] : null;
+  }
+  // last try: "pizza con papas" -> papas, and pizza is asked about
+  const porConector = p => p.split(/\s+(?:con|y)\s+/).map(conectores).filter(Boolean);
+  const NUMEROS = ["dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
   function leerPedido(text) {
     const encontrados = [], dudas = [];
-    const partes = norm(text).replace(/\bun[oa]?\b/g, "1").split(/,|;|\n|\+|\by\b|\btambien\b|\bmas\b/).map(p => p.trim()).filter(Boolean);
+    const partes = norm(text).replace(/\bun[oa]?\s+(?=[a-z])/g, "1 ").replace(/\b(dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/g, w => String(NUMEROS.indexOf(w) + 2)).split(/,|;|\n|\+|\by\b|\btambien\b|\bmas\b/).map(p => p.replace(/[^\w\s#×*]/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
     for (const p of partes) {
-      let m, it = null, cantidad = 1;
-      if ((m = p.match(/^(?:el |la |numero |#)?(\d+)\s*(?:x|×|\*|por)\s*(\d+)$/))) { it = N.item(m[1]); cantidad = +m[2]; }
-      else if ((m = p.match(/^(\d+)\s*(?:del?|de la)\s*(?:numero |#)?(\d+)$/))) { it = N.item(m[2]); cantidad = +m[1]; }
-      else if ((m = p.match(/^(?:el |la |numero |#)?(\d+)$/))) it = N.item(m[1]);
-      else {
-        const limpio = p.replace(/^(quiero|me da|me das|deme|dame|regaleme|mandeme|para mi|y)\s+/, "");
-        it = N.item(limpio);
-        if ((m = limpio.match(/^(\d+)\s+(.+)$/))) { const otro = N.item(m[2]); if (otro) { it = otro; cantidad = +m[1]; } }
-        if ((m = limpio.match(/^(.+?)\s*(?:x|×)\s*(\d+)$/))) { const otro = N.item(m[1]); if (otro) { it = otro; cantidad = +m[2]; } }
+      let rs = partir(p, 0);
+      if (rs && rs.length === 1 && !completo(p, rs[0]) && porConector(p).length > 1) {
+        rs = [];
+        for (const q of porConector(p)) { const r = partir(q, 0); if (r) rs.push(...r); else if (q.length > 1) dudas.push(q); }
       }
-      if (it) encontrados.push({ id: it.id, cantidad });
+      if (rs) rs.forEach(r => encontrados.push({ id: r.it.id, cantidad: r.cantidad }));
       else if (p.length > 1) dudas.push(p);
     }
     return { encontrados, dudas };
