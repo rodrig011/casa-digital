@@ -437,7 +437,7 @@ function createEngine(negocio) {
     let it;
     if ((m = l.match(/^(\d+)\s+(.+)$/)) && (it = N.item(m[2]))) ops.push({ it, cantidad: +m[1], n: null });
     // "combo 1", "2 combo numero 1": a word of the product plus its number in the list
-    if ((m = l.match(/^(?:(\d+)\s+)?([a-z][a-z\s]*?)\s*(?:numero |no |#)?(\d+)$/)) && (it = N.item(m[3]))) {
+    if ((m = l.match(/^(?:(\d+)\s+)?([a-z][a-z\s]*?)\s*(?:del? )?(?:numero |no |#)?(\d+)$/)) && (it = N.item(m[3]))) {
       const w = N.tokens(m[2]), nombre = N.tokens(it.nombre);
       if (w.length && w.every(x => nombre.includes(x))) ops.push({ it, cantidad: m[1] ? +m[1] : 1, n: m[3] });
     }
@@ -467,7 +467,7 @@ function createEngine(negocio) {
   const NUMEROS = ["dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
   function leerPedido(text) {
     const encontrados = [], dudas = [];
-    const partes = norm(text).replace(/\bun[oa]?\s+(?=[a-z])/g, "1 ").replace(/\b(dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/g, w => String(NUMEROS.indexOf(w) + 2)).split(/,|;|\n|\+|\by\b|\btambien\b|\bmas\b/).map(p => p.replace(/[^\w\s#×*]/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
+    const partes = norm(text).replace(/\bun[oa]?\s+(?=[a-z])/g, "1 ").replace(/\b(dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/g, w => String(NUMEROS.indexOf(w) + 2)).split(/,|;|\n|\+|\by\b|\btambien\b|\bmas\b|\b(?:quiero|dame|deme|me das?|regaleme|mandeme|ponme|agregue|agregame)\b/).map(p => p.replace(/[^\w\s#×*]/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
     for (const p of partes) {
       let rs = partir(p, 0);
       if (rs && rs.length === 1 && !completo(p, rs[0]) && porConector(p).length > 1) {

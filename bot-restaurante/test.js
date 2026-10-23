@@ -59,6 +59,8 @@ test("motor: pedido, sucursales, domicilio y persona", () => {
   assert.deepEqual(carrito("quiero un combo 3 piezas con 2 refrescos de 2 litros"), [["c3", 1], ["ref", 2]]);
   assert.deepEqual(carrito("dos combos de 3 piezas"), [["c3", 2]]);
   assert.deepEqual(carrito("1 x2, 4"), [["c2", 2], ["papas", 1]]);
+  assert.deepEqual(carrito("quiero 3 combos de numero 1 quiero 3 papas y 2 refrescos"), [["c2", 3], ["papas", 3], ["ref", 2]]);
+  assert.deepEqual(carrito("dame 3 combos del 1 dame 1 refresco"), [["c2", 3], ["ref", 1]]);
 
   const c = run("Agregar y empezar de nuevo", "hola", "pedir para recoger", "centro", "5", "Agregar algo más", "papas x3", "Empezar de nuevo", "3", "1", "1", "Ana");
   assert.deepEqual(c.lead.lineas.map(l => [l.id, l.cantidad]), [["fam", 1]]);
