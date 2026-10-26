@@ -1,0 +1,405 @@
+<title>Harvey WhatsApp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Una columna para el celular: barra de hoy arriba, tarjetas de negocios abajo. */
+:root{
+  --bg:#f3f5f4; --card:#ffffff; --fg:#16201c; --muted:#5f6d67; --line:#dde3e0;
+  --accent:#0f6b4f; --accent-fg:#ffffff; --accent-soft:#e2f0ea;
+  --warn:#9a5b00; --warn-soft:#fbf0dc; --bad:#a33a2c; --bad-soft:#f8e6e3; --info:#2f5a8a; --info-soft:#e4edf7;
+  --skel:#e7ecea;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --card:#17201d; --fg:#e6ece9; --muted:#97a6a0; --line:#27332f;
+  --accent:#3fb489; --accent-fg:#06130e; --accent-soft:#183229;
+  --warn:#e2a54a; --warn-soft:#2e2414; --bad:#e3826f; --bad-soft:#331c18; --info:#86b2e3; --info-soft:#18273a;
+  --skel:#202b27; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --card:#17201d; --fg:#e6ece9; --muted:#97a6a0; --line:#27332f;
+  --accent:#3fb489; --accent-fg:#06130e; --accent-soft:#183229;
+  --warn:#e2a54a; --warn-soft:#2e2414; --bad:#e3826f; --bad-soft:#331c18; --info:#86b2e3; --info-soft:#18273a;
+  --skel:#202b27; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:12px max(16px,env(safe-area-inset-left,0px)) 0}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-size:19px;font-weight:700;margin:0;letter-spacing:-.01em}
+.clock{font:500 12px var(--f-mono);color:var(--muted);text-align:right}
+.clock b{display:block;font-weight:500;color:var(--fg)}
+.clock.ok b{color:var(--accent)} .clock.no b{color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 10px}
+.stat{min-width:0}
+.stat b{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav button{flex:0 0 auto;border:0;background:none;color:var(--muted);font:600 14px var(--f-body);padding:10px 10px 11px;border-bottom:2px solid transparent;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav .n{font:500 11px var(--f-mono);margin-left:4px;color:var(--muted)}
+main{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+.sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 2px 0}
+.hint{font-size:13px;color:var(--muted);margin:0 2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.name{font-weight:700;font-size:16px;margin:0}
+.meta{font-size:13px;color:var(--muted)}
+.meta .num{font-family:var(--f-mono);font-size:12px;user-select:all;white-space:nowrap}
+.pill{flex:0 0 auto;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap;background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.info{background:var(--info-soft);color:var(--info)} .pill.gray{background:var(--bg);color:var(--muted)}
+.label{font-size:12px;font-weight:600;color:var(--muted)}
+textarea,input[type=text],input[type=tel]{width:100%;font:15px/1.45 var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+textarea:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.msg{min-height:96px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 14px var(--f-body);border-radius:8px;padding:10px 14px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.wa{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.sm{padding:7px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.note{font-size:13px;background:var(--warn-soft);color:var(--fg);border-radius:8px;padding:8px 10px}
+.hist{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.b{max-width:88%;font-size:13.5px;padding:7px 10px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.b.yo{align-self:flex-end;background:var(--accent-soft)} .b.ellos{align-self:flex-start;background:var(--bg);border:1px solid var(--line)}
+.b small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+details summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:28px 12px}
+.skel{height:150px;border-radius:10px;background:var(--skel);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:8px;z-index:20;max-width:calc(100% - 32px)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{font:600 12px var(--f-body);border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:99px;padding:5px 10px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:420px){.stats{gap:4px}.stat b{font-size:18px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>Harvey WhatsApp</h1>
+      <div class="clock" id="clock"><b>--:--</b>hora de Honduras</div>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat"><b>–</b><span>Escritos</span></div>
+      <div class="stat"><b>–</b><span>Contestaron</span></div>
+      <div class="stat"><b>–</b><span>Llamadas</span></div>
+      <div class="stat"><b>–</b><span>Por escribir</span></div>
+    </div>
+    <nav role="tablist" id="tabs">
+      <button role="tab" data-tab="hoy" aria-selected="true">Hoy<span class="n" id="n-hoy"></span></button>
+      <button role="tab" data-tab="charlas" aria-selected="false">Conversaciones<span class="n" id="n-charlas"></span></button>
+      <button role="tab" data-tab="todos" aria-selected="false">Todos<span class="n" id="n-todos"></span></button>
+      <button role="tab" data-tab="nuevo" aria-selected="false">Agregar</button>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </main>
+</div>
+
+<script>
+const LIMITE_DIA = 10;           // primeros mensajes nuevos por día, para que WhatsApp no marque el número
+const DIAS_SEGUIMIENTO = 3, DIAS_ULTIMO = 7;
+const DIA = 86400000;
+const ESTADOS = {
+  nuevo:{t:"Por escribir",c:"gray"}, esperando:{t:"Esperando respuesta",c:"info"},
+  seguimiento:{t:"Seguimiento enviado",c:"info"}, conversando:{t:"Contestó",c:""},
+  llamada:{t:"Llamada agendada",c:""}, cliente:{t:"Cliente",c:""},
+  cerrado:{t:"Sin respuesta",c:"gray"}, no:{t:"No le interesa",c:"bad"}
+};
+const REGLAS = `Escribes como Rodrigo Herrera, de Clientia Tech (clientiatech.com), por WhatsApp a un negocio de Honduras.
+- Español de Honduras, de usted. Corto, como se escribe desde el celular. Nada que suene a IA ni a agencia: sin "soluciones", "transformación digital", "líderes", sin emojis de más.
+- Quiénes somos: Rodrigo Herrera y Dylan Jiménez, hondureños, dueños de Clientia Tech. Rodrigo estudia en Ivy Tech en Estados Unidos (solo decirlo si preguntan). El número es de EE. UU. porque Rodrigo vive allá mientras estudia. Todo se instala a distancia con dos videollamadas.
+- Qué vendemos (solo esto existe hoy): bot de WhatsApp en el número del negocio que contesta a toda hora menú, precios, sucursales y horario, toma pedidos para recoger con sucursal y hora y da el total en lempiras, y dice cómo pedir por PedidosYa o Bip Bip; pantalla de cocina en una tablet o celular viejo; panel del dueño en el celular con pedidos del día, lo vendido y cada sucursal. Para negocios de reservas o eventos, el mismo sistema toma los datos de la reservación o cotización.
+- Oferta: los primeros 30 días gratis y sin compromiso; si no le sirve, se quita y no paga nada.
+- NUNCA escribir precios. Si preguntan cuánto cuesta: depende de las sucursales y de lo que necesite, es una instalación y una mensualidad sin comisión por pedido, y en una llamada de 10 minutos se lo digo exacto.
+- Si piden información: con gusto, pero en 10 minutos se lo enseño funcionando con su negocio; proponer dos opciones de día.
+- Meta: una llamada de 10 minutos. Si aceptan, pedir día y hora (hora de Honduras).
+- No inventar datos del negocio, clientes, testimonios ni funciones. No decir que tenemos clientes pagando. No mencionar a otros restaurantes.
+- Si dicen que no les interesa, agradecer corto y despedirse.`;
+
+let db = null, sample = null, negocios = [], tab = "hoy", filtro = "todos", loaded = false;
+const drafts = {};          // borradores escritos en esta sesión, por negocio
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtNum = n => n.startsWith("504") && n.length === 11 ? "+504 " + n.slice(3,7) + "-" + n.slice(7) : "+" + n;
+const fecha = ms => new Date(ms).toLocaleDateString("es-HN",{day:"numeric",month:"short",timeZone:"America/Tegucigalpa"});
+const hoyHN = () => new Date(Date.now() - 6*3600000).toISOString().slice(0,10);
+const diaHN = ms => new Date(ms - 6*3600000).toISOString().slice(0,10);
+const waLink = (n, t) => "https://wa.me/" + n + "?text=" + encodeURIComponent(t);
+
+function toast(t){ const el=document.createElement("div"); el.className="toast"; el.textContent=t; document.body.appendChild(el); setTimeout(()=>el.remove(),2600); }
+
+function reloj(){
+  const d = new Date(Date.now() - 6*3600000), h = d.getUTCHours(), m = d.getUTCMinutes(), mins = h*60+m;
+  const ok = (mins>=540 && mins<660) || (mins>=900 && mins<990);
+  const el = $("#clock"); el.className = "clock " + (ok ? "ok" : "no");
+  el.innerHTML = `<b>${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}</b>${ok ? "buena hora para escribir" : "mejor 9-11 o 3-4:30"}`;
+}
+reloj(); setInterval(reloj, 30000);
+
+// Qué mensaje toca ahora con cada negocio
+function siguiente(x){
+  const now = Date.now();
+  if (x.estado === "nuevo") return {clave:"primero", titulo:"Primer mensaje"};
+  if (x.estado === "esperando" && x.proximo <= now) return {clave:"seguimiento", titulo:`Seguimiento (${DIAS_SEGUIMIENTO} días sin respuesta)`};
+  if (x.estado === "seguimiento" && x.proximo <= now) return {clave:"ultimo", titulo:"Último mensaje"};
+  return null;
+}
+function enviadosHoy(){ const h = hoyHN(); return negocios.filter(x => x.primeroEn && diaHN(x.primeroEn) === h).length; }
+
+function listaHoy(){
+  const segs = negocios.filter(x => ["esperando","seguimiento"].includes(x.estado) && siguiente(x));
+  const libres = Math.max(0, LIMITE_DIA - enviadosHoy());
+  const nuevos = negocios.filter(x => x.estado === "nuevo").sort((a,b) => a.prioridad-b.prioridad || a.orden-b.orden).slice(0, libres);
+  return {segs, nuevos, libres};
+}
+const charlas = () => negocios.filter(x => ["conversando","llamada"].includes(x.estado)).sort((a,b) => (b.actualizado||0)-(a.actualizado||0));
+
+function render(){
+  if (!loaded) return;
+  const escritos = negocios.filter(x => x.estado !== "nuevo").length;
+  const contestaron = negocios.filter(x => ["conversando","llamada","cliente","no"].includes(x.estado)).length;
+  const llamadas = negocios.filter(x => ["llamada","cliente"].includes(x.estado)).length;
+  const porEscribir = negocios.filter(x => x.estado === "nuevo").length;
+  $("#stats").innerHTML = [[escritos,"Escritos"],[contestaron,"Contestaron"],[llamadas,"Llamadas"],[porEscribir,"Por escribir"]]
+    .map(([n,t]) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`).join("");
+  const h = listaHoy();
+  $("#n-hoy").textContent = h.segs.length + h.nuevos.length || "";
+  $("#n-charlas").textContent = charlas().length || "";
+  $("#n-todos").textContent = negocios.length || "";
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  const m = $("#main");
+  if (tab === "hoy") m.innerHTML = vistaHoy(h);
+  else if (tab === "charlas") m.innerHTML = vistaCharlas();
+  else if (tab === "todos") m.innerHTML = vistaTodos();
+  else m.innerHTML = vistaNuevo();
+}
+
+function vistaHoy(h){
+  if (!negocios.length) return `<div class="card empty">Todavía no hay negocios cargados. Pídele a Claude que cargue la lista, o agrega uno en <b>Agregar</b>.</div>`;
+  let s = "";
+  const pend = charlas().filter(x => x.ultimoDe === "ellos");
+  if (pend.length) s += `<div class="sec">Te contestaron</div>` + pend.map(cardCharla).join("");
+  if (h.segs.length) s += `<div class="sec">Seguimientos de hoy</div>` + h.segs.map(cardEnviar).join("");
+  s += `<div class="sec">Nuevos de hoy · ${enviadosHoy()} de ${LIMITE_DIA} escritos</div>`;
+  if (h.nuevos.length) s += `<p class="hint">Primero preguntás por el dueño. Cuando contesten, tocá <b>Contestó</b> y Harvey te escribe lo que sigue.</p>` + h.nuevos.map(cardEnviar).join("");
+  else s += `<div class="card empty">${h.libres === 0 ? `Ya van ${LIMITE_DIA} nuevos hoy. Mañana salen más; así WhatsApp no marca tu número.` : "Ya les escribiste a todos. Agregá más en Agregar."}</div>`;
+  return s;
+}
+
+function cabeza(x){
+  const e = ESTADOS[x.estado] || ESTADOS.nuevo;
+  const pri = x.prioridad === 1 && x.estado === "nuevo" ? `<span class="pill warn">Prioridad</span>` : "";
+  return `<div class="row"><div style="min-width:0"><p class="name">${esc(x.nombre)}</p>
+    <div class="meta">${esc(x.ciudad)} · <span class="num">${fmtNum(x.numero)}</span>${x.contacto ? " · " + esc(x.contacto) : ""}</div></div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${pri}<span class="pill ${e.c}">${e.t}</span></div></div>`;
+}
+function historial(x){
+  const h = x.historial || [];
+  if (!h.length) return "";
+  return `<details${x.estado==="conversando"||x.estado==="llamada" ? " open" : ""}><summary>Conversación (${h.length})</summary><div class="hist" style="margin-top:8px">${
+    h.map(m => `<div class="b ${m.de}">${esc(m.texto)}<small>${m.de==="yo"?"Vos":"Ellos"} · ${fecha(m.en)}</small></div>`).join("")}</div></details>`;
+}
+function notas(x){ return x.nota ? `<div class="note"><b>Ojo:</b> ${esc(x.nota)}${x.hora==="tarde" ? " Mejor en la tarde." : ""}</div>` : (x.hora==="tarde" ? `<div class="note">Mejor escribir en la tarde.</div>` : ""); }
+
+function cardEnviar(x){
+  const sig = siguiente(x);
+  const texto = drafts[x.id] ?? x.mensajes[sig.clave];
+  return `<div class="card" data-id="${x.id}">${cabeza(x)}${notas(x)}
+    <div class="label">${sig.titulo}</div>
+    <textarea class="msg" id="t-${x.id}" data-k="${sig.clave}">${esc(texto)}</textarea>
+    <div class="actions">
+      <a class="btn wa" href="${waLink(x.numero, texto)}" target="_blank" rel="noopener" data-act="abrir">Abrir en WhatsApp</a>
+      <button class="btn" data-act="mande" data-k="${sig.clave}">Ya lo mandé</button>
+      ${x.estado!=="nuevo" ? `<button class="btn" data-act="contesto">Contestó</button>` : ""}
+    </div>
+    ${historial(x)}
+    <details><summary>Más</summary><div class="actions" style="margin-top:8px">
+      ${x.estado==="nuevo" ? `<button class="btn sm" data-act="yaescrito">Ya le había escrito</button>` : ""}
+      <button class="btn sm" data-act="contesto">Contestó</button>
+      <button class="btn sm" data-act="cambiarnum">Cambiar número</button>
+      <button class="btn sm" data-act="no">No le interesa</button>
+    </div></details>
+  </div>`;
+}
+
+function cardCharla(x){
+  const d = drafts[x.id];
+  return `<div class="card" data-id="${x.id}">${cabeza(x)}
+    ${historial(x)}
+    <div class="label">Lo que te contestaron</div>
+    <textarea id="r-${x.id}" placeholder="Pegá aquí lo que te escribieron" style="min-height:70px"></textarea>
+    <div class="actions"><button class="btn" data-act="guardarresp">Guardar</button><button class="btn wa" data-act="harvey">Guardar y que Harvey conteste</button></div>
+    ${d != null ? `<div class="label">Respuesta de Harvey (podés cambiarla)</div>
+      <textarea class="msg" id="t-${x.id}" data-k="respuesta">${esc(d)}</textarea>
+      <div class="actions"><a class="btn wa" href="${waLink(x.numero, d)}" target="_blank" rel="noopener">Abrir en WhatsApp</a>
+      <button class="btn" data-act="mande" data-k="respuesta">Ya lo mandé</button></div>` : ""}
+    <details><summary>Más</summary><div class="actions" style="margin-top:8px">
+      <button class="btn sm" data-act="usarpres">Usar la presentación</button>
+      <button class="btn sm" data-act="llamada">Llamada agendada</button>
+      <button class="btn sm" data-act="cliente">Es cliente</button>
+      <button class="btn sm" data-act="cambiarnum">Cambiar número</button>
+      <button class="btn sm" data-act="no">No le interesa</button>
+    </div></details>
+  </div>`;
+}
+
+function vistaCharlas(){
+  const c = charlas();
+  if (!c.length) return `<div class="card empty">Cuando alguien te conteste, tocá <b>Contestó</b> en su tarjeta y la conversación aparece aquí.</div>`;
+  return `<p class="hint">Pegá lo que te escribieron y Harvey arma la respuesta con las reglas de Clientia: de usted, sin precios por escrito, buscando la llamada de 10 minutos.</p>` + c.map(cardCharla).join("");
+}
+
+function vistaTodos(){
+  const fs = [["todos","Todos"],["nuevo","Por escribir"],["esperando","Esperando"],["conversando","Contestaron"],["llamada","Llamadas"],["cerrado","Sin respuesta"],["no","No"]];
+  const lista = negocios.filter(x => filtro==="todos" || x.estado===filtro || (filtro==="esperando" && x.estado==="seguimiento"))
+    .sort((a,b) => a.prioridad-b.prioridad || a.orden-b.orden);
+  return `<div class="filters">${fs.map(([k,t]) => `<button data-f="${k}" aria-pressed="${filtro===k}">${t}</button>`).join("")}</div>` +
+    (lista.length ? lista.map(x => {
+      const sig = siguiente(x);
+      if (sig) return cardEnviar(x);
+      if (["conversando","llamada"].includes(x.estado)) return cardCharla(x);
+      const prox = ["esperando","seguimiento"].includes(x.estado) && x.proximo ? `<div class="meta">Siguiente mensaje el ${fecha(x.proximo)}</div>` : "";
+      return `<div class="card" data-id="${x.id}">${cabeza(x)}${prox}${historial(x)}
+        <div class="actions"><button class="btn sm" data-act="contesto">Contestó</button>
+        ${["cerrado","no","cliente"].includes(x.estado) ? `<button class="btn sm" data-act="reabrir">Volver a empezar</button>` : ""}</div></div>`;
+    }).join("") : `<div class="card empty">Nada en esta lista.</div>`);
+}
+
+function vistaNuevo(){
+  return `<div class="card"><p class="name">Agregar un negocio</p>
+    <p class="hint" style="margin:0">Lo que viste en su TikTok, Facebook o página. Harvey escribe los mensajes con eso; no inventa nada más.</p>
+    <div class="grid2"><div><div class="label">Nombre</div><input type="text" id="n-nombre"></div>
+    <div><div class="label">Ciudad</div><input type="text" id="n-ciudad"></div></div>
+    <div><div class="label">WhatsApp (con código de país si no es Honduras)</div><input type="tel" id="n-num" placeholder="9999-9999"></div>
+    <div><div class="label">¿Con quién hablar? (si sabés el nombre)</div><input type="text" id="n-contacto" placeholder="don Carlos"></div>
+    <div><div class="label">Lo que viste de su negocio</div><textarea id="n-visto" placeholder="Video de 300 mil vistas del pollo chuco; en los comentarios preguntan dónde quedan y si hacen delivery. Tienen 2 sucursales."></textarea></div>
+    <div class="actions"><button class="btn wa" data-act="crear">Que Harvey escriba los mensajes</button></div>
+    <div id="n-estado" class="meta"></div></div>`;
+}
+
+// Acciones
+async function guardar(id, cambios){
+  const x = negocios.find(n => n.id === id);
+  Object.assign(x, cambios, {actualizado: Date.now()});
+  render();
+  try { await db.collection("negocios").doc(id).update({...cambios, actualizado: x.actualizado}); }
+  catch(e){ toast("No se guardó: " + (e.message || e.code)); }
+}
+const hist = (x, de, texto) => [...(x.historial||[]), {de, texto, en: Date.now()}];
+
+async function pedirHarvey(x){
+  if (!sample){ toast("Harvey no está disponible en esta vista. Abrí la página desde claude.ai."); return; }
+  drafts[x.id] = "Harvey está escribiendo…"; render();
+  const conv = (x.historial||[]).map(m => (m.de==="yo" ? "Rodrigo: " : "Negocio: ") + m.texto).join("\n\n");
+  const prompt = `${REGLAS}
+
+Negocio: ${x.nombre} (${x.ciudad}). ${x.contacto ? "Contacto: " + x.contacto + "." : ""}
+Lo que sabemos de ellos (de sus redes): ${x.nota || ""}
+Presentación que ya tenemos escrita para ellos (úsala tal cual si es el momento de presentarse, por ejemplo si te dicen que hablas con el dueño o te pasan su número):
+${x.mensajes.presentacion}
+
+Conversación hasta ahora:
+${conv}
+
+Escribe SOLO el próximo mensaje de Rodrigo, listo para pegar en WhatsApp. Sin comillas ni explicaciones.`;
+  try {
+    const r = await sample(prompt, {modelTier:"default", cache:false, onText: u => { drafts[x.id] = u.text; const t = document.getElementById("t-"+x.id); if (t) t.value = u.text; }});
+    drafts[x.id] = r.text.trim(); render();
+  } catch(e){ delete drafts[x.id]; render(); toast(e.code === "not_granted" ? "Hace falta dar permiso para que Harvey escriba." : "Harvey no pudo escribir ahora. Probá en un rato."); }
+}
+
+async function crearNegocio(){
+  const nombre = $("#n-nombre").value.trim(), ciudad = $("#n-ciudad").value.trim(), visto = $("#n-visto").value.trim(), contacto = $("#n-contacto").value.trim();
+  let num = $("#n-num").value.replace(/\D/g,"");
+  if (!nombre || !num || !visto){ $("#n-estado").textContent = "Falta el nombre, el número o lo que viste."; return; }
+  if (num.length === 8) num = "504" + num;
+  if (!sample){ $("#n-estado").textContent = "Harvey no está disponible en esta vista."; return; }
+  $("#n-estado").textContent = "Harvey está escribiendo los mensajes…";
+  try {
+    const m = await sample.json(`${REGLAS}
+
+Escribe los mensajes para un negocio nuevo. Datos: ${nombre}, ${ciudad}. ${contacto ? "Contacto: " + contacto + "." : ""} Lo que vimos: ${visto}
+Devuelve JSON con:
+- "primero": saludo corto, "no es para un pedido", y pedir cómo comunicarse con el dueño (o con el contacto si lo tenemos). Sin presentarse todavía.
+- "presentacion": empieza "Mucho gusto. Soy Rodrigo Herrera, de Clientia Tech (clientiatech.com)." luego una o dos frases con lo que vimos de su negocio (solo esos datos), luego qué les armamos para eso, y termina exactamente: "Los primeros 30 días son gratis y sin compromiso; si no le sirve, se quita y no paga nada. ¿Tiene 10 minutos esta semana para una llamada?"
+- "nota": una línea interna para Rodrigo con algo a cuidar, o "".`, {modelTier:"default"});
+    const id = nombre.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) + "-" + Date.now().toString(36).slice(-4);
+    const doc = {id, orden: 1000 + negocios.length, nombre, ciudad, pais: num.startsWith("504") ? "HN" : "", numero: num, contacto, prioridad: 1, hora: "mañana",
+      nota: m.nota || "", estado: "nuevo", historial: [], actualizado: Date.now(),
+      mensajes: {primero: m.primero, presentacion: m.presentacion,
+        seguimiento: "Buenas, ¿cómo está? Le vuelvo a escribir por si no le llegó mi mensaje. Se lo dejo aquí por si se lo puede pasar al dueño:\n\n" + m.presentacion,
+        ultimo: `Buenas, no le quito más tiempo. Si en algún momento quieren que el WhatsApp de ${nombre} conteste solo, aquí estoy. Que les vaya muy bien. Rodrigo, de Clientia Tech.`}};
+    await db.collection("negocios").doc(id).set(doc);
+    negocios.push(doc); tab = "hoy"; render(); toast(nombre + " agregado a Hoy");
+  } catch(e){ $("#n-estado").textContent = "Harvey no pudo escribir ahora. Probá en un rato."; }
+}
+
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("[data-tab],[data-f],[data-act]");
+  if (!t) return;
+  if (t.dataset.tab){ tab = t.dataset.tab; render(); window.scrollTo({top:0}); return; }
+  if (t.dataset.f){ filtro = t.dataset.f; render(); return; }
+  const act = t.dataset.act;
+  if (act === "crear") return crearNegocio();
+  const card = t.closest("[data-id]"); if (!card) return;
+  const x = negocios.find(n => n.id === card.dataset.id), now = Date.now();
+  const texto = () => (document.getElementById("t-"+x.id)?.value || "").trim();
+  if (act === "abrir") return;  // el link abre WhatsApp
+  if (act === "mande"){
+    const k = t.dataset.k, msg = texto();
+    if (k === "primero") await guardar(x.id, {estado:"esperando", primeroEn:now, proximo:now+DIAS_SEGUIMIENTO*DIA, historial:hist(x,"yo",msg), ultimoDe:"yo"});
+    else if (k === "seguimiento") await guardar(x.id, {estado:"seguimiento", proximo:now+DIAS_ULTIMO*DIA, historial:hist(x,"yo",msg), ultimoDe:"yo"});
+    else if (k === "ultimo") await guardar(x.id, {estado:"cerrado", proximo:null, historial:hist(x,"yo",msg), ultimoDe:"yo"});
+    else await guardar(x.id, {historial:hist(x,"yo",msg), ultimoDe:"yo"});
+    delete drafts[x.id]; toast("Anotado: " + x.nombre);
+  }
+  if (act === "yaescrito") await guardar(x.id, {estado:"esperando", primeroEn:now, proximo:now+DIAS_SEGUIMIENTO*DIA});
+  if (act === "contesto"){ await guardar(x.id, {estado:"conversando"}); tab = "charlas"; render(); toast("Pegá lo que te contestaron"); }
+  if (act === "guardarresp" || act === "harvey"){
+    const r = (document.getElementById("r-"+x.id)?.value || "").trim();
+    if (r) await guardar(x.id, {historial:hist(x,"ellos",r), ultimoDe:"ellos", estado: x.estado==="llamada" ? "llamada" : "conversando"});
+    if (act === "harvey") pedirHarvey(x);
+  }
+  if (act === "usarpres"){ drafts[x.id] = x.mensajes.presentacion; render(); }
+  if (act === "llamada") await guardar(x.id, {estado:"llamada"});
+  if (act === "cliente") await guardar(x.id, {estado:"cliente"});
+  if (act === "no") await guardar(x.id, {estado:"no", proximo:null});
+  if (act === "reabrir") await guardar(x.id, {estado:"nuevo", proximo:null});
+  if (act === "cambiarnum"){
+    const box = document.createElement("div"); box.className = "actions";
+    box.innerHTML = `<input type="tel" id="cn-${x.id}" placeholder="Nuevo número" style="flex:1;min-width:0"><button class="btn sm" data-act="guardarnum">Guardar número</button>`;
+    t.closest(".actions").after(box); box.querySelector("input").focus();
+  }
+  if (act === "guardarnum"){
+    let n = (document.getElementById("cn-"+x.id)?.value || "").replace(/\D/g,"");
+    if (n.length === 8) n = "504" + n;
+    if (n.length >= 10){ await guardar(x.id, {numero:n}); toast("Número cambiado"); } else toast("Ese número no está completo");
+  }
+});
+// Mantener el link de WhatsApp al día con lo que se edita
+document.addEventListener("input", ev => {
+  const ta = ev.target; if (!ta.id?.startsWith("t-")) return;
+  const id = ta.id.slice(2), x = negocios.find(n => n.id === id); if (!x) return;
+  drafts[id] = ta.value;
+  const a = ta.closest(".card").querySelector("a.btn.wa"); if (a) a.href = waLink(x.numero, ta.value);
+});
+
+(async () => {
+  try { sample = await window.claude?.use?.("sample"); } catch(e){ sample = null; }
+  try { db = await window.claude?.use?.("db"); } catch(e){ db = null; }
+  if (!db){ $("#main").innerHTML = `<div class="card empty">Abrí esta página con tu cuenta de claude.ai para ver tus negocios.</div>`; return; }
+  db.collection("negocios").onSnapshot(snap => {
+    const editando = document.activeElement && ["TEXTAREA","INPUT"].includes(document.activeElement.tagName);
+    negocios = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    const first = !loaded; loaded = true;
+    if (first || !editando) render();
+  }, e => { $("#main").innerHTML = `<div class="card empty">No se pudo leer la lista (${esc(e.code)}). Recargá la página.</div>`; });
+})();
+</script>
