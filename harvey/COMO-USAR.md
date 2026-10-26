@@ -26,6 +26,10 @@ Primer correo corto con una pregunta, sin vender todavía. Los seguimientos ya p
 - **No sirve** para los restaurantes que solo atienden por WhatsApp, TikTok o Facebook. Esos siguen por WhatsApp como hasta ahora.
 - Su buscador gratis (OpenStreetMap) no tiene restaurantes. Para encontrar negocios en Honduras hay que usar **DataForSEO Google Maps** (te regalan $1 al registrarte, y cada búsqueda cuesta $0.002).
 
+## Correrlo en la nube (desde el celular)
+
+Claude lo corre en la nube de este proyecto, con el acceso a internet del entorno en Full. Ahí la única salida a internet es el proxy, y Harvey a propósito abre las páginas sin proxy; `nube.py` cambia solo eso: `python nube.py <comando>` en vez de `harvey <comando>`. Resultados en `resultados/`.
+
 ## Instalarlo en tu computadora
 
 Harvey tiene que correr en tu computadora: se queda prendido revisando cada 15 minutos y usa tu sesión de Claude Code.
