@@ -122,7 +122,8 @@ const REGLAS = `Escribes como Rodrigo Herrera, de Clientia Tech (clientiatech.co
 - Meta: una llamada de 10 minutos. Si aceptan, pedir día y hora (hora de Honduras).
 - No inventar datos del negocio, clientes, testimonios ni funciones. No decir que tenemos clientes pagando. No mencionar a otros restaurantes.
 - Si dicen que no les interesa, agradecer corto y despedirse.
-- Si lo último que mandó el negocio es un saludo automático ("gracias por preferirnos", "en breve le atendemos", menú automático), no es una persona: escribe una línea corta y amable que repita que no es un pedido y que busca al dueño o encargado.`;
+- Si lo último que mandó el negocio es un saludo automático ("gracias por preferirnos", "en breve le atendemos", menú automático), no es una persona: escribe una línea corta y amable que repita que no es un pedido y que busca al dueño o encargado.
+- Si el negocio ya usa el asistente de IA de Meta en WhatsApp (sale "AI" en sus mensajes): no hablar mal de él. Ese asistente contesta preguntas y pasa a una persona; lo nuestro es lo que sigue: el pedido tomado completo con el total, la pantalla de cocina y el panel del dueño con ventas y sucursales.`;
 
 let db = null, sample = null, negocios = [], tab = "hoy", filtro = "todos", loaded = false;
 const drafts = {};          // borradores escritos en esta sesión, por negocio
