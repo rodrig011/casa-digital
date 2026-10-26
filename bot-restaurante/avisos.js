@@ -11,7 +11,7 @@ const { lineaTexto, L } = require("./negocio");
 const waAddr = n => { const d = String(n || "").replace(/\D/g, ""); return d ? "whatsapp:+" + d : null; };
 const digits = n => String(n || "").replace(/\D/g, "");
 
-function fichaTexto(p) {
+function fichaTexto(p, fmt = L) {
   if (p.tipo === "persona") return {
     titulo: `${p.nombre || "Un cliente"} pidió hablar con una persona · ${p.sucursal}`,
     lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, p.motivo ? `💬 ${p.motivo}` : null, `Responder: https://wa.me/${digits(p.tel)}`].filter(Boolean),
@@ -24,8 +24,8 @@ function fichaTexto(p) {
       p.pagado && p.metodoPago === "tarjeta" ? "💳 Pagado con tarjeta" : null,
       p.faltas ? `⚠️ Este número no vino a recoger ${p.faltas === 1 ? "1 vez" : p.faltas + " veces"} antes` : null,
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
-      ...(p.lineas || []).map(lineaTexto),
-      `💰 Total ${L(p.total)}`,
+      ...(p.lineas || []).map(l => lineaTexto(l, fmt)),
+      `💰 Total ${fmt(p.total)}`,
       p.hora ? `🕒 Recoge: ${p.hora}` : null,
       `Responder: https://wa.me/${digits(p.tel)}`,
     ].filter(Boolean),
@@ -53,7 +53,7 @@ function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log
   return {
     destinos,
     async ficha(p) {
-      const t = fichaTexto(p), to = destinos(p.sucursal);
+      const t = fichaTexto(p, negocio.L), to = destinos(p.sucursal);
       const body = `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
       if (!to.length) { log(`[aviso sin destino: falta OWNER_WHATSAPP]\n${body}`); return []; }
       return Promise.all(to.map(n => enviar(n, body, t)));
@@ -61,11 +61,11 @@ function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log
     // to the customer, when the kitchen marks the order as ready
     listo(p) {
       const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
-      return enviar(waAddr(p.tel), `✅ ¡${(p.nombre || "Hola").split(" ")[0]}, su pedido *${p.n}* ya está listo! Puede pasar a recogerlo a *${p.sucursal}*${b && b.direccion ? ` (${b.direccion})` : ""}.\n\nTotal: ${L(p.total)}. ¡Gracias por su compra!`);
+      return enviar(waAddr(p.tel), `✅ ¡${(p.nombre || "Hola").split(" ")[0]}, su pedido *${p.n}* ya está listo! Puede pasar a recogerlo a *${p.sucursal}*${b && b.direccion ? ` (${b.direccion})` : ""}.\n\nTotal: ${negocio.L(p.total)}. ¡Gracias por su compra!`);
     },
     // the payment receipt photo, to the owner and branch: someone checks the bank and taps "Pago recibido"
     async comprobante(p, mediaUrl) {
-      const t = { titulo: `Comprobante de pago ${p.n} · ${p.sucursal}`, lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, `💰 Total ${L(p.total)}`, "Revise que el dinero esté en la cuenta y toque Pago recibido en el panel. Hasta entonces no va a cocina."] };
+      const t = { titulo: `Comprobante de pago ${p.n} · ${p.sucursal}`, lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, `💰 Total ${negocio.L(p.total)}`, "Revise que el dinero esté en la cuenta y toque Pago recibido en el panel. Hasta entonces no va a cocina."] };
       const to = destinos(p.sucursal);
       const body = `💳 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
       if (!to.length) { log(`[aviso sin destino: falta OWNER_WHATSAPP]\n${body}`); return []; }
@@ -73,7 +73,7 @@ function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log
     },
     // to the customer, when someone confirms the payment in the panel
     pagado(p) {
-      return enviar(waAddr(p.tel), `✅ Recibimos su pago del pedido *${p.n}* (${L(p.total)}). Ya está en cocina; le avisamos por aquí cuando esté listo.`);
+      return enviar(waAddr(p.tel), `✅ Recibimos su pago del pedido *${p.n}* (${negocio.L(p.total)}). Ya está en cocina; le avisamos por aquí cuando esté listo.`);
     },
     enviar,
   };

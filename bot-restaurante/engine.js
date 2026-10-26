@@ -7,11 +7,11 @@
 // cuando el cliente lo pide. Cada pedido terminado sale en state.lead y server.js lo guarda y avisa.
 // Si el negocio cobra antes (negocio.cobro), el pedido sale "por_pagar": no va a cocina hasta que se confirme el pago.
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, norm, L } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, norm } = require("./negocio");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
 const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|hablar con|me llamen|queja|reclamo/.test(t);
-const quiereDomicilio = t => /domicilio|delivery|envio|enviar|envian|llevan|a mi casa|pedidos ?ya|bip ?bip|motorista|repartidor/.test(t);
+const quiereDomicilio = t => /domicilio|delivery|envio|enviar|envian|llevan|a mi casa|pedidos ?ya|bip ?bip|uber|motorista|repartidor/.test(t);
 const quiereSucursal = t => /donde|ubicacion|ubicados|direccion|sucursal|horario|abren|cierran|abierto|mapa|como llego/.test(t);
 const quiereMenu = t => /menu|precio|cuanto|cuesta|vale|valen|combo|carta|que tienen|que venden/.test(t);
 const quierePedir = t => /pedir|pedido|ordenar|orden|quiero|me da|me das|recoger|para llevar|apartar/.test(t);
@@ -26,7 +26,7 @@ function createEngine(negocio) {
   function menuTexto(corto) {
     return N.menu.map(c => `*${c.categoria}*\n` + (c.items || []).map(i => {
       const it = N.items.find(x => x.id === i.id);
-      return `${it.num}. ${it.nombre} · ${L(it.precio)}${!corto && it.desc ? `\n    ${it.desc}` : ""}`;
+      return `${it.num}. ${it.nombre} · ${N.L(it.precio)}${!corto && it.desc ? `\n    ${it.desc}` : ""}`;
     }).join("\n")).join("\n\n");
   }
   function sucursalesTexto() {
@@ -124,7 +124,7 @@ function createEngine(negocio) {
     const done = () => ({ state: s, messages: out });
 
     const menuInicio = pre => say({ text: (pre ? pre + "\n\n" : "") + "¿En qué le ayudo?", buttons: MENU });
-    const carritoTexto = () => { const c = cuenta(N, d.carrito); return c.lineas.map(lineaTexto).join("\n") + `\n\n*Total: ${L(c.total)}*`; };
+    const carritoTexto = () => { const c = cuenta(N, d.carrito); return c.lineas.map(l => lineaTexto(l, N.L)).join("\n") + `\n\n*Total: ${N.L(c.total)}*`; };
     const pedirSucursal = (siguiente, pregunta) => {
       if (!N.variasSucursales) { d.sucursal = N.sucursales[0].id; return false; }
       d.despues = siguiente; go("sucursal");
@@ -229,14 +229,14 @@ function createEngine(negocio) {
         const b = N.sucursales.find(x => x.id === d.sucursal) || N.sucursales[0];
         const c = cuenta(N, d.carrito);
         const n = "PED-" + (++s.seq);
-        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(lineaTexto).join(" · ") };
+        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · ") };
         if (requiereCobro(N, c.total, ctx.faltas || 0)) {
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total };
-          say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(lineaTexto).join("\n")}\n*Total: ${L(c.total)}*\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.\n\nPara mandarlo a cocina, se paga antes:\n${textoCobro(N, n, c.total)}\n\nEn cuanto se confirme el pago entra a cocina y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
+          say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.\n\nPara mandarlo a cocina, se paga antes:\n${textoCobro(N, n, c.total)}\n\nEn cuanto se confirme el pago entra a cocina y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
           go("pago");
           break;
         }
-        say({ text: `✅ *Listo, ${d.nombre.split(" ")[0]}.* Pedido *${n}*\n\n${c.lineas.map(lineaTexto).join("\n")}\n*Total: ${L(c.total)}*\n\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.${N.pago ? `\n${N.pago}` : ""}\n\nLe avisamos por aquí cuando esté listo.`, buttons: ["Hacer otro pedido", "Sucursales y horario"] });
+        say({ text: `✅ *Listo, ${d.nombre.split(" ")[0]}.* Pedido *${n}*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n\nRecoge en *${b.nombre}*: ${d.hora.toLowerCase()}.${N.pago ? `\n${N.pago}` : ""}\n\nLe avisamos por aquí cuando esté listo.`, buttons: ["Hacer otro pedido", "Sucursales y horario"] });
         go("post");
         break;
       }

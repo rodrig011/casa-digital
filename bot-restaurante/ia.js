@@ -5,7 +5,7 @@
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0 });
 //   r = { reply, history, pedido?, persona? }
-const { cuenta, requiereCobro, textoCobro, L } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -13,10 +13,10 @@ const MAX_VUELTAS = 5;          // llamadas a la API por mensaje (herramientas i
 
 function system(N) {
   const apps = (N.domicilio.apps || []).map(a => a.nombre + (a.url ? ` (${a.url})` : "")).join(", ");
-  return `Usted es el asistente de WhatsApp de ${N.nombre}, un restaurante en Honduras. Atiende a clientes que preguntan por el menú, los precios, las sucursales, o que quieren hacer un pedido para recoger.
+  return `Usted es el asistente de WhatsApp de ${N.nombre}, un restaurante en ${N.pais}. Atiende a clientes que preguntan por el menú, los precios, las sucursales, o que quieren hacer un pedido para recoger.
 
 Cómo escribe:
-- Español de Honduras, trato de usted, cálido y rápido.
+- Español de ${N.pais}, trato de usted, cálido y rápido.
 - Mensajes cortos de WhatsApp: 1 a 5 líneas. Una pregunta a la vez.
 - Para resaltar use *asteriscos* (negrita de WhatsApp). Sin títulos ni tablas.
 
@@ -42,7 +42,7 @@ Límites:
 function tools(N) {
   const suc = { type: "string", enum: N.sucursales.map(s => s.id), description: "Sucursal: " + N.sucursales.map(s => `${s.id} = ${s.nombre}`).join(", ") };
   return [
-    { name: "ver_menu", description: "Menú completo con id, nombre exacto, categoría, descripción y precio en lempiras.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
+    { name: "ver_menu", description: "Menú completo con id, nombre exacto, categoría, descripción y precio con su moneda.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
     { name: "sucursales", description: "Sucursales con dirección, teléfono y horario.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
     {
       name: "crear_pedido",
@@ -66,7 +66,7 @@ function tools(N) {
 function ejecutar(N, name, input, ctx) {
   const b = id => N.sucursales.find(s => s.id === id) || N.sucursales[0];
   switch (name) {
-    case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: L(i.precio) })) };
+    case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: N.L(i.precio) })) };
     case "sucursales": return { sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", telefono: s.telefono || "", horario: s.horario || "Por confirmar: una persona de la sucursal lo confirma.", ...(s.mapa ? { mapa: s.mapa } : {}) })) };
     case "crear_pedido": {
       if (ctx.pedido) return { error: "Ya se creó el pedido en este mensaje.", numero: ctx.pedido.n };
@@ -77,7 +77,7 @@ function ejecutar(N, name, input, ctx) {
       const s = b(input.sucursal);
       const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora: String(input.hora || "").slice(0, 60), resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · ") };
-      const base = { ok: true, numero: ctx.pedido.n, total: L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${L(l.subtotal)}`), sucursal: s.nombre };
+      const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre };
       if (requiereCobro(N, c.total, ctx.faltas || 0)) {
         ctx.pedido.estado = "por_pagar";
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total), nota: "Todavía NO va a cocina: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando se confirme el pago entra a cocina y se le avisa." };
@@ -116,7 +116,7 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   async function turn(history, text, now, { numero, faltas = 0 } = {}) {
     const ctx = { numero, faltas, pedido: null, persona: null };
     const base = recortar((history || []).map(sinPensar));
-    const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en Honduras: ${fecha(now)}]` }] }];
+    const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), timeoutMs);
     try {

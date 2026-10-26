@@ -5,7 +5,17 @@ const fs = require("fs");
 const path = require("path");
 
 const norm = s => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const L = n => "L " + (+n || 0).toLocaleString("es-HN", { maximumFractionDigits: 2 });
+// "moneda" en negocios/<cliente>.json: HNL (lempiras, por defecto), GTQ (quetzales) o USD (dólares, El Salvador)
+const MONEDAS = {
+  HNL: { simbolo: "L ", locale: "es-HN", min: 0, pais: "Honduras" },
+  GTQ: { simbolo: "Q", locale: "es-GT", min: 0, pais: "Guatemala" },
+  USD: { simbolo: "$", locale: "en-US", min: 2, pais: "El Salvador" },
+};
+const dinero = (moneda = "HNL") => {
+  const m = MONEDAS[moneda] || MONEDAS.HNL;
+  return n => m.simbolo + (+n || 0).toLocaleString(m.locale, { minimumFractionDigits: m.min, maximumFractionDigits: 2 });
+};
+const L = dinero("HNL");
 
 function preparar(n) {
   const errores = [];
@@ -13,6 +23,7 @@ function preparar(n) {
   if (!n.nombre) errores.push("falta nombre");
   if (!Array.isArray(n.sucursales) || !n.sucursales.length) errores.push("falta al menos una sucursal");
   if (!Array.isArray(n.menu) || !n.menu.length) errores.push("falta el menú");
+  if (n.moneda && !MONEDAS[n.moneda]) errores.push(`moneda desconocida: ${n.moneda} (use ${Object.keys(MONEDAS).join(", ")})`);
   const items = [];
   const ids = new Set();
   for (const c of n.menu || []) for (const it of c.items || []) {
@@ -55,6 +66,9 @@ function preparar(n) {
   return {
     ...n,
     color: n.color || "#C8102E",
+    moneda: n.moneda || "HNL",
+    pais: n.pais || (MONEDAS[n.moneda] || MONEDAS.HNL).pais,
+    L: dinero(n.moneda),
     pago: n.pago || "",
     domicilio: n.domicilio || { propio: false, apps: [] },
     cobro: prepararCobro(n.cobro),
@@ -65,7 +79,7 @@ function preparar(n) {
 
 // Cobro antes de cocinar (opcional): para que un pedido grande o de alguien que ya dejó un pedido botado
 // no se cocine hasta que esté pagado. Solo se activa si el restaurante dio cómo cobrar (transferencia o enlace).
-//   desde: total en lempiras desde el que se cobra antes (0 = todos; vacío = ninguno por monto)
+//   desde: total (en la moneda del negocio) desde el que se cobra antes (0 = todos; vacío = ninguno por monto)
 //   faltas: cuántas veces "No vino" a recoger para que ese número tenga que pagar antes (0 = nunca)
 //   transferencia: banco, tipo y número de cuenta, a nombre de quién (lo da el dueño)
 //   tarjeta: enlace de pago fijo de la pasarela del restaurante; {n} y {total} se cambian por el pedido y el total
@@ -90,7 +104,7 @@ function textoCobro(negocio, n, total) {
   return [
     c.pasarela ? `💳 *Con tarjeta:* ${LINK}\nAl pagar con tarjeta, el pedido entra solo a cocina.` : c.tarjeta ? `💳 *Con tarjeta:* ${link}` : null,
     c.transferencia ? `🏦 *Por transferencia:* ${c.transferencia}` : null,
-    `Monto: *${L(total)}* · Referencia: *${n}*`,
+    `Monto: *${negocio.L(total)}* · Referencia: *${n}*`,
     c.transferencia ? `${c.pasarela ? "Si paga por transferencia, mándenos" : "Al pagar, mándenos"} aquí la foto del comprobante.` : null,
   ].filter(Boolean).join("\n");
 }
@@ -113,6 +127,6 @@ function cuenta(negocio, lineas) {
   }
   return { lineas: out, total: out.reduce((a, l) => a + l.subtotal, 0) };
 }
-const lineaTexto = l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${L(l.subtotal)}`;
+const lineaTexto = (l, fmt = L) => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${fmt(l.subtotal)}`;
 
-module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, requiereCobro, textoCobro, LINK, norm, L };
+module.exports = { cargarNegocio, preparar, cuenta, lineaTexto, requiereCobro, textoCobro, LINK, norm, L, dinero, MONEDAS };

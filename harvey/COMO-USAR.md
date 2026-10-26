@@ -20,6 +20,10 @@ Se instaló y se cargaron 3 negocios de `correos/` (Pollos El Hondureño, Basili
 
 Primer correo corto con una pregunta, sin vender todavía. Los seguimientos ya presentan el bot.
 
+## Guatemala y El Salvador
+
+`entrada/guatemala-el-salvador.csv` trae 66 restaurantes con correo (34 de Guatemala y 32 de El Salvador), cada uno con su país, su moneda y los datos que se pueden usar en el correo. Sale de `expansion/` (ver `expansion/README.md`). La columna `enviado` es para marcar a quién ya se le escribió.
+
 ## Dónde sirve y dónde no
 
 - **Sirve** para negocios con correo: hoteles, catering, panaderías, cadenas y empresas tipo Steel Works. Lleva el seguimiento y las respuestas solo.
