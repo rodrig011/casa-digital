@@ -1,0 +1,10 @@
+# Libby's Cajun · paquete de Casa Digital
+
+Restaurante de mariscos "al estilo Louisiana" en San Pedro Sula. TikTok @libbyscajun (39.9K seguidores, 667.7K me gusta, 398 videos; "Nueva mariscada Catracha Louisiana" tiene 1.1M de vistas). Pedidos al 9309-9296 (bio). Ya usan el asistente gratis de Meta en su WhatsApp Business: no hablar mal de él; lo nuestro es lo que sigue después del chat.
+Dueña posible: Libby Sabillón (@libbysabillonoficial), no confirmado. Dirección exacta: no la publican (un cliente comenta "15 avenida 5 calle arriba del estadio", no confirmado).
+Ojo: no mezclar con material de otros restaurantes.
+
+- `redes/`: datos de TikTok leídos el 26-oct-2026 (`tiktok-datos.json`, con comentarios y cuántos contestó la cuenta) y portadas de sus videos (`tiktok-portadas/`, a su tamaño original). `avatar.jpg` es la foto de perfil: el rótulo del local con el logo.
+- `panel/`: panel de la dueña (demo), estilo Salesforce. `python3 panel/build.py` arma `panel/dist/libbys-cajun-panel.html`, un solo archivo, publicado en https://clientiatech.com/demos/libbys-cajun-panel.html. Secciones: Inicio, Pedidos de WhatsApp (el pedido sale del chat completo con total y entra solo a cocina), Cocina (mesas, para llevar y domicilio en una pantalla, revisión antes de servir o salir), Reservaciones (cumpleaños, cenas románticas, recordatorio el mismo día, mesas), Mariscos e insumos (descuento por plato, aviso a proveedores), Caja, Ventas (por día y lo más pedido), Clientes y TikTok (vistas reales, preguntas reales de sus comentarios, código por video). Ciudad, número, nombres de platos, fotos y datos de TikTok son reales; precios, ventas, conversaciones, reservaciones, caja e insumos son de ejemplo y lo dice en pantalla.
+
+Precio si lo piden (26-oct): instalación entre L15,000 y L20,000 y mensualidad desde L2,500, sin comisión; 30 días gratis; la instalación se paga en dos partes, día 30 y día 60.
