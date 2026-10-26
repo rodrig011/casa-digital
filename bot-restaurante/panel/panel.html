@@ -93,7 +93,8 @@ if (!VISTAS.some(v => v[0] === vista)) vista = "hoy";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const L = n => "L " + (+n || 0).toLocaleString("es-HN", { maximumFractionDigits: 2 });
+const MONEDAS = { HNL: ["L ", "es-HN", 0], GTQ: ["Q", "es-GT", 0], USD: ["$", "en-US", 2] };
+const L = n => { const [s, loc, min] = MONEDAS[(N && N.moneda) || "HNL"] || MONEDAS.HNL; return s + (+n || 0).toLocaleString(loc, { minimumFractionDigits: min, maximumFractionDigits: 2 }); };
 const hora = iso => new Date(iso).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
 const dia = iso => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/Tegucigalpa" });
 const hoy = () => dia(new Date().toISOString());

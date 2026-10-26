@@ -29,6 +29,20 @@ function run(titulo, ...xs) {
   return st;
 }
 
+test("moneda: quetzales en Guatemala, dólares en El Salvador, lempiras si no dice", () => {
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8"));
+  assert.equal(N.L(1250), "L 1,250"); assert.equal(N.pais, "Honduras");
+  const gt = preparar({ ...base, moneda: "GTQ" });
+  assert.equal(gt.L(45), "Q45"); assert.equal(gt.pais, "Guatemala");
+  const sv = preparar({ ...base, moneda: "USD" });
+  assert.equal(sv.L(3.5), "$3.50"); assert.equal(sv.pais, "El Salvador");
+  const E2 = createEngine(sv), hola = E2.handle(null, "hola", NOW);
+  const menu = E2.handle(hola.state, "1", NOW).messages.map(toText).join("\n");
+  assert.match(menu, /\$\d+\.\d\d/);
+  assert.doesNotMatch(menu, /L \d/);
+  assert.throws(() => preparar({ ...base, moneda: "EUR" }), /moneda desconocida/);
+});
+
 test("negocio: el archivo de ejemplo es válido y un archivo incompleto se rechaza", () => {
   assert.equal(N.items.length, 5);
   assert.equal(N.item("combo de 3 piezas").id, "c3");

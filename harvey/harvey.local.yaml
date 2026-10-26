@@ -8,12 +8,13 @@ persona:
   role: "Sistemas e instalación"
   email: "rodrigo@clientiatech.com"   # cámbialo por el buzón del que vas a enviar
   linkedin: ""
-  tone: "cercano y respetuoso, de usted, español de Honduras, directo y corto"
+  tone: "cercano y respetuoso, de usted, directo y corto; español de Honduras con negocios de Honduras y neutro con Guatemala y El Salvador"
 
 product:
   name: "Casa Digital"
   description: >-
-    Bot de WhatsApp y panel del dueño para restaurantes y negocios de Honduras.
+    Bot de WhatsApp y panel del dueño para restaurantes y negocios de Honduras,
+    Guatemala y El Salvador.
     El bot contesta a toda hora (menú, precios, sucursales, horario), toma
     pedidos para recoger y los manda a una pantalla de cocina; el dueño ve los
     pedidos y lo vendido desde su celular. Se instala a distancia.
@@ -55,6 +56,12 @@ icp:
     - "San Pedro Sula, Honduras"
     - "La Ceiba, Honduras"
     - "Comayagua, Honduras"
+    - "Guatemala City, Guatemala"
+    - "Antigua Guatemala, Guatemala"
+    - "Quetzaltenango, Guatemala"
+    - "San Salvador, El Salvador"
+    - "Santa Tecla, El Salvador"
+    - "Antiguo Cuscatlán, El Salvador"
   hiring_signals: []
 
 channels:

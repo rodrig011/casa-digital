@@ -21,7 +21,7 @@ const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, L } = require("./negocio");
+const { cargarNegocio, LINK } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -108,7 +108,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
     const p = store.addPedido({ ...base, n: base.n || numero(base.tipo === "persona" ? "AS" : "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
-    log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? L(p.total) : p.motivo || ""}`);
+    log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? negocio.L(p.total) : p.motivo || ""}`);
     track(avisos.ficha(p));
     return p;
   }
@@ -237,7 +237,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function pendientes() {
     const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
-    return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
+    return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
   }
 
   const baseDe = req => cfg.publicUrl || `${req.protocol}://${req.get("host")}`;
@@ -283,7 +283,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, cobro: negocio.cobro.activo, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;

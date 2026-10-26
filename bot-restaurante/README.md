@@ -56,6 +56,7 @@ y abrir `http://localhost:3000/panel`.
 
 1. Copiar `negocios/ejemplo.json` a `negocios/<cliente>.json`.
 2. Llenar **solo con lo que el cliente confirmó**: nombre exacto de cada producto como en su menú, precio en lempiras, sucursales con dirección y teléfono. Un horario que no confirmó se deja `""` y el bot dice que una persona lo confirma.
+   Para un negocio de Guatemala o El Salvador, agregar `"moneda": "GTQ"` (quetzales, Q45) o `"moneda": "USD"` (dólares, $3.50). Sin `moneda` el bot cobra en lempiras. El bot también dice el país correcto al hablar con la IA.
 3. `whatsapp` en cada sucursal es opcional: si la sucursal tiene su propio WhatsApp, recibe sus pedidos además del dueño.
 4. `npm test` revisa que todos los archivos de `negocios/` estén bien escritos.
 5. Para cambiar un precio después: editar el archivo, subirlo a GitHub y Render lo actualiza solo.
