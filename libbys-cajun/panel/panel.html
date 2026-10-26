@@ -6,7 +6,7 @@
 <title>Panel Libby's Cajun</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#F5F3EF">
-<script>try{if(localStorage.getItem("lc-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+<script>try{if(localStorage.getItem("lc-tema")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}try{if(sessionStorage.getItem("lc-demo")!=="1")document.documentElement.classList.add("gated");}catch(e){document.documentElement.classList.add("gated");}</script>
 <style>
 /* Libby's Cajun's desk, the same CRM-style layout as the other restaurant panels: global header,
    app tabs, record-style page header, dense cards and list views. One Louisiana-style seafood restaurant in San Pedro Sula
@@ -276,16 +276,32 @@ main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:
   <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
 </svg>
 
+<div class="gate" id="gate">
+  <form id="gateForm" autocomplete="on">
+    <div class="brand"><img src="logo.jpg" alt="Libby's Cajun"></div>
+    <h1>Entrar al panel</h1>
+    <p>Libby's Cajun · San Pedro Sula</p>
+    <div class="err" id="gateErr" role="alert" hidden>Correo o contraseña incorrectos.</div>
+    <label>Correo<input id="gMail" type="email" autocomplete="username" required></label>
+    <label>Contraseña<input id="gPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn pri" type="submit">Entrar</button>
+    <div class="hint">Demostración: entre con <b>demo@libbyscajun.hn</b> y la contraseña <b>mariscos2026</b>. En el panel real cada persona entra con su propio correo y la contraseña se revisa en el servidor.</div>
+  </form>
+</div>
 <header class="gh">
   <div class="gh-top">
     <div class="brand"><img src="logo.jpg" alt="Libby's Cajun"></div>
     <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" placeholder="Buscar pedidos, reservaciones, clientes e insumos" autocomplete="off"><div class="results" id="results" hidden></div></div>
     <div class="tb-r">
       <button class="iconbtn theme" id="tema" aria-label="Cambiar tema"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
-      <span class="avatar" title="Dueña">LC</span>
+      <div class="pop"><button class="iconbtn bell" id="bell" aria-label="Avisos"><svg class="ic"><use href="#i-bell"/></svg><span class="bn" id="bellN"></span></button>
+        <div class="popm" id="bellPop" hidden><header>Avisos</header><div id="bellList"></div></div></div>
+      <div class="pop"><button class="avatar" id="me" title="Dueña">LC</button>
+        <div class="popm me" id="mePop" hidden><header>Dueña<small>demo@libbyscajun.hn</small></header><a href="#equipo" data-v="equipo">Equipo y permisos</a><a href="#" id="salir">Salir</a></div></div>
     </div>
   </div>
   <div class="gh-nav"><div class="appname"><span class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Libby's Cajun</div><nav id="nav" aria-label="Secciones"></nav></div>
@@ -327,6 +343,61 @@ main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:
 .order ul{list-style:none;margin:6px 0;padding:0;}
 .q{border-left:3px solid var(--line2);padding:6px 10px;background:var(--sunk);border-radius:0 4px 4px 0;}
 .q small{display:block;color:var(--tx3);font-size:11px;}
+
+/* CRM: demo login, skeleton, record page, timeline, lists, pipeline, heatmap, permissions, popovers */
+.gate{display:none;position:fixed;inset:0;z-index:100;place-items:center;padding:16px;background:var(--bg);}
+.gated .gate{display:grid;} .gated body{overflow:hidden;}
+.gate form{width:min(400px,100%);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:28px;display:grid;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.gate .brand img{height:40px;width:auto;}
+.gate h1{margin:6px 0 0;font:700 20px var(--body);} .gate p{margin:0;color:var(--tx3);}
+.gate label{display:grid;gap:4px;font-size:12px;color:var(--tx2);}
+.gate input{height:40px;border-radius:4px;border:1px solid var(--line2);background:var(--card);padding:0 10px;font-size:16px;}
+.gate input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand);}
+.gate .btn{height:40px;font-size:14px;}
+.gate .err{background:var(--red-bg);color:var(--red);border-radius:4px;padding:8px 12px;}
+.gate .hint{background:var(--amber-bg);color:var(--amber);border-radius:4px;padding:8px 12px;}
+.sk{display:block;border-radius:4px;background:linear-gradient(90deg,var(--hover) 25%,var(--sunk) 45%,var(--hover) 65%);background-size:300% 100%;}
+@media (prefers-reduced-motion:no-preference){.sk{animation:shim 1.3s ease-in-out infinite;}@keyframes shim{from{background-position:100% 0}to{background-position:0 0}}}
+.skrow{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);}
+.skchart{display:flex;align-items:flex-end;gap:6%;height:200px;padding:20px 20px 24px 40px;} .skchart .sk{flex:1;}
+.pop{position:relative;}
+button.avatar{border:0;cursor:pointer;}
+.bell{position:relative;} .bell .bn{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px;}
+.popm{position:absolute;right:0;top:40px;width:min(340px,92vw);background:var(--card);border:1px solid var(--line2);border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.16);z-index:50;overflow:hidden;}
+.popm header{padding:10px 14px;font-weight:700;border-bottom:1px solid var(--line);} .popm header small{display:block;font-weight:400;color:var(--tx3);}
+.popm a{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--line);} .popm a:last-child{border-bottom:0;}
+.popm a b{display:block;font-weight:400;color:var(--brand);} .popm a small{color:var(--tx3);font-size:12px;}
+@media (hover:hover) and (pointer:fine){.popm a:hover{background:var(--hover);}}
+.popm.me{width:220px;}
+.ti{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none;} .ti svg{width:14px;height:14px;}
+.lnk{color:var(--brand);} @media (hover:hover) and (pointer:fine){.lnk:hover{text-decoration:underline;}}
+.kpis.k5{grid-template-columns:repeat(5,1fr);} .k5 .kpi b{font-size:22px;}
+.hl{flex-basis:100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);margin:4px -16px 0;}
+.hl > div{padding:10px 16px;border-left:1px solid var(--line);} .hl > div:first-child{border-left:0;}
+.hl span{display:block;font-size:12px;color:var(--tx3);} .hl b{font-size:15px;font-weight:400;}
+.g2.rev{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);}
+.tl{list-style:none;margin:0;padding:4px 16px 12px;border-top:1px solid var(--line);}
+.tl li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;padding:10px 0;position:relative;}
+.tl li:not(:last-child)::before{content:"";position:absolute;left:13.5px;top:40px;bottom:-8px;width:1px;background:var(--line2);}
+.tl b{font-weight:700;font-size:13px;} .tl p{margin:1px 0 0;color:var(--tx2);font-size:12px;} .tl time{font-size:12px;color:var(--tx3);white-space:nowrap;}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;margin:0;padding:12px 16px 16px;border-top:1px solid var(--line);}
+.dl dt{color:var(--tx3);font-size:12px;padding-top:2px;} .dl dd{margin:0;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--line);}
+.chip2{height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--line2);background:var(--card);color:var(--tx2);font-size:12px;white-space:nowrap;}
+.chip2 b{font-weight:700;color:var(--tx3);margin-left:4px;} .chip2.on{background:var(--brand);border-color:var(--brand);color:#fff;} .chip2.on b{color:#fff;}
+.sort{font:inherit;font-weight:700;color:var(--tx2);} .sort.on{color:var(--brand);}
+.clist tbody tr{cursor:pointer;}
+.pipe .opp{display:block;width:calc(100% - 20px);text-align:left;cursor:pointer;}
+.pipe .opp .t b{font-size:13px;} .opp.sel{box-shadow:inset 0 0 0 2px var(--brand);}
+@media (hover:hover) and (pointer:fine){.pipe .opp:hover{border-color:var(--brand);}}
+.nx{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:var(--amber);} .nx .ic{width:13px;height:13px;}
+.col h3 span{font-size:12px;}
+.heat{display:grid;grid-template-columns:34px repeat(10,1fr);gap:3px;font-size:11px;color:var(--tx3);}
+.heat i{display:block;height:22px;border-radius:3px;} .heat .hh{text-align:center;} .heat .hd{align-self:center;}
+.perm td,.perm th{text-align:center;} .perm td:first-child,.perm th:first-child{text-align:left;}
+.perm .ok{color:var(--ok);display:inline-grid;} .perm .ok svg{width:16px;height:16px;} .perm .no{color:var(--line2);}
+.form select{appearance:auto;}
+@media (max-width:860px){.kpis.k5{grid-template-columns:1fr 1fr;}.k5 .kpi:nth-child(odd){border-left:0;}.k5 .kpi{border-bottom:1px solid var(--line);}.g2.rev{grid-template-columns:1fr;}.ph.recph .r{order:3;}.board.pipe{grid-template-columns:repeat(4,minmax(240px,82vw));}}
 </style>
 <script>
 "use strict";
@@ -457,13 +528,13 @@ const chn = c => c ? `<span class="chn ${c}">${CHN[c]}</span>` : "";
 const WAHOY = () => SALES.filter(s => s.ch !== "Salón").length;
 const resHoy = () => RESV.filter(r => r[0] === 0);
 
-const NAV = [["hoy","Inicio"],["whatsapp","Pedidos de WhatsApp"],["pedidos","Cocina"],["reservas","Reservaciones"],["insumos","Mariscos e insumos"],["caja","Caja"],["ventas","Ventas"],["clientes","Clientes"],["tiktok","TikTok"]];
+const NAV = [["hoy","Inicio"],["whatsapp","WhatsApp"],["pedidos","Cocina"],["reservas","Reservaciones"],["eventos","Eventos"],["clientes","Clientes"],["campanas","Campañas"],["insumos","Mariscos e insumos"],["caja","Caja"],["ventas","Reportes"],["tiktok","TikTok"],["equipo","Equipo"]];
 function nav() {
   const c = {pedidos: PICK.filter(p => p.st === "nuevo").length, insumos: INS.filter(i => i[2] < i[3]).length, caja: CAJA.filter(x => x.d > 0 && x.d < 4 && x.diff < -100).length,
-    whatsapp: CONV.filter(x => x.st === "reserva").length, reservas: RESV.filter(r => !r[6]).length, clientes: OPIN.filter(o => o.s <= 3 && !o.fix).length};
-  $("#nav").innerHTML = NAV.map(([id, t]) => `<a href="#${id}" class="${VIEW === id ? "on" : ""}" data-v="${id}">${t}${c[id] ? `<span class="c">${c[id]}</span>` : ""}</a>`).join("");
+    whatsapp: CONV.filter(x => x.st === "reserva").length, eventos: OPPS.filter(o => o.st === "consulta").length, reservas: RESV.filter(r => !r[6]).length, clientes: OPIN.filter(o => o.s <= 3 && !o.fix).length};
+  $("#nav").innerHTML = NAV.map(([id, t]) => `<a href="#${id}" class="${VIEW === id || (VIEW === "cliente" && id === "clientes") ? "on" : ""}" data-v="${id}">${t}${c[id] ? `<span class="c">${c[id]}</span>` : ""}</a>`).join("");
 }
-const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bag","#FE9339"],reservas:["i-cal","#BA0517"],insumos:["i-box","#B78300"],caja:["i-cash","#3BA755"],ventas:["i-chart","#0B827C"],clientes:["i-users","#7526E3"],tiktok:["i-play","#181818"]};
+const TILE = {hoy:["i-home","#0176D3"],whatsapp:["i-chat","#2E844A"],pedidos:["i-bag","#FE9339"],reservas:["i-cal","#BA0517"],insumos:["i-box","#B78300"],caja:["i-cash","#3BA755"],ventas:["i-chart","#0B827C"],clientes:["i-users","#7526E3"],tiktok:["i-play","#181818"],eventos:["i-cal","#C23934"],campanas:["i-send","#0B827C"],equipo:["i-users","#032D60"],cliente:["i-users","#7526E3"]};
 const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Ciudad, número de pedidos, nombres de platos, fotos y videos de TikTok (con sus vistas y comentarios) son los reales de Libby's Cajun. Precios, ventas, conversaciones, pedidos, reservaciones, caja e insumos son datos de ejemplo.</div>
   <div class="ph"><div class="tile" style="background:${TILE[VIEW][1]}">${icon(TILE[VIEW][0])}</div><div><div class="ey">Libby's Cajun · ${CITY}</div><h1>${title}</h1></div>${extra ? `<div class="r">${extra}</div>` : ""}</div><div class="subline">${sub}</div>`;
 const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</span>`;
@@ -618,7 +689,7 @@ function vInsumos() {
     <div class="g2">
       <section class="card"><header>${CT("i-box","#B78300")}<h2>Lo que más sale</h2><div class="r">fotos de sus videos</div></header>
         <div class="dish"><img src="foto-mariscada.jpg" alt="Mariscada de Libby's Cajun"><div><b>Mariscada Catracha Louisiana</b><p class="hint" style="margin:4px 0 0">Su video con 1.1M de vistas. Lleva camarón, cangrejo, langosta, mejillones, elote y papa: cada una descuenta eso del inventario.</p></div></div>
-        <div class="dish"><img src="foto-cajun.jpg" alt="Mariscos Cajun de Libby's Cajun"><div><b>Mariscos Cajun</b><p class="hint" style="margin:4px 0 0">Si un marisco se acaba, el asistente deja de ofrecer los platos que lo llevan y sigue vendiendo lo demás.</p></div></div></section>
+        <div class="dish"><img src="foto-sopa.jpg" alt="Sopa marinera de Libby's Cajun"><div><b>Sopa marinera</b><p class="hint" style="margin:4px 0 0">Su video "La sopa marinera de los millonarios" (495.9K vistas). Si un marisco se acaba, el asistente deja de ofrecer los platos que lo llevan y sigue vendiendo lo demás.</p></div></div></section>
       <section class="card"><header>${CT("i-box","#B78300")}<h2>Pedido para mañana, ${DAYS[f.wd]}</h2><div class="r">últimos 4 ${PL(DAYS[f.wd])} + reservaciones + 10%</div></header>
         <table class="tbl"><thead><tr><th>Qué</th><th class="r">Pedidos esperados</th><th class="r">Pedir</th></tr></thead>
         <tbody><tr><td>Camarón</td><td class="r num">${f.avg.toFixed(0)}</td><td class="r num"><b>${f.camaron} libras</b></td></tr>
@@ -663,50 +734,6 @@ function cajaCalc() {
   $("#cres").innerHTML = `<div class="res" style="background:var(--sunk)"><span>Efectivo esperado</span><span class="big">${L(exp)}</span></div>` + (ef ? `<div class="res" style="background:var(--${k}-bg);color:var(--${k})"><span>${k === "ok" ? "Cuadra" : d < 0 ? "Faltan" : "Sobran"}</span><span class="big">${k === "ok" ? "✓" : L(Math.abs(d))}</span></div>` : "");
 }
 
-function vVentas() {
-  const wk = HIST.slice(21).reduce((q, h) => q + h.ventas, 0); const wo = HIST.slice(21).reduce((q, h) => q + h.o, 0);
-  const t = SALES.reduce((a, x) => a + x.total, 0) || 1;
-  const byCh = CH.map(c => [c, SALES.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]);
-  const items = itemsSold(); const mxI = Math.max(...items.map(i => i[2]));
-  const days = HIST.slice(21); const mxD = Math.max(...days.map(d => d.ventas));
-  return `${PH("Ventas", "Lo que se vendió cada día y lo más pedido, sin sacar cuentas a mano.")}
-  <div class="stack">
-    <section class="card"><div class="kpis">
-      <div class="kpi"><span>Ventas últimos 7 días</span><b class="num">${L(wk)}</b><small>${wo.toLocaleString("en-US")} pedidos</small></div>
-      <div class="kpi"><span>Ticket promedio</span><b class="num">${L(wk / wo)}</b><small>por mesa o pedido</small></div>
-      <div class="kpi"><span>WhatsApp hoy</span><b class="num">${L(byCh[1][1] + byCh[2][1])}</b><small>${Math.round((byCh[1][1] + byCh[2][1]) / t * 100)}% de las ventas</small></div>
-      <div class="kpi"><span>Salón hoy</span><b class="num">${L(byCh[0][1])}</b><small>${Math.round(byCh[0][1] / t * 100)}% de las ventas</small></div>
-    </div></section>
-    <div class="g2">
-      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Lo más vendido hoy</h2><div class="r">precios de ejemplo</div></header><div class="bars">${items.map(([m, q, v]) => `<div class="hb"><b>${m.s}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
-      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Cada día de la semana</h2></header><div class="bars">${days.map(d => `<div class="hb"><b>${d.d === 1 ? "Ayer" : DAYS[d.wd]}<em class="num">${d.o} pedidos · ${L(d.ventas)}</em></b><div class="trk"><i style="width:${d.ventas / mxD * 100}%;background:var(--c3)"></i></div></div>`).join("")}</div></section>
-    </div>
-    <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Hoy por canal</h2></header><div class="bars">${byCh.map(([c, v]) => `<div class="hb"><b>${c}<em class="num">${L(v)} · ${Math.round(v / t * 100)}%</em></b><div class="trk"><i style="width:${v / t * 100}%;background:${col(CHC[c])}"></i></div></div>`).join("")}</div></section>
-  </div>`;
-}
-
-function vClientes() {
-  const avg = (OPIN.reduce((a, o) => a + o.s, 0) / OPIN.length).toFixed(1);
-  return `${PH("Clientes", "Quién le compra más, qué pide y hace cuánto no vuelve. Después de cada visita o domicilio el asistente pregunta \"¿Cómo le fue?\", y si algo faltó usted se entera ese mismo día.")}
-  <div class="stack">
-    <section class="card"><div class="kpis">
-      <div class="kpi"><span>Calificación de hoy</span><b class="num">${avg} <span class="stars" style="font-size:18px">★</span></b><small>${OPIN.length} respuestas de ejemplo</small></div>
-      <div class="kpi"><span>Me gusta en TikTok</span><b class="num">667.7K</b><small>real</small></div>
-      <div class="kpi"><span>Clientes que volvieron este mes</span><b class="num">138</b><small>ejemplo</small></div>
-      <div class="kpi"><span>Faltó algo</span><b class="num late">${OPIN.filter(o => o.s <= 3).length}</b><small>para resolver hoy</small></div>
-    </div></section>
-    <div class="g2">
-      <section class="card"><header>${CT("i-users","#7526E3")}<h2>Respuestas de hoy</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl resv">
-        <thead><tr><th>Hora</th><th>Cliente</th><th>Calificación</th><th>Dijo</th><th>Pedido</th><th></th></tr></thead>
-        <tbody>${OPIN.map(o => `<tr><td class="num">${o.h}</td><td>${o.who}</td><td><span class="stars">${"★".repeat(o.s)}${"☆".repeat(5 - o.s)}</span></td><td>${o.t}</td><td>#${o.id}</td><td class="r">${o.s <= 3 ? (o.fix ? `<span class="status s-ok"><i></i>Resuelto</span>` : `<a class="btn sm wa" target="_blank" rel="noopener" data-fix="${o.id}" href="${waLink(`Hola ${first(o.who)}, le escribe Libby's Cajun. Disculpe que en su pedido #${o.id} faltó la mantequilla aparte. ¿Cómo le podemos compensar?`, "")}">${icon("i-wa")}Resolver</a>`) : ""}</td></tr>`).join("")}</tbody></table></div></section>
-      <section class="card"><header>${CT("i-users","#7526E3")}<h2>Clientes frecuentes</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl">
-        <thead><tr><th>Cliente</th><th class="r">Visitas</th><th>Su favorito</th><th>Último</th><th></th></tr></thead>
-        <tbody>${FREQ.map(c => `<tr><td>${c.who} ${chn(c.ch)}</td><td class="r num">${c.n}</td><td>${c.fav}</td><td class="${c.last.includes("21") ? "late" : ""}">${c.last}</td><td class="r">${c.last.includes("21") ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(c.who)}, le escribe Libby's Cajun. ¡Le extrañamos! ¿Le apartamos mesa este fin de semana?`, "")}">${icon("i-wa")}Escribirle</a>` : ""}</td></tr>`).join("")}</tbody></table></div>
-        <div class="pad" style="border-top:1px solid var(--line)"><p class="hint">Cada pedido y cada reservación de WhatsApp queda guardado con el nombre y lo que pidió. Así se sabe quién dejó de venir y se le puede escribir.</p></div></section>
-    </div>
-  </div>`;
-}
-
 function vTiktok() {
   const ts = VIDS.slice().sort((a, b) => b.ven - a.ven); const mx = ts[0].ven;
   return `${PH("TikTok", `Sus videos traen la gente. En la descripción va "pide al ${WA}" con un código, el asistente lo anota y aquí se ve cuánto vendió cada video.`)}
@@ -730,12 +757,281 @@ function vTiktok() {
   </div>`;
 }
 
+// ---------- CRM: customers (360 record), events pipeline, campaigns, reports, team ----------
+const TODAY0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const dAgo = n => new Date(TODAY0.getTime() - n * 864e5);
+const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const fecha = d => `${d.getDate()} ${MES[d.getMonth()]}`;
+const hace = n => n === 0 ? "hoy" : n === 1 ? "ayer" : `hace ${n} días`;
+// customers (example): the five frequent ones first, so every screen tells the same story
+const CNAMES = ["Karla M.","José R.","Daniela P.","Óscar F.","Ana Lucía B.","Marcela S.","Luis y Andrea","Gabriela T.","Héctor Z.","Familia Rivera","Carlos M.","Paola N.","Mario R.","Cindy V.","Fernando G.","Lourdes E.","Kevin A.","Yessica L.","Wilmer C.","Fernanda V.","Allan R.","Nicole P.","Iris M.","Roberto C.","Melissa H.","Jorge L.","Andrea S.","Diego F."];
+const CUST = CNAMES.map((n, i) => {
+  const f = FREQ.find(x => x.who === n);
+  const vis = f ? f.n : i < 12 ? 2 + Math.floor(rnd() * 5) : 1 + Math.floor(rnd() * 3);
+  const ult = f ? ({hoy: 0, ayer: 1}[f.last] ?? parseInt(f.last.replace(/\D/g, ""))) : Math.floor(rnd() * (i % 4 === 0 ? 70 : 28));
+  const tk = 780 + Math.round(rnd() * 900 / 10) * 10 + (n.startsWith("Familia") || n.startsWith("Carlos") ? 1400 : 0);
+  const cm = (now.getMonth() + (i % 5 === 0 ? 0 : 1 + Math.floor(rnd() * 10))) % 12;
+  return {id: "c" + (i + 1), n, tel: "9" + String(4000000 + Math.floor(rnd() * 5999999)), ch: f ? f.ch : pick(["wa","wa","wa","sal","tt"]), vis, ult, tk, gasto: vis * tk,
+    fav: f ? f.fav : pick(MENU.slice(0, 4)).n, cumple: `${1 + Math.floor(rnd() * 27)} ${MES[cm]}`, cmes: cm, origen: rnd() < .45 ? pick(VIDS)[4] : "", opt: rnd() < .8,
+    desde: fecha(dAgo(ult + vis * 9 + Math.floor(rnd() * 30)))};
+});
+const SEG = {
+  vip: ["VIP", c => c.gasto >= 9000, "#7526E3"],
+  frec: ["Frecuentes", c => c.vis >= 5, "#0176D3"],
+  riesgo: ["En riesgo", c => c.vis >= 3 && c.ult > 20, "#BA0517"],
+  nuevo: ["Nuevos", c => c.vis === 1, "#2E844A"],
+  cumple: ["Cumpleaños este mes", c => c.cmes === now.getMonth(), "#B78300"],
+  tiktok: ["Llegaron por TikTok", c => !!c.origen, "#181818"]};
+const segsDe = c => Object.entries(SEG).filter(([, s]) => s[1](c)).map(([k]) => k);
+const segTag = k => `<span class="status" style="background:${SEG[k][2]}1A;color:${SEG[k][2]}">${SEG[k][0]}</span>`;
+const custBy = n => CUST.find(c => c.n === n);
+const cLink = n => { const c = custBy(n); return c ? `<a class="lnk" href="#cliente-${c.id}" data-cr="${c.id}">${n}</a>` : n; };
+let CSEG = "", CREC = "c1", CSORT = "gasto";
+const NOTAS0 = {c1: "Le gusta la mesa del fondo. Pide la mantequilla aparte.", c6: "Cumpleaños de la hija el sábado: preguntó por promoción."};
+let CNOTAS = {}; try { CNOTAS = JSON.parse(localStorage.getItem("lc-notas") || "{}"); } catch (e) {}
+function timeline(c) {
+  const ev = []; let s = 7 + c.id.length;
+  const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let k = 0, d = c.ult; k < Math.min(c.vis, 6); k++, d += 6 + Math.floor(r() * 14)) {
+    const kind = k === 0 && c.ch === "sal" ? "mesa" : r() < .55 ? "pedido" : r() < .6 ? "reserva" : "mesa";
+    const it = k === 0 ? c.fav : pick(MENU.slice(0, 4)).n; const v = Math.round(c.tk * (.8 + r() * .4) / 10) * 10;
+    ev.push({d, ic: kind === "reserva" ? "i-cal" : kind === "pedido" ? "i-wa" : "i-home", c: kind === "reserva" ? "#BA0517" : kind === "pedido" ? "#2E844A" : "#0176D3",
+      t: kind === "reserva" ? `Reservación por WhatsApp · ${2 + Math.floor(r() * 5)} personas` : kind === "pedido" ? `Pedido por WhatsApp · ${r() < .5 ? "domicilio" : "para llevar"}` : "Comió en el salón",
+      p: `${it} · ${L(v)}`});
+    if (k === 1) ev.push({d: d - 1, ic: "i-users", c: "#7526E3", t: "Contestó la encuesta", p: `${"★".repeat(4 + (r() < .6 ? 1 : 0))} "${pick(["Todo muy rico", "Excelente atención", "La mariscada, lo máximo", "Volveremos pronto"])}"`});
+  }
+  if (c.origen) { const v = VIDS.find(x => x[4] === c.origen); ev.push({d: c.ult + c.vis * 9 + 3, ic: "i-play", c: "#181818", t: "Llegó por TikTok", p: `Código ${c.origen} · "${v[0]}"`}); }
+  if (segsDe(c).includes("cumple")) ev.unshift({d: Math.max(0, c.ult - 1), ic: "i-send", c: "#B78300", t: "Campaña: cumpleañeros del mes", p: "Mensaje leído"});
+  return ev.sort((a, b) => a.d - b.d);
+}
+function vCliente() {
+  const c = CUST.find(x => x.id === CREC) || CUST[0]; const sg = segsDe(c); const res = RESV.filter(r => r[2] === c.n);
+  const nota = CNOTAS[c.id] ?? NOTAS0[c.id] ?? "";
+  return `<div class="notice"><b>Demo</b> Clientes, pedidos, reservaciones y notas son datos de ejemplo. Con el sistema, esta ficha se llena sola con cada conversación de WhatsApp.</div>
+  <div class="ph recph"><div class="tile" style="background:#7526E3">${icon("i-users")}</div><div><div class="ey"><a class="lnk" href="#clientes" data-v="clientes">Clientes</a> › Ficha</div><h1>${c.n}</h1></div>
+    <div class="r"><a class="btn wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(c.n)}, le escribe Libby's Cajun.`, c.tel)}">${icon("i-wa")}WhatsApp</a><button class="btn" data-demo="Nueva reservación para ${c.n} (demo)">${icon("i-cal")}Nueva reservación</button><button class="btn pri" data-demo="${c.n} agregado a una campaña (demo)">${icon("i-send")}Agregar a campaña</button></div>
+    </div>
+  <section class="card" style="margin-bottom:12px"><div class="kpis k5"><div class="kpi"><span>Visitas y pedidos</span><b class="num">${c.vis}</b></div><div class="kpi"><span>Gasto total</span><b class="num">${L(c.gasto)}</b></div><div class="kpi"><span>Ticket promedio</span><b class="num">${L(c.tk)}</b></div><div class="kpi"><span>Última vez</span><b class="num">${hace(c.ult)}</b></div><div class="kpi"><span>Cliente desde</span><b class="num">${c.desde}</b></div></div></section>
+  <div class="g2 rev">
+    <div class="stack">
+      <section class="card"><header>${CT("i-clock","#5A6872")}<h2>Actividad</h2><div class="r">lo más reciente arriba</div></header>
+        <ol class="tl">${timeline(c).map(e => `<li><span class="ti" style="background:${e.c}">${icon(e.ic)}</span><div><b>${e.t}</b><p>${e.p}</p></div><time>${e.d < 2 ? hace(e.d) : fecha(dAgo(e.d))}</time></li>`).join("")}</ol></section>
+      <section class="card"><header>${CT("i-cal","#BA0517")}<h2>Reservaciones</h2><div class="r">${res.length}</div></header>
+        ${res.length ? `<div class="scrollx"><table class="tbl"><tbody>${res.map(r => `<tr><td>${["Hoy","Mañana"][r[0]] || DAYS[(today + r[0]) % 7]}</td><td class="num">${r[1]}</td><td>${r[3]} pers. · ${r[4]}</td><td>${r[6] ? `<span class="status s-ok"><i></i>Confirmada</span>` : `<span class="status s-amber"><i></i>Sin confirmar</span>`}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty" style="border-top:1px solid var(--line)">Sin reservaciones próximas</div>`}</section>
+    </div>
+    <div class="stack">
+      <section class="card"><header>${CT("i-users","#7526E3")}<h2>Datos</h2></header><dl class="dl">
+        <dt>WhatsApp</dt><dd class="num">+504 ${c.tel.slice(0, 4)}-${c.tel.slice(4)}</dd><dt>Llegó por</dt><dd>${chn(c.ch)}${c.origen ? ` <span class="status s-gray">${c.origen}</span>` : ""}</dd>
+        <dt>Su favorito</dt><dd>${c.fav}</dd><dt>Cumpleaños</dt><dd>${c.cumple}</dd><dt>Promociones</dt><dd>${c.opt ? `<span class="status s-ok"><i></i>Aceptó recibirlas</span>` : `<span class="status s-gray"><i></i>No acepta</span>`}</dd>
+        <dt>Segmentos</dt><dd style="display:flex;gap:6px;flex-wrap:wrap">${sg.map(segTag).join("") || `<span class="hint">ninguno</span>`}</dd></dl></section>
+      <section class="card"><header>${CT("i-chat","#0B827C")}<h2>Notas del equipo</h2></header><div class="pad form"><textarea id="cnota" data-cn="${c.id}" placeholder="Algo que el equipo deba saber de este cliente">${nota}</textarea><p class="hint" style="margin:0">Se guarda sola. La ve todo el equipo.</p></div></section>
+    </div>
+  </div>`;
+}
+function vClientes() {
+  const avg = (OPIN.reduce((a, o) => a + o.s, 0) / OPIN.length).toFixed(1);
+  const list = CUST.filter(c => !CSEG || SEG[CSEG][1](c)).sort((a, b) => CSORT === "ult" ? a.ult - b.ult : CSORT === "vis" ? b.vis - a.vis : b.gasto - a.gasto);
+  const th = (k, t, cls = "") => `<th class="${cls}"><button class="sort ${CSORT === k ? "on" : ""}" data-sort="${k}">${t}${CSORT === k ? " ↓" : ""}</button></th>`;
+  return `${PH("Clientes", "Cada persona que escribe, reserva o come aquí tiene su ficha: qué pide, cuánto ha gastado, cuándo vino y de qué video llegó. Después de cada visita el asistente pregunta \"¿Cómo le fue?\".")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Clientes en la base</span><b class="num">2,184</b><small>${CUST.length} en esta demo</small></div>
+      <div class="kpi"><span>Volvieron este mes</span><b class="num">138</b><small>ejemplo</small></div>
+      <div class="kpi"><span>Calificación de hoy</span><b class="num">${avg} <span class="stars" style="font-size:18px">★</span></b><small>${OPIN.length} respuestas de ejemplo</small></div>
+      <div class="kpi"><span>Faltó algo</span><b class="num late">${OPIN.filter(o => o.s <= 3 && !o.fix).length}</b><small>para resolver hoy</small></div>
+    </div></section>
+    <section class="card"><header>${CT("i-users","#7526E3")}<h2>Todos los clientes</h2><div class="r">${list.length} · ejemplo</div></header>
+      <div class="chips"><button class="chip2 ${CSEG ? "" : "on"}" data-seg="">Todos <b>${CUST.length}</b></button>${Object.entries(SEG).map(([k, s]) => `<button class="chip2 ${CSEG === k ? "on" : ""}" data-seg="${k}">${s[0]} <b>${CUST.filter(s[1]).length}</b></button>`).join("")}</div>
+      <div class="scrollx"><table class="tbl clist"><thead><tr><th>Cliente</th>${th("vis","Visitas","r")}${th("gasto","Gasto total","r")}<th>Favorito</th>${th("ult","Última vez")}<th>Segmentos</th></tr></thead>
+        <tbody>${list.map(c => `<tr data-row="${c.id}"><td>${cLink(c.n)} ${chn(c.ch)}</td><td class="r num">${c.vis}</td><td class="r num">${L(c.gasto)}</td><td>${c.fav}</td><td class="${c.ult > 20 ? "late" : ""}">${hace(c.ult)}</td><td><div style="display:flex;gap:4px;flex-wrap:wrap">${segsDe(c).slice(0, 2).map(segTag).join("")}</div></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-users","#7526E3")}<h2>Respuestas de hoy</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl resv">
+        <thead><tr><th>Hora</th><th>Cliente</th><th>Calificación</th><th>Dijo</th><th>Pedido</th><th></th></tr></thead>
+        <tbody>${OPIN.map(o => `<tr><td class="num">${o.h}</td><td>${cLink(o.who)}</td><td><span class="stars">${"★".repeat(o.s)}${"☆".repeat(5 - o.s)}</span></td><td>${o.t}</td><td>#${o.id}</td><td class="r">${o.s <= 3 ? (o.fix ? `<span class="status s-ok"><i></i>Resuelto</span>` : `<a class="btn sm wa" target="_blank" rel="noopener" data-fix="${o.id}" href="${waLink(`Hola ${first(o.who)}, le escribe Libby's Cajun. Disculpe que en su pedido #${o.id} faltó la mantequilla aparte. ¿Cómo le podemos compensar?`, "")}">${icon("i-wa")}Resolver</a>`) : ""}</td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header>${CT("i-users","#7526E3")}<h2>Clientes frecuentes</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Cliente</th><th class="r">Visitas</th><th>Su favorito</th><th>Último</th><th></th></tr></thead>
+        <tbody>${FREQ.map(c => `<tr><td>${cLink(c.who)} ${chn(c.ch)}</td><td class="r num">${c.n}</td><td>${c.fav}</td><td class="${c.last.includes("21") ? "late" : ""}">${c.last}</td><td class="r">${c.last.includes("21") ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(c.who)}, le escribe Libby's Cajun. ¡Le extrañamos! ¿Le apartamos mesa este fin de semana?`, "")}">${icon("i-wa")}Escribirle</a>` : ""}</td></tr>`).join("")}</tbody></table></div>
+        <div class="pad" style="border-top:1px solid var(--line)"><p class="hint">Cada pedido y cada reservación de WhatsApp queda guardado con el nombre y lo que pidió. Así se sabe quién dejó de venir y se le puede escribir.</p></div></section>
+    </div>
+  </div>`;
+}
+
+// events pipeline: company dinners, birthdays, groups (example)
+const STAGES = [["consulta","Consulta",.2],["propuesta","Propuesta enviada",.45],["anticipo","Anticipo recibido",.8],["confirmado","Confirmado",.95]];
+const OPPS = [
+  {id:"E-118", who:"Carlos M.", org:"Cena de fin de año de empresa", tipo:"Empresa", per:35, dia:"sáb 12 dic", val:52000, st:"propuesta", nx:"Llamar el jueves para confirmar menú", src:"wa"},
+  {id:"E-121", who:"Marcela S.", org:"Cumpleaños de la hija", tipo:"Cumpleaños", per:8, dia:"este sábado", val:11600, st:"confirmado", nx:"Pastel lo traen ellos", src:"wa"},
+  {id:"E-122", who:"Allan R.", org:"Graduación (familia)", tipo:"Familia", per:14, dia:"vie 4 dic", val:19800, st:"consulta", nx:"Mandar opciones de mariscada para 14", src:"tt"},
+  {id:"E-115", who:"Iris M.", org:"Despedida de compañera", tipo:"Empresa", per:12, dia:"jue 19 nov", val:15400, st:"anticipo", nx:"Apartar mesas 6, 7 y 8", src:"wa"},
+  {id:"E-124", who:"Roberto C.", org:"Aniversario de bodas", tipo:"Aniversario", per:2, dia:"vie 13 nov", val:3200, st:"consulta", nx:"Preguntar si quiere decoración en la mesa", src:"tt"},
+  {id:"E-119", who:"Melissa H.", org:"Baby shower", tipo:"Familia", per:20, dia:"dom 22 nov", val:24500, st:"propuesta", nx:"Esperando que confirme el número de personas", src:"wa"},
+  {id:"E-110", who:"Jorge L.", org:"Almuerzo de equipo de ventas", tipo:"Empresa", per:18, dia:"mié 11 nov", val:21600, st:"confirmado", nx:"Factura con RTN a nombre de la empresa", src:"wa"}];
+const OPPWON = [["Familia Rivera","Cumpleaños",9,13400],["Andrea S.","Empresa",22,28100],["Diego F.","Aniversario",2,2900]];
+let OSEL = "";
+function vEventos() {
+  const open = OPPS.filter(o => o.st !== "ganado");
+  const tot = open.reduce((a, o) => a + o.val, 0), pond = open.reduce((a, o) => a + o.val * STAGES.find(s => s[0] === o.st)[2], 0);
+  const o = OPPS.find(x => x.id === OSEL);
+  return `${PH("Eventos y grupos", "Cenas de empresa, cumpleaños, graduaciones y grupos grandes. Cada consulta de WhatsApp para un grupo entra aquí y avanza hasta confirmarse, con el valor de cada evento y lo que falta por hacer.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Eventos en camino</span><b class="num">${open.length}</b><small>${open.reduce((a, x) => a + x.per, 0)} personas en total</small></div>
+      <div class="kpi"><span>Valor en camino</span><b class="num">${L(tot)}</b><small>ejemplo</small></div>
+      <div class="kpi"><span>Valor esperado</span><b class="num">${L(pond)}</b><small>según la etapa de cada uno</small></div>
+      <div class="kpi"><span>Cerrados este mes</span><b class="num" style="color:var(--ok)">${OPPWON.length}</b><small>${L(OPPWON.reduce((a, x) => a + x[3], 0))} · 64% de las consultas</small></div>
+    </div></section>
+    <div class="board pipe">${STAGES.map(([k, t, p]) => { const l = OPPS.filter(x => x.st === k);
+      return `<div class="col"><h3>${t}<span>${l.length} · ${L(l.reduce((a, x) => a + x.val, 0))}</span></h3>${l.map(x => `<button class="tk opp ${OSEL === x.id ? "sel" : ""}" data-opp="${x.id}"><div class="t"><b>${x.org}</b><span class="num">${L(x.val)}</span></div><div class="m" style="margin-top:6px"><span>${x.who}</span><span>·</span><span>${x.per} pers.</span><span>·</span><span>${x.dia}</span></div><div class="nx">${icon("i-clock")}${x.nx}</div></button>`).join("") || `<div class="empty">Nada aquí</div>`}</div>`; }).join("")}</div>
+    ${o ? `<section class="card drawer-in"><header>${CT("i-cal","#BA0517")}<h2>${o.org}</h2><div class="r"><span class="status s-blue"><i></i>${STAGES.find(s => s[0] === o.st)[1]}</span><button class="iconbtn" data-opp="" aria-label="Cerrar">✕</button></div></header>
+      <div class="g2 pad" style="border-top:1px solid var(--line)"><dl class="dl" style="padding:0;border-top:0">
+        <dt>Contacto</dt><dd>${cLink(o.who)} ${chn(o.src)}</dd><dt>Tipo</dt><dd>${o.tipo}</dd><dt>Fecha</dt><dd>${o.dia}</dd><dt>Personas</dt><dd>${o.per}</dd><dt>Valor</dt><dd class="num">${L(o.val)} <span class="hint">ejemplo</span></dd><dt>Siguiente paso</dt><dd>${o.nx}</dd></dl>
+        <div style="display:grid;gap:10px;align-content:start"><div class="msg out" style="max-width:100%">Hola ${first(o.who)}, le escribe Libby's Cajun. Para su ${o.org.toLowerCase()} de ${o.per} personas le proponemos: …<small>propuesta por WhatsApp · plantilla</small></div>
+          <a class="btn wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(o.who)}, le escribe Libby's Cajun. Para su ${o.org.toLowerCase()} de ${o.per} personas le proponemos:`, "")}">${icon("i-wa")}Mandar propuesta</a>
+          ${o.st !== "confirmado" ? `<button class="btn pri" data-adv="${o.id}">Pasar a ${STAGES[STAGES.findIndex(s => s[0] === o.st) + 1][1].toLowerCase()}</button>` : `<span class="status s-ok" style="justify-self:start"><i></i>Confirmado: ya está en Reservaciones</span>`}</div></div></section>` : ""}
+    <section class="card"><header>${CT("i-check","#2E844A")}<h2>Cerrados este mes</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Cliente</th><th>Tipo</th><th class="r">Personas</th><th class="r">Valor</th></tr></thead>
+      <tbody>${OPPWON.map(w => `<tr><td>${cLink(w[0])}</td><td>${w[1]}</td><td class="r num">${w[2]}</td><td class="r num">${L(w[3])}</td></tr>`).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+// campaigns: WhatsApp messages to a segment, with approved templates (example)
+const TPL = [
+  {id:"cumple", n:"Cumpleañeros del mes", seg:"cumple", t:"¡Feliz cumpleaños, {nombre}! 🎉 Este mes celébrelo en Libby's Cajun. Responda aquí y le apartamos mesa."},
+  {id:"vuelve", n:"Le extrañamos", seg:"riesgo", t:"Hola {nombre}, hace rato no le vemos por Libby's Cajun 🦞 ¿Le apartamos mesa este fin de semana?"},
+  {id:"nuevo", n:"Gracias por su primera visita", seg:"nuevo", t:"Gracias por venir a Libby's Cajun, {nombre}. ¿Qué le pareció? Su opinión nos ayuda mucho."},
+  {id:"vip", n:"Primero para VIP", seg:"vip", t:"{nombre}, usted es de nuestros mejores clientes. Antes que nadie: esta semana tenemos mariscada nueva. ¿Le apartamos?"}];
+const CAMPS = [
+  {n:"Le extrañamos · octubre", seg:"En riesgo", env:142, leidos:.91, resp:31, res:12, ven:21400, f:"15 oct"},
+  {n:"Cumpleañeros de octubre", seg:"Cumpleaños este mes", env:64, leidos:.95, resp:22, res:14, ven:33800, f:"1 oct"},
+  {n:"Feriado Morazánico", seg:"Frecuentes", env:310, leidos:.88, resp:58, res:27, ven:46200, f:"5 oct"}];
+let TSEL = "cumple";
+function vCampanas() {
+  const tp = TPL.find(t => t.id === TSEL); const aud = CUST.filter(c => SEG[tp.seg][1](c)); const ok = aud.filter(c => c.opt);
+  return `${PH("Campañas", "Mensajes de WhatsApp a un grupo de clientes: cumpleañeros del mes, los que no vuelven hace semanas, los nuevos. Se mide cuántos lo leyeron, cuántos reservaron y cuánto vendió.")}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Mensajes este mes</span><b class="num">${CAMPS.reduce((a, c) => a + c.env, 0)}</b><small>3 campañas · ejemplo</small></div>
+      <div class="kpi"><span>Los leyeron</span><b class="num">90%</b><small>en WhatsApp casi todo se lee</small></div>
+      <div class="kpi"><span>Reservaciones que trajeron</span><b class="num">${CAMPS.reduce((a, c) => a + c.res, 0)}</b><small>ligadas a cada campaña</small></div>
+      <div class="kpi"><span>Ventas que trajeron</span><b class="num" style="color:var(--ok)">${L(CAMPS.reduce((a, c) => a + c.ven, 0))}</b><small>ejemplo</small></div>
+    </div></section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-send","#0B827C")}<h2>Nueva campaña</h2></header><div class="pad form">
+        <label>Mensaje<select id="tpl">${TPL.map(t => `<option value="${t.id}" ${t.id === TSEL ? "selected" : ""}>${t.n}</option>`).join("")}</select></label>
+        <div class="res" style="background:var(--sunk)"><span>Para: <b>${SEG[tp.seg][0]}</b></span><span class="num">${ok.length} de ${aud.length} aceptaron promociones</span></div>
+        <div class="msg out" style="max-width:100%">${tp.t.replace("{nombre}", ok[0] ? first(ok[0].n) : "Karla")}<small>vista previa · plantilla aprobada por Meta</small></div>
+        <div class="f2"><button class="btn" data-demo="Mensaje de prueba enviado a su WhatsApp (demo)">Mandarme una prueba</button><button class="btn pri" data-demo="Campaña programada para mañana 10:00 am a ${ok.length} clientes (demo)">${icon("i-send")}Programar</button></div>
+        <p class="hint" style="margin:0">WhatsApp solo deja mandar promociones con plantillas que Meta aprueba, y solo a clientes que aceptaron recibirlas. El sistema lleva esa lista solo: quien dice "no me manden" sale de todas las campañas.</p></div></section>
+      <section class="card"><header>${CT("i-users","#7526E3")}<h2>A quién le llega</h2><div class="r">${ok.length} clientes</div></header>
+        <div class="scrollx"><table class="tbl"><tbody>${ok.slice(0, 8).map(c => `<tr><td>${cLink(c.n)}</td><td>${c.fav}</td><td class="hint">${hace(c.ult)}</td></tr>`).join("") || `<tr><td class="empty">Nadie en este grupo todavía</td></tr>`}</tbody></table></div></section>
+    </div>
+    <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Campañas anteriores</h2><div class="r">ejemplo</div></header><div class="scrollx"><table class="tbl">
+      <thead><tr><th>Campaña</th><th>Para</th><th class="r">Enviados</th><th class="r">Leídos</th><th class="r">Respondieron</th><th class="r">Reservaron</th><th class="r">Ventas</th></tr></thead>
+      <tbody>${CAMPS.map(c => `<tr><td><b style="font-weight:400">${c.n}</b><div class="hint">${c.f}</div></td><td>${c.seg}</td><td class="r num">${c.env}</td><td class="r num">${Math.round(c.leidos * 100)}%</td><td class="r num">${c.resp}</td><td class="r num">${c.res}</td><td class="r num">${L(c.ven)}</td></tr>`).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+// reports: 90 days of example history
+const H90 = []; for (let d = 90; d >= 1; d--) { const dt = dAgo(d); const wd = dt.getDay(); const o = Math.round(BASE * WK[wd] * (0.88 + rnd() * .24) * (1 + (90 - d) * .002)); H90.push({d, dt, wd, o, ventas: o * 1180 * (0.94 + rnd() * .12)}); }
+let RANGE = 30;
+function lineChart(rows) {
+  const W = 900, H = 240, pl = 40, pb = 24; const mx = Math.max(...rows.map(r => r.ventas)); const step = Math.ceil(mx / 4 / 5000) * 5000;
+  const x = i => pl + (W - pl - 6) * i / Math.max(1, rows.length - 1), y = v => H - pb - (H - pb - 10) * v / (step * 4);
+  let g = ""; for (let i = 0; i <= 4; i++) g += `<line class="gl" x1="${pl}" x2="${W}" y1="${y(i * step)}" y2="${y(i * step)}"/><text x="${pl - 6}" y="${y(i * step) + 4}" text-anchor="end">${i ? i * step / 1000 + "k" : 0}</text>`;
+  const pts = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.ventas).toFixed(1)}`).join(" ");
+  g += `<polygon points="${pl},${H - pb} ${pts} ${x(rows.length - 1)},${H - pb}" fill="var(--c1)" opacity=".1"/><polyline points="${pts}" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linejoin="round"/>`;
+  const every = Math.ceil(rows.length / 6); rows.forEach((r, i) => { if (i % every === 0) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${fecha(r.dt)}</text>`;
+    g += `<rect x="${x(i) - (W - pl) / rows.length / 2}" y="0" width="${(W - pl) / rows.length}" height="${H - pb}" fill="transparent" data-tip="${DAYS[r.wd]} ${fecha(r.dt)} · ${r.o} pedidos|${L(r.ventas)}"/>`; });
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por día">${g}</svg></div>`;
+}
+function heat() {
+  const hrs = [12,13,14,15,16,17,18,19,20,21]; const ord = [1,2,3,4,5,6,0];
+  const v = (wd, h) => WK[wd] * (SHAPE[h] || .3); const mx = Math.max(...ord.flatMap(w => hrs.map(h => v(w, h))));
+  return `<div class="heat"><span></span>${hrs.map(h => `<span class="hh">${h > 12 ? h - 12 : h}${h >= 12 ? "p" : "a"}</span>`).join("")}${ord.map(w => `<span class="hd">${DAYS[w].slice(0, 3)}</span>${hrs.map(h => `<i style="background:color-mix(in srgb,var(--c1) ${Math.round(v(w, h) / mx * 100)}%,var(--sunk))" title="${DAYS[w]} ${h > 12 ? h - 12 : h}:00"></i>`).join("")}`).join("")}</div>`;
+}
+function csv() {
+  const rows = [["fecha","dia","pedidos","ventas_lempiras"]].concat(H90.slice(-RANGE).map(r => [r.dt.toISOString().slice(0, 10), DAYS[r.wd], r.o, Math.round(r.ventas)]));
+  const b = new Blob(["﻿" + rows.map(r => r.join(",")).join("\n")], {type: "text/csv;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `libbys-cajun-ventas-${RANGE}-dias.csv`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function vVentas() {
+  const cur = H90.slice(-RANGE), prev = H90.slice(-RANGE * 2, -RANGE); const sum = (a, k) => a.reduce((q, h) => q + h[k], 0);
+  const wk = sum(cur, "ventas"), wo = sum(cur, "o"); const pv = prev.length ? sum(prev, "ventas") : 0; const ch = pv ? Math.round((wk / pv - 1) * 100) : null;
+  const t = SALES.reduce((a, x) => a + x.total, 0) || 1;
+  const byCh = CH.map(c => [c, SALES.filter(x => x.ch === c).reduce((a, x) => a + x.total, 0)]);
+  const items = itemsSold(); const mxI = Math.max(...items.map(i => i[2]));
+  const best = cur.slice().sort((a, b) => b.ventas - a.ventas)[0];
+  return `${PH("Reportes", "Lo que se vendió cada día, lo más pedido y a qué hora se llena, sin sacar cuentas a mano. Se puede bajar en Excel.", `<div class="seg">${[7, 30, 90].map(r => `<button class="${RANGE === r ? "on" : ""}" data-range="${r}">${r} días</button>`).join("")}</div><button class="btn" id="csv">Exportar a Excel</button>`)}
+  <div class="stack">
+    <section class="card"><div class="kpis">
+      <div class="kpi"><span>Ventas, últimos ${RANGE} días</span><b class="num">${L(wk)}</b><small>${ch === null ? "" : `<span class="${ch >= 0 ? "up" : "down"}">${ch >= 0 ? "▲" : "▼"} ${Math.abs(ch)}%</span> vs. los ${RANGE} días antes`}</small></div>
+      <div class="kpi"><span>Pedidos y mesas</span><b class="num">${wo.toLocaleString("en-US")}</b><small>${Math.round(wo / RANGE)} por día</small></div>
+      <div class="kpi"><span>Ticket promedio</span><b class="num">${L(wk / wo)}</b><small>por mesa o pedido</small></div>
+      <div class="kpi"><span>Mejor día</span><b class="num">${L(best.ventas)}</b><small>${DAYS[best.wd]} ${fecha(best.dt)}</small></div>
+    </div></section>
+    <section class="card"><header>${CT("i-chart","#0176D3")}<h2>Ventas por día</h2><div class="r">últimos ${RANGE} días · ejemplo</div></header>${lineChart(cur)}</section>
+    <div class="g2">
+      <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Lo más vendido hoy</h2><div class="r">precios de ejemplo</div></header><div class="bars">${items.map(([m, q, v]) => `<div class="hb"><b>${m.s}<em class="num">${q} · ${L(v)}</em></b><div class="trk"><i style="width:${v / mxI * 100}%;background:var(--c1)"></i></div></div>`).join("")}</div></section>
+      <section class="card"><header>${CT("i-clock","#0B827C")}<h2>Cuándo se llena</h2><div class="r">pedidos por día y hora</div></header><div class="pad" style="border-top:1px solid var(--line)">${heat()}<p class="hint" style="margin:10px 0 0">Más oscuro, más pedidos. Sirve para saber cuánta gente poner en cocina y en salón cada turno.</p></div></section>
+    </div>
+    <section class="card"><header>${CT("i-chart","#0B827C")}<h2>Hoy por canal</h2></header><div class="bars">${byCh.map(([c, v]) => `<div class="hb"><b>${c}<em class="num">${L(v)} · ${Math.round(v / t * 100)}%</em></b><div class="trk"><i style="width:${v / t * 100}%;background:${col(CHC[c])}"></i></div></div>`).join("")}</div></section>
+  </div>`;
+}
+
+// team: users, roles and an activity log (example)
+const USERS = [["Dueña","duena@libbyscajun.hn","Dueña","ahora"],["Gerente de turno","gerencia@libbyscajun.hn","Gerente","hace 12 min"],["Caja turno tarde","caja1@libbyscajun.hn","Caja","hace 2 h"],["Caja turno noche","caja2@libbyscajun.hn","Caja","hace 5 min"],["Cocina","cocina@libbyscajun.hn","Cocina","ahora"],["Salón","salon@libbyscajun.hn","Meseros","hace 20 min"]];
+const PERMS = [["Ver ventas y reportes",[1,1,0,0,0]],["Cerrar caja",[1,1,1,0,0]],["Pantalla de cocina",[1,1,0,1,1]],["Reservaciones y mesas",[1,1,1,0,1]],["Eventos y campañas",[1,1,0,0,0]],["Menú, precios y usuarios",[1,0,0,0,0]]];
+const ROLES = ["Dueña","Gerente","Caja","Cocina","Meseros"];
+const AUDIT = [["7:02 pm","Caja turno noche","abrió la caja con L2,000"],["6:58 pm","Asistente de WhatsApp","tomó el pedido #2421 (domicilio, L1,570)"],["6:41 pm","Asistente de WhatsApp","anotó una reservación para 8 el sábado"],["6:20 pm","Gerente de turno","marcó Camarón: quedan 12 libras"],["5:47 pm","Cocina","sirvió el pedido #2405 en mesa 7"],["3:15 pm","Asistente de WhatsApp","le pidió mantequilla al proveedor de lácteos"],["12:00 pm","Asistente de WhatsApp","mandó 3 recordatorios de reservación"],["9:12 am","Dueña","cambió el precio de Sopa marinera"]];
+function vEquipo() {
+  return `${PH("Equipo y permisos", "Cada persona entra con su correo y ve solo lo que le toca: caja no ve reportes, cocina solo ve su pantalla. Todo lo que pasa queda anotado con quién y a qué hora.")}
+  <div class="stack">
+    <div class="g2">
+      <section class="card"><header>${CT("i-users","#032D60")}<h2>Usuarios</h2><div class="r"><button class="btn sm" data-demo="Invitación enviada por correo (demo)">Invitar</button></div></header><div class="scrollx"><table class="tbl">
+        <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Última vez</th></tr></thead>
+        <tbody>${USERS.map(u => `<tr><td><b style="font-weight:400">${u[0]}</b></td><td class="hint">${u[1]}</td><td><span class="status s-gray">${u[2]}</span></td><td class="hint">${u[3]}</td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header>${CT("i-check","#032D60")}<h2>Qué puede hacer cada rol</h2></header><div class="scrollx"><table class="tbl perm">
+        <thead><tr><th></th>${ROLES.map(r => `<th>${r}</th>`).join("")}</tr></thead>
+        <tbody>${PERMS.map(([p, v]) => `<tr><td>${p}</td>${v.map(x => `<td>${x ? `<span class="ok">${icon("i-check")}</span>` : `<span class="no">—</span>`}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+    </div>
+    <section class="card"><header>${CT("i-clock","#5A6872")}<h2>Actividad de hoy</h2><div class="r">registro · ejemplo</div></header><ol class="tl">${AUDIT.map(a => `<li><span class="ti" style="background:${a[1].startsWith("Asistente") ? "#2E844A" : "#5A6872"}">${icon(a[1].startsWith("Asistente") ? "i-wa" : "i-users")}</span><div><b>${a[1]}</b><p>${a[2]}</p></div><time>${a[0]}</time></li>`).join("")}</ol></section>
+  </div>`;
+}
+
+// notifications (bell)
+function notifs() { return [
+  ["i-cal","#BA0517","Reservación sin confirmar","Empresa (Carlos M.) · 10 personas hoy 8:15 pm","reservas"],
+  ["i-clock","#BA0517","Domicilio atrasado","Pedido #2415 · Jardines del Valle","pedidos"],
+  ["i-chat","#FE9339","Pregunta por promoción","Marcela S. · cumpleaños para 8","whatsapp"],
+  ["i-box","#B78300","Camarón por debajo del mínimo","Quedan 12 libras","insumos"],
+  ["i-cal","#0176D3","Evento nuevo","Graduación para 14 · llegó por TikTok","eventos"]]; }
+function skeleton() {
+  const row = `<div class="skrow"><span class="sk" style="height:28px"></span><span><span class="sk" style="height:12px;width:70%"></span><span class="sk" style="height:10px;width:45%;margin-top:8px"></span></span></div>`;
+  return `<div class="skel" aria-busy="true" aria-label="Cargando el panel"><div class="ph"><span class="sk" style="width:36px;height:36px"></span><div style="flex:1"><span class="sk" style="height:10px;width:120px"></span><span class="sk" style="height:18px;width:200px;margin-top:8px"></span></div></div>
+    <section class="card"><div class="kpis">${'<div class="kpi"><span class="sk" style="height:10px;width:60%"></span><span class="sk" style="height:28px;width:70%;margin:8px 0"></span><span class="sk" style="height:10px;width:80%"></span></div>'.repeat(4)}</div></section>
+    <div class="g2" style="margin-top:12px"><section class="card">${row.repeat(4)}</section><section class="card"><div class="skchart">${[40,70,55,90,65,80,50].map(h => `<span class="sk" style="height:${h}%"></span>`).join("")}</div></section></div></div>`;
+}
+
 // ---------- render & events ----------
-const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, reservas: vReservas, insumos: vInsumos, caja: vCaja, ventas: vVentas, clientes: vClientes, tiktok: vTiktok};
+const VIEWS = {hoy: vHoy, whatsapp: vWhatsapp, pedidos: vPedidos, reservas: vReservas, eventos: vEventos, clientes: vClientes, cliente: vCliente, campanas: vCampanas, insumos: vInsumos, caja: vCaja, ventas: vVentas, tiktok: vTiktok, equipo: vEquipo};
+const ruta = h => { if (h.startsWith("cliente-") && CUST.some(c => c.id === h.slice(8))) { CREC = h.slice(8); return "cliente"; } return VIEWS[h] ? h : null; };
 function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); if (VIEW === "caja") cajaCalc(); window.scrollTo(0, 0); }
 const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
-function go(v) { if (!VIEWS[v]) return; const rs = $("#results"); if (rs) { rs.hidden = true; $("#q").value = ""; } VIEW = v; KMODE = false; history.replaceState(null, "", "#" + v); render(); }
+function go(h) { const v = ruta(h); if (!v) return; const rs = $("#results"); if (rs) { rs.hidden = true; $("#q").value = ""; } $("#bellPop").hidden = true; VIEW = v; KMODE = false; history.replaceState(null, "", "#" + h); render(); }
 document.addEventListener("click", e => {
+  const cr = e.target.closest("[data-cr]"); if (cr) { e.preventDefault(); go("cliente-" + cr.dataset.cr); return; }
+  const rw = e.target.closest("[data-row]"); if (rw && !e.target.closest("a,button")) { go("cliente-" + rw.dataset.row); return; }
+  const sg = e.target.closest("[data-seg]"); if (sg) { CSEG = sg.dataset.seg; keep(); return; }
+  const so = e.target.closest("[data-sort]"); if (so) { CSORT = so.dataset.sort; keep(); return; }
+  const op = e.target.closest("[data-opp]"); if (op) { OSEL = OSEL === op.dataset.opp ? "" : op.dataset.opp; keep(); if (OSEL) setTimeout(() => { const d = document.querySelector(".drawer-in"); d && d.scrollIntoView({behavior: "smooth", block: "nearest"}); }, 30); return; }
+  const ad = e.target.closest("[data-adv]"); if (ad) { const o = OPPS.find(x => x.id === ad.dataset.adv); const i = STAGES.findIndex(s => s[0] === o.st); o.st = STAGES[i + 1][0]; toast(`${o.org}: ${STAGES[i + 1][1].toLowerCase()}`); keep(); return; }
+  const rg = e.target.closest("[data-range]"); if (rg) { RANGE = +rg.dataset.range; keep(); return; }
+  if (e.target.closest("#csv")) { csv(); toast("Listo: se bajó el archivo para Excel"); return; }
+  const dm = e.target.closest("[data-demo]"); if (dm) { toast(dm.dataset.demo); return; }
+  if (e.target.closest("#bell")) { const p = $("#bellPop"); p.hidden = !p.hidden; $("#mePop").hidden = true; return; }
+  if (e.target.closest("#me")) { const p = $("#mePop"); p.hidden = !p.hidden; $("#bellPop").hidden = true; return; }
+  if (e.target.closest("#salir")) { e.preventDefault(); try { sessionStorage.removeItem("lc-demo"); } catch (er) {} $("#mePop").hidden = true; document.documentElement.classList.add("gated"); $("#gMail").focus(); return; }
+  if (!e.target.closest(".pop")) { $("#bellPop").hidden = true; $("#mePop").hidden = true; }
   const cs = e.target.closest("[data-cs]"); if (cs) CSEL = +cs.dataset.cs;
   const v = e.target.closest("[data-v]"); if (v) { e.preventDefault(); go(v.dataset.v); return; }
   const cv = e.target.closest("[data-c]"); if (cv) { CSEL = +cv.dataset.c; keep(); return; }
@@ -760,17 +1056,28 @@ document.addEventListener("input", e => {
     r.innerHTML = hits.join("") || `<div class="empty">Sin resultados</div>`; r.hidden = false; }
   if (e.target.id === "cef" || e.target.id === "cga") cajaCalc();
   if (e.target.dataset.bot) { BOTTXT[e.target.dataset.bot] = e.target.value; saveBot(); }
+  if (e.target.dataset.cn) { CNOTAS[e.target.dataset.cn] = e.target.value; try { localStorage.setItem("lc-notas", JSON.stringify(CNOTAS)); } catch (er) {} }
   if (e.target.dataset.ptel) { PCFG[e.target.dataset.ptel].tel = e.target.value; savePC(); const id = e.target.id, pos = e.target.selectionStart; render(); const i = document.getElementById(id); i.focus(); i.setSelectionRange(pos, pos); }
 });
 document.addEventListener("change", e => {
+  if (e.target.id === "tpl") { TSEL = e.target.value; keep(); return; }
   if (e.target.dataset.ck) { const [id, k] = e.target.dataset.ck.split(":"); PICK.find(x => x.id === +id).chk[k] = e.target.checked; keep(); }
   if (e.target.dataset.pauto) { const pv = e.target.dataset.pauto; PCFG[pv].auto = e.target.checked; savePC(); toast(e.target.checked ? `Aviso automático a ${PROV.find(x => x.id === pv).n} activado` : `Aviso automático a ${PROV.find(x => x.id === pv).n} apagado`); render(); } });
 document.addEventListener("pointerover", e => { const r = e.target.closest("[data-tip]"); const old = document.querySelector(".tip"); if (old) old.remove(); if (!r) return;
   const ch = r.closest(".chart"); const bb = r.getBoundingClientRect(), cb = ch.getBoundingClientRect(); const [a, b] = r.dataset.tip.split("|");
   const t = document.createElement("div"); t.className = "tip"; t.innerHTML = `<b>${b}</b>${a}`; t.style.left = (bb.left + bb.width / 2 - cb.left) + "px"; t.style.top = (bb.top - cb.top) + "px"; ch.append(t); });
-const h0 = location.hash.slice(1); if (VIEWS[h0]) VIEW = h0;
-window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (VIEWS[h] && h !== VIEW) go(h); });
-render();
+const h0 = ruta(location.hash.slice(1)); if (h0) VIEW = h0;
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (ruta(h) && h !== VIEW) go(h); });
+$("#bellList").innerHTML = notifs().map(([ic, c, t, p, v]) => `<a href="#${v}" data-v="${v}"><span class="ti" style="background:${c}">${icon(ic)}</span><span><b>${t}</b><small>${p}</small></span></a>`).join("");
+$("#bellN").textContent = notifs().length;
+// demo login: only in this demo file; the real panel logs in on the server
+{ const H = document.documentElement; let dentro = false; try { dentro = sessionStorage.getItem("lc-demo") === "1"; } catch (e) {}
+  if (!dentro) { H.classList.add("gated"); setTimeout(() => $("#gMail").focus(), 50); }
+  $("#gateForm").addEventListener("submit", e => { e.preventDefault();
+    if ($("#gMail").value.trim().toLowerCase() === "demo@libbyscajun.hn" && $("#gPass").value === "mariscos2026") { try { sessionStorage.setItem("lc-demo", "1"); } catch (er) {} H.classList.remove("gated"); $("#gateErr").hidden = true; $("#gPass").value = ""; }
+    else { $("#gateErr").hidden = false; $("#gPass").select(); } }); }
+$("#main").innerHTML = skeleton();
+setTimeout(render, 450);
 </script>
 </body>
 </html>
