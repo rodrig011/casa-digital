@@ -1,0 +1,103 @@
+# Configuración de Harvey para Clientia Tech (Casa Digital).
+# instalar.sh copia este archivo a la carpeta de Harvey. Aquí NO van claves:
+# las claves van en el archivo .env de Harvey, en tu computadora.
+
+persona:
+  name: "Rodrigo Herrera"
+  company: "Clientia Tech"
+  role: "Sistemas e instalación"
+  email: "rodrigo@clientiatech.com"   # cámbialo por el buzón del que vas a enviar
+  linkedin: ""
+  tone: "cercano y respetuoso, de usted, español de Honduras, directo y corto"
+
+product:
+  name: "Casa Digital"
+  description: >-
+    Bot de WhatsApp y panel del dueño para restaurantes y negocios de Honduras.
+    El bot contesta a toda hora (menú, precios, sucursales, horario), toma
+    pedidos para recoger y los manda a una pantalla de cocina; el dueño ve los
+    pedidos y lo vendido desde su celular. Se instala a distancia.
+  pricing: "Depende de las sucursales; se habla en una llamada de diez minutos, nunca por escrito"
+  key_benefits:
+    - "Ningún cliente se queda sin respuesta en WhatsApp, ni a medianoche"
+    - "Pedidos para recoger que llegan solos a la cocina, sin fila"
+    - "El dueño ve pedidos y ventas del día desde su celular"
+  objection_responses:
+    "too expensive": "Primero lo ve funcionando con su propio menú. Los primeros 30 días no paga nada."
+    "already have a solution": "Tiene sentido. ¿Qué pasa hoy con los mensajes que llegan cuando el local está cerrado?"
+    "not interested": "Entendido, no le vuelvo a escribir. ¿Me permite preguntarle cómo atienden hoy los pedidos por WhatsApp?"
+  offer:
+    primary: "Bot de WhatsApp + panel del dueño, instalación a distancia"
+    entry: "Los primeros 30 días sin pagar nada, sin compromiso"
+    goal: "book_call"
+    booking_method: "ask_preference"
+    booking_url: ""
+    meeting_duration: "10 minutos"
+    meeting_owner: "Rodrigo Herrera"
+
+icp:
+  industries:
+    - "restaurant"
+    - "fried chicken restaurant"
+    - "bakery"
+    - "catering"
+    - "hotel"
+  company_size: "1-50 employees"
+  titles:
+    - "Owner"
+    - "Dueño"
+    - "Propietario"
+    - "Gerente General"
+    - "Gerente"
+    - "Administrador"
+  geography:
+    - "Tegucigalpa, Honduras"
+    - "San Pedro Sula, Honduras"
+    - "La Ceiba, Honduras"
+    - "Comayagua, Honduras"
+  hiring_signals: []
+
+channels:
+  email:
+    enabled: true
+    provider: "gmail"
+    max_daily_sends: 15
+    require_approval: true      # todo correo espera tu aprobación en el Outbox
+    link_domains: ["clientiatech.com"]
+    send_to_risky: false
+    max_bounce_rate: 0.05
+    warmup:
+      start_date: ""
+      min_days: 14
+      start_sends: 5
+      daily_increase: 3
+      dkim_selector: ""
+    send_window:
+      start: "08:00"
+      end: "17:00"
+      weekdays_only: true
+      recipient_timezone: true
+  linkedin:
+    enabled: false
+    max_daily_connections: 20
+    max_daily_messages: 10
+
+usage:
+  max_daily_claude_percent: 50   # deja la mitad de tu plan de Claude para lo demás
+  heartbeat_interval_minutes: 15
+  quiet_hours:
+    start: "20:00"
+    end: "07:00"
+    timezone: "America/Tegucigalpa"
+
+compliance:
+  postal_address: ""   # una dirección postal real (o apartado) antes de enviar
+  # Harvey solo acepta esta línea en inglés ("Reply STOP"), así que va vacía y
+  # la línea en español la pone el Writer (ver skills/product_knowledge.md).
+  opt_out_line: ""
+  do_not_contact: []
+  precleared:
+    enabled: false
+    sender_country: "US"
+    address_source: "unknown"
+    prospect_country: "HN"
