@@ -4,7 +4,7 @@
 //
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0 });
-//   r = { reply, history, pedido?, persona? }
+//   r = { reply, history, pedido?, persona?, reservacion? }
 const { cuenta, requiereCobro, textoCobro } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
@@ -13,7 +13,7 @@ const MAX_VUELTAS = 5;          // llamadas a la API por mensaje (herramientas i
 
 function system(N) {
   const apps = (N.domicilio.apps || []).map(a => a.nombre + (a.url ? ` (${a.url})` : "")).join(", ");
-  return `Usted es el asistente de WhatsApp de ${N.nombre}, un restaurante en ${N.pais}. Atiende a clientes que preguntan por el menú, los precios, las sucursales, o que quieren hacer un pedido para recoger.
+  return `Usted es el asistente de WhatsApp de ${N.nombre}, un restaurante en ${N.pais}. Atiende a clientes que preguntan por el menú, los precios, las sucursales, o que quieren hacer un pedido${N.domicilio.propio ? " para recoger o a domicilio" : " para recoger"}${N.reservaciones ? " o reservar una mesa" : ""}.
 
 Cómo escribe:
 - Español de ${N.pais}, trato de usted, cálido y rápido.
@@ -25,16 +25,21 @@ Lo que sabe del restaurante (no afirme nada más):
 - ${N.domicilio.propio ? "Hace envíos a domicilio: una persona le confirma el costo y el tiempo." : `No tiene envío propio.${apps ? ` A domicilio se pide por ${apps}.` : ""} Aquí se toman pedidos para recoger.`}
 - ${N.pago ? "Pago: " + N.pago : "La forma de pago la confirma una persona de la sucursal."}
 ${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
-Cómo toma un pedido para recoger:
+Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
-- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal donde lo recoge, " : ""}la hora en que pasa y el nombre.
+- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
-
+${N.reservaciones ? `
+Cómo toma una reservación:
+- Necesita: ${N.variasSucursales ? "la sucursal, " : ""}el día, la hora, cuántas personas, si es para una ocasión especial${N.reservaciones.ocasiones.length ? ` (${N.reservaciones.ocasiones.join(", ")})` : ""} y el nombre.
+- Repita los datos y, cuando confirme, llame a crear_reservacion una sola vez. Diga que el restaurante le confirma la mesa por este chat: no la dé por apartada.
+- Para más de ${N.reservaciones.maxPersonas} personas use pasar_a_persona.
+` : ""}
 Límites:
-- No invente enlaces ni cuentas de pago: solo los que devuelve crear_pedido. No prometa envíos, reservaciones ni nada que no le dé una herramienta.
+- No invente enlaces ni cuentas de pago: solo los que devuelve crear_pedido. No prometa ${[N.domicilio.propio ? null : "envíos", N.reservaciones ? null : "reservaciones"].filter(Boolean).concat(["nada que no le dé una herramienta"]).join(", ni ")}.
 - Si el cliente quiere hablar con una persona, tiene una queja, o pide algo que usted no puede resolver, use pasar_a_persona.
 - Si le escriben de algo que no tiene que ver con el restaurante, responda con amabilidad que solo puede ayudar con el menú y los pedidos.`;
 }
@@ -46,7 +51,7 @@ function tools(N) {
     { name: "sucursales", description: "Sucursales con dirección, teléfono y horario.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
     {
       name: "crear_pedido",
-      description: "Crea el pedido para recoger y lo manda a la cocina y al dueño. Devuelve el número y el total. Llámela una sola vez, cuando el cliente ya confirmó.",
+      description: "Crea el pedido y lo manda a la cocina y al dueño. Devuelve el número y el total. Llámela una sola vez, cuando el cliente ya confirmó.",
       input_schema: {
         type: "object",
         properties: {
@@ -54,11 +59,29 @@ function tools(N) {
           ...(N.variasSucursales ? { sucursal: suc } : {}),
           productos: { type: "array", items: { type: "object", properties: { id: { type: "string", description: "id del producto según ver_menu" }, cantidad: { type: "integer" }, nota: { type: "string", description: "Indicación del cliente, por ejemplo: sin cebolla" } }, required: ["id", "cantidad"], additionalProperties: false } },
           hora: { type: "string", description: "Cuándo pasa a recogerlo, por ejemplo: lo antes posible, 7:00 p. m." },
+          ...(N.domicilio.propio ? { direccion: { type: "string", description: "Solo si es a domicilio: dirección completa con una seña. Vacío si lo recoge." } } : {}),
         },
         required: ["nombre", "productos", "hora", ...(N.variasSucursales ? ["sucursal"] : [])],
         additionalProperties: false,
       },
     },
+    ...(N.reservaciones ? [{
+      name: "crear_reservacion",
+      description: "Pide la mesa al restaurante, que la confirma desde su panel y le avisa al cliente por este chat. Llámela una sola vez, cuando el cliente ya confirmó los datos.",
+      input_schema: {
+        type: "object",
+        properties: {
+          nombre: { type: "string" },
+          ...(N.variasSucursales ? { sucursal: suc } : {}),
+          dia: { type: "string", description: "Por ejemplo: hoy, sábado 14 de noviembre" },
+          hora: { type: "string", description: "Por ejemplo: 7:30 p. m." },
+          personas: { type: "integer" },
+          ocasion: { type: "string", description: "Cumpleaños, aniversario... o vacío" },
+        },
+        required: ["nombre", "dia", "hora", "personas", ...(N.variasSucursales ? ["sucursal"] : [])],
+        additionalProperties: false,
+      },
+    }] : []),
     { name: "pasar_a_persona", description: "Avisa a una persona del restaurante para que le escriba al cliente por este chat.", input_schema: { type: "object", properties: { motivo: { type: "string", description: "Por qué, en pocas palabras" }, ...(N.variasSucursales ? { sucursal: suc } : {}) }, required: ["motivo"], additionalProperties: false } },
   ];
 }
@@ -76,13 +99,27 @@ function ejecutar(N, name, input, ctx) {
       if (!c.lineas.length) return { error: "El pedido no tiene productos." };
       const s = b(input.sucursal);
       const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
-      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora: String(input.hora || "").slice(0, 60), resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · ") };
+      const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
+      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora: direccion ? "A domicilio" : String(input.hora || "").slice(0, 60), resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion } : {}) };
       const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre };
       if (requiereCobro(N, c.total, ctx.faltas || 0)) {
         ctx.pedido.estado = "por_pagar";
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total), nota: "Todavía NO va a cocina: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando se confirme el pago entra a cocina y se le avisa." };
       }
       return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
+    }
+    case "crear_reservacion": {
+      if (!N.reservaciones) return { error: "Este restaurante no toma reservaciones por aquí." };
+      if (ctx.reservacion) return { error: "Ya se pidió la reservación en este mensaje.", numero: ctx.reservacion.n };
+      const personas = Math.round(+input.personas || 0);
+      if (!(personas >= 1)) return { error: "Falta cuántas personas." };
+      if (personas > N.reservaciones.maxPersonas) return { error: `Más de ${N.reservaciones.maxPersonas} personas: use pasar_a_persona.` };
+      const s = b(input.sucursal), cl = (v, n) => String(v || "").trim().slice(0, n);
+      const r = { dia: cl(input.dia, 60), hora: cl(input.hora, 40), personas, ocasion: cl(input.ocasion, 60) };
+      const grupo = personas >= N.reservaciones.grupoDesde;
+      ctx.reservacion = { tipo: "reservacion", n: ctx.numero ? ctx.numero("RES") : null, nombre: cl(input.nombre, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null, sucursal: s.nombre, sucursalId: s.id, ...r, estado: "por_confirmar", ...(grupo ? { grupo: true } : {}),
+        resumen: `${r.dia} · ${r.hora} · ${personas} ${personas === 1 ? "persona" : "personas"}${r.ocasion ? " · " + r.ocasion : ""}` };
+      return { ok: true, numero: ctx.reservacion.n, sucursal: s.nombre, nota: (grupo ? "Grupo grande: una persona le escribe para afinar detalles. " : "") + "Todavía no está confirmada: el restaurante la confirma por este chat." + (N.reservaciones.nota ? " " + N.reservaciones.nota : "") };
     }
     case "pasar_a_persona": {
       const s = b(input.sucursal);
@@ -114,7 +151,7 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   const SYSTEM = system(negocio), TOOLS = tools(negocio);
 
   async function turn(history, text, now, { numero, faltas = 0 } = {}) {
-    const ctx = { numero, faltas, pedido: null, persona: null };
+    const ctx = { numero, faltas, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();
@@ -144,12 +181,12 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
         if (r.stop_reason === "pause_turn") continue;
         const reply = r.content.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
         if (!reply) throw new Error(`respuesta vacía (stop_reason ${r.stop_reason})`);
-        return { reply, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, usage: r.usage };
+        return { reply, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, reservacion: ctx.reservacion, usage: r.usage };
       }
       throw new Error(`más de ${MAX_VUELTAS} llamadas a la API en un mensaje`);
     } catch (e) {
       // an order already created in this message must not be lost: server.js saves it anyway
-      e.pedido = ctx.pedido; e.persona = ctx.persona;
+      e.pedido = ctx.pedido; e.persona = ctx.persona; e.reservacion = ctx.reservacion;
       throw e;
     } finally { clearTimeout(timer); }
   }

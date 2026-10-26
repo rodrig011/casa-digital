@@ -32,7 +32,7 @@ const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
-const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido"];
+const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo"];
 
 function loadConfig(env = process.env) {
   const sandbox = on(env.TWILIO_SANDBOX);
@@ -107,8 +107,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
-    const p = store.addPedido({ ...base, n: base.n || numero(base.tipo === "persona" ? "AS" : "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
-    log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? negocio.L(p.total) : p.motivo || ""}`);
+    const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
+    log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? negocio.L(p.total) : p.tipo === "reservacion" ? p.resumen : p.motivo || ""}`);
     track(avisos.ficha(p));
     return p;
   }
@@ -134,12 +134,13 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: () => numero("PED"), faltas: faltasDe(key) });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
       if (e.pedido) guardar(e.pedido, key, convo);
       if (e.persona) persona(e.persona.motivo, e.persona.sucursal, key, convo);
+      if (e.reservacion) guardar(e.reservacion, key, convo);
       return null;
     }
     sess.ia = r.history;
@@ -154,6 +155,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     }
     reply = reply.split(LINK).join("");          // never show the placeholder
     if (r.persona) persona(r.persona.motivo, r.persona.sucursal, key, sess.convo);
+    if (r.reservacion) guardar(r.reservacion, key, sess.convo);
     store.setSession(key, sess);
     return reply;
   }
@@ -235,7 +237,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   const esDueno = from => cfg.owner && digits(from) === digits(cfg.owner);
   function pendientes() {
-    const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina"].includes(p.estado)).slice(-10).reverse();
+    const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
     return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
   }
@@ -283,7 +285,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -293,11 +295,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: "estado inválido" });
     const antes = store.getPedido(req.params.n);
     if (!antes) return res.status(404).json({ error: "no existe" });
-    const yaAvisado = antes.avisoListo;
+    const yaAvisado = antes.avisoListo, estadoAntes = antes.estado;
     const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido";
     if (pagoRecibido) confirmarPago(antes, { por: panel.usuarioDe(req).correo, metodo: "manual" });
     const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
     if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(p.n, { avisoListo: true }); track(avisos.listo(p)); }
+    if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
     res.json(p);
   });
