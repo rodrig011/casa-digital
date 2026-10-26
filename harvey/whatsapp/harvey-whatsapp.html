@@ -121,7 +121,8 @@ const REGLAS = `Escribes como Rodrigo Herrera, de Clientia Tech (clientiatech.co
 - Si piden información: con gusto, pero en 10 minutos se lo enseño funcionando con su negocio; proponer dos opciones de día.
 - Meta: una llamada de 10 minutos. Si aceptan, pedir día y hora (hora de Honduras).
 - No inventar datos del negocio, clientes, testimonios ni funciones. No decir que tenemos clientes pagando. No mencionar a otros restaurantes.
-- Si dicen que no les interesa, agradecer corto y despedirse.`;
+- Si dicen que no les interesa, agradecer corto y despedirse.
+- Si lo último que mandó el negocio es un saludo automático ("gracias por preferirnos", "en breve le atendemos", menú automático), no es una persona: escribe una línea corta y amable que repita que no es un pedido y que busca al dueño o encargado.`;
 
 let db = null, sample = null, negocios = [], tab = "hoy", filtro = "todos", loaded = false;
 const drafts = {};          // borradores escritos en esta sesión, por negocio
@@ -188,7 +189,7 @@ function vistaHoy(h){
   if (pend.length) s += `<div class="sec">Te contestaron</div>` + pend.map(cardCharla).join("");
   if (h.segs.length) s += `<div class="sec">Seguimientos de hoy</div>` + h.segs.map(cardEnviar).join("");
   s += `<div class="sec">Nuevos de hoy · ${enviadosHoy()} de ${LIMITE_DIA} escritos</div>`;
-  if (h.nuevos.length) s += `<p class="hint">Primero preguntás por el dueño. Cuando contesten, tocá <b>Contestó</b> y Harvey te escribe lo que sigue.</p>` + h.nuevos.map(cardEnviar).join("");
+  if (h.nuevos.length) s += `<p class="hint">Primero preguntás por el dueño. Cuando conteste una persona (no el saludo automático), tocá <b>Contestó</b> y Harvey te escribe lo que sigue.</p>` + h.nuevos.map(cardEnviar).join("");
   else s += `<div class="card empty">${h.libres === 0 ? `Ya van ${LIMITE_DIA} nuevos hoy. Mañana salen más; así WhatsApp no marca tu número.` : "Ya les escribiste a todos. Agregá más en Agregar."}</div>`;
   return s;
 }

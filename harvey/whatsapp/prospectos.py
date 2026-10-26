@@ -14,9 +14,9 @@ CIERRE = ("Los primeros 30 días son gratis y sin compromiso; si no le sirve, se
 # (id, nombre, ciudad, celular, a quién pedir, lo que vimos, lo que les resolvemos, nota interna, prioridad 1-3, hora)
 N = [
  ("pupa", "Asados El Hijo de Pupa", "San Pedro Sula", "88570778", None,
-  "Vi sus videos, el de más de un millón de vistas, y que todos los pedidos entran a este WhatsApp a mano. En los comentarios mucha gente pregunta cuánto se tardan a domicilio.",
-  "Yo les armo un sistema para que este WhatsApp conteste solo, tome el pedido completo con la dirección y le diga al cliente cuánto se tarda, y un panel para que la cocina vea los pedidos en orden.",
-  "Abren a las 6 pm, martes a domingo: escribir de 3 a 4:30 pm. Hay quejas de domicilio en sus videos: no mencionarlas.", 1, "tarde"),
+  "Vi sus videos, el de más de un millón de vistas, y que su WhatsApp ya saluda solo y le pide al cliente el plato, la carne y el nombre, pero después alguien tiene que tomar cada orden a mano.",
+  "Yo les armo un sistema para que este WhatsApp tome el pedido completo solo, con el plato, la carne, el nombre y la dirección, le dé el total y cuánto se tarda, y lo pase a un panel para que la cocina lo vea en orden.",
+  "Su WhatsApp tiene el mensaje automático de bienvenida de WhatsApp Business (pide plato, carne y nombre); después alguien toma la orden a mano. Eso no es un bot: es el gancho. Abren 6 pm, martes a domingo. No mencionar quejas de domicilio.", 1, "tarde"),
  ("sabor-pueblo", "Con Sabor a Pueblo", "Tegucigalpa y San Pedro Sula", "31699031", None,
   "Vi el video del chanchito que va por 870 mil vistas y que la gente pregunta precios, si hacen envíos y a qué número pedir. Me imagino que este WhatsApp no para, y más con Tegucigalpa y San Pedro en el mismo número.",
   "Yo les armo un sistema para que este WhatsApp conteste al instante el menú con precios, dónde están ese día y tome el pedido, para Tegus y San Pedro por separado.",
