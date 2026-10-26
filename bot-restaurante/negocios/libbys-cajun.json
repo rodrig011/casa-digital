@@ -1,0 +1,33 @@
+{
+  "_nota": "DEMO (2026-10-26) para la propuesta. Real (de su TikTok @libbyscajun): nombre, San Pedro Sula, pedidos al 9309-9296, que llevan a domicilio, nombres de la Mariscada Catracha Louisiana y la sopa marinera, cumpleaños y cenas románticas. Los PRECIOS SON DE EJEMPLO, igual que en el panel de la demo. Antes de prender el bot: menú completo con precios, dirección, horario, zona y costo de envío, y cuántas personas caben (lista 'lo que necesitamos').",
+  "nombre": "Libby's Cajun",
+  "color": "#B3261E",
+  "sucursales": [
+    { "id": "sps", "nombre": "San Pedro Sula", "direccion": "", "telefono": "+504 9309-9296", "whatsapp": "", "horario": "", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Mariscadas", "items": [
+      { "id": "catracha", "nombre": "Mariscada Catracha Louisiana", "precio": 1450, "desc": "Precio de ejemplo" },
+      { "id": "cajun", "nombre": "Mariscos Cajun", "precio": 980, "desc": "Precio de ejemplo" }
+    ] },
+    { "categoria": "Platos", "items": [
+      { "id": "sopa", "nombre": "Sopa marinera", "precio": 650, "desc": "Precio de ejemplo" },
+      { "id": "pescado", "nombre": "Pescado frito", "precio": 420, "desc": "Precio de ejemplo" }
+    ] },
+    { "categoria": "Bebidas", "items": [
+      { "id": "bebida", "nombre": "Bebida", "precio": 60, "desc": "Precio de ejemplo" }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "",
+  "tiempoPreparacion": "",
+  "cobro": { "desde": "", "faltas": 1, "transferencia": "", "tarjeta": "" },
+  "domicilio": { "propio": true, "zona": "en San Pedro Sula", "apps": [] },
+  "reservaciones": {
+    "activo": true,
+    "ocasiones": ["Cumpleaños", "Cena romántica", "Aniversario", "Reunión de empresa"],
+    "maxPersonas": 30,
+    "grupoDesde": 12,
+    "nota": ""
+  }
+}

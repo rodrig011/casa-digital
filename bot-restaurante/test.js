@@ -109,7 +109,7 @@ async function montar(dir, extra = {}, deps = {}) {
     panelSecret: "s".repeat(40), panelUsuarios: `dueno@restaurante.hn|Dueño|${await hashClave(CLAVE)}`, ...extra,
   };
   const negocio = deps.negocio || preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8")) });
-  negocio.sucursales[1].whatsapp = "+504 8888-1111";
+  if (negocio.sucursales[1]) negocio.sucursales[1].whatsapp = "+504 8888-1111";
   const app = createApp(cfg, { client, now: () => NOW, log: () => {}, negocio, ...deps });
   return new Promise(ok => { const srv = app.listen(0, () => ok({ app, srv, sent, base: `http://127.0.0.1:${srv.address().port}` })); });
 }
@@ -547,4 +547,81 @@ test("seguridad: cabeceras, https y freno de mensajes por número", async () => 
     assert.match(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50490002222", Body: "hola", NumMedia: "0" })).xml), /\S/, "otro número sigue normal");
     assert.match(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50499990000", Body: "pedidos", NumMedia: "0" })).xml), /Pendientes|No hay pedidos/);
   } finally { ctx.srv.close(); }
+});
+
+const LC = cargarNegocio("negocios/libbys-cajun.json");
+test("motor (Libby's Cajun): a domicilio con dirección, y reservación de mesa con ocasión", () => {
+  const E3 = createEngine(LC);
+  const correr = xs => { let st = null, ult; for (const x of xs) { const r = E3.handle(st, x, NOW); st = r.state; ult = r.messages.map(toText).join("\n"); if (VERBOSE) console.log(">> " + x + "\n" + ult); } return { st, ult }; };
+  const hola = E3.handle(null, "hola", NOW);
+  assert.deepEqual(hola.messages.at(-1).buttons, ["Ver el menú y precios", "Hacer un pedido", "Reservar una mesa", "Ubicación y horario", "Pedir a domicilio", "Hablar con una persona"]);
+
+  // delivery: asks pickup or delivery, then the address
+  let { st, ult } = correr(["hola", "quiero una mariscada catracha y 2 bebidas", "Confirmar pedido", "A domicilio", "Rio", "Col. Trejo, 5 calle, casa blanca frente a la pulpería", "Carla Mejía"]);
+  assert.equal(st.lead.tipo, "pedido"); assert.equal(st.lead.entrega, "domicilio");
+  assert.match(st.lead.direccion, /Col. Trejo/); assert.equal(st.lead.total, 1570);
+  assert.match(ult, /A domicilio: Col. Trejo/); assert.match(ult, /costo del envío/);
+  // pickup keeps asking the hour
+  ({ st } = correr(["hola", "2", "1 x1", "Confirmar pedido", "Para recoger", "Lo antes posible", "Ana"]));
+  assert.equal(st.lead.entrega, undefined); assert.equal(st.lead.hora, "Lo antes posible");
+
+  // reservation: day, hour, people (in words), occasion, name -> waits for the restaurant
+  ({ st, ult } = correr(["hola", "quiero reservar para un cumpleaños", "Otro día", "sábado 14 de noviembre", "7:30 p. m.", "somos seis", "Cumpleaños", "me llamo daniela r."]));
+  assert.deepEqual({ tipo: st.lead.tipo, dia: st.lead.dia, hora: st.lead.hora, personas: st.lead.personas, ocasion: st.lead.ocasion, estado: st.lead.estado },
+    { tipo: "reservacion", dia: "Sábado 14 de noviembre", hora: "7:30 p. m.", personas: 6, ocasion: "Cumpleaños", estado: "por_confirmar" });
+  assert.match(ult, /Reservación RES-1001 recibida, Daniela/); assert.match(ult, /le confirmamos/);
+  // a big group is flagged; over the limit goes to a person
+  ({ st } = correr(["hola", "3", "Hoy", "8 pm", "15", "Ninguna", "Empresa X"]));
+  assert.equal(st.lead.grupo, true); assert.equal(st.lead.ocasion, "");
+  ({ st } = correr(["hola", "3", "Mañana", "1 pm", "45"]));
+  assert.equal(st.lead, undefined); assert.equal(st.handoff, "San Pedro Sula");
+});
+
+test("webhook (Libby's Cajun): la reservación llega al dueño, el panel la confirma y al cliente le llega el aviso", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio: cargarNegocio("negocios/libbys-cajun.json") });
+  try {
+    const cliente = "whatsapp:+50495554444";
+    for (const Body of ["hola", "3", "Mañana", "8:00 p. m.", "2", "Cena romántica", "Luis Andino"]) await post(ctx, "/whatsapp", { From: cliente, Body });
+    await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, 1);
+    assert.match(ctx.sent[0].body, /Nueva reservación RES-1001 · San Pedro Sula/);
+    assert.match(ctx.sent[0].body, /Mañana, 8:00 p. m./); assert.match(ctx.sent[0].body, /Cena romántica/);
+    const pend = await post(ctx, "/whatsapp", { From: "whatsapp:+50499990000", Body: "pendientes" });
+    assert.match(textoDe(pend.xml), /RES-1001/);
+
+    const cookie = await entrar(ctx);
+    assert.equal((await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json()).reservaciones, true);
+    const estado = e => fetch(ctx.base + "/api/pedidos/RES-1001/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify({ estado: e }) });
+    assert.equal((await estado("confirmada")).status, 200);
+    await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, 2); assert.equal(ctx.sent[1].to, cliente);
+    assert.match(ctx.sent[1].body, /Luis, su mesa en \*San Pedro Sula\* queda apartada: Mañana, 8:00 p. m., 2 personas/);
+    await estado("confirmada"); await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, 2, "confirmar dos veces no le escribe dos veces");
+
+    // delivery order: the owner sees the address; "listo" tells the customer it is on its way
+    for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", "Col. Jardines del Valle, 3 calle, portón negro", "Marta"]) await post(ctx, "/whatsapp", { From: "whatsapp:+50491112222", Body });
+    await ctx.app.locals.idle();
+    assert.match(ctx.sent.at(-1).body, /Nuevo pedido PED-1002/); assert.match(ctx.sent.at(-1).body, /A domicilio: Col. Jardines del Valle/);
+    await fetch(ctx.base + "/api/pedidos/PED-1002/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: '{"estado":"listo"}' });
+    await ctx.app.locals.idle();
+    assert.match(ctx.sent.at(-1).body, /Marta, su pedido \*PED-1002\* ya va en camino/);
+  } finally { ctx.srv.close(); }
+});
+
+test("ia (Libby's Cajun): crear_reservacion pide la mesa sin darla por confirmada; domicilio lleva dirección", () => {
+  const { ejecutar, tools, system } = require("./ia");
+  assert.ok(tools(LC).some(t => t.name === "crear_reservacion"));
+  assert.ok(!tools(N).some(t => t.name === "crear_reservacion"));
+  assert.match(system(LC), /Cómo toma una reservación/); assert.doesNotMatch(system(LC), /No prometa envíos/);
+  assert.match(system(N), /No prometa envíos, ni reservaciones/);
+  const ctx = { numero: (pre = "PED") => pre + "-7" };
+  const r = ejecutar(LC, "crear_reservacion", { nombre: "sofía", dia: "viernes", hora: "7 pm", personas: 4, ocasion: "Aniversario" }, ctx);
+  assert.equal(r.numero, "RES-7"); assert.match(r.nota, /no está confirmada/);
+  assert.equal(ctx.reservacion.estado, "por_confirmar"); assert.equal(ctx.reservacion.nombre, "Sofía");
+  assert.match(ejecutar(LC, "crear_reservacion", { nombre: "x", dia: "hoy", hora: "1", personas: 80 }, {}).error, /pasar_a_persona/);
+  const c2 = {};
+  ejecutar(LC, "crear_pedido", { nombre: "Ana", productos: [{ id: "sopa", cantidad: 1 }], hora: "ya", direccion: "Col. Trejo, casa 5" }, c2);
+  assert.equal(c2.pedido.entrega, "domicilio"); assert.equal(c2.pedido.hora, "A domicilio");
 });

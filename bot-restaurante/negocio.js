@@ -72,9 +72,21 @@ function preparar(n) {
     pago: n.pago || "",
     domicilio: n.domicilio || { propio: false, apps: [] },
     cobro: prepararCobro(n.cobro),
+    reservaciones: prepararReservaciones(n.reservaciones),
     items, sucursal, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };
+}
+
+// Reservaciones (opcional): el bot toma día, hora, personas y ocasión, y el restaurante confirma desde el panel.
+//   ocasiones: lo que el cliente puede elegir (cumpleaños, aniversario...)
+//   maxPersonas: más que esto pasa a una persona; grupoDesde: desde cuántas personas se marca como grupo grande
+//   nota: lo que el bot dice al cerrar (por ejemplo "la mesa se guarda 15 minutos")
+function prepararReservaciones(r) {
+  if (!r || r.activo === false) return null;
+  const num = (v, d) => (+v > 0 ? Math.round(+v) : d);
+  const ocasiones = (Array.isArray(r.ocasiones) ? r.ocasiones : []).map(o => String(o).trim()).filter(Boolean).slice(0, 8);
+  return { ocasiones, maxPersonas: num(r.maxPersonas, 20), grupoDesde: num(r.grupoDesde, Infinity), nota: String(r.nota || "").trim() };
 }
 
 // Cobro antes de cocinar (opcional): para que un pedido grande o de alguien que ya dejó un pedido botado

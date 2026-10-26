@@ -16,6 +16,10 @@ function fichaTexto(p, fmt = L) {
     titulo: `${p.nombre || "Un cliente"} pidió hablar con una persona · ${p.sucursal}`,
     lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, p.motivo ? `💬 ${p.motivo}` : null, `Responder: https://wa.me/${digits(p.tel)}`].filter(Boolean),
   };
+  if (p.tipo === "reservacion") return {
+    titulo: `${p.grupo ? "Reservación de grupo" : "Nueva reservación"} ${p.n} · ${p.sucursal}`,
+    lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, `📅 ${p.dia}, ${p.hora}`, `👥 ${p.personas} ${p.personas === 1 ? "persona" : "personas"}`, p.ocasion ? `🎉 ${p.ocasion}` : null, "Confirme o diga que no hay cupo desde el panel: al cliente le llega el aviso.", `Responder: https://wa.me/${digits(p.tel)}`].filter(Boolean),
+  };
   const porPagar = p.estado === "por_pagar";
   return {
     titulo: `${porPagar ? "Pedido por pagar" : "Nuevo pedido"} ${p.n} · ${p.sucursal}`,
@@ -26,7 +30,7 @@ function fichaTexto(p, fmt = L) {
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       ...(p.lineas || []).map(l => lineaTexto(l, fmt)),
       `💰 Total ${fmt(p.total)}`,
-      p.hora ? `🕒 Recoge: ${p.hora}` : null,
+      p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}` : p.hora ? `🕒 Recoge: ${p.hora}` : null,
       `Responder: https://wa.me/${digits(p.tel)}`,
     ].filter(Boolean),
   };
@@ -60,6 +64,7 @@ function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log
     },
     // to the customer, when the kitchen marks the order as ready
     listo(p) {
+      if (p.entrega === "domicilio") return enviar(waAddr(p.tel), `🛵 ¡${(p.nombre || "Hola").split(" ")[0]}, su pedido *${p.n}* ya va en camino! Total: ${negocio.L(p.total)}. ¡Gracias por su compra!`);
       const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
       return enviar(waAddr(p.tel), `✅ ¡${(p.nombre || "Hola").split(" ")[0]}, su pedido *${p.n}* ya está listo! Puede pasar a recogerlo a *${p.sucursal}*${b && b.direccion ? ` (${b.direccion})` : ""}.\n\nTotal: ${negocio.L(p.total)}. ¡Gracias por su compra!`);
     },
@@ -70,6 +75,14 @@ function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log
       const body = `💳 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
       if (!to.length) { log(`[aviso sin destino: falta OWNER_WHATSAPP]\n${body}`); return []; }
       return Promise.all(to.map(n => enviar(n, body, t, mediaUrl)));
+    },
+    // to the customer, when the restaurant confirms the table (or has no room) from the panel
+    reservacion(p) {
+      const nom = (p.nombre || "Hola").split(" ")[0];
+      const r = negocio.reservaciones || {};
+      return enviar(waAddr(p.tel), p.estado === "confirmada"
+        ? `✅ ${nom}, su mesa en *${p.sucursal}* queda apartada: ${p.dia}, ${p.hora}, ${p.personas} ${p.personas === 1 ? "persona" : "personas"}.${r.nota ? `\n${r.nota}` : ""}\n\n¡Le esperamos!`
+        : `${nom}, lo sentimos: para ${p.dia} a las ${p.hora} ya no tenemos mesa para ${p.personas}. Si quiere otra hora o día, escríbanos por aquí y se la buscamos.`);
     },
     // to the customer, when someone confirms the payment in the panel
     pagado(p) {
