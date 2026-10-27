@@ -1,0 +1,5 @@
+# Falsos positivos revisados: llaves de prueba en bot-restaurante/test.js (no son claves reales)
+7968944dbd65053dbd8f74321c91cc6bfba38331:bot-restaurante/test.js:generic-api-key:837
+7968944dbd65053dbd8f74321c91cc6bfba38331:bot-restaurante/test.js:generic-api-key:850
+fd3e9e4ec2779c14def228793b2582f234348e07:bot-restaurante/test.js:generic-api-key:837
+fd3e9e4ec2779c14def228793b2582f234348e07:bot-restaurante/test.js:generic-api-key:850
