@@ -6,6 +6,8 @@
 //   cd kit-cliente && npm install && cd ..
 //   node kit-cliente/generar.mjs --restaurante "Pollo de Ejemplo" --dueno "Juan Pérez" \
 //     --numero "9999-9999" --instalacion "L32,000" --mensual "L3,500" --inicio "20 de octubre de 2026"
+//   --fuentes gambos/kit   usa los .md de esa carpeta en lugar de los de aquí (y su 0-carta-de-presentacion.md, si hay)
+//   --solo bienvenida,lo-que-necesitamos   arma solo esos documentos
 // Solo --restaurante es obligatorio; lo que falte queda en blanco para escribirlo a mano
 // (sin --numero, el cartel sale como borrador con el QR pendiente).
 // Salida: kit-cliente/pdf/<restaurante>/  (no se sube a GitHub: tiene datos del cliente)
@@ -21,7 +23,7 @@
 //   <!-- banda: 30 | texto --> la sección siguiente en una banda azul con ese número grande
 //   <!-- contraportada -->    la sección siguiente va en la contraportada azul
 //   <!-- pagina -->           la sección siguiente empieza en una página nueva
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -34,7 +36,7 @@ const raiz = join(aqui, "..");
 const { values: a } = parseArgs({ options: {
   restaurante: { type: "string" }, dueno: { type: "string" }, numero: { type: "string" },
   instalacion: { type: "string" }, mensual: { type: "string" }, inicio: { type: "string" },
-  salida: { type: "string" },
+  salida: { type: "string" }, fuentes: { type: "string" }, solo: { type: "string" },
 } });
 if (!a.restaurante) { console.error('Falta --restaurante "Nombre"'); process.exit(1); }
 
@@ -218,7 +220,9 @@ const bloque = (tok, dir) => {
 };
 
 const render = archivo => {
-  let t = readFileSync(join(aqui, archivo), "utf8");
+  // --fuentes <carpeta>: los .md de un cliente (por ejemplo gambos/kit) reemplazan a los de aquí
+  const propio = a.fuentes && join(raiz, a.fuentes, archivo);
+  let t = readFileSync(propio && existsSync(propio) ? propio : join(aqui, archivo), "utf8");
   for (const [k, v] of Object.entries(datos)) t = t.split(k).join(v);
   const toks = marked.lexer(t, { gfm: true });
   let portada = null, estilo = "", titulo = "", lead = [], secs = [], cur = null, dir = null, sigSec = {};
@@ -308,6 +312,7 @@ ${waNum ? "" : '<div class="borrador">Borrador</div>'}<div class="r">${esc(a.res
 };
 
 const docs = [
+  ...(a.fuentes && existsSync(join(raiz, a.fuentes, "0-carta-de-presentacion.md")) ? [["carta-de-presentacion", "0-carta-de-presentacion.md"]] : []),
   ["bienvenida", "1-bienvenida.md"],
   ["lo-que-necesitamos", "2-lo-que-necesitamos.md"],
   ["acuerdo-de-servicio", "3-acuerdo-de-servicio.md"],
@@ -339,8 +344,9 @@ const pdf = async (nombre, html) => {
   console.log("  " + nombre + ".pdf");
 };
 console.log(`Kit de ${a.restaurante} → ${salida}`);
-for (const [nombre, archivo] of docs) await pdf(nombre, render(archivo));
-const c = await cartel();
-await pdf("cartel-whatsapp", c);
+// --solo carta-de-presentacion,lo-que-necesitamos: solo esos documentos
+const solo = a.solo ? new Set(a.solo.split(",").map(x => x.trim())) : null;
+for (const [nombre, archivo] of docs) if (!solo || solo.has(nombre)) await pdf(nombre, render(archivo));
+if (!solo || solo.has("cartel-whatsapp")) await pdf("cartel-whatsapp", await cartel());
 if (!waNum) console.log("  (sin --numero el cartel sale como borrador, sin QR)");
 await navegador.close();
