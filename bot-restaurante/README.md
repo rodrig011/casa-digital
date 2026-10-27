@@ -28,7 +28,7 @@ Para instalarle a un cliente desde EE. UU., ver también [INSTALACION-A-DISTANCI
 | `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. Los pedidos cerrados con más de 30 días pasan a `archivo/pedidos-AAAA-MM.json` para que `pedidos.json` no crezca para siempre. |
 | `auth.js`, `usuarios.js` | Entrada al panel con correo y contraseña. |
 | `seguridad.js` | Cabeceras de seguridad, https forzado y freno de mensajes por número (ver `SEGURIDAD.md` en la raíz). |
-| `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú. |
+| `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú (y Cupos o Reservaciones si el negocio los usa). |
 | `test.js` | Pruebas sin Twilio ni internet: `npm test`. |
 
 ## 1. Probarlo en la computadora
@@ -105,7 +105,17 @@ Con transferencia, la confirmación es a mano en el panel.
 
 Pendiente antes del primer cliente real: confirmar con Tilopay que da servicio en Honduras y en lempiras, y hacer un pago de prueba para revisar los campos del pago (el bot acepta `code: "1"` o un estado "aprobado"; Tilopay no publica ese formato). Sin pasarela, `tarjeta` en el archivo del negocio sigue sirviendo para un link fijo, confirmado a mano. Si en Twilio está activada la protección de archivos con clave (HTTP basic auth on media), la foto no se reenvía al dueño: el aviso llega igual sin foto.
 
-## 5. Lo que el dueño puede hacer por WhatsApp
+## 5. Venta por cupos y tandas (Gambos)
+
+Para negocios que venden por adelantado y cocinan por tandas. En `negocios/<cliente>.json`:
+
+- Cada producto lleva `"cupos"`: cuántas personas son (Combo individual 1, Duo de Mar 2...). Los adicionales van en 0 y no se venden solos.
+- `"cupos": { "dias": [...], "tandas": [...], "porTanda": 12, "anticipacion": 1, "cierre": "21:00", "verDias": 7, "salsas": [...] }`.
+  `anticipacion: 1` y `cierre: "21:00"` = cada día se puede pedir hasta las 9 de la noche del día anterior (hora de Honduras).
+
+Lo que hace el bot: arma el pedido, pregunta la salsa de cada combo, si lo recoge o se lo llevan, el día (solo los que siguen abiertos) y la tanda (solo las que tienen cupo, con cuántos quedan). Antes de cerrar vuelve a revisar el cupo, por si otro cliente lo tomó mientras tanto. Si no cabe, ofrece otro día o la lista de espera: el pedido queda "Lista de espera" sin cupo y sin cobro. Los cupos se cuentan de los pedidos guardados (todos menos cancelados y lista de espera), así que un pedido cancelado libera sus cupos y al dueño le llega quién está en espera para escribirle. En el panel, **Cupos** muestra cada día con sus tandas y la lista de espera; Cocina solo muestra los pedidos de hoy, en orden de tanda. El modo IA hace lo mismo con la herramienta `ver_cupos`.
+
+## 6. Lo que el dueño puede hacer por WhatsApp
 
 Desde el número de `OWNER_WHATSAPP`, escribirle al bot **pedidos**: le contesta con los pedidos y clientes pendientes.
 

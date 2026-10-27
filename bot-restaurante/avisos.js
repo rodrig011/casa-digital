@@ -20,17 +20,19 @@ function fichaTexto(p, fmt = L) {
     titulo: `${p.grupo ? "Reservación de grupo" : "Nueva reservación"} ${p.n} · ${p.sucursal}`,
     lineas: [`👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`, `📅 ${p.dia}, ${p.hora}`, `👥 ${p.personas} ${p.personas === 1 ? "persona" : "personas"}`, p.ocasion ? `🎉 ${p.ocasion}` : null, "Confirme o diga que no hay cupo desde el panel: al cliente le llega el aviso.", `Responder: https://wa.me/${digits(p.tel)}`].filter(Boolean),
   };
-  const porPagar = p.estado === "por_pagar";
+  const porPagar = p.estado === "por_pagar", espera = p.estado === "en_espera";
   return {
-    titulo: `${porPagar ? "Pedido por pagar" : "Nuevo pedido"} ${p.n} · ${p.sucursal}`,
+    titulo: `${espera ? "Lista de espera" : porPagar ? "Pedido por pagar" : "Nuevo pedido"} ${p.n} · ${p.sucursal}`,
     lineas: [
+      espera ? `⏳ No había cupo: quiere ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"} para ${p.dia}. Si se libera uno, escríbale.` : null,
+      p.tanda ? `📅 ${p.dia.replace(/^\p{L}/u, c => c.toUpperCase())} · tanda de ${p.tanda} · ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"}` : null,
       porPagar ? "⏳ Todavía no va a cocina: espera el pago" : null,
       p.pagado && p.metodoPago === "tarjeta" ? "💳 Pagado con tarjeta" : null,
       p.faltas ? `⚠️ Este número no vino a recoger ${p.faltas === 1 ? "1 vez" : p.faltas + " veces"} antes` : null,
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       ...(p.lineas || []).map(l => lineaTexto(l, fmt)),
       `💰 Total ${fmt(p.total)}`,
-      p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}` : p.hora ? `🕒 Recoge: ${p.hora}` : null,
+      p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}` : p.tanda || espera ? "📍 Lo recoge" : p.hora ? `🕒 Recoge: ${p.hora}` : null,
       `Responder: https://wa.me/${digits(p.tel)}`,
     ].filter(Boolean),
   };

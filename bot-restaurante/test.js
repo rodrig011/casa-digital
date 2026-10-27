@@ -625,3 +625,117 @@ test("ia (Libby's Cajun): crear_reservacion pide la mesa sin darla por confirmad
   ejecutar(LC, "crear_pedido", { nombre: "Ana", productos: [{ id: "sopa", cantidad: 1 }], hora: "ya", direccion: "Col. Trejo, casa 5" }, c2);
   assert.equal(c2.pedido.entrega, "domicilio"); assert.equal(c2.pedido.hora, "A domicilio");
 });
+
+// ---------- Gambos: cupos por día y tanda ----------
+const GB = cargarNegocio("negocios/gambos.json");
+const GBCUP = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/gambos.json"), "utf8")).cupos;
+const gambosCon = cambios => preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/gambos.json"), "utf8")), ...cambios });
+
+test("negocio (Gambos): nombres del catálogo, cupos por producto y días que todavía se pueden pedir", () => {
+  const { fechasCupos } = require("./negocio");
+  assert.equal(GB.item("marea x4").id, "marea4"); assert.equal(GB.item("marea x6").id, "marea6");
+  assert.equal(GB.item("la marea de 4").id, "marea4"); assert.equal(GB.item("duo de mar").id, "duo");
+  assert.equal(GB.item("marea"), null, "ambiguo: no adivina");
+  assert.deepEqual(GB.items.filter(i => i.cupos).map(i => i.cupos), [1, 2, 4, 6]);
+  const E4 = createEngine(GB);
+  assert.deepEqual(E4.leerPedido("marea x6 x2, una libra de camarones").encontrados, [{ id: "marea6", cantidad: 2 }, { id: "camarones", cantidad: 1 }]);
+  // NOW = sábado 17 de octubre al mediodía: el domingo todavía se puede (cierra hoy a las 9 pm), el sábado de hoy no
+  assert.deepEqual(fechasCupos(GB, NOW).map(f => f.etiqueta), ["domingo 18 de octubre", "jueves 22 de octubre", "viernes 23 de octubre", "sábado 24 de octubre"]);
+  assert.equal(fechasCupos(GB, new Date("2026-10-17T21:30:00-06:00"))[0].etiqueta, "jueves 22 de octubre", "después del cierre ya no entra el domingo");
+  assert.throws(() => gambosCon({ cupos: { dias: ["lunes"], tandas: [], porTanda: 5 } }), /cupos.tandas/);
+  assert.throws(() => gambosCon({ cupos: { dias: ["feriado"], tandas: ["1"], porTanda: 5 } }), /cupos.dias/);
+});
+
+test("motor (Gambos): salsa por combo, día, tanda con cupos, lista de espera y adicionales solos", () => {
+  const ocup = {};
+  const E4 = createEngine(gambosCon({ cupos: { ...GBCUP, dias: ["domingo", "jueves"], porTanda: 4 } }));
+  const correr = xs => { let st = null, ult = ""; for (const x of xs) { const r = E4.handle(st, x, NOW, { ocupados: (f, t) => ocup[f + " " + t] || 0 }); st = r.state; ult = r.messages.map(toText).join("\n"); if (VERBOSE) console.log(">> " + x + "\n" + ult); } return { st, ult }; };
+
+  let { st, ult } = correr(["hola", "quiero un duo de mar y 2 elotes", "Confirmar pedido"]);
+  assert.match(ult, /Qué salsa para el \*Duo de Mar \(2px\)\*/); assert.match(ult, /Honey Cajún/);
+  ({ st, ult } = correr(["hola", "quiero un duo de mar y 2 elotes", "Confirmar pedido", "honey", "Para recoger"]));
+  assert.match(ult, /Para qué día\? Su pedido usa 2 cupos/);
+  assert.deepEqual(st.offer, ["Domingo 18 de octubre", "Jueves 22 de octubre", "Lista de espera"]);
+  ocup["2026-10-18 12:00 p. m."] = 4; ocup["2026-10-18 2:00 p. m."] = 3;   // 12:00 llena, 2:00 con 1 libre
+  ({ st, ult } = correr(["hola", "quiero un duo de mar y 2 elotes", "Confirmar pedido", "honey", "Para recoger", "domingo"]));
+  assert.deepEqual(st.offer, ["4:30 p. m. · quedan 4", "6:30 p. m. · quedan 4"]);
+  ({ st, ult } = correr(["hola", "quiero un duo de mar y 2 elotes", "Confirmar pedido", "honey", "Para recoger", "domingo", "6:30", "daniela paz"]));
+  assert.deepEqual({ cupos: st.lead.cupos, diaFecha: st.lead.diaFecha, tanda: st.lead.tanda, hora: st.lead.hora, estado: st.lead.estado },
+    { cupos: 2, diaFecha: "2026-10-18", tanda: "6:30 p. m.", hora: "Domingo 18 de octubre, 6:30 p. m.", estado: undefined });
+  assert.equal(st.lead.lineas[0].nota, "Salsa Honey Cajún"); assert.equal(st.lead.total, 1070);
+  assert.match(ult, /Domingo 18 de octubre, tanda de 6:30 p\. m\. · 2 cupos apartados/); assert.match(ult, /Recoge en \*Pickup en Colonia Florencia Norte\*/);
+
+  // the batch fills while the customer types the name: it offers the others again
+  const a = correr(["hola", "1 x2", "si", "clasica", "Para recoger", "domingo", "4:30"]);
+  ocup["2026-10-18 4:30 p. m."] = 3;
+  const r = E4.handle(a.st, "Ana", NOW, { ocupados: (f, t) => ocup[f + " " + t] || 0 });
+  assert.equal(r.state.lead, undefined); assert.match(toText(r.messages[0]), /se llenó esa tanda/); assert.equal(r.state.step, "tanda");
+
+  // a Marea x6 does not fit anywhere: full days are named, the waiting list takes it, with nothing to pay yet
+  ({ st, ult } = correr(["hola", "una marea x6", "si", "lemon", "A domicilio", "Col. Palmira, casa 12 portón negro", "domingo"]));
+  assert.match(ult, /ya no tiene 6 cupos libres/); assert.ok(st.offer.includes("Lista de espera"));
+  ({ st, ult } = correr(["hola", "una marea x6", "si", "lemon", "A domicilio", "Col. Palmira, casa 12 portón negro", "domingo", "Lista de espera", "Carlos"]));
+  assert.equal(st.lead.estado, "en_espera"); assert.equal(st.lead.cupos, 6); assert.equal(st.lead.tanda, undefined);
+  assert.match(ult, /lista de espera/); assert.match(ult, /Todavía no tiene que pagar nada/);
+
+  // extras alone go with a combo
+  ({ ult } = correr(["hola", "2 elotes", "si"]));
+  assert.match(ult, /Los adicionales van con un combo/);
+});
+
+test("webhook (Gambos): los pedidos llenan la tanda, el panel ve los cupos y al cancelar avisa a quién está en espera", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const G = gambosCon({ cupos: { ...GBCUP, porTanda: 4 } });
+  const ctx = await montar(dir, { negocio: "negocios/gambos.json" }, { negocio: G });
+  try {
+    const pedir = async (From, xs) => { let r; for (const Body of xs) r = await post(ctx, "/whatsapp", { From, Body }); return textoDe(r.xml); };
+    await pedir("whatsapp:+50491110001", ["hola", "marea x4", "si", "honey", "Para recoger", "domingo", "12", "Rosa"]);
+    await ctx.app.locals.idle();
+    assert.match(ctx.sent.at(-1).body, /Nuevo pedido PED-1001/);
+    assert.match(ctx.sent.at(-1).body, /Domingo 18 de octubre · tanda de 12:00 p\. m\. · 4 cupos/);
+    assert.match(ctx.sent.at(-1).body, /Marea x4 \(4px\) \(Salsa Honey Cajún\)/);
+    // the next customer no longer sees the 12:00 batch
+    const t = await pedir("whatsapp:+50491110002", ["hola", "duo de mar", "si", "clasica", "Para recoger", "domingo"]);
+    assert.doesNotMatch(t, /12:00/); assert.match(t, /2:00 p\. m\. · quedan 4/);
+    // a full weekend for a Marea x6 (6 > 4 per batch) goes to the waiting list
+    await pedir("whatsapp:+50491110003", ["hola", "marea x6", "si", "lemon", "Para recoger", "Lista de espera", "Carlos"]);
+    await ctx.app.locals.idle();
+    assert.match(ctx.sent.at(-1).body, /Lista de espera PED-1002/);
+
+    const cookie = await entrar(ctx);
+    const n = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(n.cupos.tandas, G.cupos.tandas); assert.equal(n.cupos.porTanda, 4);
+    assert.equal(n.cupos.dias[0].fecha, "2026-10-17"); assert.equal(n.cupos.dias[0].abierto, false); assert.equal(n.cupos.dias[1].abierto, true);
+    const antes = ctx.sent.length;
+    const r = await fetch(ctx.base + "/api/pedidos/PED-1001/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: '{"estado":"cancelado"}' });
+    assert.equal(r.status, 200); await ctx.app.locals.idle();
+    assert.equal(ctx.sent.length, antes + 2, "al dueño y al WhatsApp de Gambos");
+    assert.match(ctx.sent.at(-1).body, /Se liberaron 4 cupos · domingo 18 de octubre, 12:00 p\. m\./); assert.match(ctx.sent.at(-1).body, /Carlos · 6 cupos/);
+    const t2 = await pedir("whatsapp:+50491110004", ["hola", "duo de mar", "si", "clasica", "Para recoger", "domingo"]);
+    assert.match(t2, /12:00 p\. m\. · quedan 4/, "el cupo cancelado vuelve a estar libre");
+  } finally { ctx.srv.close(); }
+});
+
+test("ia (Gambos): ver_cupos y crear_pedido con día, tanda, salsa en la nota y lista de espera", () => {
+  const { ejecutar, tools, system } = require("./ia");
+  assert.ok(tools(GB).some(t => t.name === "ver_cupos")); assert.ok(!tools(N).some(t => t.name === "ver_cupos"));
+  const crear = tools(GB).find(t => t.name === "crear_pedido").input_schema;
+  assert.ok(crear.required.includes("fecha")); assert.deepEqual(crear.properties.tanda.enum, GB.cupos.tandas);
+  assert.match(system(GB), /Cómo funcionan los cupos/); assert.match(system(GB), /Clásica Cajún, Honey Cajún, Lemon Pepper/);
+  const ocupados = (f, t) => (f === "2026-10-18" && t === "6:30 p. m." ? 11 : 0);
+  const base = { numero: () => "PED-9", now: NOW, ocupados };
+  const v = ejecutar(GB, "ver_cupos", {}, base);
+  assert.equal(v.dias[0].fecha, "2026-10-18"); assert.equal(v.dias[0].tandas.find(x => x.tanda === "6:30 p. m.").libres, 1);
+  const prod = [{ id: "duo", cantidad: 1, nota: "Salsa Honey Cajún" }];
+  assert.match(ejecutar(GB, "crear_pedido", { nombre: "a", productos: prod, fecha: "2026-10-18", tanda: "6:30 p. m." }, { ...base }).error, /1 cupos libres y el pedido usa 2/);
+  assert.match(ejecutar(GB, "crear_pedido", { nombre: "a", productos: prod, fecha: "2026-10-17", tanda: "6:30 p. m." }, { ...base }).error, /ya no se puede pedir/);
+  assert.match(ejecutar(GB, "crear_pedido", { nombre: "a", productos: [{ id: "elotes", cantidad: 2 }], fecha: "2026-10-18", tanda: "2:00 p. m." }, { ...base }).error, /adicionales van con un combo/);
+  const c = { ...base };
+  const ok = ejecutar(GB, "crear_pedido", { nombre: "ana", productos: prod, fecha: "2026-10-18", tanda: "2:00 p. m.", direccion: "Col. Kennedy, casa 4" }, c);
+  assert.equal(ok.tanda, "2:00 p. m."); assert.equal(ok.cupos, 2);
+  assert.deepEqual({ diaFecha: c.pedido.diaFecha, tanda: c.pedido.tanda, cupos: c.pedido.cupos, hora: c.pedido.hora, entrega: c.pedido.entrega },
+    { diaFecha: "2026-10-18", tanda: "2:00 p. m.", cupos: 2, hora: "Domingo 18 de octubre, 2:00 p. m.", entrega: "domicilio" });
+  const c2 = { ...base };
+  const e = ejecutar(GB, "crear_pedido", { nombre: "luis", productos: [{ id: "marea6", cantidad: 1 }], fecha: "2026-10-18", lista_espera: true }, c2);
+  assert.equal(c2.pedido.estado, "en_espera"); assert.match(e.nota, /lista de espera/); assert.equal(c2.pedido.tanda, undefined);
+});

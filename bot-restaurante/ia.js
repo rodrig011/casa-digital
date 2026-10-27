@@ -3,9 +3,9 @@
 // por medio de herramientas, así nunca inventa un precio. Si la API falla, server.js usa el menú de siempre.
 //
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
-//   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0 });
+//   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, fechasCupos, cuposDe } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -27,12 +27,18 @@ Lo que sabe del restaurante (no afirme nada más):
 ${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
 Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
-- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
+- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
-${N.reservaciones ? `
+${N.cupos ? `
+Cómo funcionan los cupos:
+- Se vende por adelantado, por tandas. Cada combo usa cupos según sus personas (lo dice ver_menu); los adicionales no usan cupo y van con un combo.
+- Use ver_cupos antes de ofrecer días o tandas, y ofrezca solo tandas con cupos suficientes. No prometa un día que ver_cupos no devuelve.
+${N.cupos.salsas.length ? `- Pregunte la salsa de cada combo (${N.cupos.salsas.join(", ")}) y póngala en la nota del producto, por ejemplo: Salsa ${N.cupos.salsas[0]}.${N.cupos.nota ? " " + N.cupos.nota : ""}
+` : ""}- Si no hay cupo, ofrezca otro día u otra tanda, o anotarlo en la lista de espera (crear_pedido con lista_espera): en ese caso no paga nada todavía y se le escribe si se libera un cupo.
+` : ""}${N.reservaciones ? `
 Cómo toma una reservación:
 - Necesita: ${N.variasSucursales ? "la sucursal, " : ""}el día, la hora, cuántas personas, si es para una ocasión especial${N.reservaciones.ocasiones.length ? ` (${N.reservaciones.ocasiones.join(", ")})` : ""} y el nombre.
 - Repita los datos y, cuando confirme, llame a crear_reservacion una sola vez. Diga que el restaurante le confirma la mesa por este chat: no la dé por apartada.
@@ -49,6 +55,7 @@ function tools(N) {
   return [
     { name: "ver_menu", description: "Menú completo con id, nombre exacto, categoría, descripción y precio con su moneda.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
     { name: "sucursales", description: "Sucursales con dirección, teléfono y horario.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
+    ...(N.cupos ? [{ name: "ver_cupos", description: "Días que todavía se pueden pedir, con los cupos libres de cada tanda.", input_schema: { type: "object", properties: {}, additionalProperties: false } }] : []),
     {
       name: "crear_pedido",
       description: "Crea el pedido y lo manda a la cocina y al dueño. Devuelve el número y el total. Llámela una sola vez, cuando el cliente ya confirmó.",
@@ -58,10 +65,14 @@ function tools(N) {
           nombre: { type: "string", description: "Nombre del cliente" },
           ...(N.variasSucursales ? { sucursal: suc } : {}),
           productos: { type: "array", items: { type: "object", properties: { id: { type: "string", description: "id del producto según ver_menu" }, cantidad: { type: "integer" }, nota: { type: "string", description: "Indicación del cliente, por ejemplo: sin cebolla" } }, required: ["id", "cantidad"], additionalProperties: false } },
-          hora: { type: "string", description: "Cuándo pasa a recogerlo, por ejemplo: lo antes posible, 7:00 p. m." },
+          ...(N.cupos ? {
+            fecha: { type: "string", description: "Día del pedido, AAAA-MM-DD, uno de los que devuelve ver_cupos" },
+            tanda: { type: "string", enum: N.cupos.tandas },
+            lista_espera: { type: "boolean", description: "true si no hay cupo y el cliente quiere quedar en la lista de espera" },
+          } : { hora: { type: "string", description: "Cuándo pasa a recogerlo, por ejemplo: lo antes posible, 7:00 p. m." } }),
           ...(N.domicilio.propio ? { direccion: { type: "string", description: "Solo si es a domicilio: dirección completa con una seña. Vacío si lo recoge." } } : {}),
         },
-        required: ["nombre", "productos", "hora", ...(N.variasSucursales ? ["sucursal"] : [])],
+        required: ["nombre", "productos", N.cupos ? "fecha" : "hora", ...(N.variasSucursales ? ["sucursal"] : [])],
         additionalProperties: false,
       },
     },
@@ -86,10 +97,17 @@ function tools(N) {
   ];
 }
 
+// free cupos in one batch: ctx.ocupados(fecha, tanda) counts the orders already saved (server.js)
+const libre = (N, ctx, fecha, tanda) => N.cupos.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda)) || 0);
 function ejecutar(N, name, input, ctx) {
   const b = id => N.sucursales.find(s => s.id === id) || N.sucursales[0];
   switch (name) {
-    case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: N.L(i.precio) })) };
+    case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: N.L(i.precio), ...(N.cupos ? { cupos: i.cupos } : {}) })) };
+    case "ver_cupos": {
+      if (!N.cupos) return { error: "Este restaurante no vende por cupos." };
+      const dias = fechasCupos(N, ctx.now).map(f => ({ fecha: f.fecha, dia: f.etiqueta, tandas: N.cupos.tandas.map(t => ({ tanda: t, libres: Math.max(0, libre(N, ctx, f.fecha, t)) })) }));
+      return { dias, ...(dias.length ? {} : { nota: "No hay días abiertos para pedir: ofrezca la lista de espera." }) };
+    }
     case "sucursales": return { sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", telefono: s.telefono || "", horario: s.horario || "Por confirmar: una persona de la sucursal lo confirma.", ...(s.mapa ? { mapa: s.mapa } : {}) })) };
     case "crear_pedido": {
       if (ctx.pedido) return { error: "Ya se creó el pedido en este mensaje.", numero: ctx.pedido.n };
@@ -100,8 +118,24 @@ function ejecutar(N, name, input, ctx) {
       const s = b(input.sucursal);
       const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
-      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora: direccion ? "A domicilio" : String(input.hora || "").slice(0, 60), resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion } : {}) };
-      const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre };
+      let cup = null;
+      if (N.cupos) {
+        const cupos = cuposDe(N, input.productos);
+        if (!cupos) return { error: "Los adicionales van con un combo: el pedido necesita al menos un combo." };
+        const f = fechasCupos(N, ctx.now).find(x => x.fecha === input.fecha);
+        if (input.lista_espera) cup = { cupos, dia: f ? f.etiqueta : String(input.fecha || "el próximo día con cupo").slice(0, 40), estado: "en_espera" };
+        else {
+          if (!f) return { error: "Ese día ya no se puede pedir. Use ver_cupos." };
+          if (!N.cupos.tandas.includes(input.tanda)) return { error: "Falta la tanda. Use ver_cupos." };
+          const quedan = libre(N, ctx, f.fecha, input.tanda);
+          if (quedan < cupos) return { error: `La tanda de ${input.tanda} del ${f.etiqueta} tiene ${Math.max(0, quedan)} cupos libres y el pedido usa ${cupos}. Ofrezca otra tanda u otro día (ver_cupos) o la lista de espera.` };
+          cup = { cupos, dia: f.etiqueta, diaFecha: f.fecha, tanda: input.tanda };
+        }
+      }
+      const hora = cup ? (cup.tanda ? `${cup.dia.replace(/^\p{L}/u, x => x.toUpperCase())}, ${cup.tanda}` : `Lista de espera: ${cup.dia}`) : direccion ? "A domicilio" : String(input.hora || "").slice(0, 60);
+      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora, resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion } : {}), ...(cup || {}) };
+      const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre, ...(cup ? { cupos: cup.cupos, dia: cup.dia, ...(cup.tanda ? { tanda: cup.tanda } : {}) } : {}) };
+      if (cup && cup.estado === "en_espera") return { ...base, nota: "Quedó en la lista de espera, sin cupo apartado y sin pagar nada. Si se libera un cupo, el restaurante le escribe por este chat." };
       if (requiereCobro(N, c.total, ctx.faltas || 0)) {
         ctx.pedido.estado = "por_pagar";
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total), nota: "Todavía NO va a cocina: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando se confirme el pago entra a cocina y se le avisa." };
@@ -150,8 +184,8 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   model = model || MODELO;
   const SYSTEM = system(negocio), TOOLS = tools(negocio);
 
-  async function turn(history, text, now, { numero, faltas = 0 } = {}) {
-    const ctx = { numero, faltas, pedido: null, persona: null, reservacion: null };
+  async function turn(history, text, now, { numero, faltas = 0, ocupados } = {}) {
+    const ctx = { numero, faltas, ocupados, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();
