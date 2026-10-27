@@ -21,7 +21,7 @@ const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -32,7 +32,7 @@ const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
-const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo"];
+const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
 
 function loadConfig(env = process.env) {
   const sandbox = on(env.TWILIO_SANDBOX);
@@ -104,6 +104,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   const numero = pre => pre + "-" + (store.seq = store.seq + 1);
   const faltasDe = tel => store.faltas(tel);
+  // cupos already taken in one batch (negocio.cupos): every order of that day and batch except cancelled ones and the waiting list
+  const ocupados = (fecha, tanda) => store.pedidos.reduce((a, p) => a + (p.tipo === "pedido" && p.diaFecha === fecha && p.tanda === tanda && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0);
   const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
@@ -118,7 +120,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function conversar(key, text) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
-    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key) });
+    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados });
     const out = r.messages.map(toText).filter(Boolean);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
     if (r.state.lead) { store.seq = r.state.seq; out.pedido = guardar(r.state.lead, key, sess.convo); delete r.state.lead; }
@@ -134,7 +136,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key) });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
@@ -222,6 +224,16 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (!p || p.estado !== "por_pagar" || digits(p.tel) !== digits(tel)) return;
     store.updatePedido(n, { estado: "cancelado", t_cancelado: now().toISOString(), por: "cliente" });
     log(`[${n}] cancelado por el cliente antes de pagar`);
+    liberados(p);
+  }
+  // a cancelled order frees its cupos: the owner hears who is on the waiting list, to write to them
+  function liberados(p) {
+    if (!p.tanda) return;
+    const espera = store.pedidos.filter(x => x.estado === "en_espera");
+    if (!espera.length) return;
+    const t = { titulo: `Se liberaron ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"} · ${p.dia}, ${p.tanda}`,
+      lineas: [`${p.n} se canceló. En lista de espera:`, ...espera.slice(0, 5).map(x => `👤 ${x.nombre || "Sin nombre"} · ${x.cupos} ${x.cupos === 1 ? "cupo" : "cupos"} para ${x.dia} · https://wa.me/${digits(x.tel)}`)] };
+    track(Promise.all(avisos.destinos(p.sucursal).map(to => avisos.enviar(to, `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`, t))));
   }
   // a photo from a customer with an unpaid order = the payment receipt: goes to the owner and branch
   function comprobante(from, mediaUrl) {
@@ -285,7 +297,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
   });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones, sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
+      cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -301,6 +315,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
     if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(p.n, { avisoListo: true }); track(avisos.listo(p)); }
     if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
+    if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) liberados(p);
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
     res.json(p);
   });

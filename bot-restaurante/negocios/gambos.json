@@ -1,0 +1,41 @@
+{
+  "_nota": "Gambos (Tegucigalpa). REAL, de su catálogo de WhatsApp Business y sus respuestas en TikTok @gambos_hn (leídos el 26 y 27-oct-2026): nombres y precios del menú tal cual, las 3 salsas, que pica levemente, jueves a domingo, pedidos un día antes, delivery o pickup en Colonia Florencia Norte, WhatsApp 8932-4789. POR CONFIRMAR CON LA DUEÑA antes de prender el bot: las horas de las tandas y cuántos cupos caben en cada una (las de aquí son de ejemplo), a qué hora se cierra el día anterior, la dirección exacta del pickup, zona y costo del envío, y la cuenta para transferencias (sin cuenta, el cobro antes queda apagado).",
+  "nombre": "Gambos",
+  "color": "#E2661F",
+  "sucursales": [
+    { "id": "florencia", "nombre": "Pickup en Colonia Florencia Norte", "direccion": "Colonia Florencia Norte, Tegucigalpa", "telefono": "+504 8932-4789", "whatsapp": "+50489324789", "horario": "Jueves a domingo. Los pedidos se hacen un día antes.", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Combos", "items": [
+      { "id": "individual", "nombre": "Combo individual (1px)", "precio": 486, "cupos": 1, "desc": "5 camarones jumbo, 4 mejillones y más. Para 1 persona." },
+      { "id": "duo", "nombre": "Duo de Mar (2px)", "precio": 970, "cupos": 2, "desc": "10 camarones jumbo, 8 mejillones y más. Para 2 personas." },
+      { "id": "marea4", "nombre": "Marea x4 (4px)", "precio": 1940, "cupos": 4, "desc": "20 camarones jumbo, 16 mejillones y más. Para 4 personas." },
+      { "id": "marea6", "nombre": "Marea x6", "precio": 2910, "cupos": 6, "desc": "30 camarones jumbo, 24 mejillones y más. Para 6 personas." }
+    ] },
+    { "categoria": "Adicionales", "items": [
+      { "id": "elotes", "nombre": "Elotes", "precio": 50 },
+      { "id": "chorizo", "nombre": "Libra de chorizo", "precio": 150 },
+      { "id": "kingcrab", "nombre": "Libra de King Crab", "precio": 300 },
+      { "id": "camarones", "nombre": "Libra de camarones", "precio": 320 },
+      { "id": "mejillones", "nombre": "Libra de mejillones", "precio": 210 },
+      { "id": "butter", "nombre": "Cajun Butter Cup", "precio": 220 },
+      { "id": "langosta-s", "nombre": "Libra de Langosta Small", "precio": 450 },
+      { "id": "langosta-l", "nombre": "Libra de Langosta Large", "precio": 600 }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "",
+  "tiempoPreparacion": "",
+  "cobro": { "desde": 0, "faltas": 0, "transferencia": "", "tarjeta": "" },
+  "domicilio": { "propio": true, "zona": "en Tegucigalpa", "apps": [] },
+  "cupos": {
+    "dias": ["jueves", "viernes", "sabado", "domingo"],
+    "tandas": ["12:00 p. m.", "2:00 p. m.", "4:30 p. m.", "6:30 p. m."],
+    "porTanda": 12,
+    "anticipacion": 1,
+    "cierre": "21:00",
+    "verDias": 7,
+    "salsas": ["Clásica Cajún", "Honey Cajún", "Lemon Pepper"],
+    "nota": "Todas las salsas pican levemente."
+  }
+}

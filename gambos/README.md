@@ -18,3 +18,16 @@ Menú (catálogo de WhatsApp Business, capturas de Rodrigo del 26-oct-2026, en `
 - `video/`: video vertical de la propuesta (`python3 video/gen.py`, luego `hyperframes render . -o ...` dentro de `video/build/gambos-vertical`; necesita `src/musica.mp3`, la canción oficial, y `coco-chicken/video/deps`). Listo en `gambos-casa-digital-vertical.mp4` (1:53, 1080x1920). Las capturas del panel en `video/src/` se toman con `node video/shots.js`; si cambia el panel, se vuelven a tomar.
 
 Precio si lo piden: instalación entre L15,000 y L20,000 y mensualidad desde L2,500, sin comisión; 30 días gratis; la instalación se paga en dos partes, día 30 y día 60.
+
+## Bot real (listo para prender)
+
+`bot-restaurante/negocios/gambos.json`: su catálogo con los nombres y precios tal cual, las 3 salsas, jueves a domingo, pedidos un día antes, delivery o pickup en Florencia Norte. El bot vende por cupos (ver la sección 5 de `bot-restaurante/README.md`): pregunta la salsa de cada combo, el día y la tanda, aparta los cupos solo, cierra la tanda cuando se llena y lleva la lista de espera. El panel real tiene la vista **Cupos**.
+
+Antes de prenderlo hay que pedirle a Gambos (lo de aquí son ejemplos):
+1. Las horas de las tandas y cuántas personas caben en cada una (ahora: 12:00, 2:00, 4:30 y 6:30, 12 por tanda).
+2. A qué hora cierran los pedidos el día anterior (ahora: 9:00 p. m.).
+3. La dirección exacta del pickup y el enlace de Google Maps.
+4. Zonas y costo del envío.
+5. Cómo cobran: cuenta para transferencias (banco, tipo, número, a nombre de quién). Con eso el bot cobra antes de apartar el cupo; sin eso el cobro queda apagado.
+6. Qué número contesta el bot (el 8932-4789 u otro) y acceso a su Meta Business para conectarlo (ver `INSTALACION-A-DISTANCIA.md`).
+7. Quién recibe los avisos de pedidos y quién entra al panel (correos).
