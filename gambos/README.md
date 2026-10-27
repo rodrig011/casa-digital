@@ -31,3 +31,12 @@ Antes de prenderlo hay que pedirle a Gambos (lo de aquí son ejemplos):
 5. Cómo cobran: cuenta para transferencias (banco, tipo, número, a nombre de quién). Con eso el bot cobra antes de apartar el cupo; sin eso el cobro queda apagado.
 6. Qué número contesta el bot (el 8932-4789 u otro) y acceso a su Meta Business para conectarlo (ver `INSTALACION-A-DISTANCIA.md`).
 7. Quién recibe los avisos de pedidos y quién entra al panel (correos).
+
+## Cartas para Gambos (`kit/`)
+
+- `kit/pdf/carta-de-presentacion.pdf`: quiénes somos, lo que vimos, lo que hacemos, precio (L15,000 + L2,500) y siguiente paso.
+- `kit/pdf/lo-que-necesitamos.pdf`: la lista para prender el bot (documentos de Meta, menú, cupos y tandas, entrega, pagos, número, panel).
+- `kit/pdf/bienvenida.pdf`: para cuando digan que sí.
+
+Se arman desde los `.md` de `kit/` con el generador del kit:
+`CHROMIUM_PATH=/opt/pw-browsers/chromium node kit-cliente/generar.mjs --restaurante "Gambos" --numero "8932-4789" --instalacion "L15,000" --mensual "L2,500" --fuentes gambos/kit --solo carta-de-presentacion,lo-que-necesitamos,bienvenida --salida gambos/kit/pdf`
