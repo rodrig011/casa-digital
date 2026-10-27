@@ -32,6 +32,24 @@ Antes de prenderlo hay que pedirle a Gambos (lo de aquí son ejemplos):
 6. Qué número contesta el bot (el 8932-4789 u otro) y acceso a su Meta Business para conectarlo (ver `INSTALACION-A-DISTANCIA.md`).
 7. Quién recibe los avisos de pedidos y quién entra al panel (correos).
 
+## Panel oficial (seguro y cifrado)
+
+Es el panel real del bot (`bot-restaurante/panel`), con su menú y sus cupos, en un servidor solo para Gambos: `bot-restaurante/render-gambos.yaml`.
+
+- Los datos de sus clientes (nombres, teléfonos, direcciones, pedidos, conversaciones) se guardan cifrados con AES-256; sin la llave `DATA_KEY` nadie los puede leer, ni nosotros copiando el disco.
+- Para entrar: correo, contraseña y un código de 6 números que le llega por WhatsApp. Puede recordar su teléfono 30 días.
+- Vista **Seguridad**: quién tiene acceso, intentos fallidos y quién cambió cada pedido.
+- Conexión solo por https; la sesión se cierra sola a las 12 horas.
+
+Para prenderlo, cuando Gambos diga que sí:
+1. En Render: New > Blueprint, este repositorio, Blueprint path `bot-restaurante/render-gambos.yaml`. Llenar las claves de Meta (README del bot, sección 3) y `ANTHROPIC_API_KEY`.
+2. Copiar `DATA_KEY` y `PANEL_SECRET` (Render > Environment) al gestor de contraseñas.
+3. En Render > Shell: `npm run usuario -- agregar correo-de-la-duena "Nombre" 504XXXXXXXX` (su WhatsApp, para el código).
+4. En WhatsApp Manager crear la plantilla de Autenticación `codigo_panel` y ponerla en `META_PLANTILLA_CODIGO`.
+5. Entrar a `https://gambos-bot.onrender.com/panel` desde su celular y revisar Seguridad.
+
+Capturas: `panel-real/oficial-*.png`.
+
 ## Cartas para Gambos (`kit/`)
 
 - `kit/pdf/carta-de-presentacion.pdf`: quiénes somos, lo que vimos, lo que hacemos, precio (L15,000 + L2,500) y siguiente paso.

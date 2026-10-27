@@ -4,16 +4,18 @@
 // sessions.json se escribe agrupado cada 300 ms (si se pierde, el cliente solo vuelve a empezar).
 // Pedidos cerrados con más de archivoDias pasan a archivo/pedidos-AAAA-MM.json, así pedidos.json no crece
 // para siempre; resumen.json guarda el último número y las faltas ("No vino") de lo archivado.
+// Con DATA_KEY los archivos quedan cifrados (cifrado.js).
 const fs = require("fs");
 const path = require("path");
+const { leerJSON, escribirJSON } = require("./cifrado");
 
 const ABIERTOS = ["por_pagar", "nuevo", "cocina"];
 const tel = t => String(t || "").replace(/\D/g, "");
 
-function createStore(dir, { ttlHours = 24, archivoDias = 30, now = () => Date.now() } = {}) {
+function createStore(dir, { ttlHours = 24, archivoDias = 30, now = () => Date.now(), cifra = null } = {}) {
   const f = dir ? { pedidos: path.join(dir, "pedidos.json"), sessions: path.join(dir, "sessions.json"), resumen: path.join(dir, "resumen.json"), archivo: path.join(dir, "archivo") } : null;
-  const read = (file, empty) => { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return empty; } };
-  const write = (file, data) => { const tmp = file + ".tmp"; fs.writeFileSync(tmp, JSON.stringify(data, null, 1)); fs.renameSync(tmp, file); };
+  const read = (file, empty) => leerJSON(file, empty, cifra);
+  const write = (file, data) => escribirJSON(file, data, cifra, 1);
 
   const pedidos = f ? read(f.pedidos, []) : [];
   const sessions = new Map(Object.entries(f ? read(f.sessions, {}) : {}));

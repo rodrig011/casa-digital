@@ -26,6 +26,8 @@ const { cargarNegocio, LINK, fechasCupos } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
+const { createCifra } = require("./cifrado");
+const { createBitacora } = require("./bitacora");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
@@ -46,7 +48,7 @@ function loadConfig(env = process.env) {
     sandbox,
     from: waAddr(env.TWILIO_WHATSAPP_FROM || env.META_NUMERO || (sandbox ? "+14155238886" : "")),
     // WhatsApp directo con Meta (Cloud API): con token e id del número, el bot habla por Meta y no usa Twilio
-    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", plantilla: env.META_PLANTILLA || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
+    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", plantilla: env.META_PLANTILLA || "", plantillaCodigo: env.META_PLANTILLA_CODIGO || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
     contentSid: env.TWILIO_ALERT_CONTENT_SID || "",
     owner: env.OWNER_WHATSAPP || "",
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
@@ -55,6 +57,9 @@ function loadConfig(env = process.env) {
     panelSecret: env.PANEL_SECRET || "",
     panelUsuarios: env.PANEL_USUARIOS || "",
     dataDir: env.DATA_DIR === "" ? null : path.resolve(__dirname, env.DATA_DIR || "data"),
+    // cifra pedidos, clientes y usuarios en el disco (cifrado.js). En Render es obligatoria
+    dataKey: env.DATA_KEY || "",
+    exigirCifrado: on(env.RENDER) || on(env.EXIGIR_CIFRADO),
     ttlHours: +env.SESSION_TTL_HOURS || 12,
     // modo IA (Claude): solo si hay clave y BOT_IA no es "off"
     anthropicKey: /^off$/i.test(String(env.BOT_IA || "").trim()) ? "" : env.ANTHROPIC_API_KEY || "",
@@ -80,7 +85,10 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const pasarela = "pasarela" in deps ? deps.pasarela : createPasarela(cfg.pasarela);
   if (pasarela) negocio.cobro = { ...negocio.cobro, activo: true, pasarela: true };
   const motor = createEngine(negocio);
-  const store = deps.store || createStore(cfg.dataDir, { ttlHours: cfg.ttlHours });
+  const cifra = createCifra(cfg.dataKey);
+  if (cfg.dataDir && !cifra && cfg.exigirCifrado) throw new Error("Falta DATA_KEY: en el servidor los datos de los clientes se guardan cifrados (ver README, Seguridad).");
+  const store = deps.store || createStore(cfg.dataDir, { ttlHours: cfg.ttlHours, cifra });
+  const bitacora = createBitacora({ dir: cfg.dataDir, cifra, now: deps.now || (() => new Date()), log });
   const now = deps.now || (() => new Date());
   const mc = cfg.meta || {};
   const meta = "meta" in deps ? deps.meta : mc.token && mc.phoneId ? createMeta({ ...mc, log, ...(deps.metaFetch ? { fetch: deps.metaFetch } : {}) }) : null;
@@ -322,8 +330,14 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   // ---- Panel del dueño (correo y contraseña; ver auth.js) ----
-  const usuarios = deps.usuarios || createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null });
-  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, log });
+  const usuarios = deps.usuarios || createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null, cifra });
+  // the second step: a 6-digit code to the person's WhatsApp, from the business' own number
+  const enviarCodigo = (meta || client) ? async (wa, c) => {
+    const texto = `🔐 Su código para entrar al panel de ${negocio.nombre} es *${c}*. Vence en 5 minutos.\n\nNo se lo dé a nadie: nadie de ${negocio.nombre} ni de Casa Digital se lo va a pedir.`;
+    if (meta) return meta.codigo(wa, c, texto);
+    return !!(await avisos.enviar(waAddr(wa), texto, { titulo: `Código para entrar al panel: ${c}`, lineas: ["Vence en 5 minutos. No se lo dé a nadie."] }));
+  } : null;
+  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, log, enviarCodigo: deps.enviarCodigo || enviarCodigo, bitacora: bitacora.anotar });
   const sinSesion = (req, res) => { if (panel.usuarioDe(req)) return false; res.status(401).json({ error: "sin sesión" }); return true; };
 
   app.get("/api/pedidos", (req, res) => {
@@ -356,7 +370,18 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
     if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) liberados(p);
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
+    if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip: req.ip });
     res.json(p);
+  });
+
+  // who has access, whether the data is encrypted, and the last logins and changes
+  app.get("/api/seguridad", (req, res) => {
+    if (sinSesion(req, res)) return;
+    res.set("Cache-Control", "no-store").json({
+      cifrado: !!cifra, disco: !!cfg.dataDir, dosPasos: !!enviarCodigo || !!deps.enviarCodigo, sesionHoras: 12,
+      usuarios: usuarios.lista().map(u => ({ correo: u.correo, nombre: u.nombre, whatsapp: u.whatsapp ? "•••• " + u.whatsapp.slice(-4) : "" })),
+      eventos: bitacora.ultimos(200).map(({ en, evento, correo, como, pedido, de, a, ip, equipo }) => ({ en, evento, correo, como, pedido, de, a, ip, equipo })),
+    });
   });
 
   // ---- Pasarela de pago ----
@@ -406,8 +431,9 @@ function start() {
     if (cfg.meta.token && cfg.meta.phoneId) console.log(`WhatsApp directo con Meta en /meta${cfg.meta.appSecret ? "" : " (falta META_APP_SECRET: se rechazan todos los mensajes)"}${cfg.meta.plantilla ? "" : "; sin META_PLANTILLA los avisos al dueño fuera de 24 h no llegan"}.`);
     else if (!cfg.sid || !cfg.token) console.log("Aviso: faltan META_TOKEN / META_PHONE_ID (o las claves de Twilio); los avisos solo van al log.");
     if (!cfg.owner) console.log("Aviso: falta OWNER_WHATSAPP; nadie recibe los pedidos por WhatsApp.");
+    console.log(cfg.dataDir ? (cfg.dataKey ? `Datos cifrados en ${cfg.dataDir} (AES-256-GCM).` : `Aviso: falta DATA_KEY; los datos en ${cfg.dataDir} quedan sin cifrar.`) : "Sin DATA_DIR: los datos solo viven en memoria.");
     console.log(cfg.anthropicKey ? `Modo IA activo (${cfg.anthropicModel}); si falla, contesta el menú.` : "Modo IA apagado: contesta el menú (falta ANTHROPIC_API_KEY o BOT_IA=off).");
-    const nu = createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null }).lista().length;
+    const nu = createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null, cifra: createCifra(cfg.dataKey) }).lista().length;
     console.log(!cfg.panelSecret ? "Panel cerrado: falta PANEL_SECRET." : nu ? `Panel en /panel con ${nu} usuario(s) autorizado(s).` : "Panel en /panel, pero no hay usuarios: npm run usuario -- agregar correo \"Nombre\"");
     if (cfg.skipSignature) console.log("Aviso: SKIP_TWILIO_SIGNATURE está activo; no lo uses en producción.");
     if (app.locals.pasarela) console.log(`Pago con tarjeta por ${app.locals.pasarela.proveedor}: los pedidos pagados pasan solo a cocina.${cfg.publicUrl ? "" : " Falta PUBLIC_URL para los avisos de pago."}`);

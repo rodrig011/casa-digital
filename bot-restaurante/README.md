@@ -26,10 +26,12 @@ Para instalarle a un cliente desde EE. UU., ver también [INSTALACION-A-DISTANCI
 | `meta.js` | WhatsApp directo con Meta (Cloud API): botones, listas, plantillas y fotos de comprobantes. |
 | `avisos.js` | Avisos al dueño y a la sucursal; "pedido listo" al cliente. |
 | `pagos.js` | Pago con tarjeta por pasarela (Tilopay): link por pedido y consulta del pago. |
+| `cifrado.js` | Cifra en el disco (AES-256-GCM, llave `DATA_KEY`) pedidos, conversaciones, usuarios y bitácora. |
+| `bitacora.js` | Anota cada entrada al panel, intento fallido, bloqueo y cambio de pedido; el dueño la ve en Seguridad. |
 | `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. Los pedidos cerrados con más de 30 días pasan a `archivo/pedidos-AAAA-MM.json` para que `pedidos.json` no crezca para siempre. |
-| `auth.js`, `usuarios.js` | Entrada al panel con correo y contraseña. |
+| `auth.js`, `usuarios.js` | Entrada al panel con correo, contraseña y código por WhatsApp. |
 | `seguridad.js` | Cabeceras de seguridad, https forzado y freno de mensajes por número (ver `SEGURIDAD.md` en la raíz). |
-| `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú (y Cupos o Reservaciones si el negocio los usa). |
+| `panel/panel.html` | Panel: Hoy, Pedidos, Cocina, Por atender, Menú, Seguridad (y Cupos o Reservaciones si el negocio los usa). |
 | `test.js` | Pruebas sin Twilio ni internet: `npm test`. |
 
 ## 1. Probarlo en la computadora
@@ -79,7 +81,15 @@ Lo demás de Render:
 
 - **Blueprint path:** `bot-restaurante/render.yaml`. Para cada cliente, copie el archivo (`render-<cliente>.yaml`), cambie `name` y `NEGOCIO=negocios/<cliente>.json`. Un servidor por cliente: los datos nunca se mezclan.
 - **Con Twilio (respaldo):** igual que el bot de Steel Works ([steelworks/bot/README.md](../steelworks/bot/README.md), pasos 2 a 6), webhook `https://<su-servidor>.onrender.com/whatsapp` (POST) y plantilla de avisos en Twilio. Twilio cobra unos $0.005 por mensaje encima de Meta.
-- **Usuarios del panel:** en Render > Shell, `npm run usuario -- agregar correo "Nombre"`.
+- **Usuarios del panel:** en Render > Shell, `npm run usuario -- agregar correo "Nombre" 504XXXXXXXX`. Con el número de WhatsApp, al entrar le llega un código (ver "Seguridad del panel" abajo).
+
+### Seguridad del panel
+
+- **Datos cifrados:** con `DATA_KEY` (Render la genera) los pedidos, nombres, teléfonos, direcciones, conversaciones, usuarios y bitácora se guardan cifrados con AES-256-GCM. Quien copie el disco no puede leer nada, y si alguien cambia un archivo el servidor lo nota y no arranca. En Render el servidor no arranca sin la llave. **Copie `DATA_KEY` al gestor de contraseñas el día que se crea**: si se pierde, los datos no se pueden abrir. No la cambie después de arrancar.
+- **Dos pasos:** contraseña de 10 caracteres o más, y después un código de 6 números al WhatsApp de la persona, que vence en 5 minutos. Cinco códigos malos cortan el intento y bloquean esa conexión 15 minutos. "Recordar este teléfono" evita el código en ese teléfono por 30 días; cambiar la contraseña lo borra.
+- **Plantilla del código (Meta):** Meta pide que los códigos salgan con una plantilla de categoría **Autenticación**. En WhatsApp Manager > Plantillas: nueva, categoría Autenticación, nombre `codigo_panel`, idioma español, botón "Copiar código". Cuando la aprueben, póngala en `META_PLANTILLA_CODIGO`. Mientras tanto el código sale como aviso normal (llega si la persona escribió al número en las últimas 24 h, o con `META_PLANTILLA`).
+- **Bitácora:** el panel tiene la vista Seguridad (en el celular, tocando las iniciales): cómo está protegido, quién tiene acceso y las últimas entradas, intentos fallidos y cambios de pedido, con hora y equipo.
+- **Ya estaba:** https forzado, cabeceras de seguridad, sesión de 12 horas en cookie firmada, "Salir" la anula en el servidor, contraseñas con hash scrypt, 5 contraseñas malas bloquean 15 minutos. Lista completa en [SEGURIDAD.md](../SEGURIDAD.md).
 
 ## 4. Cobrar antes de cocinar (pedidos que nunca llegan)
 
