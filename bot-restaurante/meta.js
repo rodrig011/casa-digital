@@ -7,6 +7,8 @@
 // así el motor lo entiende igual que si el cliente escribiera "2".
 // Fuera de las 24 horas desde el último mensaje del cliente, WhatsApp solo deja mandar plantillas aprobadas:
 // si un aviso no pasa por eso, sale con la plantilla META_PLANTILLA (categoría Utilidad, cuerpo "{{1}}" y "{{2}}").
+// El código para entrar al panel sale con META_PLANTILLA_CODIGO (categoría Autenticación, botón "Copiar código"),
+// que es la que Meta pide para códigos; sin ella sale como aviso normal.
 const crypto = require("crypto");
 const { toText } = require("./engine");
 
@@ -16,7 +18,7 @@ const digits = n => String(n || "").replace(/\D/g, "");
 const param = s => String(s || "").replace(/[\n\t]+/g, " · ").replace(/ {4,}/g, "   ").trim().slice(0, 900) || "-";
 const corta = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
-function createMeta({ token, phoneId, appSecret = "", plantilla = "", idioma = "es", version = VERSION, fetch: f = globalThis.fetch, log = console.log } = {}) {
+function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaCodigo = "", idioma = "es", version = VERSION, fetch: f = globalThis.fetch, log = console.log } = {}) {
   const api = `https://graph.facebook.com/${version}`;
   async function llamar(ruta, cuerpo) {
     const r = await f(`${api}/${ruta}`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
@@ -83,7 +85,16 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", idioma = "
     return a.length === b.length && crypto.timingSafeEqual(a, b);
   }
 
-  return { responder, enviar, reenviable, firmaOk, formato };
+  // login code for the owner panel: true when WhatsApp took it
+  async function codigo(to, c, texto) {
+    if (!plantillaCodigo) return !!(await enviar(to, texto, { titulo: `Código para entrar al panel: ${c}`, lineas: ["Vence en 5 minutos. No se lo dé a nadie."] }));
+    try {
+      await mandar(to, { type: "template", template: { name: plantillaCodigo, language: { code: idioma }, components: [{ type: "body", parameters: [{ type: "text", text: c }] }, { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: c }] }] } });
+      return true;
+    } catch (e) { log(`[meta] el código no salió a ${to}: ${e.message}`); return false; }
+  }
+
+  return { responder, enviar, reenviable, firmaOk, formato, codigo };
 }
 
 // the messages inside one webhook post: [{ id, from, nombre, text, foto }]

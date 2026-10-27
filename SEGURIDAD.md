@@ -16,6 +16,9 @@ el resto se revisa a mano antes de entregar.
 - [ ] El panel real se sirve desde el servidor con correo y contraseña (`auth.js`): contraseñas con hash scrypt de al menos 10 caracteres, cookie HttpOnly + SameSite=Strict + Secure, 12 horas, "Salir" la invalida, 5 intentos fallidos bloquean 15 minutos.
 - [ ] Cada pedido de datos (`/api/...`) revisa la sesión en el servidor. Un login hecho solo en el navegador no protege nada: las demos HTML tienen login falso y nunca llevan datos reales.
 - [ ] Solo entran las personas que el dueño autoriza (`npm run usuario -- agregar|quitar`).
+- [ ] Entrada en dos pasos: cada persona se registra con su WhatsApp (`npm run usuario -- agregar correo "Nombre" 504XXXXXXXX`) y al entrar le llega un código de 6 números que vence en 5 minutos.
+- [ ] Datos cifrados en el disco con `DATA_KEY` (`cifrado.js`, AES-256-GCM): pedidos, clientes, conversaciones, usuarios y bitácora. En Render el servidor no arranca sin la llave. Guardar una copia de la llave en el gestor de contraseñas.
+- [ ] Bitácora (`bitacora.js`): cada entrada, intento fallido, bloqueo y cambio de pedido queda anotado; el dueño la ve en Seguridad.
 
 **Lo que entra de afuera**
 - [ ] El webhook de WhatsApp solo acepta mensajes firmados por Twilio (`SKIP_TWILIO_SIGNATURE=false` en producción).

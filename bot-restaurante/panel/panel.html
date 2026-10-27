@@ -23,7 +23,7 @@ svg{display:block}
 .marca b{display:block;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.marca small{display:block;font-size:12px;color:var(--tx3);line-height:1.2}
 .sp{flex:1}
 .iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--tx3);border:1px solid transparent;background:none}
-.avatar{width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.avatar{border:0;cursor:pointer;font-family:inherit;width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
 .gh-nav{display:flex;align-items:stretch;height:40px;padding:0 16px;border-top:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.gh-nav::-webkit-scrollbar{display:none}
 .gh-nav .nav{display:flex;align-items:center;gap:6px;border:0;border-top:3px solid transparent;border-bottom:3px solid transparent;background:none;padding:0 14px;white-space:nowrap;color:var(--tx2)}
 .gh-nav .nav[aria-current="page"]{border-bottom-color:var(--brand);color:var(--tx);font-weight:700;background:var(--sel)}
@@ -81,6 +81,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 @keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.sk{animation:none}}
 .tabs{display:none}
+.grid-seg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px}.solo-cel{display:none}
 @media (max-width:900px){
   .gh-nav{display:none}.band{top:52px;height:110px}main{padding:12px 12px 96px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.board{grid-template-columns:1fr}
@@ -90,6 +91,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
   .tabs .nav[aria-current="page"]{color:var(--brand);font-weight:700;background:var(--sel)}
   th,td{padding:8px 12px}
   .fila.res{flex-wrap:wrap}.fila.res div{flex-basis:100%}
+  .grid-seg{grid-template-columns:1fr}.solo-pc{display:none}.solo-cel{display:block}
 }
 </style>
 </head>
@@ -100,7 +102,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
     <span class="sp"></span>
     <span class="vivo" id="vivo"><i></i>Actualizado</span>
     <button class="iconbtn" id="tema" aria-label="Cambiar tema" title="Cambiar tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-    <span class="avatar" id="quien" title=""></span>
+    <button class="avatar" id="quien" title="" aria-label="Seguridad y acceso"></button>
     <a class="btn sm" href="/panel/salir">Salir</a>
   </div>
   <nav class="gh-nav" id="nav1"></nav>
@@ -115,12 +117,16 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 <script>
 const VISTAS = [["hoy", "Hoy"], ["pedidos", "Pedidos"], ["cocina", "Cocina"], ["personas", "Por atender"], ["menu", "Menú"]];
 const CORTO = { personas: "Atender", reservas: "Mesas" };
+// Seguridad va arriba en la compu; en el celular se abre tocando las iniciales
+const EXTRA = [["seguridad", "Seguridad"]];
+const todas = () => VISTAS.concat(EXTRA);
 // íconos en mosaico, como Lightning: [trazo SVG, color]
 const ICONO = {
   hoy: ["M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "#0176D3"], cupos: ["M4 5h16v15H4zM4 9h16M8 3v4M16 3v4", "#FE9339"],
   pedidos: ["M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6", "#3BA755"], cocina: ["M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2", "#BA0517"],
   personas: ["M4 5h16v11H8l-4 4z", "#7526E3"], menu: ["M5 4h14v16H5zM9 8h6M9 12h6M9 16h4", "#0B827C"], reservas: ["M4 10h16M6 10v9M18 10v9M8 6h8", "#032D60"],
-  ventas: ["M4 20V10M10 20V4M16 20v-7M22 20H2", "#0B827C"], espera: ["M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", "#FE9339"],
+  ventas: ["M4 20V10M10 20V4M16 20v-7M22 20H2", "#0B827C"], seguridad: ["M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4", "#032D60"],
+  llave: ["M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4", "#032D60"], actividad: ["M3 12h4l3-8 4 16 3-8h4", "#0176D3"], espera: ["M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", "#FE9339"],
 };
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONO[k][0]}"/></svg>`;
 const H = (t, k, r = "") => `<h2><span class="ct" style="background:${ICONO[k][1]}">${svg(k)}</span>${t}${r}</h2>`;
@@ -151,7 +157,7 @@ function nav() {
   const comp = pedidos().filter(p => p.estado === "por_pagar" && p.comprobante).length;
   const res = filtrados().filter(p => p.tipo === "reservacion" && p.estado === "por_confirmar").length;
   const cuenta = { pedidos: comp || "", cocina: pend || "", personas: per || "", reservas: res || "", cupos: pedidos().filter(p => p.estado === "en_espera").length || "" };
-  const html = corto => VISTAS.map(([k, t]) => `<button class="nav" data-v="${k}" ${k === vista ? 'aria-current="page"' : ""}>${corto ? CORTO[k] || t : t}<span class="n">${cuenta[k] || ""}</span></button>`).join("");
+  const html = corto => (corto ? VISTAS : todas()).map(([k, t]) => `<button class="nav" data-v="${k}" ${k === vista ? 'aria-current="page"' : ""}>${corto ? CORTO[k] || t : t}<span class="n">${cuenta[k] || ""}</span></button>`).join("");
   $("#nav1").innerHTML = html(); $("#nav2").innerHTML = html(true); $("#nav2").style.setProperty("--n", VISTAS.length);
   document.querySelectorAll(".nav[data-v]").forEach(b => b.onclick = () => { vista = b.dataset.v; try { localStorage.setItem("vista", vista); } catch {} pintar(); });
 }
@@ -173,7 +179,7 @@ function tarjeta(p, grande) {
 function pintar() {
   if (!N) return;
   nav();
-  $("#titulo").textContent = VISTAS.find(v => v[0] === vista)[1];
+  $("#titulo").textContent = todas().find(v => v[0] === vista)[1];
   $("#tile").innerHTML = svg(vista); $("#tile").style.background = ICONO[vista][1];
   const v = $("#vista");
   const ps = pedidos();
@@ -222,12 +228,49 @@ function pintar() {
     const x = filtrados().filter(p => p.tipo === "persona").slice(0, 100);
     v.innerHTML = `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
       <div class="card">${x.map(p => `<div class="fila"><div><a class="wa" href="${wa(p.tel)}" target="_blank" rel="noopener">${esc(p.tel)}</a><small>${esc(p.motivo || "Pidió hablar con una persona")} · ${esc(p.sucursal)} · ${hace(p.fecha)}</small></div>${p.estado === "nuevo" ? `<button class="btn" data-n="${esc(p.n)}" data-e="atendido">Atendido</button>` : `<span class="tag t-atendido">Atendido</span>`}</div>`).join("") || `<div class="vacio">Nadie está esperando.</div>`}</div>`;
+  } else if (vista === "seguridad") {
+    pintarSeguridad(v);
   } else {
     const cats = [...new Set(N.menu.map(i => i.categoria))];
     v.innerHTML = `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Para cambiar un precio o agregar un producto, avísele a Casa Digital y queda actualizado el mismo día.</p>
       <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
   }
   v.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => cambiar(b.dataset.n, b.dataset.e, b));
+}
+
+// ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
+let S = null, sCargando = false;
+const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido" };
+const MALOS = ["fallo", "bloqueado", "codigo_malo"];
+const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
+const equipoCorto = ua => /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : ua ? "Otro" : "";
+const desde = e => [equipoCorto(e.equipo), e.ip].filter(Boolean).map(esc).join(" · ");
+async function cargarSeguridad() {
+  if (sCargando) return; sCargando = true;
+  try { const r = await fetch("/api/seguridad", { cache: "no-store" }); if (r.status === 401) return location.href = "/panel/entrar"; if (r.ok) S = await r.json(); }
+  catch {} finally { sCargando = false; }
+  if (vista === "seguridad") pintar();
+}
+function pintarSeguridad(v) {
+  if (!S) {
+    v.innerHTML = `<div class="kpis">${'<div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div>'.repeat(4)}</div><div class="card"><div class="sk" style="height:220px;margin:12px"></div></div>`;
+    return cargarSeguridad();
+  }
+  const semana = Date.now() - 7 * 864e5;
+  const malos = S.eventos.filter(e => MALOS.includes(e.evento) && new Date(e.en) > semana).length;
+  const que = e => e.evento === "estado" ? `${esc(e.pedido)}: <span class="tag t-${esc(e.de)}">${ESTADO_TXT[e.de] || esc(e.de)}</span> → <span class="tag t-${esc(e.a)}">${ESTADO_TXT[e.a] || esc(e.a)}</span>` : `${MALOS.includes(e.evento) ? `<b style="color:var(--red)">${EVENTO[e.evento]}</b>` : EVENTO[e.evento] || esc(e.evento)}${e.como ? ` <small style="color:var(--tx3)">(${esc(e.como)})</small>` : ""}`;
+  v.innerHTML = `<p class="ayuda">Así está protegido el panel. Solo entran los correos de abajo; cada entrada, intento fallido y cambio de pedido queda anotado aquí con la hora y el equipo.</p>
+    <div class="kpis">
+      <div class="card kpi"><b>${S.cifrado ? "AES-256" : "No"}</b><span>${S.cifrado ? "Datos de clientes cifrados en el servidor" : S.disco ? "Datos sin cifrar: falta la llave" : "Datos solo en memoria"}</span></div>
+      <div class="card kpi"><b>${S.dosPasos && S.usuarios.every(u => u.whatsapp) ? "2 pasos" : S.dosPasos ? "Mixto" : "Contraseña"}</b><span>${S.dosPasos ? "Contraseña + código por WhatsApp" : "Entrada solo con contraseña"}</span></div>
+      <div class="card kpi"><b>${S.sesionHoras} h</b><span>La sesión se cierra sola</span></div>
+      <div class="card kpi" style="${malos ? "border-top-color:var(--red)" : ""}"><b>${malos}</b><span>Intentos fallidos en 7 días</span></div></div>
+    <div class="grid-seg">
+      <div class="card">${H("Quién tiene acceso", "llave")}<table><tr><th>Persona</th><th>Código a</th></tr>${S.usuarios.map(u => `<tr><td>${esc(u.nombre)}<small style="display:block;color:var(--tx3)">${esc(u.correo)}</small></td><td>${u.whatsapp ? esc(u.whatsapp) : `<span class="tag t-por_pagar">Solo contraseña</span>`}</td></tr>`).join("")}</table>
+        <p class="vacio" style="padding:12px 16px;text-align:left;font-size:12px">Para dar o quitar acceso, avísele a Casa Digital. Quitar a alguien cierra su sesión al instante.</p></div>
+      <div class="card">${H("Actividad reciente", "actividad")}${S.eventos.length ? `<div class="solo-pc" style="overflow-x:auto"><table><tr><th>Cuándo</th><th>Quién</th><th>Qué pasó</th><th>Desde</th></tr>${S.eventos.slice(0, 80).map(e => `<tr><td style="white-space:nowrap">${fechaHora(e.en)}</td><td>${esc(e.correo || "—")}</td><td>${que(e)}</td><td style="white-space:nowrap;color:var(--tx3)">${desde(e)}</td></tr>`).join("")}</table></div>
+        <div class="solo-cel">${S.eventos.slice(0, 50).map(e => `<div class="fila"><div>${que(e)}<small>${esc(e.correo || "—")} · ${fechaHora(e.en)}${desde(e) ? ` · ${desde(e)}` : ""}</small></div></div>`).join("")}</div>` : `<div class="vacio">Todavía no hay actividad.</div>`}</div>
+    </div>`;
 }
 
 async function cambiar(n, estado, b) {
@@ -251,6 +294,7 @@ async function cargar() {
     if (vistos && sonido && [...nuevos].some(n => !vistos.has(n))) beep();
     vistos = nuevos;
     $("#vivo").className = "vivo"; $("#vivo").lastChild.textContent = "Actualizado " + new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
+    if (vista === "seguridad") cargarSeguridad();
     pintar();
   } catch { $("#vivo").className = "vivo off"; $("#vivo").lastChild.textContent = "Sin conexión, reintentando"; }
 }
@@ -261,7 +305,8 @@ async function cargar() {
   N = await r.json();
   if (N.reservaciones) VISTAS.splice(3, 0, ["reservas", "Reservaciones"]);
   if (N.cupos) VISTAS.splice(1, 0, ["cupos", "Cupos"]);
-  if (!VISTAS.some(v => v[0] === vista)) vista = "hoy";
+  if (!todas().some(v => v[0] === vista)) vista = "hoy";
+  $("#quien").onclick = () => { vista = "seguridad"; try { localStorage.setItem("vista", vista); } catch {} pintar(); };
   document.title = `Panel · ${N.nombre}`;
   $("#marca").textContent = N.nombre; $("#ey").textContent = N.nombre;
   $("#sub").textContent = `Panel del dueño${N.modoIA ? " · asistente con IA" : ""}`;

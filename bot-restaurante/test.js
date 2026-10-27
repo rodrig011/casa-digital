@@ -826,3 +826,99 @@ test("meta: el comprobante se reenvía al dueño como foto, y un aviso viejo de 
     assert.equal(ctx.app.locals.store.pedidos.at(-1).comprobante, true);
   } finally { ctx.srv.close(); }
 });
+
+// ---------- seguridad del panel oficial: datos cifrados, código por WhatsApp y bitácora ----------
+test("cifrado: pedidos, conversaciones y usuarios quedan ilegibles en el disco; sin la llave correcta no arranca", async () => {
+  const { createCifra } = require("./cifrado");
+  const { createUsuarios } = require("./auth");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-cifra-"));
+  // a plain file from before encryption is still read, and comes out encrypted on the next write
+  fs.writeFileSync(path.join(dir, "pedidos.json"), JSON.stringify([{ n: "PED-1001", estado: "entregado", tipo: "pedido", nombre: "Cliente Viejo", tel: "50433334444", fecha: NOW.toISOString(), total: 100 }]));
+  const ctx = await montar(dir, { dataKey: "llave-de-prueba-123" });
+  try {
+    const de = "whatsapp:+50499990001";
+    for (const t of ["hola", "1", "1", "1", "2", "1", "1", "María López"]) await post(ctx, "/whatsapp", { From: de, Body: t });
+    await ctx.app.locals.idle();
+    ctx.app.locals.store.flush();
+  } finally { ctx.srv.close(); }
+  for (const f of ["pedidos.json", "sessions.json"]) {
+    const t = fs.readFileSync(path.join(dir, f), "utf8");
+    assert.ok(t.startsWith("cd1:"), f);
+    assert.ok(!/María|Cliente Viejo|50499990001/.test(t), f);
+  }
+  // same key: everything is there
+  const ctx2 = await montar(dir, { dataKey: "llave-de-prueba-123" });
+  try {
+    const ps = ctx2.app.locals.store.pedidos;
+    assert.ok(ps.some(p => p.nombre === "Cliente Viejo")); assert.ok(ps.some(p => p.nombre === "María López"));
+  } finally { ctx2.srv.close(); }
+  // wrong key or no key: stops instead of starting with empty data
+  await assert.rejects(() => montar(dir, { dataKey: "otra-llave" }), /DATA_KEY no es la correcta/);
+  await assert.rejects(() => montar(dir, { dataKey: "" }), /falta DATA_KEY/);
+  // on Render, a server with a disk and no key does not start
+  await assert.rejects(() => montar(fs.mkdtempSync(path.join(os.tmpdir(), "rest-sin-")), { dataKey: "", exigirCifrado: true }), /Falta DATA_KEY/);
+  // usuarios.json too
+  const cifra = createCifra("llave-de-prueba-123"), file = path.join(dir, "usuarios.json");
+  await createUsuarios({ file, cifra }).agregar("duena@gambos.hn", "Dueña", "camarones-2026", "8932-4789");
+  assert.ok(!/duena|scrypt/.test(fs.readFileSync(file, "utf8")));
+  assert.equal(createUsuarios({ file, cifra }).get("duena@gambos.hn").whatsapp, "50489324789");
+  // a tampered file is refused
+  const t = fs.readFileSync(file, "utf8");
+  fs.writeFileSync(file, t.slice(0, -6) + (t.at(-6) === "A" ? "B" : "A") + t.slice(-5));
+  assert.throws(() => createUsuarios({ file, cifra }).lista(), /alterado/);
+});
+
+test("panel: con WhatsApp registrado pide el código, frena códigos malos, recuerda el teléfono y la bitácora lo anota", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-2p-"));
+  const codigos = [];
+  const ctx = await montar(dir, { dataKey: "llave-2p", panelUsuarios: `duena@gambos.hn|Dueña|${await hashClave(CLAVE)}|89324789` }, { enviarCodigo: async (wa, c) => { codigos.push({ wa, c }); return true; } });
+  const form = (ruta, datos, cookie = "") => fetch(ctx.base + ruta, { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded", ...(cookie ? { Cookie: cookie } : {}) }, body: new URLSearchParams(datos) });
+  const galletas = r => r.headers.getSetCookie().map(c => c.split(";")[0]).filter(c => !/=$/.test(c));
+  try {
+    // password alone is not enough
+    const r1 = await form("/panel/entrar", { correo: "duena@gambos.hn", clave: CLAVE });
+    assert.equal(r1.status, 200);
+    assert.match(await r1.text(), /termina en 4789/);
+    assert.equal(codigos.length, 1); assert.equal(codigos[0].wa, "50489324789"); assert.match(codigos[0].c, /^\d{6}$/);
+    const paso = galletas(r1).find(c => c.startsWith("cd_paso="));
+    assert.ok(paso); assert.ok(!galletas(r1).some(c => c.startsWith("cd_panel=")));
+    // the step cookie is not a session
+    assert.equal((await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: paso.replace("cd_paso", "cd_panel") } })).status, 401);
+    // a wrong code
+    const malo = codigos[0].c === "000000" ? "111111" : "000000";
+    const r2 = await form("/panel/codigo", { codigo: malo }, paso);
+    assert.equal(r2.status, 401); assert.match(await r2.text(), /Ese código no es/);
+    // the right one, remembering this phone
+    const r3 = await form("/panel/codigo", { codigo: codigos[0].c, recordar: "1" }, paso);
+    assert.equal(r3.status, 303); assert.equal(r3.headers.get("location"), "/panel");
+    const sesion = galletas(r3).find(c => c.startsWith("cd_panel=")), equipo = galletas(r3).find(c => c.startsWith("cd_equipo="));
+    assert.ok(sesion && equipo);
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: sesion } })).status, 200);
+    // the code works once
+    assert.equal((await form("/panel/codigo", { codigo: codigos[0].c }, paso)).status, 401);
+    // on the remembered phone, the password is enough; on another phone, a new code
+    const r4 = await form("/panel/entrar", { correo: "duena@gambos.hn", clave: CLAVE }, equipo);
+    assert.equal(r4.status, 303); assert.equal(codigos.length, 1);
+    const r5 = await form("/panel/entrar", { correo: "duena@gambos.hn", clave: CLAVE });
+    assert.equal(r5.status, 200); assert.equal(codigos.length, 2);
+    // five wrong codes end that step
+    const paso5 = galletas(r5).find(c => c.startsWith("cd_paso="));
+    const otro = codigos[1].c === "000000" ? "111111" : "000000";
+    for (let i = 0; i < 4; i++) assert.match(await (await form("/panel/codigo", { codigo: otro }, paso5)).text(), /Ese código no es/);
+    assert.match(await (await form("/panel/codigo", { codigo: otro }, paso5)).text(), /Demasiados códigos/);
+    assert.equal((await form("/panel/codigo", { codigo: codigos[1].c }, paso5)).status, 401);
+    // after that many wrong codes this connection is locked for 15 minutes, even with the right password
+    const r6 = await form("/panel/entrar", { correo: "duena@gambos.hn", clave: CLAVE });
+    assert.equal(r6.status, 429); assert.equal(codigos.length, 2);
+    // what the owner sees in Seguridad
+    const s = await (await fetch(ctx.base + "/api/seguridad", { headers: { Cookie: sesion } })).json();
+    assert.equal(s.cifrado, true); assert.equal(s.dosPasos, true);
+    assert.deepEqual(s.usuarios, [{ correo: "duena@gambos.hn", nombre: "Dueña", whatsapp: "•••• 4789" }]);
+    const ev = s.eventos.map(e => e.evento);
+    for (const e of ["bloqueado", "codigo_malo", "entro", "codigo_enviado"]) assert.ok(ev.includes(e), e);
+    assert.equal(s.eventos[0].evento, "bloqueado");
+    assert.equal(s.eventos.find(e => e.evento === "entro").como, "equipo recordado");
+    assert.equal((await fetch(ctx.base + "/api/seguridad")).status, 401);
+    assert.ok(!/duena/.test(fs.readFileSync(path.join(dir, "bitacora.log"), "utf8")));
+  } finally { ctx.srv.close(); }
+});
