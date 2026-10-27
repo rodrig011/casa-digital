@@ -4,7 +4,7 @@ name: Página Clientia Tech
 on:
   push:
     branches: [main]
-    paths: ["clientia-tech/**", "steelworks/dist/steelworks-panel.html", "libbys-cajun/panel/dist/libbys-cajun-panel.html", ".github/workflows/pagina-clientia.yml"]
+    paths: ["clientia-tech/**", "steelworks/dist/steelworks-panel.html", "libbys-cajun/panel/dist/libbys-cajun-panel.html", "gambos/panel/dist/gambos-panel.html", ".github/workflows/pagina-clientia.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,6 +28,7 @@ jobs:
           mkdir -p _sitio/demos
           cp steelworks/dist/steelworks-panel.html _sitio/demos/steelworks-panel.html
           cp libbys-cajun/panel/dist/libbys-cajun-panel.html _sitio/demos/libbys-cajun-panel.html
+          cp gambos/panel/dist/gambos-panel.html _sitio/demos/gambos-panel.html
           touch _sitio/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
