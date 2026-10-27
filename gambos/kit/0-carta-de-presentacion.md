@@ -37,7 +37,7 @@ En el video también vieron el cálculo de la compra de mariscos según los cupo
 ## Precio
 
 - Los primeros **30 días son gratis** y sin compromiso, con sus pedidos reales.
-- Si les sirve y siguen, la instalación es de **[Instalación]**, pagada en dos partes: la mitad el día 30 y la otra mitad el día 60.
+- Si les sirve y siguen, la instalación es de **[Instalación]**, en un solo pago el día 30.
 - La mensualidad es de **[Mensualidad]** desde el día 31.
 - **No cobramos comisión** por pedido. Lo que venden es de ustedes.
 - Si no les gusta, lo apagamos y no pasa nada. Su número sigue siendo suyo, igual que antes.

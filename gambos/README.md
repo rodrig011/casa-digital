@@ -17,7 +17,7 @@ Menú (catálogo de WhatsApp Business, capturas de Rodrigo del 26-oct-2026, en `
 
 - `video/`: video vertical de la propuesta (`python3 video/gen.py`, luego `hyperframes render . -o ...` dentro de `video/build/gambos-vertical`; necesita `src/musica.mp3`, la canción oficial, y `coco-chicken/video/deps`). Listo en `gambos-casa-digital-vertical.mp4` (1:53, 1080x1920). Las capturas del panel en `video/src/` se toman con `node video/shots.js`; si cambia el panel, se vuelven a tomar.
 
-Precio si lo piden: instalación entre L15,000 y L20,000 y mensualidad desde L2,500, sin comisión; 30 días gratis; la instalación se paga en dos partes, día 30 y día 60.
+Precio si lo piden: instalación entre L15,000 y L20,000 y mensualidad desde L2,500, sin comisión; 30 días gratis; la instalación se paga en un solo pago el día 30.
 
 ## Bot real (listo para prender)
 
@@ -37,6 +37,7 @@ Antes de prenderlo hay que pedirle a Gambos (lo de aquí son ejemplos):
 - `kit/pdf/carta-de-presentacion.pdf`: quiénes somos, lo que vimos, lo que hacemos, precio (L15,000 + L2,500) y siguiente paso.
 - `kit/pdf/lo-que-necesitamos.pdf`: la lista para prender el bot (documentos de Meta, menú, cupos y tandas, entrega, pagos, número, panel).
 - `kit/pdf/bienvenida.pdf`: para cuando digan que sí.
+- `kit/pdf/acuerdo-de-servicio.pdf`: el contrato. Instalación de L15,000 en un solo pago el día 30 (decisión de Rodrigo, 27-oct-2026) y L2,500 al mes desde el día 31. No lo ha revisado un abogado.
 
 Se arman desde los `.md` de `kit/` con el generador del kit:
-`CHROMIUM_PATH=/opt/pw-browsers/chromium node kit-cliente/generar.mjs --restaurante "Gambos" --numero "8932-4789" --instalacion "L15,000" --mensual "L2,500" --fuentes gambos/kit --solo carta-de-presentacion,lo-que-necesitamos,bienvenida --salida gambos/kit/pdf`
+`CHROMIUM_PATH=/opt/pw-browsers/chromium node kit-cliente/generar.mjs --restaurante "Gambos" --numero "8932-4789" --instalacion "L15,000" --mensual "L2,500" --fuentes gambos/kit --solo carta-de-presentacion,lo-que-necesitamos,bienvenida,acuerdo-de-servicio --salida gambos/kit/pdf`
