@@ -39,8 +39,11 @@ function fichaTexto(p, fmt = L) {
 }
 
 // client: Twilio client (or a mock with messages.create). Without client, messages only go to the log.
-function createNotifier({ client, from, contentSid, sandbox, owner, negocio, log = console.log }) {
+// canal: WhatsApp directo con Meta (meta.js); si está, los avisos salen por ahí y Twilio no se usa.
+function createNotifier({ client, canal, from, contentSid, sandbox, owner, negocio, log = console.log }) {
   async function enviar(to, body, plantilla, media) {
+    if (canal) return canal.enviar(to, body, plantilla, media);
+    if (typeof media === "function") media = null;
     if (!client || !from) { log(`[mensaje sin enviar a ${to}: faltan credenciales de Twilio]\n${body}`); return null; }
     const msg = plantilla && contentSid && !sandbox
       // template variables cannot contain line breaks

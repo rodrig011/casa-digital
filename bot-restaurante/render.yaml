@@ -5,8 +5,8 @@ services:
   - type: web
     name: restaurante-bot
     runtime: node
-    region: virginia            # el más cercano a Honduras y a Twilio (us1)
-    plan: 0.5c-512mb            # plan pagado más pequeño. El gratis se duerme y Twilio no espera.
+    region: virginia            # el más cercano a Honduras
+    plan: 0.5c-512mb            # plan pagado más pequeño. El gratis se duerme y WhatsApp no espera.
     rootDir: bot-restaurante
     buildCommand: npm ci --omit=dev
     startCommand: npm start
@@ -25,6 +25,18 @@ services:
         value: /var/data
       - key: NEGOCIO               # archivo con el menú y las sucursales del cliente
         value: negocios/ejemplo.json
+      - key: META_TOKEN            # WhatsApp directo con Meta (README, sección 3). Con esto no se usa Twilio
+        sync: false
+      - key: META_PHONE_ID
+        sync: false
+      - key: META_NUMERO
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_VERIFY_TOKEN
+        generateValue: true
+      - key: META_PLANTILLA        # nombre de la plantilla de avisos aprobada (aviso_pedido)
+        sync: false
       - key: TWILIO_SANDBOX
         value: "true"
       - key: SKIP_TWILIO_SIGNATURE

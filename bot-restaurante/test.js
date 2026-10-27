@@ -739,3 +739,90 @@ test("ia (Gambos): ver_cupos y crear_pedido con día, tanda, salsa en la nota y 
   const e = ejecutar(GB, "crear_pedido", { nombre: "luis", productos: [{ id: "marea6", cantidad: 1 }], fecha: "2026-10-18", lista_espera: true }, c2);
   assert.equal(c2.pedido.estado, "en_espera"); assert.match(e.nota, /lista de espera/); assert.equal(c2.pedido.tanda, undefined);
 });
+
+// ---------- WhatsApp directo con Meta (Cloud API simulada) ----------
+function metaFalsa({ fallaTexto = false } = {}) {
+  const calls = [];
+  const fetch = async (url, op = {}) => {
+    const body = op.body && typeof op.body === "string" ? JSON.parse(op.body) : op.body;
+    calls.push({ url, body });
+    const ok = j => ({ ok: true, status: 200, json: async () => j, arrayBuffer: async () => new ArrayBuffer(4) });
+    if (/\/media$/.test(url)) return ok({ id: "MEDIA-NUEVA" });
+    if (/\/MEDIA-CLIENTE$/.test(url)) return ok({ url: "https://lookaside.fbsbx.com/foto", mime_type: "image/jpeg" });
+    if (/lookaside/.test(url)) return ok({});
+    if (fallaTexto && body && body.type === "text") return { ok: false, status: 400, json: async () => ({ error: { message: "Re-engagement message", code: 131047 } }) };
+    return ok({ messages: [{ id: "wamid.out" + calls.length }] });
+  };
+  return { calls, fetch, enviados: () => calls.filter(c => /\/messages$/.test(c.url)).map(c => c.body) };
+}
+const SECRETO = "app-secret-de-prueba";
+async function postMeta(ctx, msgs, { firma = true } = {}) {
+  const body = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { contacts: [{ wa_id: "50495550000", profile: { name: "Rosa" } }], messages: msgs } }] }] });
+  const sig = "sha256=" + require("crypto").createHmac("sha256", SECRETO).update(body).digest("hex");
+  const r = await fetch(ctx.base + "/meta", { method: "POST", headers: { "Content-Type": "application/json", ...(firma ? { "X-Hub-Signature-256": sig } : {}) }, body });
+  await ctx.app.locals.idle();
+  return r.status;
+}
+let wid = 0;
+const texto = (body, from = "50495550000") => ({ id: "wamid." + ++wid, from, type: "text", text: { body } });
+const boton = (id, from = "50495550000") => ({ id: "wamid." + ++wid, from, type: "interactive", interactive: { type: "list_reply", list_reply: { id, title: "x" } } });
+
+test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y lista, y no repite un mensaje", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M = metaFalsa();
+  const ctx = await montar(dir, { meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "verifica-esto", plantilla: "aviso_pedido", idioma: "es" } }, { metaFetch: M.fetch, negocio: GB });
+  try {
+    assert.equal(await (await fetch(ctx.base + "/meta?hub.mode=subscribe&hub.verify_token=verifica-esto&hub.challenge=777")).text(), "777");
+    assert.equal((await fetch(ctx.base + "/meta?hub.mode=subscribe&hub.verify_token=otro&hub.challenge=777")).status, 403);
+    assert.equal(await postMeta(ctx, [texto("hola")], { firma: false }), 403);
+    assert.equal(M.calls.length, 0);
+
+    const m1 = texto("hola");
+    assert.equal(await postMeta(ctx, [m1]), 200);
+    let out = M.enviados();
+    assert.equal(out.length, 2); assert.equal(out[0].to, "50495550000");
+    assert.equal(out[0].type, "text"); assert.match(out[0].text.body, /Gambos/);
+    assert.equal(out[1].interactive.type, "list", "6 opciones van en lista");
+    assert.equal(out[1].interactive.action.sections[0].rows[1].id, "2");
+    await postMeta(ctx, [m1]);
+    assert.equal(M.enviados().length, 2, "el mismo mensaje dos veces se contesta una vez");
+
+    // a full order with taps and words; 3 short options go as real buttons
+    for (const m of [boton("2"), texto("un duo de mar")]) await postMeta(ctx, [m]);
+    out = M.enviados();
+    assert.equal(out.at(-1).interactive.type, "button");
+    assert.deepEqual(out.at(-1).interactive.action.buttons.map(b => b.reply.title), ["Confirmar pedido", "Agregar algo más", "Empezar de nuevo"]);
+    for (const m of [boton("1"), boton("2"), boton("1"), boton("1"), boton("1"), texto("Rosa Díaz")]) await postMeta(ctx, [m]);
+    const p = ctx.app.locals.store.pedidos.at(-1);
+    assert.equal(p.n, "PED-1001"); assert.equal(p.tel, "+50495550000"); assert.equal(p.lineas[0].nota, "Salsa Honey Cajún"); assert.equal(p.tanda, "12:00 p. m.");
+    // the owner gets the approved template (outside the 24 h a plain text would not arrive)
+    const avisos = M.enviados().filter(b => b.type === "template");
+    assert.ok(avisos.length >= 1);
+    assert.equal(avisos[0].to, "50499990000"); assert.equal(avisos[0].template.name, "aviso_pedido");
+    assert.match(avisos[0].template.components[0].parameters[0].text, /Nuevo pedido PED-1001/);
+    assert.doesNotMatch(avisos[0].template.components[0].parameters[1].text, /\n/);
+  } finally { ctx.srv.close(); }
+});
+
+test("meta: el comprobante se reenvía al dueño como foto, y un aviso viejo de más de 24 h sale con plantilla", async () => {
+  const { createMeta } = require("./meta");
+  const M = metaFalsa({ fallaTexto: true });
+  const meta = createMeta({ token: "t", phoneId: "1234", appSecret: SECRETO, plantilla: "aviso_pedido", fetch: M.fetch, log: () => {} });
+  await meta.enviar("whatsapp:+50495550000", "✅ ¡Rosa, su pedido *PED-1* ya está listo!\n\nTotal: L 970.");
+  const [t1, t2] = M.enviados();
+  assert.equal(t1.type, "text"); assert.equal(t2.type, "template");
+  assert.equal(t2.template.components[0].parameters[0].text, "✅ ¡Rosa, su pedido *PED-1* ya está listo!");
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M2 = metaFalsa();
+  const ctx = await montar(dir, { meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "v", plantilla: "", idioma: "es" } }, { metaFetch: M2.fetch, negocio: preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8")), cobro: { desde: 0, transferencia: "BAC 123" } }) });
+  try {
+    for (const m of [texto("hola"), texto("2"), texto("1"), texto("1 x1"), texto("Confirmar pedido"), texto("Lo antes posible"), texto("Rosa")]) await postMeta(ctx, [m]);
+    assert.equal(ctx.app.locals.store.pedidos.at(-1).estado, "por_pagar");
+    await postMeta(ctx, [{ id: "wamid.foto", from: "50495550000", type: "image", image: { id: "MEDIA-CLIENTE", mime_type: "image/jpeg" } }]);
+    const fotos = M2.enviados().filter(b => b.type === "image");
+    assert.ok(fotos.length >= 1); assert.equal(fotos[0].image.id, "MEDIA-NUEVA"); assert.equal(fotos[0].to, "50499990000");
+    assert.match(M2.enviados().find(b => b.to === "50495550000" && b.type === "text" && /comprobante/.test(b.text.body)).text.body, /Recibimos su comprobante/);
+    assert.equal(ctx.app.locals.store.pedidos.at(-1).comprobante, true);
+  } finally { ctx.srv.close(); }
+});
