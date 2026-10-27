@@ -138,23 +138,24 @@ function cookies(req) {
 function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaurante", color = "#C8102E" } = {}) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
-<title>Entrar · Panel ${esc(marca)}</title><meta name="theme-color" content="#F4F3F0">
+<title>Entrar · Panel ${esc(marca)}</title><meta name="theme-color" content="#F3F3F3">
 <style>
-:root{--bg:#F4F3F0;--card:#fff;--line:#E6E3DE;--line2:#D6D2CB;--tx:#1B1C1D;--tx2:#5C6166;--tx3:#868B90;--ember:${esc(color)};--red:#C23A2B;--red-bg:#FBE7E4;color-scheme:light;}
-@media (prefers-color-scheme:dark){:root{--bg:#111213;--card:#1A1C1E;--line:#2A2D30;--line2:#383C40;--tx:#ECEAE6;--tx2:#A4A9AE;--tx3:#7A8085;--ember:${esc(color)};--red:#F0796B;--red-bg:#3A1C18;color-scheme:dark;}}
-*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:var(--bg);color:var(--tx);font:400 15px/1.5 "Helvetica Neue",Arial,sans-serif;padding:16px;-webkit-font-smoothing:antialiased}
-main{width:min(400px,100%)}.brand{margin:0 0 22px;font-size:20px;font-weight:700;letter-spacing:-.01em}.brand span{color:var(--ember)}
-form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;display:grid;gap:16px}
-h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}p{margin:0;color:var(--tx2)}
-label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--tx2)}
-input{height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--tx);padding:0 12px;font:inherit;font-size:16px}
-input:focus{outline:none;border-color:var(--ember);box-shadow:0 0 0 3px color-mix(in srgb,var(--ember) 18%,transparent)}
-button{height:46px;border:0;border-radius:10px;background:var(--ember);color:#fff;font:inherit;font-weight:700;cursor:pointer;transition:transform .15s ease}button:active{transform:scale(.98)}
-.err{background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:500}
-.ok{background:color-mix(in srgb,var(--ember) 12%,transparent);border-radius:10px;padding:10px 12px;font-size:14px}
-small{display:block;text-align:center;color:var(--tx3);margin-top:16px;font-size:12px}
+:root{--bg:#F3F3F3;--band:#B0C4DF;--card:#fff;--line:#E5E5E5;--line2:#C9C9C9;--tx:#181818;--tx2:#444;--tx3:#706E6B;--brand:#0176D3;--brand-d:#014486;--red:#BA0517;--red-bg:#FEDED8;--ok-bg:#EEF4FF;color-scheme:light;}
+@media (prefers-color-scheme:dark){:root{--bg:#1B1B1B;--band:#16325C;--card:#242424;--line:#3A3A3A;--line2:#4A4A4A;--tx:#F3F3F3;--tx2:#C9C9C9;--tx3:#A0A0A0;--brand:#1B96FF;--brand-d:#78B0FD;--red:#FE5C4C;--red-bg:#4A1410;--ok-bg:#0B2A4E;color-scheme:dark;}}
+*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:linear-gradient(var(--band) 0 220px,var(--bg) 220px);color:var(--tx);font:400 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;padding:16px;-webkit-font-smoothing:antialiased}
+main{width:min(400px,100%)}
+.brand{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:16px;font-weight:700}.brand i{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;font-style:normal;font-size:16px;background:${esc(color)}}.brand small{display:block;font-weight:400;font-size:12px;color:var(--tx2)}
+form{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:0 2px 2px rgba(0,0,0,.1);padding:24px;display:grid;gap:14px}
+h1{margin:0;font-size:18px;font-weight:700}p{margin:0;color:var(--tx3);font-size:13px}
+label{display:grid;gap:4px;font-size:12px;color:var(--tx2)}
+input{height:40px;border-radius:4px;border:1px solid var(--line2);background:var(--card);color:var(--tx);padding:0 12px;font:inherit;font-size:16px}
+input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 3px var(--brand)}
+button{height:40px;border:1px solid var(--brand);border-radius:4px;background:var(--brand);color:#fff;font:inherit;font-weight:600;cursor:pointer}button:hover{background:var(--brand-d)}
+.err{background:var(--red-bg);color:var(--red);border-radius:4px;padding:10px 12px;font-size:13px}
+.ok{background:var(--ok-bg);border-radius:4px;padding:10px 12px;font-size:13px}
+small.pie{display:block;text-align:center;color:var(--tx3);margin-top:14px;font-size:12px}
 </style></head><body><main>
-<div class="brand">${esc(marca)} <span>· panel</span></div>
+<div class="brand"><i>${esc(String(marca).trim()[0] || "?").toUpperCase()}</i><div>${esc(marca)}<small>Panel del dueño · Casa Digital</small></div></div>
 <form method="post" action="/panel/entrar" autocomplete="on">
 <div><h1>Entrar al panel</h1><p>Solo para personas autorizadas por ${esc(marca)}.</p></div>
 ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<div class="ok">${esc(aviso)}</div>` : ""}
@@ -162,7 +163,7 @@ ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<d
 <label>Contraseña<input name="clave" type="password" autocomplete="current-password" required minlength="1"></label>
 <button type="submit">Entrar</button>
 </form>
-<small>¿Olvidó su contraseña? Pídale al dueño que se la cambie.</small>
+<small class="pie">¿Olvidó su contraseña? Pídale al dueño que se la cambie.</small>
 </main></body></html>`;
 }
 

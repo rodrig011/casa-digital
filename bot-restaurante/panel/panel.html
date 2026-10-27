@@ -6,91 +6,130 @@
 <meta name="robots" content="noindex">
 <title>Panel del restaurante</title>
 <style>
-:root{--bg:#F3F4F6;--card:#fff;--line:#E5E7EB;--line2:#D1D5DB;--tx:#111827;--tx2:#4B5563;--tx3:#6B7280;--acc:#C8102E;--ok:#15803D;--ok-bg:#DCFCE7;--warn:#B45309;--warn-bg:#FEF3C7;--info:#1D4ED8;--info-bg:#DBEAFE;--mute-bg:#F3F4F6;--sh:0 1px 2px rgba(16,24,40,.06);color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1115;--card:#171A20;--line:#262A33;--line2:#353A45;--tx:#EEF0F3;--tx2:#B4BAC4;--tx3:#8A919C;--ok:#4ADE80;--ok-bg:#12301E;--warn:#FBBF24;--warn-bg:#33270C;--info:#93C5FD;--info-bg:#15243F;--mute-bg:#1F232B;--sh:none;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0F1115;--card:#171A20;--line:#262A33;--line2:#353A45;--tx:#EEF0F3;--tx2:#B4BAC4;--tx3:#8A919C;--ok:#4ADE80;--ok-bg:#12301E;--warn:#FBBF24;--warn-bg:#33270C;--info:#93C5FD;--info-bg:#15243F;--mute-bg:#1F232B;--sh:none;color-scheme:dark}
+/* Panel del restaurante, estilo Lightning (Salesforce): cabecera blanca, banda azul, tarjetas de 4px, íconos en mosaico */
+:root{--bg:#F3F3F3;--band:#B0C4DF;--card:#fff;--line:#E5E5E5;--line2:#C9C9C9;--tx:#181818;--tx2:#444;--tx3:#706E6B;--brand:#0176D3;--brand-d:#014486;--sel:#EEF4FF;--hover:#F3F3F3;--acc:#0176D3;
+  --ok:#2E844A;--ok-bg:#CDEFC4;--warn:#8C4B02;--warn-bg:#FEF1CD;--info:#0176D3;--info-bg:#EEF4FF;--red:#BA0517;--red-bg:#FEDED8;--mute-bg:#F3F3F3;--sh:0 2px 2px 0 rgba(0,0,0,.1);color-scheme:light}
+:root[data-theme="dark"]{--bg:#1B1B1B;--band:#16325C;--card:#242424;--line:#3A3A3A;--line2:#4A4A4A;--tx:#F3F3F3;--tx2:#C9C9C9;--tx3:#A0A0A0;--brand:#1B96FF;--brand-d:#78B0FD;--sel:#0B2A4E;--hover:#2E2E2E;
+  --ok:#45C65A;--ok-bg:#163A1F;--warn:#FFBA45;--warn-bg:#3D2A06;--info:#1B96FF;--info-bg:#0B2A4E;--red:#FE5C4C;--red-bg:#4A1410;--mute-bg:#2B2B2B;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:400 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit;cursor:pointer}
-.app{display:grid;grid-template-columns:220px 1fr;min-height:100svh}
-aside{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100svh;display:flex;flex-direction:column;gap:4px}
-.marca{font-weight:700;font-size:16px;padding:4px 10px 18px;letter-spacing:-.01em}.marca small{display:block;font-weight:500;font-size:12px;color:var(--tx3)}
-.nav{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--tx2);font-weight:500}
-.nav:hover{background:var(--mute-bg)}.nav[aria-current="page"]{background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);font-weight:600}
-.nav .n{margin-left:auto;min-width:22px;height:20px;border-radius:10px;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;padding:0 6px}
-.nav .n:empty{display:none}
-.pie{margin-top:auto;font-size:12px;color:var(--tx3);padding:0 10px;display:grid;gap:6px}.pie a{color:var(--tx2)}
-main{min-width:0;padding:20px 24px 90px}
-.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
-.top .sp{flex:1}
-select,.btn{height:36px;border:1px solid var(--line2);background:var(--card);border-radius:8px;padding:0 12px;color:var(--tx);font:inherit}
-.btn{display:inline-flex;align-items:center;gap:6px;font-weight:600;text-decoration:none}.btn:active{transform:scale(.98)}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
-.vivo{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:6px}.vivo i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}.vivo.off i{background:var(--warn)}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh)}
-.kpi{padding:14px 16px}.kpi b{display:block;font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.kpi span{font-size:12px;color:var(--tx3);font-weight:500}
-.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:12px}
-.card h2{font-size:14px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:650}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--tx3);font-weight:600}tr:last-child td{border-bottom:0}td.r,th.r{text-align:right}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}a{color:inherit}
+svg{display:block}
+:focus-visible{outline:0;box-shadow:0 0 3px var(--brand);border-radius:4px}
+/* cabecera */
+.gh{position:sticky;top:0;z-index:20;background:var(--card);box-shadow:0 2px 3px rgba(0,0,0,.08)}
+.gh-top{display:flex;align-items:center;gap:12px;height:52px;padding:0 16px}
+.marca{display:flex;align-items:center;gap:10px;min-width:0}.marca .logo{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;background:var(--marca,#032D60);flex:none}
+.marca b{display:block;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.marca small{display:block;font-size:12px;color:var(--tx3);line-height:1.2}
+.sp{flex:1}
+.iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--tx3);border:1px solid transparent;background:none}
+.avatar{width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.gh-nav{display:flex;align-items:stretch;height:40px;padding:0 16px;border-top:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.gh-nav::-webkit-scrollbar{display:none}
+.gh-nav .nav{display:flex;align-items:center;gap:6px;border:0;border-top:3px solid transparent;border-bottom:3px solid transparent;background:none;padding:0 14px;white-space:nowrap;color:var(--tx2)}
+.gh-nav .nav[aria-current="page"]{border-bottom-color:var(--brand);color:var(--tx);font-weight:700;background:var(--sel)}
+.nav .n{min-width:18px;height:16px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;line-height:16px}.nav .n:empty{display:none}
+.band{position:absolute;left:0;right:0;top:92px;height:150px;background:var(--band);z-index:-1}
+main{position:relative;padding:12px 12px 64px;max-width:1500px;margin:0 auto}
+/* encabezado de página, como un registro */
+.ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh)}
+.tile{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none;background:var(--brand)}.tile svg{width:22px;height:22px}
+.ey{font-size:12px;color:var(--tx3);line-height:1.2}
+h1{margin:0;font-size:18px;font-weight:700;line-height:1.25}
+.ph .r{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,.btn{height:32px;border:1px solid var(--line2);background:var(--card);border-radius:4px;padding:0 12px;color:var(--tx);font:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--brand);text-decoration:none;white-space:nowrap}.btn:active{background:var(--hover)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:var(--hover)}.btn.pri:hover{background:var(--brand-d);border-color:var(--brand-d)}.gh-nav .nav:hover{background:var(--hover);color:var(--tx)}.iconbtn:hover{border-color:var(--line2);color:var(--brand)}}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.vivo{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:6px;white-space:nowrap}.vivo i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}.vivo.off i{background:var(--warn)}
+/* tarjetas */
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--sh);min-width:0}
+.card h2{display:flex;align-items:center;gap:10px;font-size:14px;margin:0;padding:12px 16px;font-weight:700;border-bottom:1px solid var(--line)}
+.ct{width:24px;height:24px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none}.ct svg{width:14px;height:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.kpi{padding:12px 16px;display:flex;flex-direction:column-reverse;gap:2px;border-top:3px solid var(--brand)}
+.kpi b{display:block;font-size:24px;font-weight:300;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}.kpi span{font-size:12px;color:var(--tx3)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px 16px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--tx3);font-weight:700;background:var(--mute-bg);text-transform:none}tr:last-child td{border-bottom:0}td.r,th.r{text-align:right}
+@media (hover:hover) and (pointer:fine){tr:hover td{background:var(--hover)}}
 .vacio{padding:28px 16px;text-align:center;color:var(--tx3)}
-.cupos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:12px}.cupos h2 small{font-weight:400;color:var(--tx3);margin-left:6px}
-.tnd{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}.tnd i{height:8px;border-radius:4px;background:var(--mute-bg);overflow:hidden}.tnd i b{display:block;height:100%;background:var(--acc)}.tnd.lleno i b{background:var(--tx3)}.tnd span{color:var(--tx2)}
+.cupos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:12px}.cupos h2 small{font-weight:400;color:var(--tx3);margin-left:auto;font-size:12px}
+.tnd{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}.tnd:first-of-type{border-top:0}.tnd i{height:8px;border-radius:4px;background:var(--mute-bg);overflow:hidden}.tnd i b{display:block;height:100%;background:var(--brand)}.tnd.lleno i b{background:var(--tx3)}.tnd span{color:var(--tx2)}
+/* tablero de pedidos */
 .board{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:12px;align-items:start}
-.col h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);margin:0 0 8px;display:flex;justify-content:space-between}
-.ped{padding:12px 14px;margin-bottom:10px;display:grid;gap:6px}
-.ped .l1{display:flex;justify-content:space-between;gap:8px;font-weight:650}.ped .l1 span{color:var(--tx3);font-weight:500;font-size:12px;white-space:nowrap}
+.col{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--sh);padding:0 8px 8px}
+.col h3{font-size:13px;font-weight:700;color:var(--tx);margin:0 -8px 8px;padding:10px 12px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--mute-bg);border-radius:4px 4px 0 0}.col h3 span{color:var(--tx3);font-weight:400}
+.col .card{box-shadow:none}
+.ped{padding:10px 12px;margin-bottom:8px;display:grid;gap:6px}
+.ped .l1{display:flex;justify-content:space-between;gap:8px;font-weight:700;color:var(--brand)}.ped .l1 span{color:var(--tx3);font-weight:400;font-size:12px;white-space:nowrap}
 .ped ul{margin:0;padding:0;list-style:none;color:var(--tx2)}.ped li{overflow-wrap:anywhere}
-.ped .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--tx2);flex-wrap:wrap}
-.ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:32px;padding:0 10px;font-size:13px}
-.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;font-size:12px;font-weight:600;white-space:nowrap}
-.t-nuevo{background:var(--info-bg);color:var(--info)}.t-cocina,.t-por_pagar{background:var(--warn-bg);color:var(--warn)}.t-listo,.t-comp{background:var(--ok-bg);color:var(--ok)}.t-por_confirmar{background:var(--warn-bg);color:var(--warn)}.t-confirmada{background:var(--ok-bg);color:var(--ok)}.t-en_espera{background:var(--warn-bg);color:var(--warn)}.t-entregado,.t-atendido,.t-cancelado,.t-no_vino,.t-sin_cupo{background:var(--mute-bg);color:var(--tx3)}
-.ped .aviso{font-size:12px;color:var(--warn);font-weight:600}
+.ped .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
+.ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:28px;padding:0 10px;font-size:12px}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:15px;font-size:12px;white-space:nowrap;background:var(--mute-bg);color:var(--tx2)}
+.t-nuevo{background:var(--info-bg);color:var(--info)}.t-cocina,.t-por_pagar,.t-por_confirmar,.t-en_espera{background:var(--warn-bg);color:var(--warn)}.t-listo,.t-comp,.t-confirmada{background:var(--ok-bg);color:var(--ok)}.t-entregado,.t-atendido,.t-cancelado,.t-no_vino,.t-sin_cupo{background:var(--mute-bg);color:var(--tx3)}
+.ped .aviso{font-size:12px;color:var(--red);font-weight:700}
+/* cocina */
 .cocina{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.cocina .ped{font-size:16px;padding:16px}.cocina .ped ul{color:var(--tx);font-size:17px;font-weight:550}.cocina .ped .l1{font-size:18px}
+.cocina .ped{font-size:16px;padding:16px}.cocina .ped ul{color:var(--tx);font-size:17px;font-weight:600}.cocina .ped .l1{font-size:18px;color:var(--tx)}
 .cocina .ped.nuevo{border-left:4px solid var(--info)}.cocina .ped.cocina-e{border-left:4px solid var(--warn)}
-.cocina .btn{height:44px;font-size:15px;flex:1;justify-content:center}
-.wa{color:var(--acc);font-weight:600;text-decoration:none}
-.fila{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.fila:last-child{border-bottom:0}.fila div{flex:1;min-width:0}.fila small{display:block;color:var(--tx3)}
-.ayuda{font-size:13px;color:var(--tx3);margin:-8px 0 14px}
+.cocina .btn{height:44px;font-size:15px;flex:1}
+.wa{color:var(--brand);font-weight:700;text-decoration:none}
+.fila{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}.fila:last-child{border-bottom:0}.fila div{flex:1;min-width:0}.fila small{display:block;color:var(--tx3)}.fila b{color:var(--brand)}
+.ayuda{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:4px;padding:8px 12px;margin:0 0 12px;color:var(--tx2);font-size:12px;box-shadow:var(--sh)}
+/* esqueleto mientras carga: nunca una pantalla en blanco */
+.sk{background:linear-gradient(90deg,var(--mute-bg) 25%,var(--hover) 50%,var(--mute-bg) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:4px}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
 .tabs{display:none}
 @media (max-width:900px){
-  .app{grid-template-columns:1fr}aside{display:none}main{padding:16px 16px 96px}
-  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}
-  .board{grid-template-columns:1fr}
-  .tabs{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
-  .tabs .nav{gap:3px;font-size:12px;padding:10px 2px;justify-content:center;white-space:nowrap}
-  .tabs .nav .n{margin-left:0;min-width:17px;height:17px;font-size:11px;padding:0 5px}
-  th,td{padding:9px 12px}
+  .gh-nav{display:none}.band{top:52px;height:110px}main{padding:12px 12px 96px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.board{grid-template-columns:1fr}
+  .vivo{display:none}.kpi span{min-height:3em}
+  .tabs{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:20;box-shadow:0 -2px 3px rgba(0,0,0,.06)}
+  .tabs .nav{display:flex;align-items:center;justify-content:center;gap:3px;border:0;background:none;font-size:12px;padding:10px 2px;white-space:nowrap;color:var(--tx2);border-radius:4px}
+  .tabs .nav[aria-current="page"]{color:var(--brand);font-weight:700;background:var(--sel)}
+  th,td{padding:8px 12px}
   .fila.res{flex-wrap:wrap}.fila.res div{flex-basis:100%}
 }
-@media (hover:none){.nav:hover{background:none}}
 </style>
 </head>
 <body>
-<div class="app">
-  <aside>
-    <div class="marca" id="marca">Panel<small>Casa Digital</small></div>
-    <nav id="nav1"></nav>
-    <div class="pie"><span id="quien"></span><a href="/panel/salir">Salir</a></div>
-  </aside>
-  <main>
-    <div class="top">
-      <h1 id="titulo">Hoy</h1>
-      <span class="sp"></span>
-      <span class="vivo" id="vivo"><i></i>Actualizado</span>
-      <select id="suc" aria-label="Sucursal"><option value="">Todas las sucursales</option></select>
-    </div>
-    <div id="vista"></div>
-  </main>
-</div>
+<header class="gh">
+  <div class="gh-top">
+    <div class="marca"><span class="logo" id="logo"></span><div><b id="marca">Panel</b><small id="sub">Casa Digital</small></div></div>
+    <span class="sp"></span>
+    <span class="vivo" id="vivo"><i></i>Actualizado</span>
+    <button class="iconbtn" id="tema" aria-label="Cambiar tema" title="Cambiar tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <span class="avatar" id="quien" title=""></span>
+    <a class="btn sm" href="/panel/salir">Salir</a>
+  </div>
+  <nav class="gh-nav" id="nav1"></nav>
+</header>
+<div class="band"></div>
+<main>
+  <div class="ph"><span class="tile" id="tile"></span><div><div class="ey" id="ey">Panel</div><h1 id="titulo">Hoy</h1></div>
+    <div class="r"><select id="suc" aria-label="Sucursal"><option value="">Todas las sucursales</option></select></div></div>
+  <div id="vista"><div class="kpis"><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div></div><div class="grid2"><div class="card"><div class="sk" style="height:180px;margin:12px"></div></div><div class="card"><div class="sk" style="height:180px;margin:12px"></div></div></div></div>
+</main>
 <nav class="tabs" id="nav2"></nav>
 <script>
 const VISTAS = [["hoy", "Hoy"], ["pedidos", "Pedidos"], ["cocina", "Cocina"], ["personas", "Por atender"], ["menu", "Menú"]];
 const CORTO = { personas: "Atender", reservas: "Mesas" };
+// íconos en mosaico, como Lightning: [trazo SVG, color]
+const ICONO = {
+  hoy: ["M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "#0176D3"], cupos: ["M4 5h16v15H4zM4 9h16M8 3v4M16 3v4", "#FE9339"],
+  pedidos: ["M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6", "#3BA755"], cocina: ["M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2", "#BA0517"],
+  personas: ["M4 5h16v11H8l-4 4z", "#7526E3"], menu: ["M5 4h14v16H5zM9 8h6M9 12h6M9 16h4", "#0B827C"], reservas: ["M4 10h16M6 10v9M18 10v9M8 6h8", "#032D60"],
+  ventas: ["M4 20V10M10 20V4M16 20v-7M22 20H2", "#0B827C"], espera: ["M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", "#FE9339"],
+};
+const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONO[k][0]}"/></svg>`;
+const H = (t, k, r = "") => `<h2><span class="ct" style="background:${ICONO[k][1]}">${svg(k)}</span>${t}${r}</h2>`;
 const ESTADO_TXT = { por_pagar: "Por pagar", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false;
+// tema claro u oscuro: el que eligió, o el del celular
+const ponerTema = t => document.documentElement.setAttribute("data-theme", t);
+try { ponerTema(localStorage.getItem("tema") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); } catch { ponerTema("light"); }
+document.getElementById("tema").onclick = () => { const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"; ponerTema(t); try { localStorage.setItem("tema", t); } catch {} };
 try { vista = localStorage.getItem("vista") || "hoy"; } catch {}
 
 
@@ -135,6 +174,7 @@ function pintar() {
   if (!N) return;
   nav();
   $("#titulo").textContent = VISTAS.find(v => v[0] === vista)[1];
+  $("#tile").innerHTML = svg(vista); $("#tile").style.background = ICONO[vista][1];
   const v = $("#vista");
   const ps = pedidos();
   if (vista === "hoy") {
@@ -150,8 +190,9 @@ function pintar() {
       <div class="card kpi"><b>${ps.filter(p => p.estado === "nuevo" || p.estado === "cocina").length}</b><span>En preparación</span></div>
       <div class="card kpi"><b>${espera}</b><span>Clientes esperando a una persona</span></div></div>
       <div class="grid2">
-        <div class="card"><h2>Lo más pedido hoy</h2>${top.length ? `<table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Venta</th></tr>${top.map(([n, [c, s]]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay pedidos hoy.</div>`}</div>
-        <div class="card"><h2>Por sucursal</h2><table><tr><th>Sucursal</th><th class="r">Pedidos</th><th class="r">Venta</th></tr>${porSuc.map(([n, c, s]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table></div>
+        <div class="card">${H("Lo más pedido hoy", "ventas")}${top.length ? `<table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Venta</th></tr>${top.map(([n, [c, s]]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay pedidos hoy.</div>`}</div>
+        ${N.sucursales.length > 1 ? `<div class="card">${H("Por sucursal", "hoy")}<table><tr><th>Sucursal</th><th class="r">Pedidos</th><th class="r">Venta</th></tr>${porSuc.map(([n, c, s]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table></div>`
+          : `<div class="card">${H("Pedidos por estado", "pedidos")}<table><tr><th>Estado</th><th class="r">Pedidos</th></tr>${["por_pagar", "nuevo", "cocina", "listo", "en_espera"].map(e => [e, ps.filter(p => p.estado === e).length]).filter(([e, c]) => c || e !== "por_pagar" && e !== "en_espera").map(([e, c]) => `<tr><td><span class="tag t-${e}">${ESTADO_TXT[e]}</span></td><td class="r">${c}</td></tr>`).join("")}</table></div>`}
       </div>`;
   } else if (vista === "pedidos") {
     const cols = [["nuevo", "Nuevos"], ["cocina", "En cocina"], ["listo", "Listos para recoger"], ["entregado", "Entregados hoy"]];
@@ -167,16 +208,16 @@ function pintar() {
   } else if (vista === "cupos") {
     const C = N.cupos, espera = ps.filter(p => p.estado === "en_espera");
     v.innerHTML = `<p class="ayuda">Cupos apartados por WhatsApp en cada tanda (${C.porTanda} por tanda). Cuando una tanda se llena, el bot ofrece otra hora, otro día o la lista de espera. Un pedido cancelado libera sus cupos.</p>
-      <div class="cupos">${C.dias.map(d => `<div class="card"><h2>${esc(d.etiqueta.replace(/^\p{L}/u, c => c.toUpperCase()))}<small>${d.abierto ? "abierto" : d.fecha <= hoy() ? "hoy" : "cerrado"}</small></h2>${C.tandas.map((t, i) => { const u = ps.reduce((a, p) => a + (p.diaFecha === d.fecha && p.tanda === t && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0); return `<div class="tnd ${u >= C.porTanda ? "lleno" : ""}"><b>${esc(t)}</b><i><b style="width:${Math.min(100, Math.round(u / C.porTanda * 100))}%"></b></i><span>${u >= C.porTanda ? "Llena" : `${u} de ${C.porTanda}`}</span></div>`; }).join("")}</div>`).join("") || `<div class="card vacio">No hay días por delante.</div>`}</div>
-      <div class="card"><h2>Lista de espera</h2>${espera.map(p => `<div class="fila"><div><b>${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}</b><small>${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"} para ${esc(p.dia)} · ${esc(p.resumen)} · ${hace(p.fecha)}</small></div><a class="btn pri" href="${wa(p.tel)}" target="_blank" rel="noopener">Escribirle</a><button class="btn" data-n="${esc(p.n)}" data-e="cancelado">Quitar</button></div>`).join("") || `<div class="vacio">Nadie en lista de espera.</div>`}</div>`;
+      <div class="cupos">${C.dias.map(d => `<div class="card"><h2><span class="ct" style="background:${ICONO.cupos[1]}">${svg("cupos")}</span>${esc(d.etiqueta.replace(/^\p{L}/u, c => c.toUpperCase()))}<small>${d.abierto ? "abierto" : d.fecha <= hoy() ? "hoy" : "cerrado"}</small></h2>${C.tandas.map((t, i) => { const u = ps.reduce((a, p) => a + (p.diaFecha === d.fecha && p.tanda === t && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0); return `<div class="tnd ${u >= C.porTanda ? "lleno" : ""}"><b>${esc(t)}</b><i><b style="width:${Math.min(100, Math.round(u / C.porTanda * 100))}%"></b></i><span>${u >= C.porTanda ? "Llena" : `${u} de ${C.porTanda}`}</span></div>`; }).join("")}</div>`).join("") || `<div class="card vacio">No hay días por delante.</div>`}</div>
+      <div class="card">${H("Lista de espera", "espera")}${espera.map(p => `<div class="fila"><div><b>${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}</b><small>${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"} para ${esc(p.dia)} · ${esc(p.resumen)} · ${hace(p.fecha)}</small></div><a class="btn pri" href="${wa(p.tel)}" target="_blank" rel="noopener">Escribirle</a><button class="btn" data-n="${esc(p.n)}" data-e="cancelado">Quitar</button></div>`).join("") || `<div class="vacio">Nadie en lista de espera.</div>`}</div>`;
   } else if (vista === "reservas") {
     const x = filtrados().filter(p => p.tipo === "reservacion").slice(0, 150);
     const pend = x.filter(p => p.estado === "por_confirmar"), resto = x.filter(p => p.estado !== "por_confirmar");
     const fila = p => `<div class="fila res"><div><b>${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}</b>${p.grupo ? ` <span class="tag t-por_pagar">Grupo</span>` : ""}<small>📅 ${esc(p.dia)}, ${esc(p.hora)} · 👥 ${p.personas}${p.ocasion ? ` · 🎉 ${esc(p.ocasion)}` : ""}${N.sucursales.length > 1 ? ` · ${esc(p.sucursal)}` : ""} · pedida ${hace(p.fecha)}</small></div>
       ${p.estado === "por_confirmar" ? `<button class="btn pri" data-n="${esc(p.n)}" data-e="confirmada">Confirmar</button><button class="btn" data-n="${esc(p.n)}" data-e="sin_cupo">Sin cupo</button>` : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>`}<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a></div>`;
     v.innerHTML = `<p class="ayuda">Mesas que pidieron por WhatsApp. Al tocar <b>Confirmar</b> o <b>Sin cupo</b>, al cliente le llega el aviso por WhatsApp.</p>
-      <div class="card" style="margin-bottom:12px"><h2>Por confirmar</h2>${pend.map(fila).join("") || `<div class="vacio">No hay mesas por confirmar.</div>`}</div>
-      ${resto.length ? `<div class="card"><h2>Ya respondidas</h2>${resto.map(fila).join("")}</div>` : ""}`;
+      <div class="card" style="margin-bottom:12px">${H("Por confirmar", "reservas")}${pend.map(fila).join("") || `<div class="vacio">No hay mesas por confirmar.</div>`}</div>
+      ${resto.length ? `<div class="card">${H("Ya respondidas", "reservas")}${resto.map(fila).join("")}</div>` : ""}`;
   } else if (vista === "personas") {
     const x = filtrados().filter(p => p.tipo === "persona").slice(0, 100);
     v.innerHTML = `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
@@ -222,9 +263,10 @@ async function cargar() {
   if (N.cupos) VISTAS.splice(1, 0, ["cupos", "Cupos"]);
   if (!VISTAS.some(v => v[0] === vista)) vista = "hoy";
   document.title = `Panel · ${N.nombre}`;
-  document.documentElement.style.setProperty("--acc", N.color);
-  $("#marca").innerHTML = `${esc(N.nombre)}<small>Panel del dueño${N.modoIA ? " · bot con IA" : ""}</small>`;
-  $("#quien").textContent = N.usuario;
+  $("#marca").textContent = N.nombre; $("#ey").textContent = N.nombre;
+  $("#sub").textContent = `Panel del dueño${N.modoIA ? " · asistente con IA" : ""}`;
+  $("#logo").textContent = (N.nombre || "?").trim()[0].toUpperCase(); $("#logo").style.setProperty("--marca", N.color);
+  $("#quien").textContent = String(N.usuario || "?").split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase(); $("#quien").title = N.usuario || "";
   $("#suc").innerHTML += N.sucursales.map(s => `<option value="${esc(s.id)}">${esc(s.nombre)}</option>`).join("");
   if (N.sucursales.length < 2) $("#suc").style.display = "none";
   try { $("#suc").value = localStorage.getItem("suc") || ""; } catch {}
