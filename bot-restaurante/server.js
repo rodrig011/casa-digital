@@ -1,6 +1,7 @@
 // Bot de WhatsApp para restaurantes · webhook de Twilio + panel del dueño.  npm start
 //
 //   POST /whatsapp                 Twilio > WhatsApp sender > "When a message comes in"
+//   GET|POST /meta                 WhatsApp directo con Meta (Cloud API, ver meta.js): con META_TOKEN no hace falta Twilio
 //   GET  /panel                    panel del dueño y pantalla de cocina (correo y contraseña, ver auth.js)
 //   GET  /api/pedidos              pedidos en JSON (sesión del panel, o Authorization: Bearer <LEADS_TOKEN>)
 //   POST /api/pedidos/:n/estado    { estado } por_pagar | nuevo | cocina | listo | entregado | no_vino | cancelado | atendido (sesión del panel)
@@ -30,6 +31,7 @@ const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
+const { createMeta, mensajes: mensajesMeta } = require("./meta");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
@@ -42,7 +44,9 @@ function loadConfig(env = process.env) {
     sid: env.TWILIO_ACCOUNT_SID || "",
     token: env.TWILIO_AUTH_TOKEN || "",
     sandbox,
-    from: waAddr(env.TWILIO_WHATSAPP_FROM || (sandbox ? "+14155238886" : "")),
+    from: waAddr(env.TWILIO_WHATSAPP_FROM || env.META_NUMERO || (sandbox ? "+14155238886" : "")),
+    // WhatsApp directo con Meta (Cloud API): con token e id del número, el bot habla por Meta y no usa Twilio
+    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", plantilla: env.META_PLANTILLA || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
     contentSid: env.TWILIO_ALERT_CONTENT_SID || "",
     owner: env.OWNER_WHATSAPP || "",
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
@@ -77,9 +81,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
   if (pasarela) negocio.cobro = { ...negocio.cobro, activo: true, pasarela: true };
   const motor = createEngine(negocio);
   const store = deps.store || createStore(cfg.dataDir, { ttlHours: cfg.ttlHours });
-  const client = "client" in deps ? deps.client : cfg.sid && cfg.token ? twilio(cfg.sid, cfg.token) : null;
-  const avisos = createNotifier({ client, from: cfg.from, contentSid: cfg.contentSid, sandbox: cfg.sandbox, owner: cfg.owner, negocio, log });
   const now = deps.now || (() => new Date());
+  const mc = cfg.meta || {};
+  const meta = "meta" in deps ? deps.meta : mc.token && mc.phoneId ? createMeta({ ...mc, log, ...(deps.metaFetch ? { fetch: deps.metaFetch } : {}) }) : null;
+  const client = meta ? null : "client" in deps ? deps.client : cfg.sid && cfg.token ? twilio(cfg.sid, cfg.token) : null;
+  const avisos = createNotifier({ client, canal: meta, from: cfg.from, contentSid: cfg.contentSid, sandbox: cfg.sandbox, owner: cfg.owner, negocio, log });
   const ia = "ia" in deps ? deps.ia : cfg.anthropicKey ? createIA({ negocio, apiKey: cfg.anthropicKey, model: cfg.anthropicModel }) : null;
   const pending = new Set();                      // messages in flight (tests wait on them)
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
@@ -122,6 +128,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
     const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados });
     const out = r.messages.map(toText).filter(Boolean);
+    out.mensajes = r.messages.filter(m => m.text);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
     if (r.state.lead) { store.seq = r.state.seq; out.pedido = guardar(r.state.lead, key, sess.convo); delete r.state.lead; }
     if (r.state.handoff) { persona("", r.state.handoff, key, sess.convo); delete r.state.handoff; }
@@ -239,7 +246,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function comprobante(from, mediaUrl) {
     const p = porPagar(from);
     if (!p) return null;
-    store.updatePedido(p.n, { comprobante: true, t_comprobante: now().toISOString(), ...(mediaUrl ? { comprobanteUrl: mediaUrl } : {}) });
+    store.updatePedido(p.n, { comprobante: true, t_comprobante: now().toISOString(), ...(typeof mediaUrl === "string" ? { comprobanteUrl: mediaUrl } : {}) });
     track(avisos.comprobante(p, mediaUrl));
     const sess = store.getSession(from);
     if (sess && sess.state && sess.state.step === "pago") { sess.state.step = "post"; sess.state.pago = null; sess.state.offer = null; store.setSession(from, sess); }
@@ -257,30 +264,62 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const baseDe = req => cfg.publicUrl || `${req.protocol}://${req.get("host")}`;
 
   // ---- WhatsApp ----
-  app.post("/whatsapp", firma, async (req, res) => {
-    const p = req.body || {};
-    const from = p.From || "anon";
-    const foto = Number(p.NumMedia || 0) > 0;
-    const text = (foto && !p.Body ? "📷 foto" : String(p.Body || "")).slice(0, 1000);
-    const tw = new twilio.twiml.MessagingResponse();
+  // one customer message -> the bot's replies [{ text, buttons? }] (the same for Twilio and Meta)
+  async function turno(from, text, { foto, media, base }) {
     let reply;
     // too many messages from one number: one notice, then silence until the window passes
     if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
-      if (limite.primeraVezFuera(digits(from) || from)) { log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`); tw.message("Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí."); }
+      if (!limite.primeraVezFuera(digits(from) || from)) return [];
+      log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`);
+      return [{ text: "Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí." }];
     }
-    else if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) tw.message(pendientes().slice(0, 1590));
-    else if (foto && (reply = comprobante(from, p.MediaUrl0))) tw.message(reply);
-    else if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, baseDe(req)))) tw.message(reply.slice(0, 1590));
-    else {
-      // one WhatsApp message per turn keeps the order and costs one message
-      let buf = "";
-      const out = conversar(from, text);
-      const textos = out.pedido ? await Promise.all(out.map(t => conLink(t, out.pedido, baseDe(req)))) : out;
-      for (const t of textos.map(t => t.split(LINK).join(""))) { if (buf && (buf + "\n\n" + t).length > 1590) { tw.message(buf); buf = t; } else buf = buf ? buf + "\n\n" + t : t; }
-      if (buf) tw.message(buf.slice(0, 1590));
-    }
+    if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
+    if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
+    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base))) return [{ text: reply.slice(0, 1590) }];
+    const out = conversar(from, text);
+    return Promise.all(out.mensajes.map(async m => ({ ...m, text: (out.pedido ? await conLink(m.text, out.pedido, base) : m.text).split(LINK).join("") })));
+  }
+
+  app.post("/whatsapp", firma, async (req, res) => {
+    const p = req.body || {};
+    const foto = Number(p.NumMedia || 0) > 0;
+    const text = (foto && !p.Body ? "📷 foto" : String(p.Body || "")).slice(0, 1000);
+    const tw = new twilio.twiml.MessagingResponse();
+    // one WhatsApp message per turn keeps the order and costs one message
+    let buf = "";
+    for (const t of (await turno(p.From || "anon", text, { foto, media: p.MediaUrl0, base: baseDe(req) })).map(toText)) { if (buf && (buf + "\n\n" + t).length > 1590) { tw.message(buf); buf = t; } else buf = buf ? buf + "\n\n" + t : t; }
+    if (buf) tw.message(buf.slice(0, 1590));
     res.type("text/xml").send(tw.toString());
   });
+
+  // Meta Cloud API: answers 200 at once (Meta retries otherwise) and replies with its own calls
+  if (meta) {
+    const vistos = new Set();
+    app.get("/meta", (req, res) => {
+      const q = req.query;
+      if (q["hub.mode"] === "subscribe" && mc.verifyToken && q["hub.verify_token"] === mc.verifyToken) return res.type("text/plain").send(String(q["hub.challenge"] || ""));
+      res.sendStatus(403);
+    });
+    app.post("/meta", express.json({ limit: "200kb", verify: (req, res, buf) => { req.crudo = buf; } }), (req, res) => {
+      if (!meta.firmaOk(req.crudo, req.get("X-Hub-Signature-256"))) { log("[meta] firma inválida"); return res.sendStatus(403); }
+      res.sendStatus(200);
+      const base = baseDe(req);
+      track((async () => {
+        for (const m of mensajesMeta(req.body)) {
+          if (vistos.has(m.id)) continue;                 // Meta can deliver the same message twice
+          vistos.add(m.id); if (vistos.size > 2000) vistos.delete(vistos.values().next().value);
+          const foto = !!m.foto;
+          if (!foto && !m.text) { await meta.responder(m.from, "Por ahora solo leo texto y fotos. ¿Me lo puede escribir?").catch(e => log(`[meta] ${e.message}`)); continue; }
+          let id = null;
+          const media = foto ? () => (id = id || meta.reenviable(m.foto).catch(e => { log(`[meta] foto: ${e.message}`); return null; })) : null;
+          try {
+            const out = await turno(m.from, foto && !m.text ? "📷 foto" : m.text, { foto, media, base });
+            for (const r of out) await meta.responder(m.from, r);
+          } catch (e) { log(`[meta] no se pudo contestar a ${m.from}: ${e.message}`); }
+        }
+      })());
+    });
+  }
 
   // ---- Panel del dueño (correo y contraseña; ver auth.js) ----
   const usuarios = deps.usuarios || createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null });
@@ -364,7 +403,8 @@ function start() {
   const server = app.listen(cfg.port, () => {
     const N = app.locals.negocio;
     console.log(`Bot de ${N.nombre} escuchando en :${cfg.port} (${N.items.length} productos, ${N.sucursales.length} sucursales, ${cfg.negocio})`);
-    if (!cfg.sid || !cfg.token) console.log("Aviso: faltan TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN; los avisos solo van al log.");
+    if (cfg.meta.token && cfg.meta.phoneId) console.log(`WhatsApp directo con Meta en /meta${cfg.meta.appSecret ? "" : " (falta META_APP_SECRET: se rechazan todos los mensajes)"}${cfg.meta.plantilla ? "" : "; sin META_PLANTILLA los avisos al dueño fuera de 24 h no llegan"}.`);
+    else if (!cfg.sid || !cfg.token) console.log("Aviso: faltan META_TOKEN / META_PHONE_ID (o las claves de Twilio); los avisos solo van al log.");
     if (!cfg.owner) console.log("Aviso: falta OWNER_WHATSAPP; nadie recibe los pedidos por WhatsApp.");
     console.log(cfg.anthropicKey ? `Modo IA activo (${cfg.anthropicModel}); si falla, contesta el menú.` : "Modo IA apagado: contesta el menú (falta ANTHROPIC_API_KEY o BOT_IA=off).");
     const nu = createUsuarios({ env: cfg.panelUsuarios, file: cfg.dataDir ? path.join(cfg.dataDir, "usuarios.json") : null }).lista().length;

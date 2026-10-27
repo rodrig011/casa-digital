@@ -23,6 +23,7 @@ Para instalarle a un cliente desde EE. UU., ver también [INSTALACION-A-DISTANCI
 | `engine.js` | La conversación con menú de opciones. |
 | `ia.js` | Modo IA opcional con Claude (precios siempre del archivo del cliente). |
 | `server.js` | Webhook de WhatsApp, API de pedidos y panel. |
+| `meta.js` | WhatsApp directo con Meta (Cloud API): botones, listas, plantillas y fotos de comprobantes. |
 | `avisos.js` | Avisos al dueño y a la sucursal; "pedido listo" al cliente. |
 | `pagos.js` | Pago con tarjeta por pasarela (Tilopay): link por pedido y consulta del pago. |
 | `store.js` | Guarda pedidos y conversaciones en `DATA_DIR`. Los pedidos cerrados con más de 30 días pasan a `archivo/pedidos-AAAA-MM.json` para que `pedidos.json` no crezca para siempre. |
@@ -61,14 +62,23 @@ y abrir `http://localhost:3000/panel`.
 4. `npm test` revisa que todos los archivos de `negocios/` estén bien escritos.
 5. Para cambiar un precio después: editar el archivo, subirlo a GitHub y Render lo actualiza solo.
 
-## 3. Publicarlo (Render) y conectar WhatsApp (Twilio)
+## 3. Publicarlo (Render) y conectar WhatsApp directo con Meta
 
-Igual que el bot de Steel Works: ver [steelworks/bot/README.md](../steelworks/bot/README.md), pasos 2 a 6. Lo distinto:
+El bot habla con la API de WhatsApp de Meta (Cloud API, `meta.js`), sin Twilio: contestarle a un cliente que escribió primero no cuesta nada. Los menús salen con botones y listas de WhatsApp de verdad. Con `META_TOKEN` y `META_PHONE_ID` el bot usa Meta; sin ellos, Twilio (más abajo).
+
+1. **Render:** New > Blueprint, `bot-restaurante/render.yaml` (copia por cliente, ver abajo). Anotar la URL (`https://<servidor>.onrender.com`).
+2. **App de Meta:** en [developers.facebook.com](https://developers.facebook.com) > Mis apps > Crear app > tipo Negocio, ligada al Meta Business del cliente (donde Rodrigo es administrador). Agregar el producto **WhatsApp**.
+3. **Número:** WhatsApp > Configuración de la API > Agregar número de teléfono, y el código que llega por SMS. Copiar el **identificador del número de teléfono** a `META_PHONE_ID` y el número a `META_NUMERO`. Para probar antes, Meta da un número de prueba gratis en esa misma pantalla.
+4. **Token que no vence:** Configuración del negocio > Usuarios del sistema > Agregar (administrador) > Asignar activos: la app y la cuenta de WhatsApp con control total > Generar token con los permisos `whatsapp_business_messaging` y `whatsapp_business_management`. Va en `META_TOKEN`.
+5. **Secreto de la app:** Configuración de la app > Básica > Clave secreta de la app, en `META_APP_SECRET`. Sin esto el bot rechaza todo (así nadie más puede hacerse pasar por Meta).
+6. **Webhook:** WhatsApp > Configuración > Webhook: URL `https://<servidor>.onrender.com/meta`, token de verificación = el mismo texto que `META_VERIFY_TOKEN`. Después, en Campos del webhook, suscribirse a **messages**.
+7. **Plantilla de avisos:** en el WhatsApp Manager > Plantillas de mensajes > Crear, categoría **Utilidad**, nombre `aviso_pedido`, idioma español, cuerpo: `Aviso de su negocio: {{1}}. Detalle: {{2}}`. Cuando Meta la apruebe, poner el nombre en `META_PLANTILLA`. Con ella le llegan al dueño los pedidos aunque no le haya escrito al bot en 24 horas, y al cliente el "su pedido está listo" de un pedido hecho el día anterior. Esas plantillas sí las cobra Meta (centavos), con la tarjeta que se pone en el WhatsApp Manager.
+8. **Probar:** escribirle "hola" al número desde otro celular, hacer un pedido y revisar que al dueño le llegue el aviso. En Render > Logs, `[meta]` dice si algo falló.
+
+Lo demás de Render:
 
 - **Blueprint path:** `bot-restaurante/render.yaml`. Para cada cliente, copie el archivo (`render-<cliente>.yaml`), cambie `name` y `NEGOCIO=negocios/<cliente>.json`. Un servidor por cliente: los datos nunca se mezclan.
-- **Webhook de Twilio:** `https://<su-servidor>.onrender.com/whatsapp` (POST).
-- **Plantilla de avisos al dueño:** igual que en Steel Works (categoría Utility, variables `{{1}}` y `{{2}}`).
-- **El aviso "su pedido está listo"** va como texto normal: el cliente acaba de escribir, así que está dentro de las 24 horas de WhatsApp.
+- **Con Twilio (respaldo):** igual que el bot de Steel Works ([steelworks/bot/README.md](../steelworks/bot/README.md), pasos 2 a 6), webhook `https://<su-servidor>.onrender.com/whatsapp` (POST) y plantilla de avisos en Twilio. Twilio cobra unos $0.005 por mensaje encima de Meta.
 - **Usuarios del panel:** en Render > Shell, `npm run usuario -- agregar correo "Nombre"`.
 
 ## 4. Cobrar antes de cocinar (pedidos que nunca llegan)
