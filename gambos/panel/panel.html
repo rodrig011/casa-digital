@@ -301,7 +301,7 @@ main{position:relative;z-index:0;padding:12px 12px 64px;max-width:1500px;margin:
       <div class="pop"><button class="iconbtn bell" id="bell" aria-label="Avisos"><svg class="ic"><use href="#i-bell"/></svg><span class="bn" id="bellN"></span></button>
         <div class="popm" id="bellPop" hidden><header>Avisos</header><div id="bellList"></div></div></div>
       <div class="pop"><button class="avatar" id="me" title="Dueña">GB</button>
-        <div class="popm me" id="mePop" hidden><header>Dueña<small>demo@gambos.hn</small></header><a href="#equipo" data-v="equipo">Equipo y permisos</a><a href="#" id="salir">Salir</a></div></div>
+        <div class="popm me" id="mePop" hidden><header>Dueña<small>demo@gambos.hn</small></header><a href="#equipo" data-v="equipo">Equipo</a><a href="#" id="salir">Salir</a></div></div>
     </div>
   </div>
   <div class="gh-nav"><div class="appname"><span class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Gambos</div><nav id="nav" aria-label="Secciones"></nav></div>
@@ -402,6 +402,27 @@ button.avatar{border:0;cursor:pointer;}
 <style>
 /* slots: one bar per batch, days side by side */
 .days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+/* inicio sencillo */
+.frase{margin:0 0 12px;font-size:16px;line-height:1.5;color:var(--tx);}
+.kpis.k3{grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);margin:0 -16px -16px;}
+.libres{display:grid;gap:14px;}
+.lib{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;font-size:13px;}.lib .trk{height:10px;}.lib b{font-weight:700;white-space:nowrap;}
+.pasos{display:grid;gap:12px;}.paso{display:flex;gap:12px;align-items:flex-start;}.paso p{margin:2px 0 0;color:var(--tx3);font-size:12px;}
+.pn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;}
+.mas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.masi{display:flex;gap:12px;align-items:center;padding:14px 16px;color:var(--tx);text-decoration:none;}.masi small{display:block;color:var(--tx3);font-size:12px;margin-top:2px;}
+.masi .tile{flex:none;width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;}.masi .tile svg{width:18px;height:18px;}
+@media (hover:hover) and (pointer:fine){.masi:hover{border-color:var(--brand);}}
+/* celular: las 6 secciones abajo, siempre a la vista, como una app */
+@media (max-width:640px){
+  .gh-nav{height:0;border-top:0;padding:0;overflow:visible;}.gh-nav .appname{display:none;}
+  #nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(6,1fr);background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 3px rgba(0,0,0,.06);padding:4px 2px calc(4px + env(safe-area-inset-bottom));}
+  #nav a{justify-content:center;padding:12px 2px;font-size:12px;border:0;border-radius:4px;position:relative;}
+  #nav a.on{background:var(--sel);color:var(--brand);}
+  #nav a .c{position:absolute;top:2px;right:2px;font-size:10px;line-height:14px;padding:0 4px;}
+  main{padding-bottom:96px!important;}
+}
+@media (max-width:640px){.kpis.k3{grid-template-columns:1fr;}.kpis.k3 .kpi{border-left:0;border-top:1px solid var(--line);}.kpis.k3 .kpi:first-child{border-top:0;}.lib{grid-template-columns:96px 1fr auto;}}
 .day{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);min-width:0;}
 .day > header{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);}
 .day > header h2{margin:0;font:700 14px var(--body);text-transform:capitalize;}
@@ -542,14 +563,16 @@ const VENTAS_FINDE = () => FINDE.reduce((a, d) => a + ventasDia(d), 0);
 const where = o => o.pk ? "Pickup · Florencia Norte" : "Delivery · " + o.col;
 const pagoTag = o => o.pago === "conf" ? `<span class="status s-ok"><i></i>Transferencia confirmada</span>` : o.pago === "pend" ? `<span class="status s-amber"><i></i>Transferencia por confirmar</span>` : `<span class="status s-gray"><i></i>${o.pk ? "Paga al recoger" : "Efectivo al recibir"}</span>`;
 
-const NAV = [["hoy","Inicio"],["cupos","Cupos"],["whatsapp","WhatsApp"],["cocina","Cocina"],["entregas","Entregas"],["pagos","Pagos"],["clientes","Clientes"],["campanas","Campañas"],["insumos","Mariscos e insumos"],["ventas","Reportes"],["tiktok","TikTok"],["equipo","Equipo"]];
+// lo de todos los días arriba; lo demás en "Más", con una línea que dice para qué sirve
+const NAV = [["hoy","Inicio"],["cupos","Cupos"],["whatsapp","WhatsApp"],["cocina","Cocina"],["pagos","Pagos"],["mas","Más"]];
+const MAS = [["entregas","Entregas","Quién va en camino y quién pasa a recoger hoy."],["clientes","Clientes","Cada persona que le ha pedido, su salsa y qué tal le pareció."],["insumos","Compras","Cuánto marisco comprar, según los cupos ya vendidos."],["campanas","Mensajes a clientes","Avisar por WhatsApp que abrió cupos o que quedan para el domingo."],["ventas","Ventas","Cuánto vendió cada fin de semana y qué se pide más."],["tiktok","TikTok","Qué videos le traen pedidos."],["equipo","Equipo","Quién entra al panel y qué puede ver."]];
 function nav() {
   const c = {cupos: WAIT.length, cocina: ORD.filter(o => o.wd === HOY && o.st === "empaque").length, pagos: ORD.filter(o => o.pago === "pend").length,
     whatsapp: CONV.filter(x => x.st === "duena").length, clientes: OPIN.filter(o => o.s <= 3 && !o.fix).length};
-  $("#nav").innerHTML = NAV.map(([id, t]) => `<a href="#${id}" class="${VIEW === id || (VIEW === "cliente" && id === "clientes") ? "on" : ""}" data-v="${id}">${t}${c[id] ? `<span class="c">${c[id]}</span>` : ""}</a>`).join("");
+  $("#nav").innerHTML = NAV.map(([id, t]) => `<a href="#${id}" class="${VIEW === id || (id === "mas" && (VIEW === "cliente" || MAS.some(m => m[0] === VIEW))) ? "on" : ""}" data-v="${id}">${t}${c[id] ? `<span class="c">${c[id]}</span>` : ""}</a>`).join("");
 }
-const TILE = {hoy:["i-home","#0176D3"],cupos:["i-cal","#E2661F"],whatsapp:["i-chat","#2E844A"],cocina:["i-bag","#FE9339"],entregas:["i-pin","#0B827C"],pagos:["i-cash","#3BA755"],insumos:["i-box","#B78300"],ventas:["i-chart","#0B827C"],clientes:["i-users","#7526E3"],tiktok:["i-play","#181818"],campanas:["i-send","#0B827C"],equipo:["i-users","#032D60"],cliente:["i-users","#7526E3"]};
-const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> Ciudad, WhatsApp, días de entrega, pickup en Florencia Norte, salsas, fotos y videos de TikTok (con sus vistas y comentarios) son los reales de Gambos. Menú y precios son los de su catálogo de WhatsApp. Tandas, cupos, pedidos, clientes y pagos son de ejemplo.</div>
+const TILE = {hoy:["i-home","#0176D3"],cupos:["i-cal","#E2661F"],whatsapp:["i-chat","#2E844A"],cocina:["i-bag","#FE9339"],entregas:["i-pin","#0B827C"],pagos:["i-cash","#3BA755"],insumos:["i-box","#B78300"],ventas:["i-chart","#0B827C"],clientes:["i-users","#7526E3"],tiktok:["i-play","#181818"],campanas:["i-send","#0B827C"],equipo:["i-users","#032D60"],cliente:["i-users","#7526E3"],mas:["i-menu","#706E6B"]};
+const PH = (title, sub, extra = "") => `<div class="notice"><b>Demo</b> El menú, los precios, las salsas y sus videos son los reales de Gambos. Los pedidos, clientes y pagos son de ejemplo.</div>
   <div class="ph"><div class="tile" style="background:${TILE[VIEW][1]}">${icon(TILE[VIEW][0])}</div><div><div class="ey">Gambos Seafood Boil · ${CITY}</div><h1>${title}</h1></div>${extra ? `<div class="r">${extra}</div>` : ""}</div><div class="subline">${sub}</div>`;
 const CT = (ic, c) => `<span class="ct" style="background:${c}">${icon(ic)}</span>`;
 
@@ -563,29 +586,34 @@ function dayCard(wd, full) {
     ${full ? `<footer>${past ? `<span class="hint">${ORD.filter(o => o.wd === wd).length} pedidos entregados</span>` : CERR[wd] ? `<span class="hint">Se cerró ayer a las 9:00 pm (un día antes)</span>` : `<span class="hint">Cupos por tanda</span><span class="stp"><button data-cap="${wd}:-1" aria-label="Menos cupos">−</button><span>${CAP[wd][0]}</span><button data-cap="${wd}:1" aria-label="Más cupos">+</button></span><button class="btn sm" data-cierra="${wd}">Cerrar el día</button>`}</footer>` : ""}
   </div>`;
 }
+let TODO = false;
 function vHoy() {
-  const fv = FINDE.reduce((a, d) => a + vend(d), 0), fc = FINDE.reduce((a, d) => a + cap(d), 0);
-  const hoyO = ORD.filter(o => o.wd === HOY); const recs = RECS();
-  return `${PH("Hoy, viernes", `${HORA} · pedidos al ${WA} · tanda de 4:30 pm en la olla · sábado y domingo vendiendo`)}
+  const hoyO = ORD.filter(o => o.wd === HOY), listos = hoyO.filter(o => o.st === "entregado").length;
+  const recs = RECS().filter(r => !DONE.has(r.id)), ver = TODO ? recs : recs.slice(0, 3);
+  const dias = FINDE.filter(d => d !== 4);
+  const paso = (n, t, p) => `<div class="paso"><span class="pn">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`;
+  return `${PH("Hoy, viernes", `${HORA}`)}
   <div class="stack">
-    <section class="card"><div class="kpis">
-      <div class="kpi"><span>Cupos vendidos este fin de semana</span><b class="num">${fv} de ${fc}</b><small>jueves a domingo · ${Math.round(fv / fc * 100)}% lleno</small></div>
-      <div class="kpi"><span>Ventas del fin de semana</span><b class="num">${L(VENTAS_FINDE())}</b><small>ya apartadas, antes de cocinar</small></div>
-      <div class="kpi"><span>Quedan para mañana sábado</span><b class="num">${cap(6) - vend(6)}</b><small>domingo: ${cap(0) - vend(0)} · ${WAIT.length} en lista de espera</small></div>
-      <div class="kpi"><span>Hoy</span><b class="num">${hoyO.filter(o => o.st === "entregado").length} de ${hoyO.length}</b><small>pedidos entregados</small></div>
-    </div></section>
-    <div class="days">${FINDE.map(d => dayCard(d, false)).join("")}</div>
+    <section class="card resumen"><div class="pad">
+      <p class="frase">Hoy salen <b>${hoyO.length} pedidos</b> y ya se entregaron <b>${listos}</b>. Para mañana sábado quedan <b>${cap(6) - vend(6)} cupos</b> y para el domingo <b>${cap(0) - vend(0)}</b>.</p>
+      <div class="kpis k3">
+        <div class="kpi"><span>Vendido este fin de semana</span><b class="num">${L(VENTAS_FINDE())}</b><small>apartado antes de cocinar</small></div>
+        <div class="kpi"><span>Pedidos de hoy</span><b class="num">${listos} de ${hoyO.length}</b><small>ya entregados</small></div>
+        <div class="kpi"><span>Esperando un cupo</span><b class="num">${WAIT.length}</b><small>personas en lista de espera</small></div>
+      </div></div></section>
     <div class="g2">
-      <section class="card"><header>${CT("i-warn","#FE9339")}<h2>Acciones recomendadas</h2><div class="r">${recs.filter(r => !DONE.has(r.id)).length} pendientes</div></header>
-        <ul class="recs">${recs.map(r => `<li class="rec ${DONE.has(r.id) ? "done" : ""}"><div class="ico" style="background:${{red:"#EA001E",amber:"#FE9339",blue:"#0176D3",ok:"#3BA755"}[r.t]}">${icon(r.i)}</div><div><b>${r.h}</b><p>${r.p}</p></div><div>${r.a}</div></li>`).join("")}</ul></section>
+      <section class="card"><header>${CT("i-warn","#FE9339")}<h2>Lo que necesita su atención</h2><div class="r">${recs.length ? `${recs.length} ${recs.length === 1 ? "cosa" : "cosas"}` : "nada"}</div></header>
+        <ul class="recs">${ver.map(r => `<li class="rec"><div class="ico" style="background:${{red:"#EA001E",amber:"#FE9339",blue:"#0176D3",ok:"#3BA755"}[r.t]}">${icon(r.i)}</div><div><b>${r.h}</b><p>${r.p}</p></div><div>${r.a}</div></li>`).join("") || `<li class="empty">Todo al día. El asistente se encarga.</li>`}</ul>
+        ${recs.length > 3 ? `<div class="pad" style="padding-top:10px"><button class="btn sm" id="todo">${TODO ? "Ver menos" : `Ver ${recs.length - 3} más`}</button></div>` : ""}</section>
       <div class="stack">
-        <section class="card"><header>${CT("i-bag","#FE9339")}<h2>Cocina ahora</h2></header><div class="pad" style="display:grid;gap:10px">
-          ${[["olla","En la olla (4:30 pm)"],["empaque","Empacando y revisando"],["camino","En camino"],["espera","Tanda de 6:30 pm"]].map(([k, n]) => `<div style="display:flex;justify-content:space-between"><span class="hint">${n}</span><b>${hoyO.filter(o => o.st === k).length}</b></div>`).join("")}
-          <a class="btn sm" href="#cocina" data-v="cocina">Pantalla de cocina</a></div></section>
-        <section class="card"><header>${CT("i-cash","#3BA755")}<h2>Por confirmar</h2></header><div class="pad" style="display:grid;gap:10px">
-          <div style="display:flex;justify-content:space-between"><span class="hint">Transferencias sin comprobante</span><b class="num">${ORD.filter(o => o.pago === "pend").length}</b></div>
-          <div style="display:flex;justify-content:space-between"><span class="hint">Valor</span><b class="num">${L(ORD.filter(o => o.pago === "pend").reduce((a, o) => a + tot(o), 0))}</b></div>
-          <a class="btn sm" href="#pagos" data-v="pagos">Ver pagos</a></div></section>
+        <section class="card"><header>${CT("i-cal","#E2661F")}<h2>Cupos libres</h2><div class="r"><a class="lnk" href="#cupos" data-v="cupos">Ver por tanda</a></div></header><div class="pad libres">
+          ${dias.map(d => { const v = vend(d), c = cap(d); return `<div class="lib"><span>${dlbl(d)}</span><div class="trk"><i style="width:${v / c * 100}%;background:${CERR[d] ? "var(--tx3)" : c - v ? "var(--c1)" : "var(--red)"}"></i></div><b>${CERR[d] ? "Cerrado, se cocina hoy" : c - v ? `${c - v} libres` : "Lleno"}</b></div>`; }).join("")}
+        </div></section>
+        <section class="card"><header>${CT("i-chat","#2E844A")}<h2>Así funciona</h2></header><div class="pad pasos">
+          ${paso(1, "El cliente escribe a su WhatsApp", "Como siempre, al " + WA + ".")}
+          ${paso(2, "El asistente toma el pedido", "Combo, salsa, día y tanda. Aparta el cupo solo.")}
+          ${paso(3, "Usted lo ve aquí y cocina", "Sin anotar nada a mano.")}
+        </div></section>
       </div>
     </div>
   </div>`;
@@ -602,7 +630,7 @@ function RECS() {
 
 function vCupos() {
   const sel = DSEL; const lista = ORD.filter(o => o.wd === sel);
-  return `${PH("Cupos del fin de semana", "Cada pedido de WhatsApp aparta sus cupos solo, en la tanda que el cliente escogió. Un cupo es una persona, igual que en su menú: Combo individual (1px) usa 1, Duo de Mar 2, Marea x4 4, Marea x6 6. Cuando una tanda se llena, el asistente ofrece otra hora o lo anota en lista de espera. Nunca se vende de más.")}
+  return `${PH("Cupos del fin de semana", "Un cupo es una persona, como en su menú (Duo de Mar = 2 cupos). Cada pedido aparta los suyos solo y una tanda llena ya no se vende.")}
   <div class="stack">
     <div class="days">${FINDE.map(d => `<div data-dsel="${d}" style="cursor:pointer">${dayCard(d, true)}</div>`).join("")}</div>
     <div class="g2">
@@ -624,7 +652,7 @@ function vWhatsapp() {
   const c = CONV.find(x => x.id === CSEL) || CONV[0];
   const tag = x => x.st === "duena" ? `<span class="status s-amber"><i></i>Pasó a la dueña</span>` : x.st === "pedido" ? `<span class="status s-blue"><i></i>Pedido con cupo apartado</span>` : x.st === "espera" ? `<span class="status s-amber"><i></i>Lista de espera</span>` : `<span class="status s-ok"><i></i>Contestado</span>`;
   const p = c.ped;
-  return `${PH("Pedidos de WhatsApp", `El cliente le sigue escribiendo al ${WA}, como siempre. El asistente contesta precio, ubicación y si pica, toma el pedido completo con la salsa y la tanda, y aparta el cupo. Lo que no sabe, se lo pasa a usted.`)}
+  return `${PH("Pedidos de WhatsApp", `Lo que los clientes escriben al ${WA}. El asistente contesta y toma el pedido; lo que no sabe se lo pasa a usted.`)}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Conversaciones hoy</span><b class="num">58</b><small>ejemplo</small></div>
@@ -672,7 +700,7 @@ function ticket(o) {
 function vCocina() {
   const cols = [["espera","Tanda 6:30 pm · por cocinar"],["olla","En la olla"],["empaque","Empacar y revisar"],["camino","En camino o listo para pickup"]];
   const hoy = ORD.filter(o => o.wd === HOY);
-  return `${PH("Cocina de hoy", "Los pedidos de hoy por tanda, con la salsa de cada uno y la nota del cliente. Antes de sellar la bolsa se marca lo que lleva.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
+  return `${PH("Cocina de hoy", "Lo que hay que cocinar hoy, tanda por tanda.", `<button class="btn ${KMODE ? "pri" : ""}" id="kmode">${KMODE ? "Salir de pantalla de cocina" : "Pantalla de cocina"}</button>`)}
   <section class="card" style="margin-bottom:12px"><div class="kpis">${TANDAS.map((t, ti) => { const l = hoy.filter(o => o.ti === ti); const sc = [0,1,2].map(i => l.filter(o => o.salsa === i).length);
     return `<div class="kpi"><span>Tanda ${t}</span><b class="num">${VEND[HOY][ti]} cupos</b><small>${ti < 2 ? "entregada" : `${sc[0]} Clásica · ${sc[1]} Honey · ${sc[2]} Lemon`}</small></div>`; }).join("")}</div></section>
   <div class="${KMODE ? "kmode" : ""}"><div class="board">${cols.filter(c => !KMODE || c[0] === "olla" || c[0] === "empaque").map(([k, t]) => { const list = hoy.filter(o => o.st === k || (k === "camino" && o.st === "listo"));
@@ -685,7 +713,7 @@ function vEntregas() {
   const est = o => o.st === "entregado" ? `<span class="status s-ok"><i></i>Entregado</span>` : o.st === "camino" ? `<span class="status s-blue"><i></i>En camino</span>` : o.st === "listo" ? `<span class="status s-ok"><i></i>Listo para recoger</span>` : `<span class="status s-gray"><i></i>${TANDAS[o.ti]}</span>`;
   const row = o => `<tr><td class="num" style="white-space:nowrap">${TANDAS[o.ti]}</td><td>${cLink(o.who)} · #${o.id}</td><td>${o.pk ? "Florencia Norte" : o.col}</td><td>${pagoTag(o)}</td><td>${est(o)}</td><td class="r">${o.st === "camino" ? `<a class="btn sm wa" target="_blank" rel="noopener" href="${waLink(`Hola ${first(o.who)}, su boil de Gambos (#${o.id}) ya va en camino 🦀`, o.tel)}">${icon("i-wa")}Avisar</a>` : ""}</td></tr>`;
   const zonas = {}; dl.forEach(o => zonas[o.col] = (zonas[o.col] || 0) + 1);
-  return `${PH("Entregas de hoy", "Delivery y pickup de hoy, por tanda. El asistente avisa al cliente cuando su pedido sale o cuando ya puede pasar a recogerlo, sin que nadie tenga que escribirle.")}
+  return `${PH("Entregas de hoy", "Quién va en camino y quién pasa a recoger. Al cliente le llega el aviso solo.")}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Delivery hoy</span><b class="num">${dl.length}</b><small>${dl.filter(o => o.st === "entregado").length} entregados</small></div>
@@ -706,7 +734,7 @@ function vEntregas() {
 function vPagos() {
   const fut = ORD.filter(o => o.wd === 6 || o.wd === 0); const pend = ORD.filter(o => o.pago === "pend");
   const sum = l => l.reduce((a, o) => a + tot(o), 0);
-  return `${PH("Pagos", "Como se pide un día antes, el cupo queda apartado y el pago se confirma con el comprobante de transferencia. Si no llega a tiempo, el cupo se libera solo para la lista de espera.")}
+  return `${PH("Pagos", "Transferencias por revisar. Si el comprobante no llega a tiempo, el cupo vuelve a quedar libre.")}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Confirmado (sábado y domingo)</span><b class="num" style="color:var(--ok)">${L(sum(fut.filter(o => o.pago === "conf")))}</b><small>${fut.filter(o => o.pago === "conf").length} pedidos</small></div>
@@ -724,7 +752,7 @@ function vPagos() {
 function vInsumos() {
   const v = vend(6);
   const msg = "Buenas, le escribe Gambos. Pedido para mañana sábado:\n" + INS.filter(i => i[4] === "mariscos").map(([n, u, per, s]) => `• ${n}: ${Math.max(0, Math.ceil(v * per - s))} ${u}`).join("\n") + "\n¿A qué hora nos lo puede traer? Gracias.";
-  return `${PH("Mariscos e insumos", "Como todo se vende por adelantado, la compra sale exacta: cupos vendidos por lo que lleva cada combo, menos lo que ya hay. Nada de comprar a ojo y que sobre marisco.")}
+  return `${PH("Compras", "Cuánto comprar para mañana, sacado de los cupos ya vendidos. Nada a ojo.")}
   <div class="stack">
     <div class="g2">
       <section class="card"><header>${CT("i-box","#B78300")}<h2>Compra para mañana sábado</h2><div class="r">${v} cupos vendidos · ejemplo</div></header><div class="scrollx"><table class="tbl">
@@ -802,7 +830,7 @@ function vClientes() {
   const avg = (OPIN.reduce((a, o) => a + o.s, 0) / OPIN.length).toFixed(1);
   const list = CUST.filter(c => !CSEG || SEG[CSEG][1](c)).sort((a, b) => CSORT === "ult" ? a.ult - b.ult : CSORT === "fs" ? b.fs - a.fs : b.gasto - a.gasto);
   const th = (k, t, cls = "") => `<th class="${cls}"><button class="sort ${CSORT === k ? "on" : ""}" data-sort="${k}">${t}${CSORT === k ? " ↓" : ""}</button></th>`;
-  return `${PH("Clientes", "Cada persona que pide por WhatsApp tiene su ficha: su salsa, su colonia, cuántos boils ha pedido y de qué video llegó. Después de cada entrega el asistente pregunta \"¿Qué tal estuvo?\".")}
+  return `${PH("Clientes", "Cada persona que le ha pedido: su salsa, su colonia y qué tal le pareció.")}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Clientes en la base</span><b class="num">612</b><small>${CUST.length} en esta demo</small></div>
@@ -832,7 +860,7 @@ const CAMPS = [
 let TSEL = "abre";
 function vCampanas() {
   const tp = TPL.find(t => t.id === TSEL); const aud = CUST.filter(c => SEG[tp.seg][1](c)); const ok = aud.filter(c => c.opt);
-  return `${PH("Campañas", "Mensajes de WhatsApp a un grupo de clientes: \"ya abrimos cupos\" el lunes, \"quedan cupos para el domingo\" si no se ha llenado, o a los que no han vuelto. Se mide cuántos cupos trajo cada mensaje.")}
+  return `${PH("Mensajes a clientes", "Un mensaje de WhatsApp a sus clientes, como \"ya abrimos cupos\", y cuántos pedidos trajo.")}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Mensajes este mes</span><b class="num">${CAMPS.reduce((a, c) => a + c.env, 0)}</b><small>3 campañas · ejemplo</small></div>
@@ -880,7 +908,7 @@ function vVentas() {
   const sc = [0,1,2].map(i => ORD.filter(o => o.salsa === i).reduce((a, o) => a + o.cup, 0)); const st = sc.reduce((a, x) => a + x, 0);
   const pk = ORD.filter(o => o.pk).length, dl = ORD.length - pk;
   const byd = FINDE.map(d => [d, vend(d)]);
-  return `${PH("Reportes", "Cuántos cupos se venden cada fin de semana, qué día se llena primero, qué salsa piden más y cuánto es delivery o pickup. Se puede bajar en Excel.", `<div class="seg">${[4, 8, 12].map(r => `<button class="${RANGE === r ? "on" : ""}" data-range="${r}">${r} fines</button>`).join("")}</div><button class="btn" id="csv">Exportar a Excel</button>`)}
+  return `${PH("Ventas", "Cuánto vendió cada fin de semana y qué se pide más. Se puede bajar en Excel.", `<div class="seg">${[4, 8, 12].map(r => `<button class="${RANGE === r ? "on" : ""}" data-range="${r}">${r} fines</button>`).join("")}</div><button class="btn" id="csv">Exportar a Excel</button>`)}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Ventas, últimos ${RANGE} fines de semana</span><b class="num">${L(ve)}</b><small>${L(ve / RANGE)} por fin de semana</small></div>
@@ -901,7 +929,7 @@ function vVentas() {
 
 function vTiktok() {
   const ts = VIDS.map((t, i) => Object.assign(t, {ped: [19, 6, 5, 4, 3, 1, 2][i]})).slice(); const mx = Math.max(...ts.map(t => t.ped));
-  return `${PH("TikTok", `Sus videos traen la gente. La gente pregunta lo mismo en los comentarios; con un código por video ("pedí con BOIL al ${WA}") se ve cuántos cupos vendió cada uno.`)}
+  return `${PH("TikTok", `Qué videos le traen pedidos.`)}
   <div class="stack">
     <section class="card"><div class="kpis">
       <div class="kpi"><span>Seguidores</span><b class="num">7.9K</b><small>@gambos_hn · real</small></div>
@@ -927,7 +955,7 @@ const PERMS = [["Ver ventas y reportes",[1,0,0,0]],["Abrir y cerrar cupos",[1,0,
 const ROLES = ["Dueña","Cocina","Entregas","Pagos"];
 const AUDIT = [["4:40 pm","Cocina","metió a la olla la tanda de 4:30 pm (10 cupos)"],["4:31 pm","Asistente de WhatsApp",`apartó 2 cupos del sábado 6:30 pm (pedido #${W1.id})`],["3:58 pm","Asistente de WhatsApp","anotó a Andrea S. en lista de espera del sábado 12:00"],["3:40 pm","Asistente de WhatsApp","le pasó a la dueña una pregunta sobre el picante"],["2:35 pm","Repartidor","entregó 6 pedidos de la tanda de 2:00 pm"],["11:02 am","Pagos","confirmó 4 transferencias del sábado"],["9:00 pm (ayer)","Asistente de WhatsApp","cerró los cupos de hoy viernes"]];
 function vEquipo() {
-  return `${PH("Equipo y permisos", "Cada persona entra con su correo y ve solo lo que le toca: cocina ve su pantalla, el repartidor sus entregas. Todo queda anotado con quién y a qué hora.")}
+  return `${PH("Equipo y permisos", "Quién entra al panel y qué puede ver cada uno.")}
   <div class="stack">
     <div class="g2">
       <section class="card"><header>${CT("i-users","#032D60")}<h2>Usuarios</h2><div class="r"><button class="btn sm" data-demo="Invitación enviada por correo (demo)">Invitar</button></div></header><div class="scrollx"><table class="tbl">
@@ -954,7 +982,11 @@ function skeleton() {
 }
 
 // ---------- render & events ----------
-const VIEWS = {hoy: vHoy, cupos: vCupos, whatsapp: vWhatsapp, cocina: vCocina, entregas: vEntregas, pagos: vPagos, clientes: vClientes, cliente: vCliente, campanas: vCampanas, insumos: vInsumos, ventas: vVentas, tiktok: vTiktok, equipo: vEquipo};
+function vMas() {
+  return `${PH("Más", "Lo que no se usa todos los días.")}
+  <div class="mas">${MAS.map(([id, t, p]) => `<a class="card masi" href="#${id}" data-v="${id}"><span class="tile" style="background:${TILE[id][1]}">${icon(TILE[id][0])}</span><span><b>${t}</b><small>${p}</small></span></a>`).join("")}</div>`;
+}
+const VIEWS = {mas: vMas, hoy: vHoy, cupos: vCupos, whatsapp: vWhatsapp, cocina: vCocina, entregas: vEntregas, pagos: vPagos, clientes: vClientes, cliente: vCliente, campanas: vCampanas, insumos: vInsumos, ventas: vVentas, tiktok: vTiktok, equipo: vEquipo};
 const ruta = h => { if (h.startsWith("cliente-") && CUST.some(c => c.id === h.slice(8))) { CREC = h.slice(8); return "cliente"; } return VIEWS[h] ? h : null; };
 function render() { nav(); $("#main").innerHTML = VIEWS[VIEW](); window.scrollTo(0, 0); }
 const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
@@ -965,6 +997,7 @@ document.addEventListener("click", e => {
   const sg = e.target.closest("[data-seg]"); if (sg) { CSEG = sg.dataset.seg; keep(); return; }
   const so = e.target.closest("[data-sort]"); if (so) { CSORT = so.dataset.sort; keep(); return; }
   const rg = e.target.closest("[data-range]"); if (rg) { RANGE = +rg.dataset.range; keep(); return; }
+  if (e.target.closest("#todo")) { TODO = !TODO; keep(); return; }
   if (e.target.closest("#csv")) { csv(); toast("Listo: se bajó el archivo para Excel"); return; }
   const cp = e.target.closest("[data-cap]"); if (cp) { const [wd, d] = cp.dataset.cap.split(":").map(Number); const nv = CAP[wd][0] + d;
     if (nv < Math.max(...VEND[wd])) { toast("Ya hay más cupos vendidos que eso en una tanda"); return; } if (nv > 20) return; CAP[wd] = CAP[wd].map(() => nv); toast(`${DAYS[wd]}: ${nv} cupos por tanda. El asistente ya ofrece los nuevos.`); keep(); return; }
