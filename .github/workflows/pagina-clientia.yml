@@ -29,6 +29,8 @@ jobs:
           cp steelworks/dist/steelworks-panel.html _sitio/demos/steelworks-panel.html
           cp libbys-cajun/panel/dist/libbys-cajun-panel.html _sitio/demos/libbys-cajun-panel.html
           cp gambos/panel/dist/gambos-panel.html _sitio/demos/gambos-panel.html
+          mkdir -p _sitio/firma
+          cp clientia-tech/firma/index.html clientia-tech/firma/clientia-tech-firma.png _sitio/firma/
           touch _sitio/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

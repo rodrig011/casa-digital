@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Firma de correo · Clientia Tech</title>
+<style>
+  body { margin: 0; background: #f4f5f8; color: #0A1230; font: 16px/1.5 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 24px; color: #4a5068; }
+  .caja { background: #fff; border: 1px solid #e1e4ec; border-radius: 10px; padding: 24px; overflow-x: auto; }
+  button { margin-top: 16px; background: #0A1230; color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; font-size: 16px; cursor: pointer; }
+  button:hover { background: #1F5BFF; }
+  #listo { margin-left: 12px; color: #1a7f4b; font-weight: 600; visibility: hidden; }
+  ol { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Firma de correo</h1>
+  <p class="sub">Para los correos que contestás a mano desde Private Email.</p>
+
+  <div class="caja" id="firma">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#0A1230;">
+  <tr>
+    <td style="padding:0 0 10px 0;">
+      <a href="https://clientiatech.com" style="text-decoration:none;"><img src="https://clientiatech.com/firma/clientia-tech-firma.png" width="220" height="43" alt="Clientia Tech" style="display:block;border:0;width:220px;height:43px;"></a>
+    </td>
+  </tr>
+  <tr>
+    <td style="border-top:2px solid #1F5BFF;padding:10px 0 0 0;font-size:14px;line-height:20px;">
+      <strong style="font-size:15px;color:#0A1230;">Rodrigo Herrera</strong><br>
+      <span style="color:#4a5068;">Sistemas e instalación · Clientia Tech</span><br>
+      <a href="https://wa.me/17655434251" style="color:#1F5BFF;text-decoration:none;">WhatsApp +1 (765) 543-4251</a><br>
+      <a href="mailto:rodrigo.herrera@clientiatech.com" style="color:#1F5BFF;text-decoration:none;">rodrigo.herrera@clientiatech.com</a>
+      <span style="color:#9aa0b4;"> · </span>
+      <a href="https://clientiatech.com" style="color:#1F5BFF;text-decoration:none;">clientiatech.com</a>
+    </td>
+  </tr>
+</table>
+  </div>
+
+  <button id="copiar" type="button">Copiar firma</button><span id="listo">Copiada</span>
+
+  <h2 style="font-size:18px;margin-top:32px;">Cómo ponerla en Private Email</h2>
+  <ol>
+    <li>Tocá <strong>Copiar firma</strong>.</li>
+    <li>En Private Email, abrí la ruedita de <strong>Configuración</strong> (arriba a la derecha) y buscá <strong>Firma</strong> (Signature).</li>
+    <li>Creá una firma nueva, pegala con <strong>Ctrl+V</strong> y guardá.</li>
+    <li>Activala para los correos nuevos y las respuestas.</li>
+  </ol>
+  <p class="sub">Los correos que manda Harvey van sin logo a propósito: en texto simple llegan más a la bandeja de entrada.</p>
+</main>
+<script>
+  document.getElementById("copiar").addEventListener("click", async () => {
+    const nodo = document.querySelector("#firma table");
+    const html = nodo.outerHTML;
+    const texto = nodo.innerText;
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([texto], { type: "text/plain" })
+      })]);
+    } catch (e) {
+      const r = document.createRange(); r.selectNode(nodo);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      document.execCommand("copy"); s.removeAllRanges();
+    }
+    document.getElementById("listo").style.visibility = "visible";
+  });
+</script>
+</body>
+</html>
