@@ -20,6 +20,7 @@ const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|habla
 const quiereDomicilio = t => /domicilio|delivery|envio|enviar|envian|llevan|a mi casa|pedidos ?ya|bip ?bip|uber|motorista|repartidor/.test(t);
 const quiereSucursal = t => /donde|ubicacion|ubicados|direccion|sucursal|horario|abren|cierran|abierto|mapa|como llego/.test(t);
 const quiereMenu = t => /menu|precio|cuanto|cuesta|vale|valen|combo|carta|que tienen|que venden/.test(t);
+const quiereCancelar = t => /\b(cancel|anul)/.test(t);
 const quierePedir = t => /pedir|pedido|ordenar|orden|quiero|me da|me das|recoger|para llevar|apartar/.test(t);
 const quiereReservar = t => /reserv|apartar (una )?mesa|mesa para|una mesa|cumpleanos|aniversario|evento/.test(t);
 
@@ -215,6 +216,18 @@ function createEngine(negocio) {
       say({ text: `📝 *Reservación ${n} recibida, ${d.nombre.split(" ")[0]}.*\n\n📅 ${d.dia}, ${d.hora}\n👥 ${d.personas} ${d.personas === 1 ? "persona" : "personas"}${d.ocasion ? `\n🎉 ${d.ocasion}` : ""}\n📍 ${b.nombre}\n\n${grupo ? "Como es un grupo grande, una persona del restaurante le escribe por aquí para afinar los detalles." : "En un momento le confirmamos por aquí que la mesa queda apartada."}${RES.nota ? `\n${RES.nota}` : ""}`, buttons: ["Ver el menú y precios", "Volver al inicio"] });
       go("post");
     };
+
+    // "cancelen mi pedido": the bot never cancels an order that is already in the kitchen; it tells the branch of
+    // the customer's last order (ctx.ultimo, from server.js) so a person confirms. Orders waiting for payment cancel in "pago".
+    if (quiereCancelar(t) && (!state || ["inicio", "post", "menu"].includes(s.step))) {
+      const u = ctx.ultimo;
+      reset(u ? { sucursal: u.sucursalId } : {});
+      if (!u) { s.handoffMotivo = "Quiere cancelar un pedido"; if (pedirSucursal("persona", "Claro. ¿En qué sucursal hizo el pedido?")) return done(); handoff(); return done(); }
+      const b = N.sucursales.find(x => x.id === u.sucursalId) || N.sucursales[0];
+      s.handoff = b.nombre; s.handoffMotivo = `Quiere cancelar el pedido ${u.n}`; go("post");
+      say({ text: `Le avisé a *${b.nombre}* que quiere cancelar el pedido *${u.n}*. Una persona le confirma por aquí mismo.${b.telefono ? `\n\nSi es urgente: ${b.telefono}` : ""}`, buttons: ["Volver al inicio"] });
+      return done();
+    }
 
     if (!state || SALUDO.test(t)) {
       reset(); go("inicio");

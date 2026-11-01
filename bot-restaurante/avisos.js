@@ -89,6 +89,11 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
         ? `✅ ${nom}, su mesa en *${p.sucursal}* queda apartada: ${p.dia}, ${p.hora}, ${p.personas} ${p.personas === 1 ? "persona" : "personas"}.${r.nota ? `\n${r.nota}` : ""}\n\n¡Le esperamos!`
         : `${nom}, lo sentimos: para ${p.dia} a las ${p.hora} ya no tenemos mesa para ${p.personas}. Si quiere otra hora o día, escríbanos por aquí y se la buscamos.`);
     },
+    // to the customer, when the restaurant cancels the order from the panel
+    cancelado(p) {
+      const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
+      return enviar(waAddr(p.tel), `${(p.nombre || "Hola").split(" ")[0]}, *${p.sucursal}* canceló su pedido *${p.n}*.${p.pagado ? " Sobre su pago, una persona de la sucursal le escribe por aquí." : ""} Si tiene alguna duda, escríbanos por aquí${b && b.telefono ? ` o llame al ${b.telefono}` : ""}.`);
+    },
     // to the customer, when someone confirms the payment in the panel
     pagado(p) {
       return enviar(waAddr(p.tel), `✅ Recibimos su pago del pedido *${p.n}* (${negocio.L(p.total)}). Ya está en cocina; le avisamos por aquí cuando esté listo.`);
