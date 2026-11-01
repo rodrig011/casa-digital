@@ -24,6 +24,8 @@ git -C "$DESTINO" checkout -q "$VERSION"
 
 cp "$AQUI/harvey.local.yaml" "$DESTINO/harvey.local.yaml"
 cp "$AQUI/skills/product_knowledge.md" "$DESTINO/skills/product_knowledge.md"
+mkdir -p "$DESTINO/parches" && cp "$AQUI/parches/precio_a_rodrigo.py" "$DESTINO/parches/"
+"$DESTINO/.venv/bin/python" "$DESTINO/parches/precio_a_rodrigo.py" "$DESTINO"   # si piden precio, Harvey no contesta
 [ -f "$DESTINO/.env" ] || cp "$DESTINO/.env.example" "$DESTINO/.env"
 
 cd "$DESTINO"

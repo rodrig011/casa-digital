@@ -4,10 +4,11 @@ Cada 5 minutos revisa la base de Harvey (data/harvey.db, solo lectura) y, por ca
 de un prospecto, le manda un correo a AVISO_A (el Gmail de Rodrigo, que suena en el celular):
 
   - "💰 Pidió precio: <negocio>"  si pregunta precio, costo, cuánto cuesta, cotización...
+  - "⚠️ Te toca contestar"       Harvey no contesta (ya es tuyo, queja o reclamo)
   - "Respondió: <negocio>"        cualquier otra respuesta de una persona
   - las respuestas automáticas (fuera de oficina) no avisan
 
-Harvey nunca contesta con precios: el precio lo da Rodrigo en persona.
+Si piden precio Harvey no contesta nada (parches/precio_a_rodrigo.py): el prospecto pasa a Rodrigo.
 
 Uso (desde C:\\Users\\rodri\\harvey, lo arranca iniciar-harvey.cmd):
     .venv\\Scripts\\python avisos.py            revisa cada 5 minutos, para siempre
@@ -115,13 +116,13 @@ def avisar(nuevo):
     precio = bool(PRECIO.search(texto))
     if precio:
         asunto = f"💰 Pidió precio: {negocio}"
-        que = "Preguntó el precio. Harvey NO le da precios: contestale vos hoy."
+        que = "Preguntó el precio. Harvey no le contestó nada: este prospecto es tuyo, contestale vos hoy."
     elif intent in ("unsubscribe", "not_interested"):
         asunto = f"Dijo que no: {negocio}"
         que = "No quiere seguir. Harvey ya no le escribe más."
     elif intent == "escalate":
-        asunto = f"⚠️ Revisá ya: {negocio}"
-        que = "Mensaje delicado (queja o reclamo). Harvey no contesta: decidís vos."
+        asunto = f"⚠️ Te toca contestar: {negocio}"
+        que = "Harvey no contesta este mensaje (ya es tuyo, o es una queja o reclamo). Contestale vos."
     else:
         asunto = f"Respondió: {negocio}"
         que = "Respondió una persona. Si Harvey preparó respuesta, espera tu aprobación."

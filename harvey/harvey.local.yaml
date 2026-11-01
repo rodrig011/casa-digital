@@ -18,7 +18,7 @@ product:
     El bot contesta a toda hora (menú, precios, sucursales, horario), toma
     pedidos para recoger y los manda a una pantalla de cocina; el dueño ve los
     pedidos y lo vendido desde su celular. Se instala a distancia.
-  pricing: "Nunca se menciona por correo, ni aunque lo pidan: Rodrigo lo da en persona (a él le llega un aviso). Antes de los 30 días gratis el dueño recibe de Rodrigo, por escrito, el precio de después y lo que incluye."
+  pricing: "Nunca se menciona por correo. Si lo piden, Harvey no contesta: la conversación pasa a Rodrigo (le llega un aviso) y él responde en persona. Antes de los 30 días gratis el dueño recibe de Rodrigo, por escrito, el precio de después y lo que incluye."
   key_benefits:
     - "Ningún cliente se queda sin respuesta en WhatsApp, ni a medianoche"
     - "Pedidos para recoger que llegan solos a la cocina, sin fila"
