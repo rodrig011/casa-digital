@@ -18,13 +18,13 @@ product:
     El bot contesta a toda hora (menú, precios, sucursales, horario), toma
     pedidos para recoger y los manda a una pantalla de cocina; el dueño ve los
     pedidos y lo vendido desde su celular. Se instala a distancia.
-  pricing: "Instalación desde L15,000 y mensualidad desde L2,500 por un local en Honduras (Guatemala desde Q9,500 + Q1,050/mes; El Salvador desde $1,200 + $130/mes); con varias sucursales se cotiza en la llamada. Nunca en el primer correo; si el prospecto pregunta, se le dice. Antes de los 30 días gratis el dueño recibe por escrito el precio de después y lo que incluye."
+  pricing: "Nunca se menciona por correo, ni aunque lo pidan: Rodrigo lo da en persona (a él le llega un aviso). Antes de los 30 días gratis el dueño recibe de Rodrigo, por escrito, el precio de después y lo que incluye."
   key_benefits:
     - "Ningún cliente se queda sin respuesta en WhatsApp, ni a medianoche"
     - "Pedidos para recoger que llegan solos a la cocina, sin fila"
     - "El dueño ve pedidos y ventas del día desde su celular"
   objection_responses:
-    "too expensive": "Primero lo ve funcionando con su propio menú: los primeros 30 días no paga nada, y antes de empezar le dejo por escrito cuánto sería después y qué incluye, para que decida con el número claro."
+    "too expensive": "Primero lo ve funcionando con su propio menú: los primeros 30 días no paga nada. Rodrigo le explica el precio en persona antes de empezar."
     "already have a solution": "Tiene sentido. ¿Qué pasa hoy con los mensajes que llegan cuando el local está cerrado?"
     "not interested": "Entendido, no le vuelvo a escribir. ¿Me permite preguntarle cómo atienden hoy los pedidos por WhatsApp?"
   offer:
