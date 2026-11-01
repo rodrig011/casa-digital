@@ -709,8 +709,12 @@ test("webhook (Gambos): los pedidos llenan la tanda, el panel ve los cupos y al 
     const antes = ctx.sent.length;
     const r = await fetch(ctx.base + "/api/pedidos/PED-1001/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: '{"estado":"cancelado"}' });
     assert.equal(r.status, 200); await ctx.app.locals.idle();
-    assert.equal(ctx.sent.length, antes + 2, "al dueño y al WhatsApp de Gambos");
-    assert.match(ctx.sent.at(-1).body, /Se liberaron 4 cupos · domingo 18 de octubre, 12:00 p\. m\./); assert.match(ctx.sent.at(-1).body, /Carlos · 6 cupos/);
+    assert.equal(ctx.sent.length, antes + 3, "al dueño y al WhatsApp de Gambos, y al cliente");
+    const libres = ctx.sent.slice(antes).filter(m => /Se liberaron/.test(m.body));
+    assert.equal(libres.length, 2);
+    assert.match(libres[0].body, /Se liberaron 4 cupos · domingo 18 de octubre, 12:00 p\. m\./); assert.match(libres[0].body, /Carlos · 6 cupos/);
+    const alCliente = ctx.sent.slice(antes).find(m => /canceló su pedido/.test(m.body));
+    assert.match(alCliente.body, /canceló su pedido \*PED-1001\*/);
     const t2 = await pedir("whatsapp:+50491110004", ["hola", "duo de mar", "si", "clasica", "Para recoger", "domingo"]);
     assert.match(t2, /12:00 p\. m\. · quedan 4/, "el cupo cancelado vuelve a estar libre");
   } finally { ctx.srv.close(); }
@@ -923,4 +927,84 @@ test("panel: con WhatsApp registrado pide el código, frena códigos malos, recu
     assert.equal((await fetch(ctx.base + "/api/seguridad")).status, 401);
     assert.ok(!/duena/.test(fs.readFileSync(path.join(dir, "bitacora.log"), "utf8")));
   } finally { ctx.srv.close(); }
+});
+
+// ---------- prueba de punta a punta (1-nov): cancelaciones y mensajes repetidos ----------
+test("punta a punta: pedir cancelar avisa a la sucursal del pedido, el panel que cancela le avisa al cliente", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir);
+  try {
+    const cliente = "whatsapp:+50496660000";
+    for (const Body of ["hola", "2", "Zona Norte", "1", "Confirmar pedido", "Lo antes posible", "Ana"]) await post(ctx, "/whatsapp", { From: cliente, Body });
+    // "cancelar mi pedido" used to start a new order (it says "pedido"); now the branch of the order hears it
+    const r = await post(ctx, "/whatsapp", { From: cliente, Body: "cancelar mi pedido porfa" });
+    assert.match(textoDe(r.xml), /Le avisé a \*Zona Norte\* que quiere cancelar el pedido \*PED-1001\*/);
+    await ctx.app.locals.idle();
+    const aviso = ctx.sent.filter(m => /Quiere cancelar el pedido PED-1001/.test(m.body));
+    assert.deepEqual(aviso.map(m => m.to).sort(), ["whatsapp:+50488881111", "whatsapp:+50499990000"]);
+    assert.equal(ctx.app.locals.store.getPedido("PED-1001").estado, "nuevo", "el bot nunca cancela solo");
+    // the restaurant cancels in the panel: the customer is told once
+    const cookie = await entrar(ctx);
+    const cancelar = () => fetch(ctx.base + "/api/pedidos/PED-1001/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: '{"estado":"cancelado"}' });
+    await cancelar(); await cancelar(); await ctx.app.locals.idle();
+    const alCliente = ctx.sent.filter(m => m.to === cliente && /canceló su pedido/.test(m.body));
+    assert.equal(alCliente.length, 1);
+    assert.match(alCliente[0].body, /Ana, \*Zona Norte\* canceló su pedido \*PED-1001\*/);
+  } finally { ctx.srv.close(); }
+});
+
+test("punta a punta: dos mensajes seguidos del mismo cliente se contestan en orden y un «sí» repetido no duplica el pedido", async () => {
+  const pedido = { nombre: "Ana", sucursal: "centro", productos: [{ id: "c3", cantidad: 2 }], hora: "7:00 p. m." };
+  const lento = claudeFalso([decir("¿Para qué hora?"), decir("Anotado."), usar("a", "crear_pedido", pedido), decir("Listo, PED-1001."), usar("b", "crear_pedido", pedido), decir("Listo.")]);
+  const create = lento.messages.create;
+  lento.messages.create = async (...a) => { await new Promise(r => setTimeout(r, 40)); return create(...a); };
+  const M = metaFalsa();
+  const ctx = await montar(null, { meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "v" } }, { metaFetch: M.fetch, ia: createIA({ negocio: N, client: lento }) });
+  try {
+    const firmado = msgs => { const body = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { messages: msgs } }] }] }); return { body, sig: "sha256=" + require("crypto").createHmac("sha256", SECRETO).update(body).digest("hex") }; };
+    const mandar = t => { const { body, sig } = firmado([texto(t, "50496661111")]); return fetch(ctx.base + "/meta", { method: "POST", headers: { "Content-Type": "application/json", "X-Hub-Signature-256": sig }, body }); };
+    // Meta gets its 200 at once and the bot answers afterwards: the second message arrives while Claude still answers the first
+    await mandar("quiero 2 combos de 3 piezas"); await mandar("en centro");
+    await ctx.app.locals.idle();
+    // the second call to Claude already sees the first message
+    assert.match(JSON.stringify(lento.llamadas[1].body.messages), /quiero 2 combos de 3 piezas/);
+    assert.deepEqual(M.enviados().map(m => m.text.body), ["¿Para qué hora?", "Anotado."]);
+    await mandar("sí, a las 7, Ana"); await ctx.app.locals.idle();
+    await mandar("sí confirmo"); await ctx.app.locals.idle();
+    const pedidos = ctx.app.locals.store.pedidos.filter(p => p.tipo === "pedido");
+    assert.equal(pedidos.length, 1, "un solo pedido");
+    const r = resultado(lento.llamadas[5], "b");
+    assert.equal(r.numero, "PED-1001"); assert.equal(r.ya_existia, true);
+  } finally { ctx.srv.close(); }
+});
+
+test("respaldo: se baja cifrado, se restaura en una carpeta nueva y el bot sigue con los mismos pedidos y numeración", async () => {
+  const { comprobar, restaurar } = require("./respaldo");
+  const KEY = LLAVE + "-respaldo";
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir, { dataKey: KEY });
+  let r;
+  try {
+    for (const tel of ["whatsapp:+50497770001", "whatsapp:+50497770002"])
+      for (const Body of ["hola", "2", "Centro", "1", "Confirmar pedido", "Lo antes posible", "Ana"]) await post(ctx, "/whatsapp", { From: tel, Body });
+    assert.equal((await fetch(ctx.base + "/api/respaldo")).status, 401);
+    assert.equal((await fetch(ctx.base + "/api/respaldo", { headers: { Authorization: "Bearer otro" } })).status, 401);
+    const res = await fetch(ctx.base + "/api/respaldo", { headers: { Authorization: "Bearer secreto" } });
+    assert.equal(res.status, 200);
+    const texto = await res.text();
+    assert.doesNotMatch(texto, /Ana|50497770001/, "los datos van cifrados");
+    r = JSON.parse(texto);
+  } finally { ctx.srv.close(); }
+  assert.throws(() => comprobar(r, "otra-llave"), /DATA_KEY no es la correcta/);
+  assert.deepEqual(comprobar(r, KEY), { creado: r.creado, pedidos: 2, abiertos: 2, archivados: 0, ultimoNumero: 1002, usuarios: 0 });
+  assert.throws(() => restaurar(r, dir, KEY), /no está vacía/, "nunca encima de datos vivos");
+  const nuevo = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-")), "datos");
+  assert.equal(restaurar(r, nuevo, KEY).pedidos, 2);
+  const ctx2 = await montar(nuevo, { dataKey: KEY });
+  try {
+    const st = ctx2.app.locals.store;
+    assert.deepEqual(st.pedidos.map(p => p.n), ["PED-1001", "PED-1002"]); assert.equal(st.pedidos[0].nombre, "Ana");
+    for (const Body of ["hola", "2", "Centro", "1", "Confirmar pedido", "Lo antes posible", "Luis"]) await post(ctx2, "/whatsapp", { From: "whatsapp:+50497770003", Body });
+    assert.equal(st.pedidos.at(-1).n, "PED-1003", "la numeración sigue");
+  } finally { ctx2.srv.close(); }
 });

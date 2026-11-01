@@ -41,7 +41,7 @@ Necesita Node 22 o más nuevo.
 ```bash
 cd bot-restaurante
 npm install
-npm test                       # debe decir "pass 12, fail 0"
+npm test                       # debe decir "fail 0"
 cp .env.example .env           # poner SKIP_TWILIO_SIGNATURE=true y un PANEL_SECRET
 npm run usuario -- agregar yo@correo.com "Rodrigo"
 npm start
@@ -139,9 +139,29 @@ Lo que hace el bot: arma el pedido, pregunta la salsa de cada combo, si lo recog
 
 Desde el número de `OWNER_WHATSAPP`, escribirle al bot **pedidos**: le contesta con los pedidos y clientes pendientes.
 
+## 7. Cancelaciones y mensajes repetidos
+
+- El bot **nunca cancela solo** un pedido que ya entró a cocina. Si el cliente escribe "cancelar mi pedido", le avisa a la sucursal de su último pedido ("Quiere cancelar el pedido PED-…") y le dice al cliente que una persona le confirma. Un pedido que todavía espera el pago sí se cancela con el botón **Cancelar pedido**.
+- Cuando la sucursal cancela un pedido desde el panel, al cliente le llega un WhatsApp: "*Sucursal* canceló su pedido PED-…". Una sola vez.
+- Los mensajes de un mismo cliente se contestan en orden, uno detrás del otro (dos mensajes seguidos ya no se pisan).
+- Si el cliente confirma dos veces el mismo pedido en menos de 30 minutos, no se crea otro: se le repite el mismo número.
+
+## 8. Respaldo de los datos
+
+Antes de instalar con un cliente, y después **una vez al día**, baje un respaldo y guárdelo fuera de Render (por ejemplo en su computadora o en Google Drive):
+
+```bash
+LEADS_TOKEN=... DATA_KEY=... node respaldo.js bajar https://su-bot.onrender.com     # baja y comprueba que abre
+DATA_KEY=... node respaldo.js comprobar respaldo-2026-11-01.json                   # dice cuántos pedidos y usuarios trae
+DATA_KEY=... node respaldo.js restaurar respaldo-2026-11-01.json ./datos-nuevos     # solo en una carpeta vacía
+```
+
+El respaldo va cifrado con `DATA_KEY`: sin la llave no se puede leer ni restaurar. Guarde la llave en el gestor de contraseñas, nunca en la misma carpeta que los respaldos. Para restaurar en Render: restaure en una carpeta nueva del disco, apunte `DATA_DIR` a esa carpeta y reinicie.
+
 ## Lo que todavía no hace
 
 - Envío a domicilio propio (pedir la dirección y cobrar el envío). Hoy el bot manda a PedidosYa o Bip Bip.
 - Pago con tarjeta: el código para Tilopay está hecho pero nunca se probó con una cuenta real (ver la sección 4). PixelPay todavía no está conectado.
 - Inventario y aviso automático a proveedores (está en los paneles de demostración, falta conectarlo aquí).
-- Nunca se ha probado con Twilio real ni con una clave real de Claude.
+- Nunca se ha probado con WhatsApp real (Meta o Twilio) ni con una clave real de Claude. Las pruebas de `npm test` simulan los dos. La prueba real se hace con el número de prueba de Meta, nunca con el número de un negocio.
+- El respaldo diario no es automático todavía: hay que correr `respaldo.js bajar` (o programarlo en una computadora).

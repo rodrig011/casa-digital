@@ -5,6 +5,7 @@
 //   GET  /panel                    panel del dueño y pantalla de cocina (correo y contraseña, ver auth.js)
 //   GET  /api/pedidos              pedidos en JSON (sesión del panel, o Authorization: Bearer <LEADS_TOKEN>)
 //   POST /api/pedidos/:n/estado    { estado } por_pagar | nuevo | cocina | listo | entregado | no_vino | cancelado | atendido (sesión del panel)
+//   GET  /api/respaldo             respaldo de los datos, cifrados (Bearer <LEADS_TOKEN> o sesión del panel; ver respaldo.js)
 //   GET  /api/negocio              menú y sucursales para el panel (sesión del panel)
 //   POST /pagos/aviso/:n?t=        aviso de la pasarela de pago (Tilopay webhook_url); el pago se confirma consultando la API
 //   GET  /pagos/listo/:n?t=        a donde vuelve el cliente después de pagar con tarjeta
@@ -34,6 +35,7 @@ const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
 const { createMeta, mensajes: mensajesMeta } = require("./meta");
+const { crearRespaldo } = require("./respaldo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
 const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
@@ -120,6 +122,10 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const faltasDe = tel => store.faltas(tel);
   // cupos already taken in one batch (negocio.cupos): every order of that day and batch except cancelled ones and the waiting list
   const ocupados = (fecha, tanda) => store.pedidos.reduce((a, p) => a + (p.tipo === "pedido" && p.diaFecha === fecha && p.tanda === tanda && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0);
+  // the customer's last open order from the last 24 h (to tell the right branch about a cancellation)
+  const ultimoDe = tel => store.pedidos.findLast(p => p.tipo === "pedido" && digits(p.tel) === digits(tel) && !["cancelado", "entregado", "no_vino"].includes(p.estado) && now() - new Date(p.fecha) < 24 * 3600e3) || null;
+  // the same order (same items, total and branch) from the same number in the last 30 minutes: a repeated "sí, confirmo"
+  const duplicadoDe = (tel, c) => store.pedidos.findLast(p => p.tipo === "pedido" && digits(p.tel) === digits(tel) && p.estado !== "cancelado" && p.resumen === c.resumen && p.total === c.total && p.sucursal === c.sucursal && now() - new Date(p.fecha) < 30 * 60e3) || null;
   const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
@@ -134,12 +140,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function conversar(key, text) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
-    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados });
+    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key) });
     const out = r.messages.map(toText).filter(Boolean);
     out.mensajes = r.messages.filter(m => m.text);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
     if (r.state.lead) { store.seq = r.state.seq; out.pedido = guardar(r.state.lead, key, sess.convo); delete r.state.lead; }
-    if (r.state.handoff) { persona("", r.state.handoff, key, sess.convo); delete r.state.handoff; }
+    if (r.state.handoff) { persona(r.state.handoffMotivo || "", r.state.handoff, key, sess.convo); delete r.state.handoff; delete r.state.handoffMotivo; }
     if (r.state.cancelar) { cancelarPorCliente(r.state.cancelar, key); delete r.state.cancelar; }
     sess.state = r.state;
     store.setSession(key, sess);
@@ -151,7 +157,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
@@ -273,7 +279,19 @@ function createApp(cfg = loadConfig(), deps = {}) {
 
   // ---- WhatsApp ----
   // one customer message -> the bot's replies [{ text, buttons? }] (the same for Twilio and Meta)
-  async function turno(from, text, { foto, media, base }) {
+  // one customer's messages are answered one after the other: two quick messages ("2 combos" + "para las 7")
+  // must not both start from the same conversation and lose one of them
+  const colas = new Map();
+  function turno(from, text, op) {
+    const k = digits(from) || from;
+    const antes = colas.get(k) || Promise.resolve();
+    const este = antes.then(() => turnoUno(from, text, op));
+    const cola = este.catch(() => {});
+    colas.set(k, cola);
+    cola.then(() => { if (colas.get(k) === cola) colas.delete(k); });
+    return este;
+  }
+  async function turnoUno(from, text, { foto, media, base }) {
     let reply;
     // too many messages from one number: one notice, then silence until the window passes
     if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
@@ -348,6 +366,18 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (!cfg.leadsToken || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(401).json({ error: "token inválido" });
     res.json(store.pedidos.slice(-500).reverse());
   });
+  // backup of the data folder (still encrypted with DATA_KEY): respaldo.js downloads it, checks it and restores it
+  app.get("/api/respaldo", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const given = (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    const a = Buffer.from(given), b = Buffer.from(cfg.leadsToken);
+    const conToken = !!cfg.leadsToken && a.length === b.length && crypto.timingSafeEqual(a, b);
+    if (!conToken && !panel.usuarioDe(req)) return res.status(401).json({ error: "sin sesión" });
+    if (!cfg.dataDir) return res.status(409).json({ error: "sin DATA_DIR: no hay datos en disco" });
+    store.flush();
+    bitacora.anotar("respaldo", { correo: conToken ? "token" : panel.usuarioDe(req).correo, ip: req.ip });
+    res.set("Content-Disposition", `attachment; filename="respaldo-${now().toISOString().slice(0, 10)}.json"`).json(crearRespaldo(cfg.dataDir, now()));
+  });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
@@ -368,7 +398,10 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
     if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(p.n, { avisoListo: true }); track(avisos.listo(p)); }
     if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
-    if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) liberados(p);
+    if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) {
+      liberados(p);
+      if (p.tipo === "pedido") track(avisos.cancelado(p));     // the customer hears it from the restaurant, not by silence
+    }
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
     if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip: req.ip });
     res.json(p);

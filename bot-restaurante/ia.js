@@ -46,6 +46,7 @@ Cómo toma una reservación:
 ` : ""}
 Límites:
 - No invente enlaces ni cuentas de pago: solo los que devuelve crear_pedido. No prometa ${[N.domicilio.propio ? null : "envíos", N.reservaciones ? null : "reservaciones"].filter(Boolean).concat(["nada que no le dé una herramienta"]).join(", ni ")}.
+- Usted no puede cancelar ni cambiar un pedido ya creado. Si el cliente lo pide, use pasar_a_persona con el motivo (por ejemplo: Quiere cancelar el pedido PED-1001)${N.variasSucursales ? " y la sucursal de ese pedido" : ""} y dígale que la sucursal le confirma por este chat. Nunca diga que el pedido quedó cancelado o cambiado.
 - Si el cliente quiere hablar con una persona, tiene una queja, o pide algo que usted no puede resolver, use pasar_a_persona.
 - Si le escriben de algo que no tiene que ver con el restaurante, responda con amabilidad que solo puede ayudar con el menú y los pedidos.`;
 }
@@ -116,6 +117,9 @@ function ejecutar(N, name, input, ctx) {
       const c = cuenta(N, input.productos);
       if (!c.lineas.length) return { error: "El pedido no tiene productos." };
       const s = b(input.sucursal);
+      // a repeated "sí, confirmo": the same order from this number a few minutes ago is not created twice
+      const dup = ctx.duplicado && ctx.duplicado({ resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), total: c.total, sucursal: s.nombre });
+      if (dup) return { ok: true, ya_existia: true, numero: dup.n, total: N.L(dup.total), nota: "Este pedido ya estaba creado con ese número: no se creó otro. No le cobre ni le confirme dos veces." };
       const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
       let cup = null;
@@ -184,8 +188,8 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   model = model || MODELO;
   const SYSTEM = system(negocio), TOOLS = tools(negocio);
 
-  async function turn(history, text, now, { numero, faltas = 0, ocupados } = {}) {
-    const ctx = { numero, faltas, ocupados, now, pedido: null, persona: null, reservacion: null };
+  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado } = {}) {
+    const ctx = { numero, faltas, ocupados, duplicado, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();
