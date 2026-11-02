@@ -19,7 +19,7 @@ No se mezcla con el de Clientia: otra carpeta (`C:\Users\rodri\harvey-plaza`), o
 
 1. `bash harvey/plaza-gardenias/instalar.sh` desde la carpeta `casa-digital`.
 2. En la cuenta de Google: activar la verificación en dos pasos y crear una **contraseña de aplicación** (myaccount.google.com/apppasswords). En Gmail, Configuración > Reenvío y POP/IMAP: IMAP activado.
-3. En `C:\Users\rodri\harvey-plaza\.env`, Rodrigo escribe: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USERNAME=rodrigoherreraarita@gmail.com`, `SMTP_PASSWORD=<contraseña de aplicación>`, `IMAP_HOST=imap.gmail.com`. Nadie más escribe la contraseña. En `skills/product_knowledge.md`, poner el teléfono real de la plaza en la firma.
+3. En `C:\Users\rodri\harvey-plaza\.env`, Rodrigo escribe: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USERNAME=rodrigoherreraarita@gmail.com`, `SMTP_PASSWORD=<contraseña de aplicación>`, `IMAP_HOST=imap.gmail.com`. Nadie más escribe la contraseña.
 4. `.venv\Scripts\python cargar_prospectos.py entrada\franquicias.csv`
 5. `iniciar-harvey-plaza.cmd`. Los borradores aparecen en el Outbox del panel (puerto 5556) para aprobar.
 
