@@ -23,6 +23,7 @@ PALABRAS = (
     "cuánto cuesta", "cuanto cuesta", "cuánto cobra", "cuanto cobra", "cuánto sale", "cuanto sale",
     "cuánto vale", "cuanto vale", "cuánto sería", "cuanto seria", "cuánto es", "cuanto es",
     "cuánto le", "cuanto le", "cuánto me", "cuanto me", "cuánto nos", "cuanto nos",
+    "alquiler", "canon", "renta mensual", "renta del local",   # Plaza Gardenias
     "price", "pricing", "how much", "quote",
 )
 

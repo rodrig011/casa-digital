@@ -33,10 +33,11 @@ AQUI = Path(__file__).resolve().parent
 DB = AQUI / "data" / "harvey.db"
 VISTOS = AQUI / "data" / "avisos-enviados.json"
 DESTINO_POR_DEFECTO = "rodrigoherreraarita@gmail.com"
+# AVISO_PREFIJO en .env (por ejemplo "[Plaza] ") distingue los avisos de cada Harvey.
 
 PRECIO = re.compile(
     r"precio|costo|cu[aá]nto\s+(cuesta|cobra|vale|sale|ser[ií]a|es)|tarifa|cotiz|mensualidad|"
-    r"inversi[oó]n|presupuesto|planes|paquete|\bvalor\b|\bq\s?\d|\$\s?\d|\bl\.?\s?\d",
+    r"inversi[oó]n|presupuesto|planes|paquete|alquiler|canon|renta\s+(mensual|del\s+local)|\bvalor\b|\bq\s?\d|\$\s?\d|\bl\.?\s?\d",
     re.IGNORECASE,
 )
 
@@ -67,6 +68,7 @@ def enviar(asunto, cuerpo):
     user = os.environ.get("SMTP_USERNAME", "")
     clave = os.environ.get("SMTP_PASSWORD", "")
     destino = os.environ.get("AVISO_A", DESTINO_POR_DEFECTO)
+    asunto = os.environ.get("AVISO_PREFIJO", "") + asunto
     m = EmailMessage()
     m["From"] = user
     m["To"] = destino

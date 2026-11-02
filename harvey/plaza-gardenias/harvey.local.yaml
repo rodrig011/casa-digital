@@ -1,0 +1,111 @@
+# Configuración de Harvey para Plaza Gardenias (Talanga).
+# Es un Harvey aparte del de Clientia: otra carpeta (C:\Users\rodri\harvey-plaza),
+# otra base de datos, otro buzón y otro panel (puerto 5556).
+# Aquí NO van claves: van en el .env de esa carpeta.
+
+persona:
+  name: "Rodrigo Herrera"
+  company: "Plaza Gardenias"
+  role: "Arrendamiento de locales"
+  email: "CORREO_DE_LA_PLAZA"   # el buzón de la plaza del que salen los correos
+  linkedin: ""
+  tone: "cordial y profesional, de usted, corto y directo; español de Honduras, como escribe una persona y no una agencia"
+
+product:
+  name: "Locales en Plaza Gardenias, Talanga"
+  description: >-
+    Locales comerciales en renta en Plaza Gardenias, una plaza nueva en Talanga,
+    Francisco Morazán, frente a la calle principal y cerca de la carretera
+    Tegucigalpa–Olancho. 12 locales de 7 × 8 m (unos 56 m²) con baño propio;
+    el Local 2 es de doble ancho (unos 112 m²) con carril de autoservicio.
+    27 parqueos (4 para personas con discapacidad) y estacionamiento de motos.
+    Ya operan la oficina del RNP y el restaurante Pollo Chilero.
+  pricing: "Nunca se menciona por correo. Si preguntan renta, precio o condiciones, Harvey no contesta: la conversación pasa a Rodrigo (le llega un aviso) y él responde en persona."
+  key_benefits:
+    - "La oficina del RNP trae gente de todo el municipio todos los días"
+    - "Plaza nueva frente a la calle principal, con 27 parqueos"
+    - "Talanga tiene unos 39,000 habitantes en el municipio y pocas plazas comerciales"
+  objection_responses:
+    "not in our plans": "Entendido. ¿Le parece si le escribo cuando estén armando los planes del próximo año?"
+    "already have a location there": "Gracias por contarme. Si en algún momento buscan cambiarse o abrir otra, aquí estamos."
+    "not interested": "Entendido, no le vuelvo a escribir. Gracias por contestar."
+  offer:
+    primary: "Locales comerciales en renta en Plaza Gardenias, Talanga"
+    entry: "Visita al sitio sin compromiso, o fotos y planos por correo"
+    goal: "book_call"
+    booking_method: "ask_preference"
+    booking_url: ""
+    meeting_duration: "15 minutos"
+    meeting_owner: "Rodrigo Herrera"
+
+icp:
+  industries:
+    - "franchise"
+    - "retail chain"
+    - "pharmacy"
+    - "clinical laboratory"
+    - "fast food"
+    - "coffee shop"
+    - "optical store"
+    - "bank"
+  company_size: "10-5000 employees"
+  titles:
+    - "Gerente de Expansión"
+    - "Gerente de Bienes Raíces"
+    - "Gerente de Desarrollo"
+    - "Gerente General"
+    - "Dueño"
+    - "Propietario"
+  geography:
+    - "Tegucigalpa, Honduras"
+    - "San Pedro Sula, Honduras"
+  hiring_signals: []
+
+channels:
+  email:
+    enabled: true
+    provider: "smtp"
+    max_daily_sends: 10
+    require_approval: true      # todo correo espera tu aprobación en el Outbox
+    link_domains: []
+    send_to_risky: true
+    max_bounce_rate: 0.05
+    warmup:
+      start_date: "2026-11-03"
+      min_days: 2
+      start_sends: 3
+      daily_increase: 2
+      dkim_selector: ""
+    send_window:
+      start: "08:00"
+      end: "17:00"
+      weekdays_only: true
+      recipient_timezone: true
+  linkedin:
+    enabled: false
+    max_daily_connections: 20
+    max_daily_messages: 10
+
+usage:
+  max_daily_claude_percent: 90
+  heartbeat_interval_minutes: 15
+  quiet_hours:
+    start: "20:00"
+    end: "07:00"
+    timezone: "America/Tegucigalpa"
+
+compliance:
+  postal_address: "Plaza Gardenias, Jícaro, San Diego, Talanga, Francisco Morazán, Honduras"
+  opt_out_line: ""
+  do_not_contact:
+    - "accival.hn"      # Grupo Intur / ACCIVAL: Rodrigo los atiende directo
+    - "intur.hn"
+  precleared:
+    enabled: false
+    sender_country: "HN"
+    address_source: "unknown"
+    prospect_country: "HN"
+
+brain:
+  provider: claude
+  model: claude-sonnet-5-5
