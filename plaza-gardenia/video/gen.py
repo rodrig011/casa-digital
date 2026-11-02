@@ -25,13 +25,13 @@ K = lambda k: round(P0 + BAR * k, 3)
 # (id, compás inicio, compás fin, toma, (inicio, fin) en el original, recorte w:h:x:y, tamaño en pantalla)
 # Los recortes quitan el logo que el video original pone arriba a la izquierda.
 SCENES = [
-    ("s1", 0, 3, "drone", (3.50, 4.90), "692:400:140:80", (1000, 578)),
+    ("s1", 0, 3, "drone", (3.50, 4.90), "692:480:140:0", (1000, 694)),
     ("s2", 3, 5, "pylon", (25.58, 28.94), "520:480:312:0", (900, 830)),
     ("s3", 5, 7, "frente", (14.18, 17.44), "676:480:156:0", (1000, 710)),
     ("s4", 7, 9, "interior", (28.99, 29.93), "832:480:0:0", (1000, 576)),
     ("s5", 9, 11, "atardecer", (32.62, 35.04), "832:480:0:0", (1000, 576)),
     ("s6", 11, 13, "calle", (35.10, 37.14), "832:480:0:0", (1000, 576)),
-    ("s7", 13, 17, "dronefin", (3.50, 4.90), "692:400:140:80", (1000, 578)),
+    ("s7", 13, 17, "dronefin", (3.50, 4.90), "692:480:140:0", (1000, 694)),
 ]
 TOTAL = K(17)
 
@@ -57,120 +57,99 @@ for sid, s, e, name, (a, b), crop, size in SCENES:
 
 nm = os.path.join(DEPS, "node_modules")
 shutil.copy(os.path.join(nm, "gsap", "dist", "gsap.min.js"), A)
-for w in (300, 400, 500):
-    shutil.copy(os.path.join(nm, "@fontsource", "cormorant-garamond", "files", f"cormorant-garamond-latin-{w}-normal.woff2"), os.path.join(A, "fonts", f"cg-{w}.woff2"))
-shutil.copy(os.path.join(nm, "@fontsource", "cormorant-garamond", "files", "cormorant-garamond-latin-400-italic.woff2"), os.path.join(A, "fonts", "cg-400i.woff2"))
-for w in (300, 400, 500):
-    shutil.copy(os.path.join(nm, "@fontsource", "inter", "files", f"inter-latin-{w}-normal.woff2"), os.path.join(A, "fonts", f"in-{w}.woff2"))
+for w in (400, 500):
+    shutil.copy(os.path.join(nm, "@fontsource", "hanken-grotesk", "files", f"hanken-grotesk-latin-{w}-normal.woff2"), os.path.join(A, "fonts", f"hg-{w}.woff2"))
 shutil.copy(MUSIC, os.path.join(A, "musica.mp3"))
 json.dump({"$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
            "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
            "media": {"autoProxy": True}}, open(os.path.join(proj, "hyperframes.json"), "w"), indent=2)
-json.dump({"id": "plaza-gardenia-v1", "name": "Plaza Gardenia"}, open(os.path.join(proj, "meta.json"), "w"))
+json.dump({"id": "plaza-gardenia-v2", "name": "Plaza Gardenia"}, open(os.path.join(proj, "meta.json"), "w"))
 
 
 def words(t):
     return " ".join(f'<span class="w">{x}</span>' for x in t.split())
 
 
-# Texto de cada escena: (arriba pequeño, titular, abajo)
+# Una sola letra (Hanken Grotesk), en minúscula normal, alineada a la izquierda. Sin etiquetas
+# chiquitas arriba del titular, sin cursivas, sin líneas finas, sin sombras ni degradados
+# (reglas de taste-skill e impeccable en .claude/skills).
+# Texto de cada escena: (titular, frase)
 TEXT = {
-    "s1": ("Bienvenidos a", "Plaza Gardenia", "Locales comerciales en renta"),
-    "s2": ("Ya están aquí", "Buenos vecinos", "RNP &nbsp;·&nbsp; Pollo Chilero &nbsp;·&nbsp; INCOOLL Systems"),
-    "s3": ("Locales disponibles", "Su negocio, aquí", "Locales de 7 × 8 metros"),
-    "s4": ("Cada local", "56 m²", "con su propio baño"),
-    "s5": ("Pensada para sus clientes", "27 parqueos", "y un local con carril de drive-thru"),
-    "s6": ("Ubicación", "Talanga", "Francisco Morazán"),
+    "s1": ("Plaza Gardenia", "Locales comerciales en renta en Talanga."),
+    "s2": ("Ya tiene buenos vecinos", "RNP, Pollo Chilero e INCOOLL Systems ya están aquí."),
+    "s3": ("Locales de 7 × 8 metros", "Cada uno con su propio baño."),
+    "s4": ("56 m<sup>2</sup>", "Por local, con luz natural."),
+    "s5": ("27 parqueos", "Y un local con carril de drive-thru."),
+    "s6": ("En Talanga, Francisco Morazán", ""),
 }
+L = 40  # margen izquierdo: el mismo borde de la foto
 
 secs = []
 for sid, s, e, name, _, _, (w, h) in SCENES:
     st, du = K(s), round(K(e) - K(s), 3)
-    vids = (f'<video class="bgv" id="bg-{sid}" src="assets/{name}_bg.mp4" data-start="{st}" data-duration="{du}" data-media-start="0" muted playsinline></video>'
-            f'<div class="shade"></div>')
     if sid != "s7":
-        top, title, sub = TEXT[sid]
-        card = (f'<div class="card" id="card-{sid}" style="width:{w}px;height:{h}px;left:{(1080 - w) // 2}px;top:{1040 - h // 2}px">'
+        title, sub = TEXT[sid]
+        top = 1000 - h // 2
+        card = (f'<div class="card" id="card-{sid}" style="width:{w}px;height:{h}px;left:{L}px;top:{top}px">'
                 f'<video class="fg" id="v-{sid}" src="assets/{name}.mp4" data-start="{st}" data-duration="{du}" data-media-start="0" muted playsinline></video></div>')
         big = " big" if sid == "s4" else ""
-        inner = (f'{vids}{card}<div class="top" style="bottom:{1920 - (1040 - h // 2) + 70}px">'
-                 f'<div class="eb" id="eb-{sid}">{top}</div><div class="h1{big}" id="h-{sid}">{words(title)}</div></div>'
-                 f'<div class="sub" id="sub-{sid}" style="top:{1040 + h // 2 + 70}px">{sub}</div>')
+        inner = (f'{card}<div class="h1{big}" id="h-{sid}" style="bottom:{1920 - top + 56}px">{words(title)}</div>'
+                 + (f'<p class="sub" id="sub-{sid}" style="top:{top + h + 48}px">{sub}</p>' if sub else ""))
     else:
-        inner = (f'{vids}<div class="endc">'
-                 f'<div class="mono" id="mono">PG</div><div class="wm" id="wm">PLAZA GARDENIA</div>'
-                 f'<div class="rule" id="rule"></div>'
-                 f'<div class="h1" id="h-s7">{words("Rente su local")}</div>'
-                 f'<div class="eb" id="eb-s7">Para información</div>'
+        inner = (f'<div class="card" id="card-s7" style="width:{w}px;height:{h}px;left:{L}px;top:300px">'
+                 f'<video class="fg" id="v-s7" src="assets/{name}.mp4" data-start="{st}" data-duration="{du}" data-media-start="0" muted playsinline></video></div>'
+                 f'<div class="endc" style="top:{300 + h + 72}px">'
+                 f'<div class="h1 end" id="h-s7">{words("Rente su local en Plaza Gardenia")}</div>'
+                 f'<p class="sub2" id="call">Llame para más información</p>'
                  f'<div class="tel" id="tel"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span>{PHONE}</span></div>'
-                 f'<div class="loc" id="loc">Talanga, Francisco Morazán</div></div>')
+                 f'</div>')
     secs.append(f'<div id="{sid}" class="scene">{inner}</div>')
 
-CSS = r'''
-@font-face{font-family:"CG";src:url("assets/fonts/cg-300.woff2") format("woff2");font-weight:300;}
-@font-face{font-family:"CG";src:url("assets/fonts/cg-400.woff2") format("woff2");font-weight:400;}
-@font-face{font-family:"CG";src:url("assets/fonts/cg-500.woff2") format("woff2");font-weight:500;}
-@font-face{font-family:"CG";src:url("assets/fonts/cg-400i.woff2") format("woff2");font-weight:400;font-style:italic;}
-@font-face{font-family:"IN";src:url("assets/fonts/in-300.woff2") format("woff2");font-weight:300;}
-@font-face{font-family:"IN";src:url("assets/fonts/in-400.woff2") format("woff2");font-weight:400;}
-@font-face{font-family:"IN";src:url("assets/fonts/in-500.woff2") format("woff2");font-weight:500;}
+CSS = r"""
+@font-face{font-family:"HG";src:url("assets/fonts/hg-400.woff2") format("woff2");font-weight:400;}
+@font-face{font-family:"HG";src:url("assets/fonts/hg-500.woff2") format("woff2");font-weight:500;}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:1080px;height:1920px;overflow:hidden;background:#0A0D0B;}
-#root{position:relative;width:1080px;height:1920px;background:#0A0D0B;color:#F3EEE4;font-family:"IN",sans-serif;-webkit-font-smoothing:antialiased;}
-.scene{position:absolute;inset:0;overflow:hidden;background:#0A0D0B;opacity:0;}
-.bgv{position:absolute;left:-180px;top:-120px;width:1440px;height:2160px;object-fit:cover;filter:blur(36px) saturate(1.1);opacity:.55;transform:scale(1.1);}
-.shade{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 52%,rgba(10,13,11,.15),rgba(10,13,11,.85) 70%),linear-gradient(180deg,rgba(10,13,11,.7),rgba(10,13,11,.1) 35%,rgba(10,13,11,.1) 65%,rgba(10,13,11,.75));}
-.card{position:absolute;border-radius:30px;overflow:hidden;box-shadow:0 50px 120px rgba(0,0,0,.6),0 0 0 1px rgba(243,238,228,.14);}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#F4F5F1;}
+#root{position:relative;width:1080px;height:1920px;background:#F4F5F1;color:#1C3326;font-family:"HG",sans-serif;-webkit-font-smoothing:antialiased;font-kerning:normal;}
+.scene{position:absolute;inset:0;overflow:hidden;background:#F4F5F1;opacity:0;}
+.card{position:absolute;border-radius:6px;overflow:hidden;background:#DDE2DA;}
 .card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%;}
-.top{position:absolute;left:60px;right:60px;text-align:center;}
-.eb{font-family:"IN";font-weight:500;font-size:30px;letter-spacing:.32em;text-transform:uppercase;color:#C9D8C5;margin-bottom:18px;}
-.h1{font-family:"CG";font-weight:400;font-size:112px;line-height:1.02;letter-spacing:-.01em;color:#F7F2E8;}
-.h1.big{font-size:190px;font-weight:300;line-height:.95;}
+.h1{position:absolute;left:36px;right:40px;font-weight:500;font-size:112px;line-height:.96;letter-spacing:-.045em;color:#1C3326;}
+.h1.big{font-size:300px;line-height:.85;letter-spacing:-.06em;left:28px;}
 .w{display:inline-block;}
-.sub{position:absolute;left:60px;right:60px;text-align:center;font-family:"CG";font-style:italic;font-weight:400;font-size:58px;line-height:1.25;color:#E8E1D3;}
-.endc{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
-.mono{font-family:"CG";font-weight:300;font-size:170px;line-height:1;letter-spacing:-.06em;color:#F7F2E8;}
-.wm{font-family:"CG";font-weight:500;font-size:40px;letter-spacing:.42em;margin:8px 0 0 .42em;color:#E8E1D3;}
-.rule{width:140px;height:1px;background:#C9D8C5;margin:70px 0 70px;transform-origin:50% 50%;}
-#h-s7{margin-bottom:60px;}
-.tel{display:flex;align-items:center;gap:26px;padding:26px 52px;border-radius:999px;border:1px solid rgba(243,238,228,.35);background:rgba(243,238,228,.06);}
-.tel svg{width:50px;height:50px;fill:#C9D8C5;}
-.tel span{font-family:"IN";font-weight:300;font-size:78px;letter-spacing:.04em;color:#F7F2E8;}
-.loc{margin-top:46px;font-family:"CG";font-style:italic;font-size:46px;color:#E8E1D3;}
-'''
+sup{font-size:.42em;vertical-align:.95em;letter-spacing:0;margin-left:.04em;}
+.sub{position:absolute;left:40px;right:80px;font-weight:400;font-size:58px;line-height:1.25;letter-spacing:-.02em;color:#4D6457;}
+.endc{position:absolute;left:0;right:0;}
+.h1.end{position:relative;font-size:104px;}
+.sub2{margin:56px 40px 0;font-weight:400;font-size:58px;letter-spacing:-.015em;color:#4D6457;}
+.tel{display:flex;align-items:center;gap:28px;margin:28px 40px 0;padding:34px 48px;width:max-content;border-radius:6px;background:#1C3326;}
+.tel svg{width:58px;height:58px;fill:#F4F5F1;}
+.tel span{font-weight:500;font-size:96px;letter-spacing:-.02em;color:#F4F5F1;font-variant-numeric:tabular-nums;}
+"""
 
-JS = r'''
+JS = r"""
 const tl = gsap.timeline({ paused: true });
 const SOFT = "expo.out";
 const K = k => +(P0 + BAR * k).toFixed(3);
 function rise(sel, t, o) { o = o || {};
-  tl.fromTo(sel, { opacity: 0, y: o.y ?? 26, filter: "blur(14px)" },
-    { opacity: 1, y: 0, filter: "blur(0px)", duration: o.d || 1.6, ease: SOFT, stagger: o.st ?? .1 }, t); }
+  tl.fromTo(sel, { opacity: 0, y: o.y ?? 40 },
+    { opacity: 1, y: 0, duration: o.d || 1.4, ease: SOFT, stagger: o.st ?? .08 }, t); }
 SC.forEach(([id, s, e]) => {
-  const a = K(s), b = K(e), len = b - a;
-  tl.fromTo("#" + id, { opacity: 0 }, { opacity: 1, duration: .55, ease: "power1.out" }, a);
-  if (id !== "s7") tl.to("#" + id, { opacity: 0, duration: .5, ease: "power1.in" }, b - .5);
-  else tl.to("#" + id, { opacity: 0, duration: 1.2, ease: "power1.in" }, b - 1.2);
+  const a = K(s), b = K(e), len = b - a, end = id === "s7" ? 1.4 : .45;
+  tl.fromTo("#" + id, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out" }, a);
+  tl.to("#" + id, { opacity: 0, duration: end, ease: "power1.in" }, b - end);
+  tl.fromTo("#card-" + id, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.5, ease: "expo.inOut" }, a);
+  tl.fromTo("#v-" + id, { scale: 1.12 }, { scale: 1.0, duration: len, ease: "power1.out" }, a);
   if (id === "s7") return;
-  tl.fromTo("#card-" + id, { opacity: 0, y: 50, scale: .97, filter: "blur(10px)" },
-    { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.8, ease: SOFT }, a + .05);
-  tl.fromTo("#v-" + id, { scale: 1.0 }, { scale: 1.07, duration: len, ease: "none" }, a);
-  rise("#eb-" + id, a + .3, { d: 1.4 });
-  rise("#h-" + id + " .w", a + .5, { d: 1.8, st: .12 });
-  rise("#sub-" + id, a + 1.1, { d: 1.6 });
+  rise("#h-" + id + " .w", a + .45);
+  rise("#sub-" + id, a + 1.0, { y: 24 });
 });
-// cierre
-const e0 = K(13);
-rise("#mono", e0 + .3, { d: 2.2, y: 0 });
-rise("#wm", e0 + .7, { d: 2 });
-tl.fromTo("#rule", { scaleX: 0 }, { scaleX: 1, duration: 1.6, ease: "power2.inOut" }, e0 + 1.2);
-rise("#h-s7 .w", K(14), { d: 1.8, st: .14 });
-rise("#eb-s7", K(14.6), { d: 1.4 });
-rise("#tel", K(14.8), { d: 1.8 });
-rise("#loc", K(15.3), { d: 1.6 });
+rise("#h-s7 .w", K(13) + .5);
+rise("#call", K(14), { y: 24 });
+rise("#tel", K(14.3), { y: 30 });
 window.__timelines = window.__timelines || {};
 window.__timelines["main"] = tl;
-'''.replace("P0", str(P0)).replace("BAR", str(BAR)).replace("SC.", json.dumps([[sid, s, e] for sid, s, e, *_ in SCENES]) + ".")
+""".replace("P0", str(P0)).replace("BAR", str(BAR)).replace("SC.", json.dumps([[sid, s, e] for sid, s, e, *_ in SCENES]) + ".")
 
 HTML = f'''<!doctype html>
 <html lang="es" data-resolution="portrait">
