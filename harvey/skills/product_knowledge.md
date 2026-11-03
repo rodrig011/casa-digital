@@ -7,6 +7,29 @@
 - Ningún correo lleva línea de baja ("stop", "no, gracias" o parecida). Si alguien pide que no le escriban más, se respeta de inmediato.
 - Firma siempre en tres líneas, sin nada más: Rodrigo Herrera / Clientia Tech / WhatsApp +1 (765) 543-4251.
 
+## Cómo escribe Rodrigo (así suenan todos los correos)
+
+Rodrigo le escribe al dueño como un hondureño educado que le habla a una persona mayor que respeta, no como un consultor. Así le escribió a Eduardo, de Coco Chicken, y le contestaron:
+
+> Buenas tardes, Eduardo. Para que no tenga que leer mucho, le dejo un video corto de lo que preparé para Coco Chicken. Si le interesa, con gusto se lo explico en una llamada de 15 minutos cuando a usted le quede bien.
+
+> Hola, buenas tardes, Eduardo. Primero que todo, muchísimas gracias por haber respondido a mi mensaje desde el principio, y disculpe la insistencia. Solo quería ofrecerle los primeros 30 días gratis de este sistema para que lo pruebe de verdad. Si no le gusta, no hay ningún problema; simplemente estoy convencido de que le puede traer muy buenos resultados.
+
+> Todo esto está hecho a su medida, no estamos queriendo vender una plantilla. Como a usted le guste lo hacemos.
+
+Reglas que salen de ahí:
+
+- **Saludo con la hora y el nombre**: "Buenas tardes, don Mario." / "Hola, buenos días, equipo de La Pampa, ¿cómo están?". Si no hay nombre, "Buenas tardes" y el nombre del negocio.
+- **Cálido y humilde**: "con gusto", "cuando a usted le quede bien", "no dude en escribirme", "muchísimas gracias por su tiempo", "disculpe la insistencia" (en seguimientos).
+- **Quién es, en una línea y con orgullo**: "Somos dos estudiantes hondureños con una empresa, Clientia Tech" o "Le escribe Rodrigo Herrera, hondureño". Para Guatemala y El Salvador: "somos centroamericanos, de Honduras".
+- **Hecho a la medida**: decir que se arma para su negocio, con su menú y sus sucursales, no una plantilla.
+- **Ofrecer algo fácil, no hacer un interrogatorio**: una llamada de 10 a 15 minutos "cuando le quede bien", o los 30 días sin pagar nada, "y si no le gusta, no hay ningún problema". Nada de preguntas tipo examen sobre su operación ("¿quién contesta el WhatsApp cuando…?").
+- **Convicción personal**: "estoy convencido de que le puede ayudar" en vez de datos fríos.
+- Un dato real del negocio sirve para que se note que no es correo masivo ("vi que tienen seis sucursales"), pero dicho con amabilidad, no como diagnóstico.
+- **Asunto natural**, con mayúscula y el nombre del negocio: "Una propuesta para La Pampa", "Para el equipo de Castor's Pizza". Nada de acertijos en minúscula.
+- **Seguimientos** como los de Rodrigo: "Buenas tardes, don Mario, ¿cómo está? Solo para preguntarle si tuvo chance de ver mi mensaje." El último, despedida amable: "Si en algún momento le interesa, no dude en escribirme. Muchísimas gracias por su tiempo."
+- Corto: 3 a 5 líneas. Sin viñetas, sin negritas, sin palabras de agencia ("solución", "optimizar", "potenciar", "transformación digital").
+
 ## Quiénes somos
 
 Rodrigo Herrera y Dylan Jiménez, dos amigos hondureños, dueños de Clientia Tech. Rodrigo estudia en Ivy Tech (Estados Unidos) y arma los sistemas; Dylan estudia Finanzas en Harding University y lleva los números. Atendemos nosotros mismos, en español, por WhatsApp o videollamada. El número es de Estados Unidos porque Rodrigo vive allá mientras estudia.
