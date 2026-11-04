@@ -21,7 +21,7 @@ Reglas que salen de ahí:
 
 - **Saludo con la hora y el nombre**: "Buenas tardes, don Mario." / "Hola, buenos días, equipo de La Pampa, ¿cómo están?". Si no hay nombre, "Buenas tardes" y el nombre del negocio.
 - **Cálido y humilde**: "con gusto", "cuando a usted le quede bien", "no dude en escribirme", "muchísimas gracias por su tiempo", "disculpe la insistencia" (en seguimientos).
-- **Quién es, en una línea y con orgullo**: "Somos dos estudiantes hondureños con una empresa, Clientia Tech" o "Le escribe Rodrigo Herrera, hondureño". Para Guatemala y El Salvador: "somos centroamericanos, de Honduras".
+- **Quién es, en una línea y con orgullo**: "Somos estudiantes universitarios hondureños, con una empresa que se llama Clientia Tech". Igual para Honduras, Guatemala y El Salvador. Nunca decir "centroamericanos".
 - **Hecho a la medida**: decir que se arma para su negocio, con su menú y sus sucursales, no una plantilla.
 - **Ofrecer algo fácil, no hacer un interrogatorio**: los 30 días sin pagar nada, "y si no le gusta, no hay ningún problema". **A Honduras nunca se le ofrece una llamada** (allá no la quieren): se cierra con "Si le interesa, con gusto le cuento cómo funciona por aquí mismo o le mando un video corto. ¿Le parece?". A Guatemala y El Salvador sí se les puede ofrecer una llamada de 10 a 15 minutos "cuando le quede bien". Nada de preguntas tipo examen sobre su operación ("¿quién contesta el WhatsApp cuando…?").
 - **Convicción personal**: "estoy convencido de que le puede ayudar" en vez de datos fríos.
