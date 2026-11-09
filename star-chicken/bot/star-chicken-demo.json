@@ -1,0 +1,25 @@
+{
+  "_nota": "DEMO para el video de Star Chicken (2026-11-09). Nombres de productos, dirección y forma de entrega salen de su TikTok @starchkn.hn. PRECIOS, horario, cuenta y tiempos son DE EJEMPLO: no son de Star Chicken. No usar con clientes reales sin que ellos confirmen menú y precios.",
+  "nombre": "Star Chicken",
+  "color": "#F5D90A",
+  "sucursales": [
+    { "id": "cocina", "nombre": "Cocina Star Chicken", "direccion": "21 Avenida entre 1.a y 2.a calle S.O., Colonia Moderna, Blvd. Los Próceres, detrás de Cafeteo, San Pedro Sula", "telefono": "", "whatsapp": "", "horario": "", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Pollo", "items": [
+      { "id": "bon", "nombre": "Boneless Maracuyeahhh", "precio": 220, "desc": "Con salsa Maracuyeahhh" },
+      { "id": "ten", "nombre": "Tenders", "precio": 200 }
+    ] },
+    { "categoria": "Burgers", "items": [
+      { "id": "cos", "nombre": "Cosmic Burger", "precio": 240 }
+    ] },
+    { "categoria": "Acompañantes", "items": [
+      { "id": "mac", "nombre": "Mac & Cheese", "precio": 90 }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "",
+  "tiempoPreparacion": "25 a 35 minutos",
+  "cobro": { "desde": 0, "faltas": 0, "transferencia": "Banco de ejemplo, cuenta 000-000000-0, a nombre de Star Chicken", "tarjeta": "" },
+  "domicilio": { "propio": true, "zona": "en San Pedro Sula", "apps": [ { "nombre": "Bip Bip", "url": "" } ] }
+}
