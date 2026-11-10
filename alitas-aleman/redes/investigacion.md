@@ -30,9 +30,9 @@ Fuente: su propio TikTok @alitasaleman.hn (perfil, 11 videos recientes, 330 come
 - Piden opciones que un pedido escrito resuelve: "mitad alitas y mitad boneless", "¿trae papas?", "¿aplica para llevar?".
 
 ## Cuidado
-- Una nota de El Heraldo (10 ene 2024) sobre el cierre temporal por higiene de "un local de alitas" en Tegucigalpa tiene "alitas-aleman" en la URL, pero el texto no nombra al negocio. No confirmado. **No mencionarlo nunca.**
-- No citar comentarios de "lechuga vieja" ni quejas de calidad en el mensaje.
+- No citar quejas de calidad en ningún mensaje ni en el video.
 - Dueño: no se encontró nombre en internet.
+- Son competencia directa de Tito Wings: no compartir material entre los dos.
 
 ## Primer mensaje (borrador, sin precios)
 Canal sugerido: DM de Instagram @alitasdelaaleman (quien maneja redes contesta) y, si no responden, WhatsApp a 9603-6732.
