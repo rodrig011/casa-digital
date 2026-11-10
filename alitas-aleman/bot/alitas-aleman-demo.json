@@ -1,0 +1,29 @@
+{
+  "_nota": "DEMO para el video de Alitas de la Alemán (2026-11-10). Nombres de productos, dirección, horario y forma de entrega salen de su TikTok @alitasaleman.hn. El precio de 24 Alitas (L395) lo dieron ellos en un comentario el 31 de octubre; LOS DEMÁS PRECIOS y los tiempos son DE EJEMPLO: no son de Alitas de la Alemán. No usar con clientes reales sin que ellos confirmen menú y precios.",
+  "nombre": "Alitas de la Alemán",
+  "color": "#D62B1F",
+  "sucursales": [
+    { "id": "colinas", "nombre": "Las Colinas", "direccion": "Res. Las Colinas, Boulevard Francia, contiguo a la Escuela Liceo Franco Hondureño, Tegucigalpa", "telefono": "", "whatsapp": "", "horario": "Martes a domingo, 10:30 a. m. a 8:00 p. m.", "mapa": "" }
+  ],
+  "menu": [
+    { "categoria": "Alitas y boneless", "items": [
+      { "id": "a12", "nombre": "12 Alitas", "precio": 215 },
+      { "id": "a24", "nombre": "24 Alitas", "precio": 395 },
+      { "id": "b12", "nombre": "12 Boneless", "precio": 230 }
+    ] },
+    { "categoria": "Hamburguesas y papas", "items": [
+      { "id": "ham", "nombre": "Hamburguesa", "precio": 95 },
+      { "id": "psp", "nombre": "Papas sazonadas con pollo", "precio": 150 },
+      { "id": "pfa", "nombre": "Papas familiares", "precio": 90 }
+    ] },
+    { "categoria": "Complementos", "items": [
+      { "id": "col", "nombre": "Ensalada coleslaw", "precio": 45 },
+      { "id": "ref", "nombre": "Refresco 1.5L", "precio": 45 }
+    ] }
+  ],
+  "recoger": true,
+  "pago": "Se paga al recibir o al recoger.",
+  "tiempoPreparacion": "30 a 40 minutos",
+  "cobro": { "desde": "", "faltas": 0, "transferencia": "", "tarjeta": "" },
+  "domicilio": { "propio": true, "zona": "en Tegucigalpa", "apps": [ { "nombre": "Bip Bip", "url": "" } ] }
+}
