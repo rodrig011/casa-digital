@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Alitas de la Alemán · video corto</title>
+<style>
+@font-face{font-family:"Archivo";src:url(src/archivo.woff2) format("woff2-variations");font-weight:100 900;font-stretch:62% 125%;}
+:root{
+  --paper:#F3EEE4; --ink:#1A1411; --mute:#6E635A; --rule:#D9D0C2;
+  --red:#C3261B;            /* el rojo de su logo */
+  --wa-bg:#E9E1D6; --wa-out:#D6F2C4; --wa-in:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--paper);}
+body{font-family:"Archivo",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;}
+.scene{position:absolute;inset:0;visibility:hidden;overflow:hidden;}
+.pad{position:absolute;left:84px;right:84px;}
+/* una sola familia, dos anchos: condensada pesada para titulares, normal para leer */
+.h{font-stretch:68%;font-weight:800;line-height:.92;letter-spacing:-.012em;text-wrap:balance;}
+.h em{font-style:normal;color:var(--red);}
+.b{font-stretch:100%;font-weight:450;line-height:1.28;}
+.src{font-size:30px;font-weight:450;color:var(--mute);line-height:1.3;}
+.who{position:absolute;top:84px;left:84px;display:flex;align-items:center;gap:22px;font-size:34px;font-weight:600;}
+.who img{width:84px;height:84px;border-radius:50%;object-fit:cover;}
+
+/* 1 · gancho */
+#s1 .strip{position:absolute;top:236px;left:0;display:flex;gap:18px;will-change:transform;}
+#s1 .strip img{width:576px;height:618px;display:block;}   /* sus fotos a tamaño original, sin agrandar */
+#s1 .num{top:930px;font-size:330px;}
+#s1 .l2{top:1262px;font-size:112px;}
+#s1 .src{top:1730px;}
+
+/* 2 · cuatro números */
+#s2 .h1{top:210px;font-size:150px;} #s2 .h1 em{white-space:nowrap;}
+#s2 ol{position:absolute;top:620px;left:84px;right:84px;list-style:none;}
+#s2 li{display:flex;align-items:baseline;justify-content:space-between;border-top:3px solid var(--ink);padding:26px 0 30px;font-stretch:68%;font-weight:700;font-size:150px;line-height:1;}
+#s2 li span{font-stretch:100%;font-weight:500;font-size:34px;color:var(--mute);}
+#s2 li:last-child{border-bottom:3px solid var(--ink);}
+#s2 .src{top:1560px;}
+
+/* 3 · lo que escribe su gente */
+#s3 .q{font-size:64px;font-weight:500;line-height:1.16;border-left:8px solid var(--red);padding-left:36px;}
+#s3 .q1{top:230px;} #s3 .q2{top:640px;}
+#s3 .big{top:1010px;font-size:330px;}
+#s3 .l2{top:1320px;font-size:104px;}
+#s3 .src{top:1650px;}
+
+/* 4 · un WhatsApp */
+#s4 .h1{top:190px;font-size:134px;}
+#s4 .chat{position:absolute;left:84px;right:84px;top:650px;height:960px;background:var(--wa-bg);border-radius:36px;padding:44px 40px;display:flex;flex-direction:column;gap:22px;}
+.m{max-width:78%;padding:24px 30px 26px;border-radius:26px;font-size:40px;line-height:1.24;font-weight:450;}
+.m.c{align-self:flex-end;background:var(--wa-out);border-bottom-right-radius:8px;}
+.m.r{align-self:flex-start;background:var(--wa-in);border-bottom-left-radius:8px;}
+.m b{font-weight:700;}
+#s4 .src{top:1650px;}
+
+/* 5 y 6 · el panel real */
+.shot{position:absolute;left:150px;top:560px;width:780px;height:1130px;border-radius:30px;overflow:hidden;border:3px solid var(--ink);background:#fff;}
+.shot img{width:780px;display:block;will-change:transform;}   /* 780 px: su tamaño original */
+#s5 .h1,#s6 .h1{top:200px;font-size:150px;}
+#s5 .src,#s6 .src{top:1740px;}
+
+/* 7 · cierre */
+#s7{background:var(--ink);color:var(--paper);}
+#s7 .h1{top:330px;font-size:210px;}
+#s7 .h1 em{color:#FF6B57;}
+#s7 .cta{top:1010px;font-size:54px;font-weight:450;line-height:1.25;color:#E9E1D6;}
+#s7 .wa{top:1250px;font-stretch:68%;font-weight:800;font-size:120px;line-height:1;}
+#s7 .wa small{display:block;font-stretch:100%;font-weight:500;font-size:34px;color:#B5AA9D;margin-bottom:18px;letter-spacing:0;}
+#s7 .by{position:absolute;left:84px;bottom:110px;display:flex;align-items:center;gap:26px;font-size:40px;font-weight:500;color:#E9E1D6;}
+#s7 .by img{width:74px;height:84px;}
+#s7 .by b{font-weight:700;color:#fff;}
+</style>
+</head>
+<body>
+
+<section class="scene" id="s1">
+  <div class="who" data-in="0.05"><img src="src/logo.jpg" alt="">Para Alitas de la Alemán</div>
+  <div class="strip"><img src="src/alitas1.jpg" alt=""><img src="src/papas.jpg" alt=""><img src="src/alitas2.jpg" alt=""><img src="src/alitas3.jpg" alt=""></div>
+  <div class="pad h num" data-in="0.55">274.7K</div>
+  <div class="pad h l2" data-in="1.1">vistas en un solo video.<br><em>La gente quiere<br>sus alitas.</em></div>
+  <div class="pad src" data-in="1.65">Su TikTok @alitasaleman.hn, video del 4 de octubre. Fotos de sus propios videos.</div>
+</section>
+
+<section class="scene" id="s2">
+  <div class="pad h h1" data-in="0">Para pedir,<br><em>cuatro números.</em></div>
+  <ol>
+    <li data-in="0.55">9603-6732 <span>línea 1</span></li>
+    <li data-in="1.09">9615-4856 <span>línea 2</span></li>
+    <li data-in="1.64">9746-0609 <span>línea 3</span></li>
+    <li data-in="2.18">9651-8746 <span>línea 4</span></li>
+  </ol>
+  <div class="pad src" data-in="2.7">Los cuatro números que ustedes publican para domicilio.</div>
+</section>
+
+<section class="scene" id="s3">
+  <div class="pad b q q1" data-in="0">“ayer llame llame llame llame y me quede con las ganas de comer alitas”</div>
+  <div class="pad b q q2" data-in="1.09">“A qué número hago el pedido con envío mañana. Me envían el WhatsApp”</div>
+  <div class="pad h big" data-in="2.18"><em id="cnt">20</em>+</div>
+  <div class="pad h l2" data-in="2.6">comentarios piden el número o preguntan cómo pedir.</div>
+  <div class="pad src" data-in="3.1">Comentarios de su TikTok, palabra por palabra. Conteo nuestro sobre 347 comentarios.</div>
+</section>
+
+<section class="scene" id="s4">
+  <div class="pad h h1" data-in="0">Un solo WhatsApp<br>toma <em>el pedido<br>completo.</em></div>
+  <div class="chat" data-in="0.55">
+    <div class="m c" data-in="1.09">Buenas, quiero 24 alitas a domicilio</div>
+    <div class="m r" data-in="2.18">¡Con gusto! <b>24 Alitas, L 395.</b> ¿A qué dirección se las llevamos?</div>
+    <div class="m c" data-in="3.82">Res. Las Uvas, bloque C, casa 14, portón negro</div>
+    <div class="m r" data-in="4.9">Listo, Marta. Su pedido ya está en cocina. <b>Total L 395,</b> se paga al recibir.</div>
+  </div>
+  <div class="pad src" data-in="1.09">Conversación de ejemplo. L 395 es el precio que ustedes dieron en un comentario.</div>
+</section>
+
+<section class="scene" id="s5">
+  <div class="pad h h1" data-in="0">Y entra solo <em>a la cocina.</em></div>
+  <div class="shot" data-in="0.55"><img id="shot5" src="src/panel-cocina.jpg" alt=""></div>
+  <div class="pad src" data-in="1.09">Panel real de Casa Digital. Los pedidos y sus precios son de ejemplo.</div>
+</section>
+
+<section class="scene" id="s6">
+  <div class="pad h h1" data-in="0">Usted ve el día <em>en su celular.</em></div>
+  <div class="shot" data-in="0.55"><img id="shot6" src="src/panel-hoy.jpg" alt=""></div>
+  <div class="pad src" data-in="1.09">Panel real de Casa Digital. Las cifras son de ejemplo, no ventas de Alitas de la Alemán.</div>
+</section>
+
+<section class="scene" id="s7">
+  <div class="pad h h1" data-in="0">¿Lo vemos con <em>su menú?</em></div>
+  <div class="pad b cta" data-in="1.09">Se lo armamos con sus productos y sus precios para que lo pruebe antes de decidir nada.</div>
+  <div class="pad wa" data-in="2.18"><small>Escríbanos por WhatsApp</small>+1 (765) 543-4251</div>
+  <div class="by" data-in="3.0"><img src="src/clientia.svg" alt=""><span><b>Casa Digital</b> by Clientia Tech</span></div>
+</section>
+
+<script>
+// "Stylish" (FASSounds), 110 BPM: cada corte cae en un compás.
+const P0 = 0.035, BAR = 4 * 60 / 110, K = k => P0 + BAR * k;
+const SCENES = [["s1",0,2.5],["s2",2.5,4.5],["s3",4.5,7],["s4",7,10.5],["s5",10.5,12.5],["s6",12.5,14.5],["s7",14.5,17.5]];
+const TOTAL = K(17.5);
+const EASE = "cubic-bezier(0.23,1,0.32,1)";   // ease-out fuerte: entra rápido y se asienta
+const anims = [];
+function A(el, at, kf, dur = 700, easing = EASE) {
+  const a = el.animate(kf, { delay: at * 1000, duration: dur, fill: "both", easing });
+  a.pause(); anims.push(a); return a;
+}
+for (const [id, a, b] of SCENES) {
+  const sc = document.getElementById(id), t0 = K(a);
+  sc.dataset.a = t0; sc.dataset.b = K(b);
+  sc.querySelectorAll("[data-in]").forEach(el => {
+    // nada aparece de la nada: entra desde 0.97 y 28 px, solo transform y opacity
+    A(el, t0 + parseFloat(el.dataset.in), [{ opacity: 0, transform: "translateY(28px) scale(.97)" }, { opacity: 1, transform: "none" }]);
+  });
+}
+const span = id => { const s = document.getElementById(id); return [parseFloat(s.dataset.a), (parseFloat(s.dataset.b) - parseFloat(s.dataset.a)) * 1000]; };
+// movimiento lento y continuo dentro de cada escena (lineal: es un paneo, no una entrada)
+{ const [t, d] = span("s1"); A(document.querySelector("#s1 .strip"), t, [{ transform: "translateX(60px)" }, { transform: "translateX(-500px)" }], d, "linear"); }
+{ const [t, d] = span("s5"); A(document.getElementById("shot5"), t + 1.3, [{ transform: "translateY(-150px)" }, { transform: "translateY(-620px)" }], d - 1500, "cubic-bezier(0.77,0,0.175,1)"); document.getElementById("shot5").style.transform = "translateY(-150px)"; }
+{ const [t, d] = span("s6"); A(document.getElementById("shot6"), t + 1.3, [{ transform: "translateY(-150px)" }, { transform: "translateY(-560px)" }], d - 1500, "cubic-bezier(0.77,0,0.175,1)"); }
+window.TOTAL = TOTAL;
+window.seek = t => {
+  for (const [id] of SCENES) { const s = document.getElementById(id); s.style.visibility = (t >= +s.dataset.a && t < +s.dataset.b) ? "visible" : "hidden"; }
+  if (t >= +document.getElementById("s7").dataset.a) document.getElementById("s7").style.visibility = "visible";
+  for (const a of anims) a.currentTime = t * 1000;
+  // contador: sube hasta 20 en medio segundo
+  const c0 = +document.getElementById("s3").dataset.a + 2.18, p = Math.min(1, Math.max(0, (t - c0) / 0.6));
+  document.getElementById("cnt").textContent = Math.round(20 * (1 - Math.pow(1 - p, 3)));
+};
+const q = new URLSearchParams(location.search).get("t");
+document.fonts.ready.then(() => { window.READY = true; seek(q ? +q : 0); });
+</script>
+</body>
+</html>
