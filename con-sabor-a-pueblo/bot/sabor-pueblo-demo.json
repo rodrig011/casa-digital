@@ -1,5 +1,5 @@
 {
-  "_nota": "DEMO para el video y la propuesta de Con Sabor a Pueblo (2026-11-11). Nombres de productos, puntos de venta y horarios salen de su TikTok @consaborapueblohn. Ellos NO publican precios (contestan 'Menu y precios 3169-9031'): TODOS LOS PRECIOS de este archivo son DE EJEMPLO, no son de Con Sabor a Pueblo. No usar con clientes reales sin que ellos confirmen menú y precios.",
+  "_nota": "DEMO para el video y la propuesta de Con Sabor a Pueblo (2026-11-11). Nombres de productos, puntos de venta y horarios salen de su TikTok @consaborapueblohn. Ellos NO publican precios (contestan 'Menu y precios 3169-9031'): TODOS LOS PRECIOS de este archivo son DE EJEMPLO, no son de Con Sabor a Pueblo. El dueño le dijo a Rodrigo por teléfono (11 nov 2026) que tienen envío propio; zonas y costo del envío están por confirmar. No usar con clientes reales sin que ellos confirmen menú y precios.",
   "nombre": "Con Sabor a Pueblo",
   "color": "#E8A91C",
   "sucursales": [
@@ -17,8 +17,8 @@
     ] }
   ],
   "recoger": true,
-  "pago": "Se paga al recoger.",
+  "pago": "Se paga al recibir o al recoger.",
   "tiempoPreparacion": "",
   "cobro": { "desde": "", "faltas": 0, "transferencia": "", "tarjeta": "" },
-  "domicilio": { "propio": false, "zona": "", "apps": [] }
+  "domicilio": { "propio": true, "zona": "", "apps": [] }
 }

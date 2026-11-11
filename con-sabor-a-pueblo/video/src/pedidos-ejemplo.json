@@ -1,0 +1,221 @@
+[
+ {
+  "tipo": "pedido",
+  "n": "PED-1008",
+  "nombre": "Wendy Aguilar",
+  "sucursal": "Tegucigalpa",
+  "sucursalId": "tegucigalpa",
+  "lineas": [
+   {
+    "id": "sopa",
+    "nombre": "Sopa de gallina india",
+    "precio": 160,
+    "cantidad": 2,
+    "subtotal": 320
+   },
+   {
+    "id": "guacamole",
+    "nombre": "Guacamole",
+    "precio": 40,
+    "cantidad": 2,
+    "subtotal": 80
+   }
+  ],
+  "total": 400,
+  "hora": "sábado 1:30 pm",
+  "resumen": "2 × Sopa de gallina india · L 320 · 2 × Guacamole · L 80",
+  "tel": "+50499990008",
+  "fecha": "2026-11-11T21:20:20.577Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1007",
+  "nombre": "Óscar Mejía",
+  "sucursal": "San Pedro Sula",
+  "sucursalId": "sps",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 2,
+    "subtotal": 300
+   },
+   {
+    "id": "chicharron",
+    "nombre": "Chicharrones de panceta",
+    "precio": 180,
+    "cantidad": 1,
+    "subtotal": 180
+   }
+  ],
+  "total": 480,
+  "hora": "A domicilio, lo antes posible",
+  "resumen": "2 × Chanchito chuko · L 300 · 1 × Chicharrones de panceta · L 180",
+  "entrega": "domicilio",
+  "direccion": "Res. Los Álamos, bloque C, casa 9",
+  "tel": "+50499990007",
+  "fecha": "2026-11-11T21:20:20.521Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1006",
+  "nombre": "Dania Cruz",
+  "sucursal": "Tegucigalpa",
+  "sucursalId": "tegucigalpa",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 1,
+    "subtotal": 150
+   }
+  ],
+  "total": 150,
+  "hora": "sábado 12:30 pm",
+  "resumen": "1 × Chanchito chuko · L 150",
+  "tel": "+50499990006",
+  "fecha": "2026-11-11T21:20:20.465Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1005",
+  "nombre": "Familia Reyes",
+  "sucursal": "San Pedro Sula",
+  "sucursalId": "sps",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 4,
+    "subtotal": 600
+   },
+   {
+    "id": "sopa",
+    "nombre": "Sopa de gallina india",
+    "precio": 160,
+    "cantidad": 2,
+    "subtotal": 320
+   }
+  ],
+  "total": 920,
+  "hora": "A domicilio, lo antes posible",
+  "resumen": "4 × Chanchito chuko · L 600 · 2 × Sopa de gallina india · L 320",
+  "entrega": "domicilio",
+  "direccion": "Col. Trejo, 5 calle, casa blanca frente a la pulpería",
+  "tel": "+50499990005",
+  "fecha": "2026-11-11T21:20:20.402Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1004",
+  "nombre": "Luis Fúnez",
+  "sucursal": "Tegucigalpa",
+  "sucursalId": "tegucigalpa",
+  "lineas": [
+   {
+    "id": "chicharron",
+    "nombre": "Chicharrones de panceta",
+    "precio": 180,
+    "cantidad": 1,
+    "subtotal": 180
+   },
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 1,
+    "subtotal": 150
+   }
+  ],
+  "total": 330,
+  "hora": "A domicilio, lo antes posible",
+  "resumen": "1 × Chicharrones de panceta · L 180 · 1 × Chanchito chuko · L 150",
+  "entrega": "domicilio",
+  "direccion": "Col. Miraflores, calle principal, casa esquina color crema",
+  "tel": "+50499990004",
+  "fecha": "2026-11-11T21:20:20.348Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1003",
+  "nombre": "Andrea Paz",
+  "sucursal": "San Pedro Sula",
+  "sucursalId": "sps",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 2,
+    "subtotal": 300
+   }
+  ],
+  "total": 300,
+  "hora": "sábado 12:00 pm",
+  "resumen": "2 × Chanchito chuko · L 300",
+  "tel": "+50499990003",
+  "fecha": "2026-11-11T21:20:20.296Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1002",
+  "nombre": "José Zelaya",
+  "sucursal": "Tegucigalpa",
+  "sucursalId": "tegucigalpa",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 3,
+    "subtotal": 450
+   },
+   {
+    "id": "guacamole",
+    "nombre": "Guacamole",
+    "precio": 40,
+    "cantidad": 1,
+    "subtotal": 40
+   }
+  ],
+  "total": 490,
+  "hora": "sábado 10:30 am",
+  "resumen": "3 × Chanchito chuko · L 450 · 1 × Guacamole · L 40",
+  "tel": "+50499990002",
+  "fecha": "2026-11-11T21:20:20.233Z",
+  "estado": "nuevo"
+ },
+ {
+  "tipo": "pedido",
+  "n": "PED-1001",
+  "nombre": "Karla Mejía",
+  "sucursal": "Tegucigalpa",
+  "sucursalId": "tegucigalpa",
+  "lineas": [
+   {
+    "id": "chanchito",
+    "nombre": "Chanchito chuko",
+    "precio": 150,
+    "cantidad": 2,
+    "subtotal": 300
+   }
+  ],
+  "total": 300,
+  "hora": "A domicilio, lo antes posible",
+  "resumen": "2 × Chanchito chuko · L 300",
+  "entrega": "domicilio",
+  "direccion": "Col. Kennedy, bloque 12, casa 4, portón verde",
+  "tel": "+50499990001",
+  "fecha": "2026-11-11T21:20:09.002Z",
+  "estado": "nuevo"
+ }
+]
