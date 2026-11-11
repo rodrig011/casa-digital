@@ -20,5 +20,9 @@
   "pago": "Se paga al recibir o al recoger.",
   "tiempoPreparacion": "",
   "cobro": { "desde": "", "faltas": 0, "transferencia": "", "tarjeta": "" },
-  "domicilio": { "propio": true, "zona": "", "apps": [] }
+  "domicilio": { "propio": true, "zona": "", "apps": [] },
+  "repartidores": [
+    { "id": "rep1", "nombre": "Repartidor 1 (ejemplo)", "whatsapp": "+504 0000-0001", "sucursal": "tegucigalpa" },
+    { "id": "rep2", "nombre": "Repartidor 2 (ejemplo)", "whatsapp": "+504 0000-0002", "sucursal": "sps" }
+  ]
 }

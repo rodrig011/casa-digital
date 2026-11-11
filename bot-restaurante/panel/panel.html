@@ -67,7 +67,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 .ped .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
 .ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:28px;padding:0 10px;font-size:12px}
 .tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:15px;font-size:12px;white-space:nowrap;background:var(--mute-bg);color:var(--tx2)}
-.t-nuevo{background:var(--info-bg);color:var(--info)}.t-cocina,.t-por_pagar,.t-por_confirmar,.t-en_espera{background:var(--warn-bg);color:var(--warn)}.t-listo,.t-comp,.t-confirmada{background:var(--ok-bg);color:var(--ok)}.t-entregado,.t-atendido,.t-cancelado,.t-no_vino,.t-sin_cupo{background:var(--mute-bg);color:var(--tx3)}
+.t-nuevo,.t-en_camino{background:var(--info-bg);color:var(--info)}.t-cocina,.t-por_pagar,.t-por_confirmar,.t-en_espera{background:var(--warn-bg);color:var(--warn)}.t-listo,.t-comp,.t-confirmada{background:var(--ok-bg);color:var(--ok)}.t-entregado,.t-atendido,.t-cancelado,.t-no_vino,.t-sin_cupo{background:var(--mute-bg);color:var(--tx3)}
 .ped .aviso{font-size:12px;color:var(--red);font-weight:700}
 /* cocina */
 .cocina{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
@@ -131,7 +131,7 @@ const ICONO = {
 };
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONO[k][0]}"/></svg>`;
 const H = (t, k, r = "") => `<h2><span class="ct" style="background:${ICONO[k][1]}">${svg(k)}</span>${t}${r}</h2>`;
-const ESTADO_TXT = { por_pagar: "Por pagar", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
+const ESTADO_TXT = { por_pagar: "Por pagar", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", en_camino: "En camino", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false;
 // tema claro u oscuro: el que eligió, o el del celular
 const ponerTema = t => document.documentElement.setAttribute("data-theme", t);
@@ -164,7 +164,8 @@ function nav() {
 }
 
 function tarjeta(p, grande) {
-  const sig = { por_pagar: [["nuevo", "Pago recibido"]], nuevo: [["cocina", "A cocina"]], cocina: [["listo", "Listo"]], listo: [["entregado", "Entregado"]] }[p.estado] || [];
+  const reparto = p.entrega === "domicilio" && N.repartidores && N.repartidores.length;
+  const sig = { por_pagar: [["nuevo", "Pago recibido"]], nuevo: [["cocina", "A cocina"]], cocina: [["listo", "Listo"]], listo: [reparto ? ["en_camino", "En camino"] : ["entregado", "Entregado"]], en_camino: [["entregado", "Entregado"]] }[p.estado] || [];
   const extra = { por_pagar: [["cancelado", "Cancelar"]], nuevo: [["cancelado", "Cancelar"]], listo: [["no_vino", "No vino"]] }[p.estado] || [];
   return `<div class="card ped ${grande ? (p.estado === "cocina" ? "cocina-e" : p.estado) : ""}">
     <div class="l1">${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}<span>${hora(p.fecha)} · ${hace(p.fecha)}</span></div>
@@ -173,7 +174,8 @@ function tarjeta(p, grande) {
     ${p.tanda ? `<div><span class="tag t-por_confirmar">📅 ${esc(p.dia)} · ${esc(p.tanda)} · ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"}</span></div>` : ""}
     <ul>${(p.lineas || []).map(l => `<li>${l.cantidad} × ${esc(l.nombre)}${l.nota ? ` <em>(${esc(l.nota)})</em>` : ""}</li>`).join("")}</ul>
     <div class="l3"><span>${grande ? "" : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado]}</span> `}<b>${L(p.total)}</b> · ${esc(p.sucursal)}</span><span>${p.entrega === "domicilio" ? `🛵 ${esc(p.direccion)}` : `Recoge: ${esc(p.hora || "—")}`}</span></div>
-    <div class="acc">${sig.concat(extra).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("")}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
+    ${reparto && (p.repartidor || p.estado === "listo") && !["entregado", "cancelado"].includes(p.estado) ? `<div><span class="tag t-${p.repartidor ? "en_camino" : "por_confirmar"}">🛵 ${p.repartidor ? `Lo lleva ${esc(p.repartidor.nombre)}` : "Sin repartidor"}</span></div>` : ""}
+    <div class="acc">${sig.concat(extra).concat(reparto && p.estado === "listo" ? [["_rep", p.repartidor ? "Otro repartidor" : "Buscar repartidor"]] : []).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("")}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
   </div>`;
 }
 
@@ -202,10 +204,11 @@ function pintar() {
       <div class="grid2">
         <div class="card">${H("Lo más pedido hoy", "ventas")}${top.length ? `<table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Venta</th></tr>${top.map(([n, [c, s]]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay pedidos hoy.</div>`}</div>
         ${N.sucursales.length > 1 ? `<div class="card">${H("Por sucursal", "hoy")}<table><tr><th>Sucursal</th><th class="r">Pedidos</th><th class="r">Venta</th></tr>${porSuc.map(([n, c, s]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table></div>`
-          : `<div class="card">${H("Pedidos por estado", "pedidos")}<table><tr><th>Estado</th><th class="r">Pedidos</th></tr>${["por_pagar", "nuevo", "cocina", "listo", "en_espera"].map(e => [e, ps.filter(p => p.estado === e).length]).filter(([e, c]) => c || e !== "por_pagar" && e !== "en_espera").map(([e, c]) => `<tr><td><span class="tag t-${e}">${ESTADO_TXT[e]}</span></td><td class="r">${c}</td></tr>`).join("")}</table></div>`}
+          : `<div class="card">${H("Pedidos por estado", "pedidos")}<table><tr><th>Estado</th><th class="r">Pedidos</th></tr>${["por_pagar", "nuevo", "cocina", "listo", "en_camino", "en_espera"].map(e => [e, ps.filter(p => p.estado === e).length]).filter(([e, c]) => c || !["por_pagar", "en_espera", "en_camino"].includes(e)).map(([e, c]) => `<tr><td><span class="tag t-${e}">${ESTADO_TXT[e]}</span></td><td class="r">${c}</td></tr>`).join("")}</table></div>`}
       </div>`;
   } else if (vista === "pedidos") {
-    const cols = [["nuevo", "Nuevos"], ["cocina", "En cocina"], ["listo", "Listos para recoger"], ["entregado", "Entregados hoy"]];
+    const cols = [["nuevo", "Nuevos"], ["cocina", "En cocina"], ["listo", N.repartidores && N.repartidores.length ? "Listos" : "Listos para recoger"], ["entregado", "Entregados hoy"]];
+    if (N.repartidores && N.repartidores.length) cols.splice(3, 0, ["en_camino", "En camino"]);
     if (N.cobro || ps.some(p => p.estado === "por_pagar")) cols.unshift(["por_pagar", "Esperando pago"]);
     v.innerHTML = `${cols[0][0] === "por_pagar" ? `<p class="ayuda">Los pedidos que se pagan antes esperan aquí y no salen en cocina. Cuando llegue el comprobante, revise que el dinero esté en la cuenta y toque <b>Pago recibido</b>. Si alguien no llega por su pedido, toque <b>No vino</b>: la próxima vez ese número paga antes.</p>` : ""}<div class="board" style="--cols:${cols.length}">${cols.map(([e, t]) => { const x = ps.filter(p => p.estado === e && (e !== "entregado" || dia(p.fecha) === hoy())); return `<div class="col"><h3>${t}<span>${x.length}</span></h3>${x.map(p => tarjeta(p)).join("") || `<div class="card vacio">Nada aquí</div>`}</div>`; }).join("")}</div>`;
   } else if (vista === "cocina") {
@@ -239,12 +242,12 @@ function pintar() {
     v.innerHTML = `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Para cambiar un precio o agregar un producto, avísele a Casa Digital y queda actualizado el mismo día.</p>
       <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
   }
-  v.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => cambiar(b.dataset.n, b.dataset.e, b));
+  v.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => b.dataset.e === "_rep" ? otroRepartidor(b.dataset.n, b) : cambiar(b.dataset.n, b.dataset.e, b));
 }
 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
-const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido" };
+const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor" };
 const MALOS = ["fallo", "bloqueado", "codigo_malo"];
 const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
 const equipoCorto = ua => /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : ua ? "Otro" : "";
@@ -285,6 +288,18 @@ async function cambiar(n, estado, b) {
     if (!r.ok) throw new Error();
     const p = await r.json(); P = P.map(x => x.n === p.n ? p : x); pintar();
   } catch { b.disabled = false; alert("No se pudo guardar. Revise la conexión e intente otra vez."); }
+}
+
+// the bot passes the order to the next driver (never back to one who said no) and tells him by WhatsApp
+async function otroRepartidor(n, b) {
+  b.disabled = true;
+  try {
+    const r = await fetch(`/api/pedidos/${encodeURIComponent(n)}/repartidor`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    if (r.status === 401) return location.href = "/panel/entrar";
+    if (!r.ok) throw new Error();
+    const p = await r.json(); P = P.map(x => x.n === p.n ? p : x); pintar();
+    if (!p.repartidor) alert("No hay otro repartidor disponible para esta sucursal. Escríbale a uno directamente.");
+  } catch { b.disabled = false; alert("No se pudo cambiar el repartidor. Revise la conexión e intente otra vez."); }
 }
 
 function beep() { try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.2, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .6); o.start(); o.stop(c.currentTime + .6); } catch {} }
