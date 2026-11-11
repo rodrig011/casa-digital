@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Con Sabor a Pueblo · video corto</title>
+<style>
+@font-face{font-family:"Archivo";src:url(src/archivo.woff2) format("woff2-variations");font-weight:100 900;font-stretch:62% 125%;}
+:root{
+  --paper:#17130D; --ink:#F6EFE0; --mute:#A89C88; --rule:#3A3226;
+  --red:#F2B32B;            /* el amarillo de su logo */
+  --wa-bg:#0F0C08; --wa-out:#D6F2C4; --wa-in:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--paper);}
+body{font-family:"Archivo",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;}
+.scene{position:absolute;inset:0;visibility:hidden;overflow:hidden;}
+.pad{position:absolute;left:84px;right:84px;}
+/* una sola familia, dos anchos: condensada pesada para titulares, normal para leer */
+.h{font-stretch:68%;font-weight:800;line-height:.92;letter-spacing:-.012em;text-wrap:balance;}
+.h em{font-style:normal;color:var(--red);}
+.b{font-stretch:100%;font-weight:450;line-height:1.28;}
+.src{font-size:30px;font-weight:450;color:var(--mute);line-height:1.3;}
+.who{position:absolute;top:84px;left:84px;display:flex;align-items:center;gap:22px;font-size:34px;font-weight:600;}
+.who img{width:84px;height:84px;border-radius:50%;object-fit:cover;}
+
+/* 1 · gancho */
+#s1 .strip{position:absolute;top:236px;left:0;display:flex;gap:18px;will-change:transform;}
+#s1 .strip img{width:576px;height:618px;display:block;}   /* sus fotos a tamaño original, sin agrandar */
+#s1 .num{top:930px;font-size:330px;}
+#s1 .l2{top:1262px;font-size:104px;}
+#s1 .src{top:1730px;}
+
+/* 2 · lo que pregunta la gente */
+#s2 .h1{top:210px;font-size:150px;}
+#s2 ol{position:absolute;top:640px;left:84px;right:84px;list-style:none;}
+#s2 li{display:flex;align-items:baseline;justify-content:space-between;border-top:3px solid var(--ink);padding:30px 0 34px;font-stretch:68%;font-weight:700;font-size:132px;line-height:1;}
+#s2 li b{font-weight:800;color:var(--red);}
+#s2 li:last-child{border-bottom:3px solid var(--ink);}
+#s2 .src{top:1340px;}
+
+/* 3 · un solo WhatsApp */
+#s3 .h1{top:210px;font-size:150px;}
+#s3 .q{font-size:62px;font-weight:500;line-height:1.16;border-left:8px solid var(--red);padding-left:36px;}
+#s3 .q small{display:block;font-size:32px;font-weight:500;color:var(--mute);margin-bottom:14px;}
+#s3 .q1{top:800px;} #s3 .q2{top:1060px;} #s3 .q3{top:1320px;}
+#s3 .src{top:1650px;}
+
+/* 4 · el apartado completo */
+#s4 .h1{top:200px;font-size:104px;line-height:.98;}
+#s4 .chat{position:absolute;left:84px;right:84px;top:600px;height:1040px;background:var(--wa-bg);border:3px solid var(--rule);border-radius:36px;padding:44px 40px;display:flex;flex-direction:column;gap:22px;color:#1A1411;}
+.m{max-width:84%;padding:26px 32px 28px;border-radius:26px;font-size:43px;line-height:1.24;font-weight:450;}
+.m.c{align-self:flex-end;background:var(--wa-out);border-bottom-right-radius:8px;}
+.m.r{align-self:flex-start;background:var(--wa-in);border-bottom-left-radius:8px;}
+.m b{font-weight:700;}
+.m i{font-style:normal;font-weight:600;font-size:33px;border:2px dashed #8A7F70;border-radius:10px;padding:2px 12px;color:#5E5448;white-space:nowrap;}
+#s4 .src{top:1680px;}
+
+/* 5 y 6 · el panel real */
+.shot{position:absolute;left:150px;top:540px;width:780px;height:1150px;border-radius:30px;overflow:hidden;border:3px solid var(--rule);background:#fff;}
+.shot img{width:780px;display:block;will-change:transform;}   /* 780 px: su tamaño original */
+#s5 .h1,#s6 .h1{top:230px;font-size:110px;line-height:.98;}
+#s5 .src,#s6 .src{top:1740px;}
+
+/* 7 · Navidad */
+#s7 .ph{position:absolute;left:84px;top:150px;width:576px;height:700px;overflow:hidden;border-radius:24px;}
+#s7 .ph img{width:576px;display:block;will-change:transform;}
+#s7 .h1{top:930px;font-size:150px;}
+#s7 .p{top:1400px;font-size:50px;color:var(--ink);}
+#s7 .src{top:1700px;}
+
+/* 8 · cierre, en su amarillo */
+#s8{background:#F2B32B;color:#17130D;}
+#s8 .h1{top:330px;font-size:210px;}
+#s8 .h1 em{color:#17130D;box-shadow:inset 0 -22px 0 #fff3;}
+#s8 .cta{top:1010px;font-size:54px;font-weight:500;line-height:1.25;}
+#s8 .wa{top:1250px;font-stretch:68%;font-weight:800;font-size:120px;line-height:1;}
+#s8 .wa small{display:block;font-stretch:100%;font-weight:600;font-size:34px;color:#4A3B12;margin-bottom:18px;letter-spacing:0;}
+#s8 .by{position:absolute;left:84px;bottom:110px;display:flex;align-items:center;gap:26px;font-size:40px;font-weight:500;}
+#s8 .by img{width:74px;height:84px;filter:brightness(0);}
+#s8 .by b{font-weight:800;}
+</style>
+</head>
+<body>
+
+<section class="scene" id="s1">
+  <div class="who" data-in="0.05"><img src="src/logo.jpg" alt="">Para Con Sabor a Pueblo</div>
+  <div class="strip"><img src="src/chanchito2.jpg" alt=""><img src="src/chicharrones.jpg" alt=""><img src="src/chanchito1.jpg" alt=""><img src="src/chanchito3.jpg" alt=""></div>
+  <div class="pad h num" data-in="0.55">985.8K</div>
+  <div class="pad h l2" data-in="1.1">vistas en un solo video.<br><em>La gente quiere su<br>chanchito chuko.</em></div>
+  <div class="pad src" data-in="1.65">Su TikTok @consaborapueblohn, video de julio, leído el 11 de noviembre. Fotos de sus propios videos.</div>
+</section>
+
+<section class="scene" id="s2">
+  <div class="pad h h1" data-in="0">Y casi todos<br><em>preguntan lo mismo.</em></div>
+  <ol>
+    <li data-in="0.55">¿Precio? <b>19</b></li>
+    <li data-in="1.09">¿Hacen envíos? <b>15</b></li>
+    <li data-in="1.64">¿Dónde están? <b>12</b></li>
+  </ol>
+  <div class="pad src" data-in="2.2">Conteo nuestro sobre 100 comentarios de ese mismo video.</div>
+</section>
+
+<section class="scene" id="s3">
+  <div class="pad h h1" data-in="0">Todo cae en<br><em>un solo WhatsApp.</em></div>
+  <div class="pad b q q1" data-in="1.09"><small>Ustedes contestan</small>“Menu y precios 📲3169-9031”</div>
+  <div class="pad b q q2" data-in="2.18"><small>Un cliente</small>“El número esta deshabilitado”</div>
+  <div class="pad b q q3" data-in="3.27"><small>Ustedes</small>“Saturado de llamadas talves”</div>
+  <div class="pad src" data-in="3.8">Comentarios y respuestas de su TikTok, palabra por palabra.</div>
+</section>
+
+<section class="scene" id="s4">
+  <div class="pad h h1" data-in="0">Ese WhatsApp<br>puede tomar<br><em>el apartado completo.</em></div>
+  <div class="chat" data-in="0.55">
+    <div class="m c" data-in="1.09">Buenas, ¿precio del chanchito chuko? Quiero apartar 2 para el sábado</div>
+    <div class="m r" data-in="2.18">¡Con gusto! <b>Chanchito chuko</b> <i>su precio</i> cada uno. ¿Lo recoge en Tegucigalpa o en San Pedro Sula?</div>
+    <div class="m c" data-in="3.82">En Palmira, a las 11. A nombre de Karla</div>
+    <div class="m r" data-in="4.9">Listo, Karla. <b>2 Chanchito chuko apartados</b> para el sábado a las 11:00 a. m. en Col. Palmira, dos cuadras abajo del edificio rojo.</div>
+  </div>
+  <div class="pad src" data-in="1.09">Conversación de ejemplo. El precio lo ponen ustedes: aquí no inventamos ninguno.</div>
+</section>
+
+<section class="scene" id="s5">
+  <div class="pad h h1" data-in="0">Y entra solo<br><em>al punto que le toca.</em></div>
+  <div class="shot" data-in="0.55"><img id="shot5" src="src/panel-cocina.jpg" alt=""></div>
+  <div class="pad src" data-in="1.09">Panel real de Casa Digital. Los pedidos, nombres y precios son de ejemplo.</div>
+</section>
+
+<section class="scene" id="s6">
+  <div class="pad h h1" data-in="0">Tegus y San Pedro,<br><em>en su celular.</em></div>
+  <div class="shot" data-in="0.55"><img id="shot6" src="src/panel-hoy.jpg" alt=""></div>
+  <div class="pad src" data-in="1.09">Panel real de Casa Digital. Las cifras son de ejemplo, no ventas de Con Sabor a Pueblo.</div>
+</section>
+
+<section class="scene" id="s7">
+  <div class="ph" data-in="0"><img id="ph7" src="src/pierna.jpg" alt=""></div>
+  <div class="pad h h1" data-in="0.55">Y las piernas<br>del 24, <em>apartadas<br>en orden.</em></div>
+  <div class="pad b p" data-in="1.4">Cada encargo con nombre, libras y ciudad, sin buscar entre los chats.</div>
+  <div class="pad src" data-in="1.9">Ustedes anunciaron que este año las piernas van bajo pedido. Foto de su video.</div>
+</section>
+
+<section class="scene" id="s8">
+  <div class="pad h h1" data-in="0">¿Lo vemos con <em>su menú?</em></div>
+  <div class="pad b cta" data-in="1.09">Se lo armamos con sus productos y sus precios para que lo pruebe antes de decidir nada.</div>
+  <div class="pad wa" data-in="2.18"><small>Escríbanos por WhatsApp</small>+1 (765) 543-4251</div>
+  <div class="by" data-in="3.0"><img src="src/clientia.svg" alt=""><span><b>Casa Digital</b> by Clientia Tech</span></div>
+</section>
+
+<script>
+// "Stylish" (FASSounds), 110 BPM: cada corte cae en un compás.
+const P0 = 0.035, BAR = 4 * 60 / 110, K = k => P0 + BAR * k;
+const SCENES = [["s1",0,2.5],["s2",2.5,4.5],["s3",4.5,7],["s4",7,10.5],["s5",10.5,12.5],["s6",12.5,14.5],["s7",14.5,16.5],["s8",16.5,19.5]];
+const TOTAL = K(19.5);
+const EASE = "cubic-bezier(0.23,1,0.32,1)";   // ease-out fuerte: entra rápido y se asienta
+const anims = [];
+function A(el, at, kf, dur = 700, easing = EASE) {
+  const a = el.animate(kf, { delay: at * 1000, duration: dur, fill: "both", easing });
+  a.pause(); anims.push(a); return a;
+}
+for (const [id, a, b] of SCENES) {
+  const sc = document.getElementById(id), t0 = K(a);
+  sc.dataset.a = t0; sc.dataset.b = K(b);
+  sc.querySelectorAll("[data-in]").forEach(el => {
+    // nada aparece de la nada: entra desde 0.97 y 28 px, solo transform y opacity
+    A(el, t0 + parseFloat(el.dataset.in), [{ opacity: 0, transform: "translateY(28px) scale(.97)" }, { opacity: 1, transform: "none" }]);
+  });
+}
+const span = id => { const s = document.getElementById(id); return [parseFloat(s.dataset.a), (parseFloat(s.dataset.b) - parseFloat(s.dataset.a)) * 1000]; };
+const SLOW = "cubic-bezier(0.77,0,0.175,1)";
+// movimiento lento y continuo dentro de cada escena (lineal: es un paneo, no una entrada)
+{ const [t, d] = span("s1"); A(document.querySelector("#s1 .strip"), t, [{ transform: "translateX(60px)" }, { transform: "translateX(-500px)" }], d, "linear"); }
+{ const [t, d] = span("s5"); A(document.getElementById("shot5"), t + 1.3, [{ transform: "translateY(-550px)" }, { transform: "translateY(-1000px)" }], d - 1500, SLOW); }
+{ const [t, d] = span("s6"); A(document.getElementById("shot6"), t + 1.3, [{ transform: "translateY(-360px)" }, { transform: "translateY(-690px)" }], d - 1500, SLOW); }
+{ const [t, d] = span("s7"); A(document.getElementById("ph7"), t, [{ transform: "translateY(-120px)" }, { transform: "translateY(-260px)" }], d, "linear"); }
+window.TOTAL = TOTAL;
+const LAST = SCENES[SCENES.length - 1][0];
+window.seek = t => {
+  for (const [id] of SCENES) { const s = document.getElementById(id); s.style.visibility = (t >= +s.dataset.a && t < +s.dataset.b) ? "visible" : "hidden"; }
+  if (t >= +document.getElementById(LAST).dataset.a) document.getElementById(LAST).style.visibility = "visible";
+  for (const a of anims) a.currentTime = t * 1000;
+};
+const q = new URLSearchParams(location.search).get("t");
+document.fonts.ready.then(() => { window.READY = true; seek(q ? +q : 0); });
+</script>
+</body>
+</html>
