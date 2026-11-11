@@ -30,6 +30,7 @@ const { createStore } = require("./store");
 const { createCifra } = require("./cifrado");
 const { createBitacora } = require("./bitacora");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
+const { createRepartos } = require("./repartos");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
@@ -38,7 +39,7 @@ const { createMeta, mensajes: mensajesMeta } = require("./meta");
 const { crearRespaldo } = require("./respaldo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
-const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
+const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "en_camino", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
 
 function loadConfig(env = process.env) {
   const sandbox = on(env.TWILIO_SANDBOX);
@@ -99,6 +100,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const ia = "ia" in deps ? deps.ia : cfg.anthropicKey ? createIA({ negocio, apiKey: cfg.anthropicKey, model: cfg.anthropicModel }) : null;
   const pending = new Set();                      // messages in flight (tests wait on them)
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
+  const repartos = createRepartos({ negocio, store, avisos, now, log, track });
 
   const app = express();
   app.set("trust proxy", true);
@@ -294,6 +296,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
   async function turnoUno(from, text, { foto, media, base }) {
     let reply;
     // too many messages from one number: one notice, then silence until the window passes
+    // the restaurant's own drivers answer SALGO / ENTREGADO / NO PUEDO on the same number
+    const deRepartidor = repartos.mensaje(from, text);
+    if (deRepartidor) return deRepartidor;
     if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
       if (!limite.primeraVezFuera(digits(from) || from)) return [];
       log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`);
@@ -382,7 +387,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
-      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -396,7 +401,14 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido";
     if (pagoRecibido) confirmarPago(antes, { por: panel.usuarioDe(req).correo, metodo: "manual" });
     const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
-    if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(p.n, { avisoListo: true }); track(avisos.listo(p)); }
+    const conRepartidor = repartos.activo && p.tipo === "pedido" && p.entrega === "domicilio";
+    if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) {
+      store.updatePedido(p.n, { avisoListo: true });
+      // own drivers: the bot picks one and tells him, the customer and the owner; otherwise the old notice
+      if (conRepartidor && !p.repartidor) repartos.asignar(p.n, { por: p.por }); else track(avisos.listo(p));
+    }
+    if (conRepartidor && estado === "en_camino" && estadoAntes !== estado) track(repartos.enCamino(p));
+    if (conRepartidor && estado === "entregado" && estadoAntes !== estado && p.repartidor) track(repartos.entregado(p));
     if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
     if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) {
       liberados(p);
@@ -405,6 +417,24 @@ function createApp(cfg = loadConfig(), deps = {}) {
     log(`[panel] ${p.n} -> ${estado} (${p.por})`);
     if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip: req.ip });
     res.json(p);
+  });
+
+  // the owner sends the order to another driver (or picks one) from the panel
+  app.post("/api/pedidos/:n/repartidor", express.json({ limit: "2kb" }), (req, res) => {
+    if (sinSesion(req, res)) return;
+    const origen = req.get("Origin");
+    if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
+    const p = store.getPedido(req.params.n);
+    if (!p) return res.status(404).json({ error: "no existe" });
+    if (!repartos.activo || p.entrega !== "domicilio") return res.status(409).json({ error: "este pedido no lleva repartidor" });
+    if (!["listo", "cocina", "nuevo"].includes(p.estado)) return res.status(409).json({ error: "el pedido ya salió o se cerró" });
+    const id = String((req.body || {}).id || "");
+    const por = panel.usuarioDe(req).correo;
+    const otros = id ? repartos.lista.filter(r => r.id !== id).map(r => r.id) : p.repartidor ? [...(p.rechazos || []), p.repartidor.id] : [];
+    if (id && !repartos.lista.some(r => r.id === id)) return res.status(400).json({ error: "repartidor desconocido" });
+    const q = repartos.asignar(p.n, { excluir: otros, por });
+    bitacora.anotar("repartidor", { correo: por, pedido: p.n, como: q ? q.repartidor.nombre : "sin repartidor", ip: req.ip });
+    res.json(q || store.getPedido(p.n));
   });
 
   // who has access, whether the data is encrypted, and the last logins and changes

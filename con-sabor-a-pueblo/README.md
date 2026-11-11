@@ -19,7 +19,7 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 
 ## Qué hay aquí
 
-- `con-sabor-a-pueblo-casa-digital-vertical.mp4`: video vertical 1080×1920 de 1:56 en el estilo oscuro de antes, con el outro de Clientia Tech. Se genera en `video/` (ver su README). La pantalla del repartidor y la de proveedores son demostración y lo dicen.
+- `con-sabor-a-pueblo-casa-digital-vertical.mp4`: video vertical 1080×1920 de 1:56 en el estilo oscuro de antes, con el outro de Clientia Tech. Se genera en `video/` (ver su README). La pantalla de proveedores es demostración y lo dice; lo del repartidor ya funciona en el bot (los mensajes reales son texto de WhatsApp, no la pantalla del video).
 - `kit/`: la propuesta por escrito (`0-carta-de-presentacion.md`), cómo sería el arranque (`1-bienvenida.md`) y la lista de lo que necesitamos (`2-lo-que-necesitamos.md`). Los PDF están en `kit/pdf/`.
 - `bot/sabor-pueblo-demo.json`: su menú para el bot, con **precios de ejemplo**. Solo para las capturas; no usar con clientes sin que confirmen menú y precios.
 - `redes/tiktok-datos.json`: 13 videos con su transcripción, 138 comentarios y las respuestas de la cuenta.
@@ -32,7 +32,7 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 
 1. Menú y precios confirmados por ellos (hoy no tenemos ninguno).
 2. Zonas y costo del envío, quiénes reparten y cómo se les avisa.
-2b. **Construir** la pantalla del repartidor y los avisos a proveedores: hoy solo existen como demostración en el video. El bot real ya toma pedidos a domicilio con dirección, los manda a cocina y le avisa al cliente cuando va en camino.
+2b. Repartidores: **ya está en el bot** (`bot-restaurante/README.md`, sección 9): asigna al más libre de la sucursal, le manda la entrega por WhatsApp, el repartidor contesta SALGO / ENTREGADO / NO PUEDO y al cliente le llegan los avisos. Falta solo el nombre y WhatsApp de cada repartidor y su ciudad. Los avisos a proveedores siguen siendo demostración.
 3. Hasta qué hora se aparta y si quieren tope de apartados por sábado (el bot ya maneja cupos; hay que configurarlos a su manera).
 4. Cómo quieren los encargos de las piernas: precio, mínimo, fecha límite y dónde se entregan.
 5. La prueba real del bot en WhatsApp, que sigue pendiente (`bot-restaurante/PRUEBA-REAL.md`).

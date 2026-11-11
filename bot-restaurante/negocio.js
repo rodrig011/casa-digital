@@ -37,6 +37,8 @@ function preparar(n) {
   let cupos = null;
   try { cupos = prepararCupos(n.cupos); } catch (e) { errores.push(e.message); }
   if (cupos && !items.some(i => i.cupos)) errores.push("con cupos, al menos un producto necesita \"cupos\" (cuántas personas)");
+  let repartidores = [];
+  try { repartidores = require("./repartos").prepararRepartidores(n.repartidores, n.sucursales || []); } catch (e) { errores.push(e.message); }
   if (errores.length) throw new Error("Revise el archivo del negocio: " + errores.join("; "));
 
   const sucursal = q => {
@@ -78,6 +80,7 @@ function preparar(n) {
     cobro: prepararCobro(n.cobro),
     reservaciones: prepararReservaciones(n.reservaciones),
     cupos,
+    repartidores,
     items, sucursal, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };

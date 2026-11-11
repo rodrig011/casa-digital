@@ -8,6 +8,7 @@ Qué hace el bot por WhatsApp, a cualquier hora:
 - toma pedidos para recoger (productos, sucursal, hora, nombre) y da el total,
 - da direcciones, teléfonos y horario de cada sucursal,
 - explica cómo pedir a domicilio (PedidosYa, Bip Bip) si el restaurante no tiene repartidores,
+- con repartidores propios, le asigna cada envío al más libre y le avisa por WhatsApp (sección 9),
 - pasa a una persona cuando el cliente lo pide.
 
 Cada pedido le llega por WhatsApp al dueño y a la sucursal, aparece en el **panel** y en la **pantalla de cocina**. Cuando la cocina toca **Listo**, al cliente le llega "su pedido está listo". Con la clave de Claude, el bot entiende mensajes escritos con sus palabras; sin clave funciona con el menú de opciones.
@@ -158,9 +159,33 @@ DATA_KEY=... node respaldo.js restaurar respaldo-2026-11-01.json ./datos-nuevos 
 
 El respaldo va cifrado con `DATA_KEY`: sin la llave no se puede leer ni restaurar. Guarde la llave en el gestor de contraseñas, nunca en la misma carpeta que los respaldos. Para restaurar en Render: restaure en una carpeta nueva del disco, apunte `DATA_DIR` a esa carpeta y reinicie.
 
+## 9. Repartidores propios
+
+Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (el WhatsApp de 8 cifras se toma como Honduras):
+
+```json
+"repartidores": [
+  { "id": "carlos", "nombre": "Carlos", "whatsapp": "+504 9999-0000", "sucursal": "tegucigalpa" },
+  { "id": "jose", "nombre": "José", "whatsapp": "9999-0001" }
+]
+```
+
+`sucursal` es opcional: sin ella, el repartidor lleva pedidos de todas. Los repartidores no instalan nada ni entran al panel; todo pasa por el mismo WhatsApp del negocio.
+
+1. Cocina marca **Listo** un pedido a domicilio. El bot escoge al repartidor de esa sucursal con menos entregas en la calle (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp: cliente y teléfono, dirección, qué lleva, cuánto cobrar, link de Google Maps y link para escribirle al cliente.
+2. Al cliente le llega "su pedido está listo, lo lleva Carlos"; al dueño y a la sucursal, a quién se asignó.
+3. El repartidor contesta en el mismo chat:
+   - **SALGO**: el pedido pasa a *En camino* y al cliente le llega "va en camino con Carlos". Si tiene varios listos, salen todos.
+   - **ENTREGADO**: se cierra y al cliente le llega "fue entregado, gracias"; al dueño, quién lo entregó. Con varios en la calle, el número: "entregado 1004".
+   - **NO PUEDO**: el bot se lo pasa al siguiente repartidor, nunca de vuelta a uno que ya dijo que no. Si no queda nadie, avisa al dueño.
+   - Cualquier otra cosa: le recuerda sus entregas pendientes. Al número de un repartidor el bot no le contesta como a un cliente.
+4. En el panel, la tarjeta dice quién lo lleva y tiene **En camino**, **Entregado** y **Otro repartidor** (al anterior le llega que ya no lo lleva).
+
+Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje al repartidor sale con la plantilla aprobada (`META_PLANTILLA`). Conviene que cada repartidor le escriba "hola" al número del negocio el día que empieza.
+
 ## Lo que todavía no hace
 
-- Envío a domicilio propio (pedir la dirección y cobrar el envío). Hoy el bot manda a PedidosYa o Bip Bip.
+- Cobrar el costo del envío por zona: el bot pide la dirección y dice que el costo lo confirma el negocio.
 - Pago con tarjeta: el código para Tilopay está hecho pero nunca se probó con una cuenta real (ver la sección 4). PixelPay todavía no está conectado.
 - Inventario y aviso automático a proveedores (está en los paneles de demostración, falta conectarlo aquí).
 - Nunca se ha probado con WhatsApp real (Meta o Twilio) ni con una clave real de Claude. Las pruebas de `npm test` simulan los dos. La prueba real se hace con el número de prueba de Meta, nunca con el número de un negocio.
