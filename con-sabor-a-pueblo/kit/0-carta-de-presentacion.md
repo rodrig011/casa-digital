@@ -16,7 +16,7 @@ Todo se instala a distancia: no hay que comprar equipo ni instalar nada en sus c
 - La gente pregunta casi siempre lo mismo. De 100 comentarios que leímos en ese video, 19 preguntan el precio, 15 si hacen envíos y 12 dónde están.
 - Ustedes mandan a todos al 3169-9031 para el menú, los precios y los apartados. Y ahora también los encargos de las piernas para el 24 de diciembre.
 
-Todo eso cae en un solo WhatsApp. Lo que queremos es que ese WhatsApp conteste y aparte solo, para que ustedes cocinen y vendan.
+Todo eso cae en un solo WhatsApp. Lo que nos pidieron en la llamada es eso mismo: que el pedido se tome solo, llegue a la cocina, salga con su repartidor y el cliente esté avisado.
 
 ## Lo que hacemos por ustedes
 
@@ -24,7 +24,7 @@ Todo eso cae en un solo WhatsApp. Lo que queremos es que ese WhatsApp conteste y
 - **Un asistente en su mismo WhatsApp que entiende lo que el cliente escribe.** Aunque escriba a su manera, como "precio del chanchito y dónde están en sps".
   - Manda el menú con los precios que ustedes nos den, y dice dónde están y a qué hora atienden en cada ciudad.
   - Toma el apartado completo: qué quiere, cuántos, en qué ciudad lo recoge, a qué hora y a nombre de quién, y le da el total.
-  - Contesta claro si hay envíos o no, según lo que ustedes decidan.
+  - Toma pedidos a domicilio con la dirección y su seña, y le avisa al cliente cuando su pedido va en camino.
   - Le pasa la conversación a una persona cuando el cliente lo pide.
   - Si ustedes quieren, deja de ofrecer cuando se llena el tope de apartados del sábado.
 - **Cada apartado llega al punto que le toca.** Los de Tegucigalpa a Tegucigalpa y los de San Pedro Sula a San Pedro Sula, con aviso por WhatsApp.
@@ -35,6 +35,14 @@ Todo eso cae en un solo WhatsApp. Lo que queremos es que ese WhatsApp conteste y
 <!-- tarjetas: simples -->
 - **Pantalla para el puesto.** En un celular o una tablet se ven los apartados en orden. Al tocar **Listo**, al cliente le llega un WhatsApp para que pase a recoger.
 - **Encargos de Navidad.** Las piernas del 24 de diciembre quedan anotadas con nombre, cantidad y ciudad, sin buscarlas entre los chats.
+
+## Lo que armamos con ustedes después del arranque
+
+<!-- tarjetas: simples -->
+- **Pantalla del repartidor.** En su celular ve qué lleva, a dónde va y cuánto cobra, y marca **Entregado**.
+- **Avisos a proveedores.** Cuando un insumo baja del mínimo que ustedes digan, el pedido al proveedor sale por WhatsApp.
+
+Estas dos partes todavía no están en el sistema de todos los días. En el video se ven como demostración. Las armamos con ustedes, según cómo reparten y a quién le compran, y no cuestan nada extra dentro de su plan.
 
 <!-- banda: 30 | días gratis -->
 ## Precio

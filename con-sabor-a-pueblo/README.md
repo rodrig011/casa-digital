@@ -10,7 +10,8 @@ Comida tradicional hondureña (TikTok @consaborapueblohn, 45K seguidores, 832 vi
 - **Navidad:** pierna de cerdo deshuesada para el 24 de diciembre, bajo pedido, en las dos ciudades (video del 11 nov).
 - **Apartados:** ya aceptan apartados por WhatsApp. El 7 de noviembre terminaron a las 2 p. m. con las bandejas vacías.
 - **Precios:** no los publican. A todos les contestan "Menu y precios 📲3169-9031". **No sabemos ningún precio.**
-- **Envíos:** no confirmado. Varios clientes dicen que no hacen domicilio; la cuenta no lo aclara.
+- **Envíos:** el dueño le dijo a Rodrigo por teléfono (11 nov) que tienen su propio delivery. En TikTok no lo aclaran y varios clientes creen que no hay. Zonas y costo: por confirmar.
+- **Lo que pidió el dueño en la llamada (según Rodrigo):** que la toma de pedidos sea automática y llegue a cocina, automatizar su delivery y que se le avise al cliente.
 - El video más visto (julio) tiene 985.8K vistas. De 100 comentarios leídos en ese video: 19 preguntan el precio, 15 si hacen envíos o domicilio y 12 dónde están.
 - El logo dice 8982-7262, que es el número que antes daban para San Pedro Sula. Hoy publican 3169-9031 para las dos ciudades.
 
@@ -18,7 +19,7 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 
 ## Qué hay aquí
 
-- `con-sabor-a-pueblo-corto.mp4`: video vertical 1080×1920 de 43 s, con "Stylish" de FASSounds. Se genera en `video-corto/` (ver su README).
+- `con-sabor-a-pueblo-casa-digital-vertical.mp4`: video vertical 1080×1920 de 1:56 en el estilo oscuro de antes, con el outro de Clientia Tech. Se genera en `video/` (ver su README). La pantalla del repartidor y la de proveedores son demostración y lo dicen.
 - `kit/`: la propuesta por escrito (`0-carta-de-presentacion.md`), cómo sería el arranque (`1-bienvenida.md`) y la lista de lo que necesitamos (`2-lo-que-necesitamos.md`). Los PDF están en `kit/pdf/`.
 - `bot/sabor-pueblo-demo.json`: su menú para el bot, con **precios de ejemplo**. Solo para las capturas; no usar con clientes sin que confirmen menú y precios.
 - `redes/tiktok-datos.json`: 13 videos con su transcripción, 138 comentarios y las respuestas de la cuenta.
@@ -30,7 +31,8 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 ## Antes de prender el bot con ellos
 
 1. Menú y precios confirmados por ellos (hoy no tenemos ninguno).
-2. Si hacen envíos y qué se contesta.
+2. Zonas y costo del envío, quiénes reparten y cómo se les avisa.
+2b. **Construir** la pantalla del repartidor y los avisos a proveedores: hoy solo existen como demostración en el video. El bot real ya toma pedidos a domicilio con dirección, los manda a cocina y le avisa al cliente cuando va en camino.
 3. Hasta qué hora se aparta y si quieren tope de apartados por sábado (el bot ya maneja cupos; hay que configurarlos a su manera).
 4. Cómo quieren los encargos de las piernas: precio, mínimo, fecha límite y dónde se entregan.
 5. La prueba real del bot en WhatsApp, que sigue pendiente (`bot-restaurante/PRUEBA-REAL.md`).

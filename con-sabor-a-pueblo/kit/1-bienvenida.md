@@ -14,7 +14,7 @@ Gracias por el interés. Soy Rodrigo Herrera, hondureño, estudio en Ivy Tech, y
   - Manda el menú con los precios de ustedes.
   - Toma apartados para recoger: qué quiere, en qué ciudad, a qué hora y a nombre de quién, y le da el total.
   - Da la dirección y el horario de Tegucigalpa y de San Pedro Sula.
-  - Contesta si hay envíos o no, según lo que ustedes decidan.
+  - Toma pedidos a domicilio con la dirección, y le avisa al cliente cuando su pedido va en camino.
   - Le pasa la conversación a una persona cuando el cliente lo pide o tiene una queja.
 - **Avisos a su celular.** Cada apartado le llega por WhatsApp al dueño y al punto que corresponde. Escriba **pedidos** al bot y le contesta con todo lo pendiente.
 - **Su panel, con su contraseña.** Los apartados del día, cuánto se vendió por WhatsApp, lo más pedido y cómo va cada ciudad. Solo entra quien usted autorice.
@@ -25,7 +25,7 @@ Gracias por el interés. Soy Rodrigo Herrera, hondureño, estudio en Ivy Tech, y
 
 ## Lo que se va agregando después
 
-Hay otras partes del panel que todavía no están en el sistema de todos los días: cierre de caja, inventario y ventas por video. Si a ustedes les sirven, se activan después del arranque, con sus datos reales, y no cuestan nada extra dentro de su plan.
+Hay partes que todavía no están en el sistema de todos los días: la pantalla del repartidor, los avisos a proveedores, el cierre de caja y el inventario. Las armamos con ustedes después del arranque, con sus datos reales, y no cuestan nada extra dentro de su plan.
 
 <!-- pagina -->
 <!-- banda: 30 | días gratis -->

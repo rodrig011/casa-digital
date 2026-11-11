@@ -36,8 +36,13 @@ Para Tegucigalpa y para San Pedro Sula:
 
 ## Domicilio
 
-- [ ] Si hacen envíos o no. Si sí: a qué zonas, cuánto cobran y con quién los mandan.
-- [ ] Qué quieren que se le conteste a quien pregunta por envíos.
+- [ ] A qué zonas llevan en cada ciudad y cuánto cobran el envío.
+- [ ] Quiénes reparten y el WhatsApp de cada uno.
+- [ ] Cómo le avisan hoy al repartidor y cómo cobra (efectivo, transferencia).
+
+## Proveedores (para después del arranque)
+
+- [ ] Qué insumos se les acaban más seguido y a quién se los compran.
 
 ## El número de WhatsApp
 
