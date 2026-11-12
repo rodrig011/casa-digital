@@ -1769,8 +1769,12 @@ function conversar(tel, text) {
   return r.messages.filter(m => m.text);
 }
 // Claude through the demo server (it adds the system prompt, the tools and the key); the tools run here
-const ia = IA_URL ? createIA({ negocio, timeoutMs: 25000, client: { messages: { create: async (body, opts) => {
-  const r = await fetch(IA_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ negocio: "con-sabor-a-pueblo", messages: body.messages }), signal: opts && opts.signal });
+// the free server sleeps: the first answer can take up to a minute while it wakes, so it gets more time
+let despierta = false;
+const ia = IA_URL ? createIA({ negocio, timeoutMs: 80000, client: { messages: { create: async (body, opts) => {
+  const tope = AbortSignal.timeout(despierta ? 25000 : 75000);
+  const r = await fetch(IA_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ negocio: "con-sabor-a-pueblo", messages: body.messages }), signal: opts && opts.signal ? AbortSignal.any([opts.signal, tope]) : tope });
+  despierta = true;
   if (!r.ok) throw Object.assign(new Error("demo " + r.status), { status: r.status });
   return r.json();
 } } } }) : null;
@@ -1778,14 +1782,14 @@ let iaViva = !!ia;
 function pintarIA(t) {
   const el = document.getElementById("ia"); if (!el) return;
   el.classList.toggle("on", iaViva && t === "on");
-  el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : "IA: esperando la primera respuesta";
+  el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : despierta ? "IA lista" : "IA: despertando (la primera respuesta tarda hasta un minuto)";
 }
-if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => pintarIA(), () => pintarIA());   // wakes the server up
+if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => { despierta = true; pintarIA(); }, () => pintarIA());   // wakes the server up
 async function conversarIA(tel, text) {
   const sess = sesiones.get(tel) || { state: null };
   try {
     const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null });
-    sess.ia = r.history; sesiones.set(tel, sess); pintarIA("on");
+    sess.ia = r.history; sess.fallo = false; sesiones.set(tel, sess); pintarIA("on");
     if (r.pedido) guardar(r.pedido, tel);
     if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
     return [{ text: r.reply }];
@@ -1793,6 +1797,8 @@ async function conversarIA(tel, text) {
     if (e.pedido) guardar(e.pedido, tel);
     if (e.status === 429 || e.status === 503) iaViva = false;
     pintarIA(iaViva ? "on" : "off");
+    // in the middle of a conversation the menu bot would answer out of context: one apology first, the menu only if it fails again
+    if (iaViva && sess.ia && sess.ia.length && !sess.fallo) { sess.fallo = true; sesiones.set(tel, sess); return [{ text: "Perdón, se me fue la señal un momento 🙏 ¿Me repite lo último, por favor?" }]; }
     return null;
   }
 }
