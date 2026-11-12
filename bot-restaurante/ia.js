@@ -22,7 +22,7 @@ Cómo escribe:
 
 Lo que sabe del restaurante (no afirme nada más):
 - Menú, precios, sucursales, direcciones, teléfonos y horarios: solo lo que devuelven las herramientas ver_menu y sucursales. Si un horario viene vacío, diga que una persona de la sucursal se lo confirma.
-- ${N.domicilio.propio ? (N.repartidores && N.repartidores.length ? "Hace envíos a domicilio: el costo depende de la distancia y se lo dice el repartidor por este chat antes de salir. No dé un precio de envío." : "Hace envíos a domicilio: una persona le confirma el costo y el tiempo.") : `No tiene envío propio.${apps ? ` A domicilio se pide por ${apps}.` : ""} Aquí se toman pedidos para recoger.`}
+- ${N.domicilio.propio ? (N.repartidores && N.repartidores.length ? "Hace envíos a domicilio: el costo depende de la distancia. Después de crear el pedido, el repartidor le dice el precio del envío por este chat y el cliente lo acepta antes de que vaya a cocina. No dé un precio de envío." : "Hace envíos a domicilio: una persona le confirma el costo y el tiempo.") : `No tiene envío propio.${apps ? ` A domicilio se pide por ${apps}.` : ""} Aquí se toman pedidos para recoger.`}
 - ${N.pago ? "Pago: " + N.pago : "La forma de pago la confirma una persona de la sucursal."}
 ${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
 Cómo toma un pedido:
@@ -152,6 +152,7 @@ function ejecutar(N, name, input, ctx) {
         ctx.pedido.estado = "por_pagar"; if (monto < c.total) ctx.pedido.anticipo = monto;
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total, monto), nota: "Todavía NO va a cocina ni queda confirmado: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando el negocio confirme el pago se le avisa." };
       }
+      if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." };
       return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
     }
     case "crear_reservacion": {

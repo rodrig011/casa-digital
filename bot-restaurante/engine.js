@@ -48,7 +48,7 @@ function createEngine(negocio) {
     return N.sucursales.map(s => [`📍 *${s.nombre}*`, s.direccion, s.telefono ? `Tel. ${s.telefono}` : null, `🕗 ${s.horario || "Horario: se lo confirma una persona de la sucursal."}`, s.mapa || null].filter(Boolean).join("\n")).join("\n\n");
   }
   function domicilioTexto() {
-    if (PROPIO) return `¡Sí! 🛵 Llevamos a domicilio${N.domicilio.zona ? ` ${N.domicilio.zona}` : ""}. El costo del envío depende de la distancia: ${N.repartidores && N.repartidores.length ? "se lo dice el repartidor por aquí antes de salir" : "se lo confirmamos al tomar su pedido"}.`;
+    if (PROPIO) return `¡Sí! 🛵 Llevamos a domicilio${N.domicilio.zona ? ` ${N.domicilio.zona}` : ""}. El costo del envío depende de la distancia: ${N.repartidores && N.repartidores.length ? "el repartidor se lo dice por aquí y usted lo acepta antes de que preparemos su pedido" : "se lo confirmamos al tomar su pedido"}.`;
     const apps = (N.domicilio.apps || []).filter(a => a.nombre);
     const lista = apps.map(a => `• ${a.nombre}${a.url ? `: ${a.url}` : ""}`).join("\n");
     return `Por ahora no tenemos envío propio.${apps.length ? ` A domicilio puede pedirnos por:\n${lista}` : ""}\n\nTambién puede hacer su pedido aquí y pasar a recogerlo sin hacer fila.`;
@@ -418,7 +418,7 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "El costo del envío se lo dice el repartidor por aquí antes de salir." : "El costo del envío se lo confirmamos por aquí."}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;

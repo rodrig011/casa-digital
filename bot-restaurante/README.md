@@ -172,15 +172,15 @@ Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (e
 
 `sucursal` es opcional: sin ella, el repartidor lleva pedidos de todas. Los repartidores no instalan nada ni entran al panel; todo pasa por el mismo WhatsApp del negocio.
 
-1. Cocina marca **Listo** un pedido a domicilio. El bot escoge al repartidor de esa sucursal con menos entregas en la calle (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp: cliente y teléfono, dirección, qué lleva, cuánto cobrar, link de Google Maps y link para escribirle al cliente.
-2. Al cliente le llega "su pedido está listo, lo lleva Carlos"; al dueño y a la sucursal, a quién se asignó.
-3. El repartidor contesta en el mismo chat:
-   - **SALGO**: el pedido pasa a *En camino* y al cliente le llega "va en camino con Carlos". Si tiene varios listos, salen todos.
-   - **ENTREGADO**: se cierra y al cliente le llega "fue entregado, gracias"; al dueño, quién lo entregó. Con varios en la calle, el número: "entregado 1004".
-   - **ENVÍO 60**: le dice al cliente que el envío cuesta L60 y cuánto pagar en total (con varias entregas: "envío 60 1004"). Así no hace falta tabla de precios por zona.
-   - **NO PUEDO**: el bot se lo pasa al siguiente repartidor, nunca de vuelta a uno que ya dijo que no. Si no queda nadie, avisa al dueño.
-   - Cualquier otra cosa: le recuerda sus entregas pendientes. Al número de un repartidor el bot no le contesta como a un cliente.
-4. En el panel, la tarjeta dice quién lo lleva y tiene **En camino**, **Entregado** y **Otro repartidor** (al anterior le llega que ya no lo lleva).
+1. Entra un pedido a domicilio. **No va a cocina todavía**: queda "Esperando envío". El bot escoge al repartidor de esa sucursal con menos entregas (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp: cliente y teléfono, dirección, qué lleva, link de Google Maps, y le pregunta cuánto es el envío. Al dueño le llega quién lo está cotizando.
+2. El repartidor contesta **ENVÍO 60** (con varias: "envío 60 1004"). Al cliente le llega el precio y el total, y contesta:
+   - **SÍ**: el pedido va a cocina; al dueño y a la sucursal les llega como pedido nuevo, con el envío.
+   - **RECOGER**: pasa a ser para recoger, va a cocina y el repartidor queda libre.
+   - **CANCELAR**: se cancela; se avisa al repartidor y al dueño.
+   Así no hace falta tabla de precios por zona y nunca se cocina algo cuyo envío el cliente no aceptó. Si ningún repartidor contesta, el dueño o la sucursal escriben "envío 60 1004", o lo pasan a cocina desde el panel.
+3. Cocina marca **Listo**: al repartidor le llega "pase a recogerlo" con cuánto cobrar, y al cliente "lo lleva Carlos".
+4. El repartidor contesta **SALGO** (al cliente: "va en camino", con el total), **ENTREGADO** (al cliente: "gracias"; al dueño, quién lo entregó) o **NO PUEDO** (pasa al siguiente repartidor, nunca de vuelta a uno que dijo que no; si no queda nadie, avisa al dueño). Con varios listos, SALGO los saca todos. Cualquier otra cosa le recuerda sus entregas. Al número de un repartidor el bot no le contesta como a un cliente.
+5. En el panel, la tarjeta dice quién cotiza o lleva el pedido y tiene **Pasar a cocina**, **En camino**, **Entregado** y **Otro repartidor** (al anterior le llega que ya no lo lleva).
 
 Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje al repartidor sale con la plantilla aprobada (`META_PLANTILLA`). Conviene que cada repartidor le escriba "hola" al número del negocio el día que empieza.
 

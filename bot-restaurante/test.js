@@ -1009,80 +1009,87 @@ test("respaldo: se baja cifrado, se restaura en una carpeta nueva y el bot sigue
   } finally { ctx2.srv.close(); }
 });
 
-test("repartidores (Libby's Cajun): el bot asigna al más libre, el repartidor contesta SALGO / ENTREGADO / NO PUEDO y el cliente se entera", async () => {
+test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente lo acepta antes de cocina, y luego SALGO / ENTREGADO / NO PUEDO", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
   assert.throws(() => preparar({ ...base, repartidores: [{ id: "a", nombre: "A", whatsapp: "9111-0001", sucursal: "tegus" }] }), /sucursal "tegus" no existe/);
   assert.throws(() => preparar({ ...base, repartidores: [{ id: "a", nombre: "A", whatsapp: "9111-0001" }, { id: "b", nombre: "B", whatsapp: "+504 9111-0001" }] }), /mismo WhatsApp/);
   const negocio = preparar({ ...base, repartidores: [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }, { id: "jose", nombre: "José", whatsapp: "+504 9111-0002" }] });
   const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio });
-  const CARLOS = "whatsapp:+50491110001", JOSE = "whatsapp:+50491110002";
+  const CARLOS = "whatsapp:+50491110001", JOSE = "whatsapp:+50491110002", DUENO = "whatsapp:+50499990000";
+  const MARTA = "whatsapp:+50491112222", PEDRO = "whatsapp:+50491113333", ANA = "whatsapp:+50491114444";
   const a = to => ctx.sent.filter(m => m.to === to).map(m => m.body);
+  const di = async (From, Body) => { const r = textoDe((await post(ctx, "/whatsapp", { From, Body })).xml); await ctx.app.locals.idle(); return r; };
   try {
     const cookie = await entrar(ctx);
     const neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
     assert.deepEqual(neg.repartidores.map(r => r.nombre), ["Carlos", "José"]);
-    const pedir = async (tel, dirc, nombre) => { for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", dirc, nombre]) await post(ctx, "/whatsapp", { From: tel, Body }); await ctx.app.locals.idle(); };
+    const pedido = async n => (await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json()).find(y => y.n === n);
     const estado = (n, e) => fetch(ctx.base + `/api/pedidos/${n}/estado`, { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify({ estado: e }) }).then(r => r.json());
-    await pedir("whatsapp:+50491112222", "Col. Trejo, 5 calle, casa blanca", "Marta López");
-    await pedir("whatsapp:+50491113333", "Res. Los Álamos, casa 4", "Pedro");
-    await pedir("whatsapp:+50491114444", "Barrio Guamilito, 2 avenida", "Ana");
+    let fin;
+    const pedir = async (tel, dirc, nombre) => { for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", dirc, nombre]) fin = await di(tel, Body); };
 
-    // the kitchen marks it ready: the bot picks a driver and tells him, the customer and the owner
-    let p = await estado("PED-1001", "listo"); await ctx.app.locals.idle();
-    p = await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json().then(x => (x.pedidos || x).find(y => y.n === "PED-1001"));
-    assert.equal(p.repartidor.nombre, "Carlos");
+    // a delivery order does not go to the kitchen yet: the freest driver is asked the delivery price
+    await pedir(MARTA, "Col. Trejo, 5 calle, casa blanca", "Marta López");
+    assert.match(fin, /el repartidor le dice por aquí cuánto es el envío/);
+    let p = await pedido("PED-1001");
+    assert.equal(p.estado, "por_envio"); assert.equal(p.repartidor.nombre, "Carlos");
     const ficha = a(CARLOS).at(-1);
-    assert.match(ficha, /Carlos, tiene una entrega: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.match(ficha, /Cobrar L /); assert.match(ficha, /google.com\/maps/); assert.match(ficha, /SALGO/);
-    assert.match(a("whatsapp:+50491112222").at(-1), /Marta, su pedido \*PED-1001\* ya está listo! Lo lleva \*Carlos\*/);
-    assert.ok(ctx.sent.some(m => m.to === "whatsapp:+50499990000" && /PED-1001 asignado a Carlos/.test(m.body)));
-    // the next one goes to the free driver
-    await estado("PED-1002", "listo"); await ctx.app.locals.idle();
-    assert.match(a(JOSE).at(-1), /José, tiene una entrega: PED-1002/);
+    assert.match(ficha, /Carlos, nuevo envío: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.match(ficha, /google.com\/maps/); assert.match(ficha, /ENVÍO 60/);
+    assert.ok(!a(DUENO).some(b => /Nuevo pedido PED-1001/.test(b)), "la cocina todavía no lo tiene");
+    assert.ok(a(DUENO).some(b => /PED-1001: Carlos cotiza el envío/.test(b)));
+    await pedir(PEDRO, "Res. Los Álamos, casa 4", "Pedro");
+    assert.equal((await pedido("PED-1002")).repartidor.nombre, "José", "el siguiente va al más libre");
+    await pedir(ANA, "Barrio Guamilito, 2 avenida", "Ana");
+    assert.equal((await pedido("PED-1003")).repartidor.nombre, "Carlos");
 
-    // the driver sets the delivery price; the customer hears it before he leaves
-    assert.match(ficha, /ENVÍO 60/);
-    let r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "Envío 60" })).xml); await ctx.app.locals.idle();
-    assert.match(r, /en total cobra L /);
-    assert.match(a("whatsapp:+50491112222").at(-1), /el envío de su pedido \*PED-1001\* cuesta \*L 60\*. Total a pagarle al repartidor/);
-    // the driver answers on the same WhatsApp
-    r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "Salgo con el pedido" })).xml); await ctx.app.locals.idle();
+    // Carlos has two to quote: he says which; Marta accepts -> kitchen
+    assert.match(await di(CARLOS, "envío 60"), /¿de cuál entrega\?/);
+    assert.match(await di(CARLOS, "Envío 60 1001"), /Le preguntamos al cliente/);
+    assert.match(a(MARTA).at(-1), /el envío de su pedido \*PED-1001\* a Col. Trejo.* cuesta \*L 60\*/s); assert.match(a(MARTA).at(-1), /Conteste \*SÍ\*/);
+    assert.match(await di(MARTA, "si"), /PED-1001\* ya va a cocina/);
+    assert.equal((await pedido("PED-1001")).estado, "nuevo");
+    assert.ok(a(DUENO).some(b => /Nuevo pedido PED-1001/.test(b) && /envío L 60/.test(b)), "ahora sí le llega a la cocina, con el envío");
+    assert.match(a(CARLOS).at(-1), /El cliente aceptó el envío de \*PED-1001\*/);
+
+    // Pedro would rather pick it up: José is free again
+    await di(JOSE, "envio 80");
+    assert.match(await di(PEDRO, "mejor lo recojo"), /lo recoge en \*San Pedro Sula\*/);
+    p = await pedido("PED-1002");
+    assert.equal(p.estado, "nuevo"); assert.equal(p.entrega, "recoger"); assert.equal(p.repartidor, null);
+    assert.match(a(JOSE).at(-1), /mejor pasa a recogerlo/);
+
+    // Carlos can't take Ana's: José quotes it, Ana cancels
+    assert.match(await di(CARLOS, "no puedo 1003"), /PED-1003\* se le pasó a José/);
+    assert.match(a(JOSE).at(-1), /nuevo envío: PED-1003/);
+    await di(JOSE, "envío 50");
+    assert.match(await di(ANA, "no, muy caro"), /cancelamos su pedido \*PED-1003\*/);
+    assert.equal((await pedido("PED-1003")).estado, "cancelado");
+    assert.match(a(JOSE).at(-1), /canceló el pedido/);
+
+    // the kitchen marks it ready: Carlos goes for it, Marta hears who brings it
+    assert.match(await di(CARLOS, "salgo"), /todavía no hay ninguna lista/);
+    await estado("PED-1001", "cocina"); await estado("PED-1001", "listo"); await ctx.app.locals.idle();
+    assert.match(a(CARLOS).at(-1), /PED-1001 ya está listo\* en San Pedro Sula/); assert.match(a(CARLOS).at(-1), /Cobrar L /);
+    assert.match(a(MARTA).at(-1), /PED-1001\* ya está listo! Lo lleva \*Carlos\*/);
+    let r = await di(CARLOS, "Salgo con el pedido");
     assert.match(r, /Le avisamos al cliente que va en camino/);
-    assert.match(a("whatsapp:+50491112222").at(-1), /PED-1001\* ya va en camino con \*Carlos\*! Total: L .*con envío de L 60/);
-    r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "entregado" })).xml); await ctx.app.locals.idle();
+    assert.match(a(MARTA).at(-1), /va en camino con \*Carlos\*! Total: L .*con envío de L 60/);
+    r = await di(CARLOS, "entregado");
     assert.match(r, /PED-1001\* quedó entregado/);
-    assert.match(a("whatsapp:+50491112222").at(-1), /fue entregado/);
-    assert.ok(ctx.sent.some(m => m.to === "whatsapp:+50499990000" && /PED-1001 entregado por Carlos/.test(m.body)));
-    r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "hola" })).xml);
-    assert.match(r, /No tiene entregas pendientes/);
-    assert.doesNotMatch(r, /menú/i, "a un repartidor no le contesta el bot de pedidos");
+    assert.match(a(MARTA).at(-1), /fue entregado/);
+    assert.ok(a(DUENO).some(b => /PED-1001 entregado por Carlos/.test(b)));
+    r = await di(CARLOS, "hola");
+    assert.match(r, /No tiene entregas pendientes/); assert.doesNotMatch(r, /menú/i, "a un repartidor no le contesta el bot de pedidos");
 
-    // NO PUEDO: passes to the other driver, never back to the one who said no
-    r = textoDe((await post(ctx, "/whatsapp", { From: JOSE, Body: "no puedo" })).xml); await ctx.app.locals.idle();
-    assert.match(r, /PED-1002\* se le pasó a Carlos/);
-    assert.match(a(CARLOS).at(-1), /tiene una entrega: PED-1002/);
-    assert.equal(a("whatsapp:+50491113333").filter(b => /ya está listo/.test(b)).length, 1, "al cliente no le repite el aviso");
-    r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "no puedo" })).xml); await ctx.app.locals.idle();
-    assert.match(r, /necesita otro repartidor/);
-    assert.ok(ctx.sent.some(m => m.to === "whatsapp:+50499990000" && /PED-1002 no tiene repartidor/.test(m.body)));
-    // the owner looks for one again from the panel
-    const otro = await fetch(ctx.base + "/api/pedidos/PED-1002/repartidor", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: "{}" }).then(x => x.json());
-    assert.ok(otro.repartidor); await ctx.app.locals.idle();
-
-    // two ready for the same driver: "entregado" asks which, "entregado 1003" closes that one; the panel can mark it too
-    await estado("PED-1003", "listo"); await ctx.app.locals.idle();
-    const quien = otro.repartidor.nombre === "Carlos" ? CARLOS : JOSE;
-    const tres = (await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json().then(x => (x.pedidos || x).find(y => y.n === "PED-1003")));
-    if (tres.repartidor.nombre === otro.repartidor.nombre) {
-      r = textoDe((await post(ctx, "/whatsapp", { From: quien, Body: "SALGO" })).xml); await ctx.app.locals.idle();
-      assert.match(r, /PED-1002/); assert.match(r, /PED-1003/);
-      r = textoDe((await post(ctx, "/whatsapp", { From: quien, Body: "entregado" })).xml);
-      assert.match(r, /tiene varias entregas/);
-      r = textoDe((await post(ctx, "/whatsapp", { From: quien, Body: "entregado 1003" })).xml); await ctx.app.locals.idle();
-      assert.match(r, /PED-1003\* quedó entregado/);
-    }
-    await estado("PED-1002", "en_camino"); await estado("PED-1002", "entregado"); await ctx.app.locals.idle();
-    assert.match(a("whatsapp:+50491113333").at(-1), /PED-1002\* fue entregado/);
+    // nobody quotes: the owner sets the price; the panel can pass it to another driver
+    await pedir("whatsapp:+50491115555", "Col. Moderna, casa 9", "Luis");
+    assert.equal((await pedido("PED-1004")).repartidor.nombre, "Carlos");
+    const otro = await fetch(ctx.base + "/api/pedidos/PED-1004/repartidor", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: "{}" }).then(x => x.json());
+    assert.equal(otro.repartidor.nombre, "José"); await ctx.app.locals.idle();
+    assert.match(a(CARLOS).at(-1), /se le pasó a José/);
+    assert.match(await di(DUENO, "envío 70 1004"), /envío de PED-1004 es L 70/);
+    assert.match(a("whatsapp:+50491115555").at(-1), /cuesta \*L 70\*/);
   } finally { ctx.srv.close(); }
 });
 

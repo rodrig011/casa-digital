@@ -1,21 +1,22 @@
 // Repartidores propios del restaurante (negocio.repartidores): el bot reparte los envíos solo, por WhatsApp.
 //
-// 1. Cuando la cocina marca Listo un pedido a domicilio, el bot escoge al repartidor de esa sucursal que menos
-//    entregas tiene en la calle (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp
-//    qué lleva, a dónde, cuánto cobra, el teléfono del cliente y el mapa.
-// 2. Al cliente le llega "su pedido está listo, lo lleva Carlos"; al dueño y a la sucursal, a quién se asignó.
-// 3. El repartidor contesta en el mismo WhatsApp del negocio:
-//      SALGO      -> el pedido pasa a "En camino" y al cliente le llega "va en camino con Carlos"
-//      ENTREGADO  -> el pedido se cierra y al cliente le llega "entregado, gracias"
-//      NO PUEDO   -> el bot se lo pasa al siguiente repartidor (si no hay otro, avisa al dueño)
-//      cualquier otra cosa -> le recuerda sus entregas pendientes
-//    Con dos o más entregas puede decir el número: "entregado 1004".
-// Los repartidores no necesitan instalar nada ni entrar al panel. Desde el panel se puede marcar En camino,
-// Entregado o pasar el pedido a otro repartidor.
+// 1. Entra un pedido a domicilio: queda "Esperando envío" (no va a cocina). El bot escoge al repartidor de esa
+//    sucursal con menos entregas (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp qué
+//    lleva, a dónde, el teléfono del cliente y el mapa, y le pregunta cuánto es el envío.
+// 2. El repartidor contesta ENVÍO 60. Al cliente le llega el precio y el total, y contesta:
+//      SÍ        -> el pedido va a cocina (al dueño y a la sucursal les llega como pedido nuevo)
+//      RECOGER   -> pasa a ser para recoger, va a cocina y el repartidor queda libre
+//      CANCELAR  -> se cancela y se avisa al repartidor y al dueño
+//    Si nadie contesta, el dueño o la sucursal pueden poner el precio: "ENVÍO 60 1004".
+// 3. La cocina lo marca Listo: al repartidor le llega "pase a recogerlo" y al cliente "lo lleva Carlos".
+// 4. El repartidor contesta SALGO (al cliente: "va en camino"), ENTREGADO (al cliente: "gracias") o NO PUEDO
+//    (pasa al siguiente repartidor; si no hay otro, avisa al dueño). Con varias entregas: "entregado 1004".
+// Los repartidores no instalan nada ni entran al panel. Desde el panel se puede marcar En camino, Entregado
+// o pasar el pedido a otro repartidor.
 const { waAddr, digits } = require("./avisos");
 const { lineaTexto } = require("./negocio");
 
-const EN_CALLE = ["listo", "en_camino"];
+const EN_CALLE = ["por_envio", "nuevo", "cocina", "listo", "en_camino"];
 const BOTONES = ["Salgo con el pedido", "Entregado", "No puedo llevarlo"];
 const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
@@ -48,22 +49,29 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   const lista = negocio.repartidores || [];
   const activo = lista.length > 0;
   const nom = p => (p.nombre || "Hola").split(" ")[0];
+  const num = p => p.n.replace(/\D/g, "");
   const deTel = from => lista.find(r => r.tel === digits(from)) || null;
+  const deRep = p => p.repartidor && lista.find(x => x.id === p.repartidor.id);
   const enCalle = r => store.pedidos.filter(p => p.repartidor && p.repartidor.id === r.id && EN_CALLE.includes(p.estado));
   const aDueno = (p, titulo, lineas) => Promise.all(avisos.destinos(p.sucursal).map(to => avisos.enviar(to, `🛵 *${titulo}*\n\n${lineas.join("\n")}`, { titulo, lineas })));
+  const aRep = (r, body) => r && track(avisos.enviar(waAddr(r.tel), body, { titulo: `Entregas · ${negocio.nombre}`, lineas: [body.replace(/\*/g, "").replace(/\n+/g, " · ")] }));
 
   function fichaRepartidor(p, r) {
-    const titulo = `Entrega ${p.n} · ${p.sucursal}`;
+    const cotiza = p.estado === "por_envio";
+    const titulo = `${cotiza ? "Envío por cotizar" : "Entrega"} ${p.n} · ${p.sucursal}`;
     const lineas = [
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       `📍 ${p.direccion}`,
       ...(p.lineas || []).map(l => lineaTexto(l, negocio.L)),
-      `💰 Cobrar ${negocio.L(p.total)}${p.envio ? ` + envío ${negocio.L(p.envio)} = ${negocio.L(p.total + p.envio)}` : " + el envío"}${p.pagado ? " (la comida ya está pagada)" : ""}`,
+      `💰 Comida ${negocio.L(p.total)}${p.envio != null ? ` + envío ${negocio.L(p.envio)} = cobrar ${negocio.L(p.total + p.envio)}` : ""}${p.pagado ? " (la comida ya está pagada)" : ""}`,
       `Mapa: ${mapa(p, negocio)}`,
       `Cliente: https://wa.me/${digits(p.tel)}`,
     ];
-    const body = `🛵 *${r.nombre}, tiene una entrega: ${p.n}*\n\n${lineas.join("\n")}\n\nPara decirle al cliente cuánto es el envío, conteste *ENVÍO* y el precio, por ejemplo *ENVÍO 60*.\nConteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
-    return { titulo, lineas: [...lineas, "Conteste ENVÍO y el precio (ENVÍO 60), SALGO, ENTREGADO o NO PUEDO"], body };
+    const pide = cotiza
+      ? `¿Cuánto es el envío? Conteste *ENVÍO* y el precio, por ejemplo *ENVÍO 60*. El cliente lo acepta y entonces pasa a cocina. Si no puede llevarlo, conteste *NO PUEDO*.`
+      : `Conteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
+    const body = `🛵 *${r.nombre}, ${cotiza ? "nuevo envío" : "tiene una entrega"}: ${p.n}*\n\n${lineas.join("\n")}\n\n${pide}`;
+    return { titulo, lineas: [...lineas, cotiza ? "Conteste ENVÍO y el precio (ENVÍO 60) o NO PUEDO" : "Conteste SALGO, ENTREGADO o NO PUEDO"], body };
   }
 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
@@ -74,7 +82,8 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return ok.map(r => [r, enCalle(r).length, ultima(r)]).sort((a, b) => a[1] - b[1] || a[2] - b[2])[0]?.[0] || null;
   }
 
-  // the kitchen marked a delivery order ready (or the owner asks for another driver)
+  // a new delivery order (estado por_envio: the driver quotes the delivery first), a ready one without a driver,
+  // or the owner / a driver asking for another driver
   function asignar(n, { excluir = [], por = "bot" } = {}) {
     const p = store.getPedido(n);
     if (!p || p.entrega !== "domicilio" || !activo) return null;
@@ -82,7 +91,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     if (!r) {
       store.updatePedido(n, { repartidor: null });
       log(`[${n}] sin repartidor disponible`);
-      track(aDueno(p, `${p.n} no tiene repartidor`, [`📍 ${p.direccion}`, "Ningún repartidor lo pudo llevar. Escríbale a uno o asígnelo desde el panel."]));
+      track(aDueno(p, `${p.n} no tiene repartidor`, [`📍 ${p.direccion}`, p.estado === "por_envio" ? `Nadie ha dicho el precio del envío. Escríbale a un repartidor, o conteste *ENVÍO 60 ${num(p)}* con el precio.` : "Ningún repartidor lo pudo llevar. Escríbale a uno o asígnelo desde el panel."]));
       return null;
     }
     const antes = p.repartidor;
@@ -91,10 +100,64 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     log(`[${n}] asignado a ${r.nombre}${antes ? ` (antes ${antes.nombre})` : ""}`);
     track(avisos.enviar(waAddr(r.tel), f.body, f));
     const previo = antes && antes.id !== r.id && por !== "repartidor:" + antes.id && lista.find(x => x.id === antes.id);
-    if (previo) track(avisos.enviar(waAddr(previo.tel), `ℹ️ ${previo.nombre}, la entrega *${q.n}* se le pasó a ${r.nombre}. Ya no tiene que llevarla.`));
-    if (!antes) track(avisos.enviar(waAddr(q.tel), `✅ ¡${nom(q)}, su pedido *${q.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
-    track(aDueno(q, `${q.n} asignado a ${r.nombre}`, [`📍 ${q.direccion}`, `💰 ${negocio.L(q.total)}`, antes ? `${antes.nombre} no lo pudo llevar.` : "Se le avisó por WhatsApp."]));
+    if (previo) aRep(previo, `ℹ️ ${previo.nombre}, la entrega *${q.n}* se le pasó a ${r.nombre}. Ya no tiene que llevarla.`);
+    if (!antes && q.estado === "listo") track(avisos.enviar(waAddr(q.tel), `✅ ¡${nom(q)}, su pedido *${q.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
+    track(aDueno(q, q.estado === "por_envio" ? `${q.n}: ${r.nombre} cotiza el envío` : `${q.n} asignado a ${r.nombre}`, [`📍 ${q.direccion}`, `💰 Comida ${negocio.L(q.total)}`,
+      antes ? `${antes.nombre} no lo pudo llevar.` : q.estado === "por_envio" ? "Cuando el cliente acepte el precio del envío, le llega el pedido para cocina." : "Se le avisó por WhatsApp."]));
     return q;
+  }
+
+  // the price of the delivery, from the driver ("ENVÍO 60") or the owner ("ENVÍO 60 1004"): the customer accepts it before cooking
+  function fijarEnvio(p, precio, por) {
+    const cotiza = p.estado === "por_envio";
+    const q = store.updatePedido(p.n, { envio: precio, envioPor: por, t_envio: now().toISOString() });
+    const total = negocio.L(q.total + precio);
+    track(avisos.enviar(waAddr(q.tel), cotiza
+      ? `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*.\nTotal: *${total}* (comida ${negocio.L(q.total)} + envío), se paga al recibir.\n\n¿Lo confirmamos? Conteste *SÍ* para mandarlo a cocina, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`
+      : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${total}*.`));
+    log(`[${q.n}] envío ${precio} (${por})`);
+    return q;
+  }
+
+  // the customer's answer to the delivery price -> the reply, or null if this number has no quote waiting
+  function respuestaCliente(from, text) {
+    const p = store.pedidos.findLast(x => x.estado === "por_envio" && x.envio != null && digits(x.tel) === digits(from));
+    if (!p) return null;
+    const t = norm(text), r = deRep(p);
+    const si = /^(si|sí|ok|okey|okay|dale|va|esta bien|confirm|de acuerdo|claro|perfecto|listo)\b/.test(t) || t === "1";
+    const recoger = /recog|recoj|paso yo|yo paso|voy yo|yo voy|paso por|pasar por/.test(t) || t === "2";
+    const cancelar = /cancel|no gracias|muy caro|caro|^no\b/.test(t) || t === "3";
+    const t0 = now().toISOString();
+    if (si && !recoger && !cancelar) {
+      const q = store.updatePedido(p.n, { estado: "nuevo", t_nuevo: t0, envioAceptado: true });
+      track(avisos.ficha(q));
+      aRep(r, `✅ El cliente aceptó el envío de *${q.n}* (${negocio.L(q.envio)}). Ya va a cocina; le avisamos cuando esté listo para recoger.`);
+      log(`[${q.n}] envío aceptado`);
+      return `✅ Listo, ${nom(q)}. Su pedido *${q.n}* ya va a cocina. Total: *${negocio.L(q.total + q.envio)}* con envío. Le avisamos por aquí cuando salga.`;
+    }
+    if (recoger) {
+      const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
+      const q = store.updatePedido(p.n, { estado: "nuevo", t_nuevo: t0, entrega: "recoger", envio: null, repartidor: null, hora: p.diaFecha ? p.hora : "Lo antes posible" });
+      track(avisos.ficha(q));
+      aRep(r, `ℹ️ ${r ? r.nombre : ""}, el cliente de *${q.n}* mejor pasa a recogerlo. Ya no tiene que llevarlo.`);
+      return `✅ Listo, ${nom(q)}. Su pedido *${q.n}* ya va a cocina y lo recoge en *${q.sucursal}*${b && b.direccion ? ` (${b.direccion})` : ""}. Total: *${negocio.L(q.total)}*. Le avisamos cuando esté listo.`;
+    }
+    if (cancelar) {
+      const q = store.updatePedido(p.n, { estado: "cancelado", t_cancelado: t0, por: "cliente:envio" });
+      aRep(r, `ℹ️ El cliente de *${q.n}* canceló el pedido. Ya no tiene que llevarlo.`);
+      track(aDueno(q, `${q.n} cancelado por el cliente`, [`No aceptó el envío de ${negocio.L(q.envio)}.`, `Responder: https://wa.me/${digits(q.tel)}`]));
+      return `Listo, cancelamos su pedido *${q.n}*. Si quiere, puede pedir para recoger. ¡Gracias por escribirnos!`;
+    }
+    return `¿Confirmamos su pedido *${p.n}* con envío de ${negocio.L(p.envio)} (total ${negocio.L(p.total + p.envio)})? Conteste *SÍ*, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`;
+  }
+
+  // the kitchen marked it ready: the driver who quoted it goes for it (or one is picked now)
+  function listo(p) {
+    const r = deRep(p);
+    if (!r) return asignar(p.n, { por: "cocina" });
+    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\n💰 Cobrar ${negocio.L(p.total + (p.envio || 0))}${p.pagado ? " (la comida ya está pagada: cobre solo el envío)" : ""}\n\nCuando salga, conteste *SALGO*.`);
+    track(avisos.enviar(waAddr(p.tel), `✅ ¡${nom(p)}, su pedido *${p.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
+    return p;
   }
 
   // what the customer hears when the order leaves or arrives (from the driver's WhatsApp or the panel)
@@ -106,6 +169,16 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return avisos.enviar(waAddr(p.tel), `✅ ${nom(p)}, su pedido *${p.n}* fue entregado. ¡Gracias por su compra en *${negocio.nombre}*!`);
   }
 
+  // "ENVÍO 60 1004" from the owner or a branch
+  function envioNegocio(text, por) {
+    const m = norm(text).match(/^envio\s*(?:de\s*)?(?:l\.?\s*)?(\d{1,4})\s+(?:ped-?\s*)?(\d{3,})$/);
+    if (!m) return null;
+    const p = store.pedidos.findLast(x => x.n.replace(/\D/g, "").endsWith(m[2]));
+    if (!p || p.entrega !== "domicilio" || ["entregado", "cancelado"].includes(p.estado)) return `No encuentro un envío abierto con el número ${m[2]}.`;
+    fijarEnvio(p, +m[1], por);
+    return `👍 Le avisamos al cliente que el envío de ${p.n} es ${negocio.L(+m[1])}.`;
+  }
+
   // a message from a driver's number -> the bot's replies, or null if it is not a driver
   function mensaje(from, text) {
     const r = deTel(from);
@@ -113,37 +186,40 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const t = norm(text);
     const mios = enCalle(r).sort((a, b) => new Date(a.t_asignado) - new Date(b.t_asignado));
     const lista = () => mios.map(p => `• *${p.n}* · ${ESTADO[p.estado]} · ${p.nombre || "Sin nombre"} · ${p.direccion}`).join("\n");
+    if (!mios.length) return [{ text: `Hola, ${r.nombre}. No tiene entregas pendientes. Cuando haya una, le llega por aquí.` }];
+    // "ENVÍO 60" (or "envío 60 1004" with several)
+    const env = t.match(/^envio\s*(?:de\s*)?(?:l\.?\s*)?(\d{1,4})(?:\s+(?:ped-?\s*)?(\d{3,}))?$/);
+    if (/^envio\b/.test(t) && !env) return [{ text: `Escriba *ENVÍO* y el precio en números, por ejemplo *ENVÍO 60*.` }];
+    if (env) {
+      const precio = +env[1], porCotizar = mios.filter(x => x.estado === "por_envio" && x.envio == null);
+      const cual = env[2] ? mios.filter(x => num(x).endsWith(env[2])) : porCotizar.length === 1 ? porCotizar : mios.length === 1 ? mios : [];
+      if (cual.length !== 1) return [{ text: `${r.nombre}, ¿de cuál entrega? Escriba el precio y el número, por ejemplo *ENVÍO ${precio} ${num(mios[0])}*:\n${lista()}` }];
+      const q = fijarEnvio(cual[0], precio, "repartidor:" + r.id);
+      return [{ text: q.estado === "por_envio"
+        ? `👍 Le preguntamos al cliente si acepta el envío de ${negocio.L(precio)} para *${q.n}*. Si dice que sí, le avisamos y pasa a cocina.`
+        : `👍 Le avisamos al cliente que el envío de *${q.n}* es ${negocio.L(precio)}: en total cobra ${negocio.L(q.total + precio)}.` }];
+    }
     const accion = t === "1" || /\bsalgo\b|\bsali\b|\bvoy\b|en camino/.test(t) ? "salgo"
       : t === "2" || /entregad|\bentregue\b|\blisto\b/.test(t) ? "entregado"
       : t === "3" || /no puedo|no lo puedo|no voy|otro/.test(t) ? "nopuedo" : null;
-    if (!mios.length) return [{ text: `Hola, ${r.nombre}. No tiene entregas pendientes. Cuando haya una, le llega por aquí.` }];
-    // "ENVÍO 60" (or "envío 60 1004" with several): the driver sets the delivery price and the customer hears it
-    const env = t.match(/^envio\s*(?:de\s*)?(?:l\.?\s*)?(\d{1,4})(?:\s+(?:ped-?\s*)?(\d{3,}))?$/);
-    if (env) {
-      const precio = +env[1], cual = env[2] ? mios.filter(x => x.n.replace(/\D/g, "").endsWith(env[2])) : mios.length === 1 ? mios : mios.filter(x => x.estado === "listo" && x.envio == null);
-      if (cual.length !== 1) return [{ text: `${r.nombre}, ¿de cuál entrega? Escriba el precio y el número, por ejemplo *ENVÍO ${precio} ${mios[0].n.replace(/\D/g, "")}*:\n${lista()}` }];
-      const q = store.updatePedido(cual[0].n, { envio: precio, envioPor: "repartidor:" + r.id });
-      track(avisos.enviar(waAddr(q.tel), `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${negocio.L(q.total + precio)}*.`));
-      log(`[${q.n}] envío ${precio} (${r.nombre})`);
-      return [{ text: `👍 Listo. Le avisamos al cliente que el envío de *${q.n}* es ${negocio.L(precio)}: en total cobra ${negocio.L(q.total + precio)}.${q.estado === "listo" ? " Cuando salga, conteste *SALGO*." : ""}`, buttons: q.estado === "listo" ? ["Salgo con el pedido"] : ["Entregado"] }];
-    }
     if (!accion) return [{ text: `${r.nombre}, sus entregas:\n${lista()}`, buttons: BOTONES }];
     // which order: the number in the message, else the only one that fits. SALGO with several ready takes them all.
-    const num = (text.match(/\d{3,}/) || [])[0];
+    const numero = (text.match(/\d{3,}/) || [])[0];
     const listos = mios.filter(x => x.estado === "listo"), saliendo = mios.filter(x => x.estado === "en_camino");
-    let ps = num ? mios.filter(x => x.n.replace(/\D/g, "").endsWith(num))
-      : accion === "salgo" ? (listos.length ? listos : mios)
-      : accion === "entregado" ? (mios.length === 1 ? mios : saliendo.length === 1 ? saliendo : [])
-      : listos.length === 1 ? listos : mios.length === 1 ? mios : [];
+    const ps = numero ? mios.filter(x => num(x).endsWith(numero))
+      : accion === "salgo" ? listos
+      : accion === "entregado" ? (saliendo.length === 1 ? saliendo : saliendo.length ? [] : listos.length === 1 ? listos : [])
+      : mios.length === 1 ? mios : listos.length === 1 ? listos : [];
+    if (accion === "salgo" && !numero && !ps.length) return [{ text: `${r.nombre}, todavía no hay ninguna lista para salir. Le avisamos por aquí cuando la cocina la tenga.\n${lista()}` }];
     if (ps.length !== 1 && !(accion === "salgo" && ps.length)) {
       const verbo = accion === "entregado" ? "ENTREGADO" : accion === "salgo" ? "SALGO" : "NO PUEDO";
-      return [{ text: `${r.nombre}, ${num ? `no encuentro la entrega ${num} entre las suyas` : "tiene varias entregas"}. Escriba el número, por ejemplo *${verbo} ${mios[0].n.replace(/\D/g, "")}*:\n${lista()}` }];
+      return [{ text: `${r.nombre}, ${numero ? `no encuentro la entrega ${numero} entre las suyas` : "tiene varias entregas"}. Escriba el número, por ejemplo *${verbo} ${num(mios[0])}*:\n${lista()}` }];
     }
     const t0 = now().toISOString();
     const p = ps[0];
     if (accion === "salgo") {
       const van = ps.filter(x => x.estado === "listo");
-      if (!van.length) return [{ text: `${p.n} ya estaba en camino. Cuando lo entregue, conteste *ENTREGADO*.`, buttons: ["Entregado"] }];
+      if (!van.length) return [{ text: p.estado === "en_camino" ? `${p.n} ya estaba en camino. Cuando lo entregue, conteste *ENTREGADO*.` : `${p.n} todavía no está listo. Le avisamos por aquí cuando lo esté.`, buttons: p.estado === "en_camino" ? ["Entregado"] : undefined }];
       for (const x of van) {
         const q = store.updatePedido(x.n, { estado: "en_camino", t_en_camino: t0, por: "repartidor:" + r.id });
         track(enCamino(q));
@@ -153,12 +229,13 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       return [{ text: `👍 Listo, ${r.nombre}. Le avisamos ${van.length > 1 ? "a los clientes" : "al cliente"} que va en camino.\n\n${det}\n\nCuando ${van.length > 1 ? "entregue cada uno, conteste *ENTREGADO* con el número" : "lo entregue, conteste *ENTREGADO*"}.`, buttons: ["Entregado"] }];
     }
     if (accion === "entregado") {
+      if (!["listo", "en_camino"].includes(p.estado)) return [{ text: `${p.n} todavía no ha salido. Le avisamos cuando esté listo.` }];
       const q = store.updatePedido(p.n, { estado: "entregado", t_entregado: t0, por: "repartidor:" + r.id });
       track(entregado(q));
-      track(aDueno(q, `${q.n} entregado por ${r.nombre}`, [`💰 ${negocio.L(q.total)}`, `📍 ${q.direccion}`]));
+      track(aDueno(q, `${q.n} entregado por ${r.nombre}`, [`💰 ${negocio.L(q.total + (q.envio || 0))}${q.envio ? ` (con envío de ${negocio.L(q.envio)})` : ""}`, `📍 ${q.direccion}`]));
       log(`[${p.n}] entregado por ${r.nombre}`);
       const quedan = mios.filter(x => x.n !== p.n);
-      return [{ text: `✅ Gracias, ${r.nombre}. *${p.n}* quedó entregado.${quedan.length ? `\n\nLe quedan:\n${quedan.map(x => `• *${x.n}* · ${x.direccion}`).join("\n")}` : ""}` }];
+      return [{ text: `✅ Gracias, ${r.nombre}. *${p.n}* quedó entregado.${quedan.length ? `\n\nLe quedan:\n${quedan.map(x => `• *${x.n}* · ${ESTADO[x.estado]} · ${x.direccion}`).join("\n")}` : ""}` }];
     }
     // can't take it: next driver, never back to the ones who already said no
     if (p.estado === "en_camino") return [{ text: `${p.n} ya salió con usted. Si hay un problema, llame a la sucursal.` }];
@@ -166,9 +243,9 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return [{ text: q ? `Entendido. *${p.n}* se le pasó a ${q.repartidor.nombre}.` : `Entendido. Le avisamos al negocio que *${p.n}* necesita otro repartidor.` }];
   }
 
-  return { activo, lista, asignar, mensaje, enCamino, entregado, deTel, enCalle };
+  return { activo, lista, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
-const ESTADO = { listo: "por recoger", en_camino: "en camino" };
+const ESTADO = { por_envio: "esperando su precio de envío", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
 module.exports = { createRepartos, prepararRepartidores };

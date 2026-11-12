@@ -39,7 +39,7 @@ const { createMeta, mensajes: mensajesMeta } = require("./meta");
 const { crearRespaldo } = require("./respaldo");
 
 const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
-const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "en_camino", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
+const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "en_camino", "por_envio", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
 
 function loadConfig(env = process.env) {
   const sandbox = on(env.TWILIO_SANDBOX);
@@ -133,9 +133,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
-    const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
+    // own drivers: a delivery order waits for the driver's price and the customer's yes before the kitchen gets it
+    const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && (base.estado || "nuevo") === "nuevo";
+    const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
     log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? negocio.L(p.total) : p.tipo === "reservacion" ? p.resumen : p.motivo || ""}`);
-    track(avisos.ficha(p));
+    if (cotiza) repartos.asignar(p.n, { por: "bot" }); else track(avisos.ficha(p));
     return p;
   }
   const persona = (motivo, sucursal, tel, convo) => guardar({ tipo: "persona", nombre: null, sucursal, motivo }, tel, convo);
@@ -287,7 +289,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     return `✅ ${q.n} aprobado. Al cliente ya le llegó que su ${q.encargo || q.diaFecha ? "apartado" : "pedido"} quedó confirmado.`;
   }
   function pendientes() {
-    const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
+    const ls = store.pedidos.filter(p => ["por_pagar", "por_envio", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
     return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
   }
@@ -314,13 +316,15 @@ function createApp(cfg = loadConfig(), deps = {}) {
     // the restaurant's own drivers answer SALGO / ENTREGADO / NO PUEDO on the same number
     const deRepartidor = repartos.mensaje(from, text);
     if (deRepartidor) return deRepartidor;
+    // the customer answers the delivery price (SÍ / RECOGER / CANCELAR)
+    if ((reply = repartos.respuestaCliente(from, text))) return [{ text: reply }];
     if (!esNegocio(from) && !limite.pasa(digits(from) || from)) {
       if (!limite.primeraVezFuera(digits(from) || from)) return [];
       log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`);
       return [{ text: "Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí." }];
     }
     if (esNegocio(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
-    if (esNegocio(from) && (reply = aprobar(from, text))) return [{ text: reply }];
+    if (esNegocio(from) && (reply = aprobar(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base))) return [{ text: reply.slice(0, 1590) }];
     const out = conversar(from, text);
@@ -421,7 +425,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) {
       store.updatePedido(p.n, { avisoListo: true });
       // own drivers: the bot picks one and tells him, the customer and the owner; otherwise the old notice
-      if (conRepartidor && !p.repartidor) repartos.asignar(p.n, { por: p.por }); else track(avisos.listo(p));
+      if (conRepartidor) repartos.listo(p); else track(avisos.listo(p));
     }
     if (conRepartidor && estado === "en_camino" && estadoAntes !== estado) track(repartos.enCamino(p));
     if (conRepartidor && estado === "entregado" && estadoAntes !== estado && p.repartidor) track(repartos.entregado(p));
@@ -443,7 +447,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const p = store.getPedido(req.params.n);
     if (!p) return res.status(404).json({ error: "no existe" });
     if (!repartos.activo || p.entrega !== "domicilio") return res.status(409).json({ error: "este pedido no lleva repartidor" });
-    if (!["listo", "cocina", "nuevo"].includes(p.estado)) return res.status(409).json({ error: "el pedido ya salió o se cerró" });
+    if (!["listo", "cocina", "nuevo", "por_envio"].includes(p.estado)) return res.status(409).json({ error: "el pedido ya salió o se cerró" });
     const id = String((req.body || {}).id || "");
     const por = panel.usuarioDe(req).correo;
     const otros = id ? repartos.lista.filter(r => r.id !== id).map(r => r.id) : p.repartidor ? [...(p.rechazos || []), p.repartidor.id] : [];
