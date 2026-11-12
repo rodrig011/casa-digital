@@ -87,6 +87,32 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 .sk{background:linear-gradient(90deg,var(--mute-bg) 25%,var(--hover) 50%,var(--mute-bg) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:4px}
 @keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.sk{animation:none}}
+/* ficha del pedido: un registro de Lightning (encabezado, Path, detalles, productos, actividad) */
+[data-ficha]{cursor:pointer}[data-ficha]:hover{text-decoration:underline}
+.velo{position:fixed;inset:0;background:rgba(8,7,7,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .18s ease-out}.velo.on{opacity:1;pointer-events:auto}
+.ficha{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);z-index:41;box-shadow:-4px 0 16px rgba(0,0,0,.18);overflow-y:auto;transform:translateX(100%);transition:transform .22s cubic-bezier(.32,.72,0,1);display:grid;align-content:start;gap:12px;padding:0 0 24px;visibility:hidden}
+.ficha.on{transform:none;visibility:visible}
+.ficha .fh{background:var(--card);border-bottom:1px solid var(--line);padding:14px 16px;display:grid;gap:12px;position:sticky;top:0;z-index:1}
+.ficha .fh .t{display:flex;align-items:center;gap:12px}.ficha .fh h1{font-size:18px}.ficha .fh .x{margin-left:auto;align-self:start}
+.ficha .acc{display:flex;gap:6px;flex-wrap:wrap}
+.ficha > .card{margin:0 12px}
+.path{display:flex;margin:0;padding:0;list-style:none;overflow-x:auto;scrollbar-width:none}.path::-webkit-scrollbar{display:none}
+.path li{flex:1 0 auto;min-width:74px;height:32px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 10px 0 18px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--mute-bg);color:var(--tx2);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%,9px 50%);margin-left:-5px}
+.path li:first-child{clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%);border-radius:16px 0 0 16px;margin-left:0;padding-left:12px}
+.path li:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,9px 50%);border-radius:0 16px 16px 0}
+.path li.hecho{background:var(--ok-bg);color:var(--ok)}.path li.hecho::before{content:"✓ "}
+.path li.ahora{background:var(--brand-d);color:#fff}
+.path li.fin{background:var(--red-bg);color:var(--red)}
+.campos{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;padding:4px 16px 12px;margin:0}
+.campos div{padding:8px 0;border-bottom:1px solid var(--line);min-width:0}.campos dt{font-size:12px;color:var(--tx3)}.campos dd{margin:0;overflow-wrap:anywhere}
+.campos .ancho{grid-column:1/-1}
+.linea-t{list-style:none;margin:0;padding:4px 16px 12px}
+.linea-t li{display:grid;grid-template-columns:14px 1fr auto;gap:10px;padding:8px 0;position:relative}
+.linea-t li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--brand);margin-top:5px}
+.linea-t li:not(:last-child)::after{content:"";position:absolute;left:4px;top:21px;bottom:-5px;width:2px;background:var(--line)}
+.linea-t small{color:var(--tx3);white-space:nowrap}
+table tfoot td{font-weight:700;border-bottom:0}
+@media (prefers-reduced-motion:reduce){.ficha,.velo{transition:none}}
 .tabs{display:none}
 .grid-seg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px}.solo-cel{display:none}
 @media (max-width:900px){
@@ -121,6 +147,8 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
   <div id="vista"><div class="kpis"><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div><div class="card kpi"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:26px;width:40%;margin-bottom:4px"></div></div></div><div class="grid2"><div class="card"><div class="sk" style="height:180px;margin:12px"></div></div><div class="card"><div class="sk" style="height:180px;margin:12px"></div></div></div></div>
 </main>
 <nav class="tabs" id="nav2"></nav>
+<div class="velo" id="velo"></div>
+<aside class="ficha" id="ficha" role="dialog" aria-modal="true" aria-labelledby="f-t" tabindex="-1"></aside>
 <script>
 const VISTAS = [["hoy", "Hoy"], ["pedidos", "Pedidos"], ["cocina", "Cocina"], ["personas", "Por atender"], ["menu", "Menú"]];
 const CORTO = { personas: "Atender", reservas: "Mesas", repartidores: "Envíos", proveedores: "Compras" };
@@ -162,7 +190,7 @@ function filtrados() { const s = $("#suc").value; return P.filter(p => !s || p.s
 const pedidos = () => filtrados().filter(p => p.tipo === "pedido");
 
 function nav() {
-  const pend = pedidos().filter(p => p.estado === "nuevo").length, per = filtrados().filter(p => p.tipo === "persona" && p.estado === "nuevo").length;
+  const pend = pedidos().filter(p => p.estado === "nuevo" && (!p.diaFecha || p.diaFecha <= hoy())).length, per = filtrados().filter(p => p.tipo === "persona" && p.estado === "nuevo").length;
   const comp = pedidos().filter(p => p.estado === "por_pagar" && p.comprobante).length;
   const res = filtrados().filter(p => p.tipo === "reservacion" && p.estado === "por_confirmar").length;
   const cuenta = { pedidos: comp || "", cocina: pend || "", personas: per || "", reservas: res || "", cupos: pedidos().filter(p => p.estado === "en_espera").length || "" };
@@ -171,12 +199,16 @@ function nav() {
   document.querySelectorAll(".nav[data-v]").forEach(b => b.onclick = () => { vista = b.dataset.v; try { localStorage.setItem("vista", vista); } catch {} pintar(); });
 }
 
-function tarjeta(p, grande) {
+function acciones(p) {
   const reparto = p.entrega === "domicilio" && N.repartidores && N.repartidores.length;
   const sig = { por_pagar: [["nuevo", "Pago recibido"]], nuevo: [["cocina", "A cocina"]], cocina: [["listo", "Listo"]], listo: [reparto ? ["en_camino", "En camino"] : ["entregado", "Entregado"]], en_camino: [["entregado", "Entregado"]], por_envio: [["nuevo", "Pasar a cocina"]] }[p.estado] || [];
   const extra = { por_pagar: [["cancelado", "Cancelar"]], por_envio: [["cancelado", "Cancelar"]], nuevo: [["cancelado", "Cancelar"]], listo: [["no_vino", "No vino"]] }[p.estado] || [];
+  return sig.concat(extra).concat(reparto && ["listo", "por_envio"].includes(p.estado) ? [["_rep", p.repartidor ? "Otro repartidor" : "Buscar repartidor"]] : []).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("");
+}
+function tarjeta(p, grande) {
+  const reparto = p.entrega === "domicilio" && N.repartidores && N.repartidores.length;
   return `<div class="card ped ${grande ? (p.estado === "cocina" ? "cocina-e" : p.estado) : ""}">
-    <div class="l1">${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}<span>${hora(p.fecha)} · ${hace(p.fecha)}</span></div>
+    <div class="l1"><span data-ficha="${esc(p.n)}" role="button" tabindex="0">${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}</span><span>${hora(p.fecha)} · ${hace(p.fecha)}</span></div>
     ${p.faltas ? `<div class="aviso">⚠️ No vino a recoger ${p.faltas === 1 ? "1 vez" : p.faltas + " veces"} antes</div>` : ""}
     ${p.estado === "por_pagar" ? `<div>${p.comprobante ? `<span class="tag t-comp">Comprobante recibido ${hace(p.t_comprobante)}</span> <small>Revise la cuenta antes de confirmar.</small>` : `<span class="tag t-por_pagar">${p.anticipo ? `Esperando anticipo de ${L(p.anticipo)}` : "Esperando el pago"}</span>${p.pagoLink ? ` <small>Link de tarjeta enviado: si paga, entra solo a cocina.</small>` : ""}`}</div>` : p.pagado ? `<div><span class="tag t-comp">${p.metodoPago === "tarjeta" ? "Pagado con tarjeta" : "Pagado"}</span></div>` : ""}
     ${p.tanda ? `<div><span class="tag t-por_confirmar">📅 ${esc(p.dia)}${N.cupos && N.cupos.tandas.length > 1 ? ` · ${esc(p.tanda)} · ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"}` : ""}</span></div>` : ""}
@@ -184,7 +216,7 @@ function tarjeta(p, grande) {
     <ul>${(p.lineas || []).map(l => `<li>${l.cantidad} × ${esc(l.nombre)}${l.nota ? ` <em>(${esc(l.nota)})</em>` : ""}</li>`).join("")}</ul>
     <div class="l3"><span>${grande ? "" : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado]}</span> `}<b>${L(p.total)}</b> · ${esc(p.sucursal)}</span><span>${p.entrega === "domicilio" ? `🛵 ${esc(p.direccion)}${p.envio != null ? ` · envío ${L(p.envio)}` : ""}` : `Recoge: ${esc(p.hora || "—")}`}</span></div>
     ${reparto && (p.repartidor || ["listo", "por_envio"].includes(p.estado)) && !["entregado", "cancelado"].includes(p.estado) ? `<div><span class="tag t-${p.repartidor ? "en_camino" : "por_confirmar"}">🛵 ${p.repartidor ? `${p.estado === "por_envio" ? (p.envio != null ? `Envío ${L(p.envio)}: esperando que el cliente acepte · ` : "Cotiza el envío: ") : "Lo lleva "}${esc(p.repartidor.nombre)}` : "Sin repartidor"}</span></div>` : ""}
-    <div class="acc">${sig.concat(extra).concat(reparto && ["listo", "por_envio"].includes(p.estado) ? [["_rep", p.repartidor ? "Otro repartidor" : "Buscar repartidor"]] : []).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("")}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
+    <div class="acc">${acciones(p)}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
   </div>`;
 }
 
@@ -223,7 +255,7 @@ function pintar() {
     if (modoPedidos === "lista") {
       const q = busca.trim().toLowerCase();
       const x = ps.filter(p => !q || [p.n, p.nombre, p.tel, p.direccion, p.resumen].some(c => String(c || "").toLowerCase().includes(q))).slice(0, 200);
-      v.innerHTML = barra + `<div class="card tabla">${x.length ? `<table><tr><th>Pedido</th><th>Cliente</th><th class="solo-pc">Sucursal</th><th>Estado</th><th class="solo-pc">Entrega</th><th class="r">Total</th><th class="r solo-pc">Hora</th></tr>${x.map(p => `<tr><td><b class="lnk">${esc(p.n)}</b></td><td>${esc(p.nombre || "Sin nombre")}<small class="tel">${esc(p.tel || "")}</small></td><td class="solo-pc">${esc(p.sucursal)}</td><td><span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>${p.estado === "por_pagar" && p.comprobante ? ` <span class="tag t-comp">Comprobante</span>` : ""}</td><td class="solo-pc">${p.entrega === "domicilio" ? `🛵 ${esc(p.repartidor ? p.repartidor.nombre : "Sin repartidor")}${p.envio != null ? ` · ${L(p.envio)}` : ""}` : "Recoge"}</td><td class="r">${L(p.total)}</td><td class="r solo-pc">${hora(p.fecha)}</td></tr>`).join("")}</table>` : `<div class="vacio">${q ? "Ningún pedido coincide con la búsqueda." : "Todavía no hay pedidos."}</div>`}</div>`;
+      v.innerHTML = barra + `<div class="card tabla">${x.length ? `<table><tr><th>Pedido</th><th>Cliente</th><th class="solo-pc">Sucursal</th><th>Estado</th><th class="solo-pc">Entrega</th><th class="r">Total</th><th class="r solo-pc">Hora</th></tr>${x.map(p => `<tr><td><b class="lnk" data-ficha="${esc(p.n)}" role="button" tabindex="0">${esc(p.n)}</b></td><td>${esc(p.nombre || "Sin nombre")}<small class="tel">${esc(p.tel || "")}</small></td><td class="solo-pc">${esc(p.sucursal)}</td><td><span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>${p.estado === "por_pagar" && p.comprobante ? ` <span class="tag t-comp">Comprobante</span>` : ""}</td><td class="solo-pc">${p.entrega === "domicilio" ? `🛵 ${esc(p.repartidor ? p.repartidor.nombre : "Sin repartidor")}${p.envio != null ? ` · ${L(p.envio)}` : ""}` : "Recoge"}</td><td class="r">${L(p.total)}</td><td class="r solo-pc">${hora(p.fecha)}</td></tr>`).join("")}</table>` : `<div class="vacio">${q ? "Ningún pedido coincide con la búsqueda." : "Todavía no hay pedidos."}</div>`}</div>`;
       const bi = $("#busca"); bi.oninput = () => { busca = bi.value; const pos = bi.selectionStart; pintar(); const b2 = $("#busca"); b2.focus(); b2.setSelectionRange(pos, pos); };
     } else
     v.innerHTML = barra + `${cols[0][0] === "por_pagar" ? `<p class="ayuda">Los pedidos que se pagan antes esperan en <b>Esperando pago</b> y no salen en cocina. Cuando llegue el comprobante, revise que el dinero esté en la cuenta y toque <b>Pago recibido</b>.</p>` : ""}<div class="board" style="--cols:${cols.length}">${cols.map(([e, t]) => { const x = ps.filter(p => p.estado === e && (e !== "entregado" || dia(p.fecha) === hoy())); return `<div class="col"><h3>${t}<span>${x.length}</span></h3>${x.map(p => tarjeta(p)).join("") || `<div class="card vacio">Nada aquí</div>`}</div>`; }).join("")}</div>`;
@@ -244,7 +276,7 @@ function pintar() {
       <div class="card kpi"><b>${L(ent.reduce((a, p) => a + (p.envio || 0), 0))}</b><span>Envíos cobrados hoy</span></div></div>
       ${sinRep.length ? `<p class="ayuda alerta">${sinRep.length === 1 ? "Hay 1 envío" : `Hay ${sinRep.length} envíos`} sin repartidor: ${sinRep.map(p => `<b>${esc(p.n)}</b>`).join(", ")}. Asígnelo en <b>Pedidos</b> con «Buscar repartidor».</p>` : ""}
       <div class="card" style="margin-bottom:12px">${H("Equipo de reparto", "repartidores")}${R.length ? `<table><tr><th>Repartidor</th><th class="solo-pc">Sucursal</th><th>Ahora</th><th class="r solo-pc">Hoy</th><th class="r solo-pc">Envíos hoy</th><th></th></tr>${R.map(r => { const a = de(r).filter(p => calle.includes(p.estado)), h = hoyEnt(r); const camino = a.filter(p => p.estado === "en_camino").length; return `<tr><td><div class="per"><span class="ini">${esc(r.nombre.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase())}</span><div><b>${esc(r.nombre)}</b><small class="tel">${esc(telTxt(r.tel))}</small></div></div></td><td class="solo-pc">${esc(sucNom(r.sucursal))}</td><td>${a.length ? `<span class="tag t-${camino ? "en_camino" : "por_envio"}">${camino ? `En camino${a.length > 1 ? ` · ${a.length} pedidos` : ""}` : `${a.length} ${a.length === 1 ? "pedido" : "pedidos"} asignado${a.length === 1 ? "" : "s"}`}</span>` : `<span class="tag t-listo">Libre</span>`}</td><td class="r solo-pc">${h.length}</td><td class="r solo-pc">${L(h.reduce((x, p) => x + (p.envio || 0), 0))}</td><td class="r">${r.tel ? `<a class="btn" href="${wa(r.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(r.nombre)}"><span class="solo-pc">WhatsApp</span><span class="solo-cel">💬</span></a>` : ""}</td></tr>`; }).join("")}</table>` : `<div class="vacio">No hay repartidores en esta sucursal.</div>`}</div>
-      <div class="card">${H("Envíos de hoy", "pedidos")}${activos.length + ent.length ? `<table><tr><th>Pedido</th><th class="solo-pc">Repartidor</th><th>Estado</th><th class="solo-pc">Dirección</th><th class="r">Envío</th></tr>${activos.concat(ent).map(p => `<tr><td><b>${esc(p.n)}</b><small class="tel">${esc(p.nombre || "")}</small></td><td class="solo-pc">${esc(p.repartidor.nombre)}</td><td><span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>${p.seguimiento && p.estado === "en_camino" ? ` <span class="tag t-listo">📍 En vivo</span>` : ""}</td><td class="solo-pc">${esc(p.direccion || "")}</td><td class="r">${p.envio != null ? L(p.envio) : "—"}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay envíos hoy.</div>`}</div>`;
+      <div class="card">${H("Envíos de hoy", "pedidos")}${activos.length + ent.length ? `<table><tr><th>Pedido</th><th class="solo-pc">Repartidor</th><th>Estado</th><th class="solo-pc">Dirección</th><th class="r">Envío</th></tr>${activos.concat(ent).map(p => `<tr><td><b class="lnk" data-ficha="${esc(p.n)}" role="button" tabindex="0">${esc(p.n)}</b><small class="tel">${esc(p.nombre || "")}</small></td><td class="solo-pc">${esc(p.repartidor.nombre)}</td><td><span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>${p.seguimiento && p.estado === "en_camino" ? ` <span class="tag t-listo">📍 En vivo</span>` : ""}</td><td class="solo-pc">${esc(p.direccion || "")}</td><td class="r">${p.envio != null ? L(p.envio) : "—"}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay envíos hoy.</div>`}</div>`;
   } else if (vista === "proveedores") {
     // what has been ordered for the coming days, per product and branch: what to buy
     const prox = {}; ps.filter(p => p.diaFecha && p.diaFecha >= hoy() && !["cancelado", "en_espera", "no_vino"].includes(p.estado)).forEach(p => (p.lineas || []).forEach(l => {
@@ -270,7 +302,7 @@ function pintar() {
     const orden = p => (p.diaFecha || "") + String(N.cupos ? N.cupos.tandas.indexOf(p.tanda) + 10 : "") + p.fecha;
     const x = ps.filter(p => (p.estado === "nuevo" || p.estado === "cocina") && (!p.diaFecha || p.diaFecha <= hoy())).sort((a, b) => orden(a) < orden(b) ? -1 : 1);
     v.innerHTML = `<p class="ayuda">Pantalla para la cocina: déjela abierta en una tablet. Al marcar <b>Listo</b>, al cliente le llega un WhatsApp para que pase a recoger. <button class="btn" id="son" style="height:28px;margin-left:6px">${sonido ? "🔔 Sonido activado" : "🔕 Activar sonido"}</button></p>
-      <div class="cocina">${x.map(p => tarjeta(p, true)).join("") || `<div class="card vacio" style="grid-column:1/-1">No hay pedidos pendientes.</div>`}</div>`;
+      <div class="cocina">${x.map(p => tarjeta(p, true)).join("") || (() => { const luego = ps.filter(p => ["nuevo", "cocina"].includes(p.estado) && p.diaFecha > hoy()); return `<div class="card vacio" style="grid-column:1/-1">Hoy no hay pedidos para cocina.${luego.length ? ` ${luego.length === 1 ? "Hay 1 apartado" : `Hay ${luego.length} apartados`} para ${esc([...new Set(luego.map(p => p.dia))].join(" y "))}: salen aquí ese día y ya están en <b>Pedidos</b>.` : ""}</div>`; })()}</div>`;
     $("#son").onclick = () => { sonido = !sonido; if (sonido) beep(); pintar(); };
   } else if (vista === "cupos") {
     const C = N.cupos, espera = ps.filter(p => p.estado === "en_espera");
@@ -296,8 +328,56 @@ function pintar() {
     v.innerHTML = `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Para cambiar un precio o agregar un producto, avísele a Casa Digital y queda actualizado el mismo día.</p>
       <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
   }
-  v.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => b.dataset.e === "_rep" ? otroRepartidor(b.dataset.n, b) : cambiar(b.dataset.n, b.dataset.e, b));
+  botones(v);
+  if (abierta) ficha(abierta);
 }
+const botones = el => el.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => b.dataset.e === "_rep" ? otroRepartidor(b.dataset.n, b) : cambiar(b.dataset.n, b.dataset.e, b));
+
+// ---- ficha del pedido: todo el pedido en un solo lugar, con el camino que lleva (Path) y lo que pasó (Actividad) ----
+let abierta = null, volver = null;
+function camino(p) {
+  const reparto = p.entrega === "domicilio" && N.repartidores && N.repartidores.length;
+  const pasos = [];
+  if (reparto && (p.t_envio || p.repartidor || p.estado === "por_envio")) pasos.push("por_envio");
+  if (p.pagaAntes || p.pagado || p.comprobante || p.estado === "por_pagar") pasos.push("por_pagar");
+  pasos.push("nuevo", "cocina", "listo");
+  if (reparto) pasos.push("en_camino");
+  pasos.push("entregado");
+  return pasos;
+}
+const TXT_PATH = { por_envio: "Envío", por_pagar: "Pago", nuevo: "Nuevo", cocina: "Cocina", listo: "Listo", en_camino: "En camino", entregado: "Entregado" };
+function ficha(n) {
+  const p = P.find(x => x.n === n), f = $("#ficha");
+  if (!p) return cerrarFicha();
+  const pasos = camino(p), fin = ["cancelado", "no_vino"].includes(p.estado);
+  const i = fin ? pasos.findIndex(e => !p["t_" + e] && !(e === "por_pagar" && p.pagado)) : pasos.indexOf(p.estado);
+  const path = pasos.map((e, k) => fin && k === i ? `<li class="fin">${ESTADO_TXT[p.estado]}</li>` : `<li class="${k < i ? "hecho" : k === i ? "ahora" : ""}"${k === i ? ' aria-current="step"' : ""}>${TXT_PATH[e]}</li>`).join("") + (fin && i < 0 ? `<li class="fin">${ESTADO_TXT[p.estado]}</li>` : "");
+  const pago = p.pagado ? (p.metodoPago === "tarjeta" ? "Pagado con tarjeta" : `Pagado${p.t_pagado ? ` · ${hora(p.t_pagado)}` : ""}`) : p.estado === "por_pagar" ? (p.comprobante ? "Comprobante por revisar" : "Esperando el pago") : p.pagaAntes ? "Paga antes de cocina" : "Al recibir";
+  const campo = (t, v, ancho) => v ? `<div class="${ancho ? "ancho" : ""}"><dt>${t}</dt><dd>${v}</dd></div>` : "";
+  const hechos = [["fecha", "Pedido recibido por WhatsApp"], ["t_asignado", p.repartidor ? `Envío asignado a ${esc(p.repartidor.nombre)}` : "Envío asignado"], ["t_envio", p.envio != null ? `El repartidor cotizó el envío: ${L(p.envio)}` : "Envío cotizado"], ["t_comprobante", "El cliente mandó el comprobante"], ["t_pagado", "Pago revisado y aprobado"], ["t_cocina", "Entró a cocina"], ["t_listo", "Listo"], ["t_en_camino", p.repartidor ? `Salió con ${esc(p.repartidor.nombre)}` : "Salió"], ["t_entregado", "Entregado"], ["t_no_vino", "No vino a recoger"], ["t_cancelado", "Cancelado"]]
+    .map((h, i) => [...h, i]).filter(([k]) => p[k]).sort((a, b) => new Date(p[b[0]]) - new Date(p[a[0]]) || b[2] - a[2]);
+  const envio = p.entrega === "domicilio" && p.envio != null;
+  f.innerHTML = `<div class="fh"><div class="t"><span class="tile" style="background:${ICONO.pedidos[1]}">${svg("pedidos")}</span><div><div class="ey">Pedido · ${esc(p.sucursal)}</div><h1 id="f-t">${esc(p.n)} · ${esc(p.nombre || "Sin nombre")}</h1></div><button class="iconbtn x" id="f-x" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <ol class="path" aria-label="Avance del pedido">${path}</ol>
+      <div class="acc">${acciones(p)}<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a></div></div>
+    <div class="card">${H("Detalles", "pedidos")}<dl class="campos">
+      ${campo("Cliente", esc(p.nombre || "Sin nombre"))}${campo("Teléfono", esc(telTxt(p.tel)))}
+      ${campo("Entrega", p.entrega === "domicilio" ? "A domicilio" : `Recoge${p.hora ? ` · ${esc(p.hora)}` : ""}`)}${campo("Pago", pago)}
+      ${campo("Para", p.dia ? esc(p.dia.replace(/^\p{L}/u, c => c.toUpperCase())) : "")}${campo("Repartidor", p.repartidor ? esc(p.repartidor.nombre) + (p.seguimiento && p.estado === "en_camino" ? ` <span class="tag t-listo">📍 En vivo</span>` : "") : "")}
+      ${campo("Dirección", p.direccion ? esc(p.direccion) : "", true)}</dl></div>
+    <div class="card">${H("Productos", "ventas")}<table><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th></tr>${(p.lineas || []).map(l => `<tr><td>${esc(l.nombre)}${l.nota ? `<small class="tel">${esc(l.nota)}</small>` : ""}</td><td class="r">${l.cantidad}</td><td class="r">${L(l.subtotal != null ? l.subtotal : l.precio * l.cantidad)}</td></tr>`).join("")}
+      <tfoot>${envio ? `<tr><td colspan="2">Comida</td><td class="r">${L(p.total)}</td></tr><tr><td colspan="2" style="font-weight:400">Envío <small class="tel">se le paga al repartidor</small></td><td class="r" style="font-weight:400">${L(p.envio)}</td></tr>` : ""}<tr><td colspan="2">Total</td><td class="r">${L(p.total + (envio ? p.envio : 0))}</td></tr></tfoot></table></div>
+    <div class="card">${H("Actividad", "actividad")}<ol class="linea-t">${hechos.map(([k, t]) => `<li><span>${t}</span><small>${fechaHora(p[k])}</small></li>`).join("")}</ol></div>`;
+  botones(f);
+  const ya = f.querySelector(".path .ahora, .path .fin"); if (ya) ya.parentNode.scrollLeft = ya.offsetLeft - 24;
+  $("#f-x").onclick = cerrarFicha;
+  if (!f.classList.contains("on")) { volver = document.activeElement; f.classList.add("on"); $("#velo").classList.add("on"); f.focus(); }
+}
+function abrirFicha(n) { abierta = n; ficha(n); }
+function cerrarFicha() { abierta = null; $("#ficha").classList.remove("on"); $("#velo").classList.remove("on"); if (volver && volver.isConnected) volver.focus(); }
+document.addEventListener("click", e => { const t = e.target.closest("[data-ficha]"); if (t) abrirFicha(t.dataset.ficha); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && abierta) cerrarFicha(); const t = e.target.closest && e.target.closest("[data-ficha]"); if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); abrirFicha(t.dataset.ficha); } });
+$("#velo").onclick = cerrarFicha;
 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
