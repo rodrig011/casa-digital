@@ -66,6 +66,23 @@ function montarDemo(app, { negocio, apiKey, model, client, origenes = [], porVis
     }
   });
 
+  // who opened a client's demo page: a count per day and the last time, so rodrigo knows if the prospect looked.
+  // Only in memory (the free server restarts) and in the log; nothing personal is kept.
+  const visitas = new Map();
+  app.options("/demo/visita", cors);
+  app.post("/demo/visita", cors, express.json({ limit: "2kb" }), (req, res) => {
+    const id = String((req.body && req.body.negocio) || "").slice(0, 40);
+    if (!id) return res.status(400).json({ error: "datos" });
+    const d = new Date(ahora()).toISOString().slice(0, 10);
+    const v = visitas.get(id) || { dia: d, hoy: 0, total: 0, ultima: null };
+    if (v.dia !== d) { v.dia = d; v.hoy = 0; }
+    v.hoy++; v.total++; v.ultima = new Date(ahora()).toISOString();
+    visitas.set(id, v);
+    log(`[demo] visita a la demo de ${id} (${v.hoy} hoy)`);
+    res.json({ ok: true });
+  });
+  app.get("/demo/visitas", (req, res) => res.set("Cache-Control", "no-store").json(Object.fromEntries([...visitas].map(([k, v]) => [k, { hoy: v.hoy, total: v.total, ultima: v.ultima }]))));
+
   app.options("/demo/claude", cors);
   app.post("/demo/claude", cors, express.json({ limit: "48kb" }), async (req, res) => {
     const id = String((req.body && req.body.negocio) || "");

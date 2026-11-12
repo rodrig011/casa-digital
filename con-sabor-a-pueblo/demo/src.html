@@ -206,7 +206,8 @@ function pintarIA(t) {
   el.classList.toggle("on", iaViva && t === "on");
   el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : despierta ? "IA lista" : "IA: despertando (la primera respuesta tarda hasta un minuto)";
 }
-if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => { despierta = true; pintarIA(); }, () => pintarIA());   // wakes the server up
+// wakes the server up and counts the visit (so Clientia Tech knows the prospect opened the demo)
+if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/demo/visita"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ negocio: "con-sabor-a-pueblo" }) }).then(() => { despierta = true; pintarIA(); }, () => pintarIA());
 async function conversarIA(tel, text, ubic = null) {
   const sess = sesiones.get(tel) || { state: null };
   try {

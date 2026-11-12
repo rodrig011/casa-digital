@@ -1382,5 +1382,11 @@ test("demo de un cliente: /demo/claude arma el sistema y las herramientas del ne
     assert.match(enviado.system[0].text, /Con Sabor a Pueblo/); assert.match(enviado.system[0].text, /repartidor le dice el precio del envío/);
     assert.ok(enviado.tools.some(t => t.name === "crear_pedido"));
     assert.equal(enviado.max_tokens, 1024);
+    // the page counts the prospect's visits: only from the site, by day, nothing personal
+    const visita = origin => fetch(ctx.base + "/demo/visita", { method: "POST", headers: { "Content-Type": "application/json", Origin: origin }, body: JSON.stringify({ negocio: "con-sabor-a-pueblo" }) });
+    assert.equal((await visita("https://otro.com")).status, 403);
+    assert.equal((await visita("https://clientiatech.com")).status, 200); await visita("https://clientiatech.com");
+    const v = await (await fetch(ctx.base + "/demo/visitas")).json();
+    assert.equal(v["con-sabor-a-pueblo"].hoy, 2); assert.equal(v["con-sabor-a-pueblo"].total, 2); assert.ok(v["con-sabor-a-pueblo"].ultima);
   } finally { ctx.srv.close(); }
 });
