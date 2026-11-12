@@ -23,7 +23,7 @@ const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, fechasCupos } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos, norm } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -46,6 +46,7 @@ function loadConfig(env = process.env) {
   return {
     port: +env.PORT || 3000,
     negocio: env.NEGOCIO || "negocios/ejemplo.json",
+    negocioPrivado: env.NEGOCIO_PRIVADO || "",      // JSON con los WhatsApp de sucursales y repartidores, cuenta del banco (no van al repositorio)
     sid: env.TWILIO_ACCOUNT_SID || "",
     token: env.TWILIO_AUTH_TOKEN || "",
     sandbox,
@@ -84,7 +85,7 @@ function loadConfig(env = process.env) {
 
 function createApp(cfg = loadConfig(), deps = {}) {
   const log = deps.log || console.log;
-  const negocio = deps.negocio || cargarNegocio(cfg.negocio);
+  const negocio = deps.negocio || cargarNegocio(cfg.negocio, cfg.negocioPrivado);
   const pasarela = "pasarela" in deps ? deps.pasarela : createPasarela(cfg.pasarela);
   if (pasarela) negocio.cobro = { ...negocio.cobro, activo: true, pasarela: true };
   const motor = createEngine(negocio);
@@ -123,7 +124,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const numero = pre => pre + "-" + (store.seq = store.seq + 1);
   const faltasDe = tel => store.faltas(tel);
   // cupos already taken in one batch (negocio.cupos): every order of that day and batch except cancelled ones and the waiting list
-  const ocupados = (fecha, tanda) => store.pedidos.reduce((a, p) => a + (p.tipo === "pedido" && p.diaFecha === fecha && p.tanda === tanda && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0);
+  // with cupos.porSucursal each branch counts only its own orders
+  const ocupados = (fecha, tanda, sucursalId) => store.pedidos.reduce((a, p) => a + (p.tipo === "pedido" && p.diaFecha === fecha && p.tanda === tanda && !["cancelado", "en_espera"].includes(p.estado) && (!negocio.cupos || !negocio.cupos.porSucursal || !sucursalId || p.sucursalId === sucursalId) ? p.cupos || 0 : 0), 0);
   // the customer's last open order from the last 24 h (to tell the right branch about a cancellation)
   const ultimoDe = tel => store.pedidos.findLast(p => p.tipo === "pedido" && digits(p.tel) === digits(tel) && !["cancelado", "entregado", "no_vino"].includes(p.estado) && now() - new Date(p.fecha) < 24 * 3600e3) || null;
   // the same order (same items, total and branch) from the same number in the last 30 minutes: a repeated "sí, confirmo"
@@ -271,6 +273,19 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   const esDueno = from => cfg.owner && digits(from) === digits(cfg.owner);
+  // the owner or a branch's WhatsApp
+  const esNegocio = from => esDueno(from) || negocio.sucursales.some(s => s.whatsapp && digits(s.whatsapp) === digits(from));
+  // "OK 1001" from the owner or the branch: the deposit is in the account, the order is confirmed without opening the panel
+  function aprobar(from, text) {
+    const m = norm(text).match(/^(?:ok|aprobar|aprobado|aprobada|confirmar|confirmado|pago recibido|recibido)\s*(?:ped-?\s*)?(\d{3,})$/);
+    if (!m) return null;
+    const p = store.pedidos.findLast(x => x.n.replace(/\D/g, "").endsWith(m[1]));
+    if (!p) return `No encuentro el pedido ${m[1]}.`;
+    if (p.estado !== "por_pagar") return `${p.n} no está esperando pago (está ${p.estado.replace("_", " ")}).`;
+    const q = confirmarPago(p, { por: "whatsapp:+" + digits(from), metodo: "manual" });
+    bitacora.anotar("estado", { correo: q.por, pedido: q.n, de: "por_pagar", a: "nuevo", ip: "whatsapp" });
+    return `✅ ${q.n} aprobado. Al cliente ya le llegó que su ${q.encargo || q.diaFecha ? "apartado" : "pedido"} quedó confirmado.`;
+  }
   function pendientes() {
     const ls = store.pedidos.filter(p => ["por_pagar", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
@@ -299,12 +314,13 @@ function createApp(cfg = loadConfig(), deps = {}) {
     // the restaurant's own drivers answer SALGO / ENTREGADO / NO PUEDO on the same number
     const deRepartidor = repartos.mensaje(from, text);
     if (deRepartidor) return deRepartidor;
-    if (!esDueno(from) && !limite.pasa(digits(from) || from)) {
+    if (!esNegocio(from) && !limite.pasa(digits(from) || from)) {
       if (!limite.primeraVezFuera(digits(from) || from)) return [];
       log(`[freno] ${from} pasó de ${cfg.limiteMensajes} mensajes en 10 minutos`);
       return [{ text: "Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí." }];
     }
-    if (esDueno(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
+    if (esNegocio(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
+    if (esNegocio(from) && (reply = aprobar(from, text))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base))) return [{ text: reply.slice(0, 1590) }];
     const out = conversar(from, text);

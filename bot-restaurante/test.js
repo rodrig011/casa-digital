@@ -1080,3 +1080,80 @@ test("repartidores (Libby's Cajun): el bot asigna al más libre, el repartidor c
     assert.match(a("whatsapp:+50491113333").at(-1), /PED-1002\* fue entregado/);
   } finally { ctx.srv.close(); }
 });
+
+test("Con Sabor a Pueblo: menú por ciudad, tope de apartados por sábado, depósito que el dueño aprueba con OK, pierna por encargo con 50%", async () => {
+  const { mezclarPrivado, montoCobro } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const privado = { sucursales: { sps: { whatsapp: "+504 8888-2222" } }, cobro: { transferencia: "Banco de prueba, cuenta 000" } };
+  const N2 = preparar(mezclarPrivado(base, privado));
+  assert.equal(N2.sucursales[1].whatsapp, "+504 8888-2222");
+  assert.equal(base.sucursales[1].whatsapp, "", "el archivo público no lleva números");
+  const E2 = createEngine(N2);
+  let ocup = {};
+  const ctx = { ocupados: (f, t, s) => ocup[s] || 0 };
+  const correr = (xs, now = NOW) => { let st = null, ult = ""; for (const x of xs) { const r = E2.handle(st, x, now, ctx); st = r.state; ult = r.messages.map(toText).join("\n"); if (VERBOSE) console.log(">> " + x + "\n" + ult); } return { st, ult }; };
+
+  // San Pedro: cerdito chuko, Saturday (one batch: no batch question), deposit before confirming
+  let { st, ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]);
+  assert.equal(st.lead.total, 390); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "sps");
+  assert.equal(st.lead.diaFecha, "2026-10-17"); assert.equal(st.lead.cupos, 1);
+  assert.match(ult, /Para confirmar el apartado, se paga antes/); assert.match(ult, /Banco de prueba/); assert.doesNotMatch(ult, /tanda/);
+  // Tegucigalpa does not sell it
+  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "2 cerdito chuko"]));
+  assert.doesNotMatch(ult, /Cerdito chuko · L 390/);
+  // delivery pays the driver: no deposit
+  ({ st } = correr(["hola", "Pedir a domicilio", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Col. Trejo, 5 calle, casa azul", "Sábado 17 de octubre", "Mario"]));
+  assert.equal(st.lead.entrega, "domicilio"); assert.equal(st.lead.estado, undefined);
+  // 50 apartados in San Pedro: full there, Tegucigalpa still open
+  ocup = { sps: 50 };
+  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Para recoger"]));
+  assert.match(ult, /Ya se llenó: sábado 17 de octubre/);
+  ocup = {};
+  // after 1 p. m. on Saturday that Saturday is closed
+  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Para recoger"], new Date("2026-10-17T13:30:00-06:00")));
+  assert.doesNotMatch(ult, /17 de octubre/); assert.match(ult, /24 de octubre/);
+
+  // pierna: minimum 5 lb, its own date, 50% deposit
+  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "3 pierna de cerdo", "Confirmar pedido"]));
+  assert.match(ult, /mínimo de Pierna de cerdo deshuesada \(libra\) es de 5/);
+  ({ st, ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "6 pierna de cerdo", "Confirmar pedido", "Para recoger", "Rosa"]));
+  assert.equal(st.lead.encargo, true); assert.equal(st.lead.diaFecha, "2026-12-24"); assert.equal(st.lead.total, 1920); assert.equal(st.lead.anticipo, 960);
+  assert.match(ult, /Para el jueves 24 de diciembre/); assert.match(ult, /Anticipo: \*L 960\* de L 1,920/);
+  assert.equal(montoCobro(N2, [{ id: "pierna", subtotal: 1600 }]), 800);
+  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "5 pierna de cerdo", "Confirmar pedido"], new Date("2026-12-16T09:00:00-06:00")));
+  assert.match(ult, /Ya se cerraron los pedidos de Pierna/);
+  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "5 pierna de cerdo y 1 cerdito chuko", "Confirmar pedido"]));
+  assert.match(ult, /se pide en un pedido aparte/);
+
+  // the bot: deposit receipt to the San Pedro number, which approves with "OK 1001"
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const srv = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: preparar(mezclarPrivado(base, privado)) });
+  try {
+    const cli = "whatsapp:+50495550000", SPS = "whatsapp:+50488881111";   // montar() le pone este WhatsApp a la segunda sucursal
+    for (const Body of ["hola", "Hacer un pedido", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]) await post(srv, "/whatsapp", { From: cli, Body });
+    await post(srv, "/whatsapp", { From: cli, Body: "", NumMedia: "1", MediaUrl0: "https://example.test/comprobante.jpg" });
+    await srv.app.locals.idle();
+    const aviso = srv.sent.filter(m => m.to === SPS).at(-1).body;
+    assert.match(aviso, /Comprobante de pago PED-1001/); assert.match(aviso, /OK 1001/);
+    const r = textoDe((await post(srv, "/whatsapp", { From: SPS, Body: "ok 1001" })).xml); await srv.app.locals.idle();
+    assert.match(r, /PED-1001 aprobado/);
+    assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /Su apartado quedó confirmado para el \*sábado 17 de octubre\*/);
+    assert.match(textoDe((await post(srv, "/whatsapp", { From: SPS, Body: "ok 1001" })).xml), /no está esperando pago/);
+    assert.match(textoDe((await post(srv, "/whatsapp", { From: cli, Body: "ok 1001" })).xml), /Con Sabor a Pueblo|ayudo/i, "un cliente no puede aprobar");
+  } finally { srv.srv.close(); }
+});
+
+test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mínimo; el cerdito no se vende en Tegucigalpa", () => {
+  const { mezclarPrivado } = require("./negocio");
+  const N2 = preparar(mezclarPrivado(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")), { cobro: { transferencia: "Banco de prueba" } }));
+  const { ejecutar } = require("./ia");
+  if (!ejecutar) return;
+  const c = { now: NOW, numero: () => "PED-2001", ocupados: () => 0 };
+  assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "cerdito-sps", cantidad: 1 }], fecha: "2026-10-17" }, { ...c }).error, /En Tegucigalpa no tenemos/);
+  assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 2 }], fecha: "2026-12-24" }, { ...c }).error, /mínimo/);
+  const k = { ...c };
+  const ok = ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 5 }], fecha: "2026-12-24" }, k);
+  assert.match(ok.cobro, /Anticipo: \*L 800\* de L 1,600/); assert.equal(k.pedido.encargo, true); assert.equal(k.pedido.anticipo, 800);
+  const menu = ejecutar(N2, "ver_menu", {}, c).menu;
+  assert.deepEqual(menu.find(i => i.id === "cerdito-sps").solo_en, ["San Pedro Sula"]);
+});

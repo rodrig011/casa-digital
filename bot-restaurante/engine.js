@@ -13,7 +13,7 @@
 // solo ofrece tandas con cupo (ctx.ocupados(fecha, tanda) = cupos ya apartados, server.js los cuenta) y, si está lleno,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, norm, fechasCupos, cuposDe } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe } = require("./negocio");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
 const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|hablar con|me llamen|queja|reclamo/.test(t);
@@ -35,12 +35,14 @@ function createEngine(negocio) {
   const MENU = [OP.menu, OP.pedido, ...(RES ? [OP.reservar] : []), OP.sucursales, OP.domicilio, OP.persona];
   const ENTREGA = ["Para recoger", "A domicilio"];
 
+  // the branch of the order being taken (set on every turn): products and the menu are that branch's
+  let SUC = null;
+  const item = q => N.item(q, SUC);
+  const soloEn = it => it.sucursales && !SUC && N.variasSucursales ? ` (solo ${it.sucursales.map(x => (N.sucursales.find(b => b.id === x) || {}).nombre).join(" y ")})` : "";
   // numbered menu, grouped by category; corto = one line per product (for the cart step)
   function menuTexto(corto) {
-    return N.menu.map(c => `*${c.categoria}*\n` + (c.items || []).map(i => {
-      const it = N.items.find(x => x.id === i.id);
-      return `${it.num}. ${it.nombre} · ${N.L(it.precio)}${!corto && it.desc ? `\n    ${it.desc}` : ""}`;
-    }).join("\n")).join("\n\n");
+    return N.menu.map(c => [c.categoria, (c.items || []).map(i => N.items.find(x => x.id === i.id)).filter(it => vendeEn(it, SUC))]).filter(([, its]) => its.length).map(([cat, its]) => `*${cat}*\n` + its.map(it =>
+      `${it.num}. ${it.nombre} · ${N.L(it.precio)}${soloEn(it)}${!corto && it.desc ? `\n    ${it.desc}` : ""}`).join("\n")).join("\n\n");
   }
   function sucursalesTexto() {
     return N.sucursales.map(s => [`📍 *${s.nombre}*`, s.direccion, s.telefono ? `Tel. ${s.telefono}` : null, `🕗 ${s.horario || "Horario: se lo confirma una persona de la sucursal."}`, s.mapa || null].filter(Boolean).join("\n")).join("\n\n");
@@ -63,23 +65,23 @@ function createEngine(negocio) {
   function uno(p) {
     const l = p.replace(/^(?:(?:quiero|me da|me das|deme|dame|regaleme|mandeme|para mi|y|con)\s+)+/, "");
     let m, r = null;
-    if ((m = l.match(/^(?:el |la |numero |#)?(\d+)\s*(?:x|×|\*|por)\s*(\d+)$/))) r = { it: N.item(m[1]), n: m[1], cantidad: +m[2] };
-    else if ((m = l.match(/^(\d+)\s*(?:del?|de la)\s*(?:numero |#)?(\d+)$/))) r = { it: N.item(m[2]), n: m[2], cantidad: +m[1] };
-    else if ((m = l.match(/^(?:el |la |numero |#)(\d+)$/)) || (m = p.match(/^(\d+)$/))) r = { it: N.item(m[1]), n: m[1], cantidad: 1 };
+    if ((m = l.match(/^(?:el |la |numero |#)?(\d+)\s*(?:x|×|\*|por)\s*(\d+)$/))) r = { it: item(m[1]), n: m[1], cantidad: +m[2] };
+    else if ((m = l.match(/^(\d+)\s*(?:del?|de la)\s*(?:numero |#)?(\d+)$/))) r = { it: item(m[2]), n: m[2], cantidad: +m[1] };
+    else if ((m = l.match(/^(?:el |la |numero |#)(\d+)$/)) || (m = p.match(/^(\d+)$/))) r = { it: item(m[1]), n: m[1], cantidad: 1 };
     if (r) return r.it ? r : null;
     // a quantity in front wins over a number that is part of the name ("2 refrescos" = two Refresco 2 litros)
     const ops = [];
     let it;
-    if ((m = l.match(/^(\d+)\s+(.+)$/)) && (it = N.item(m[2]))) ops.push({ it, cantidad: +m[1], n: null });
+    if ((m = l.match(/^(\d+)\s+(.+)$/)) && (it = item(m[2]))) ops.push({ it, cantidad: +m[1], n: null });
     // "combo 1", "2 combo numero 1": a word of the product plus its number in the list
-    if ((m = l.match(/^(?:(\d+)\s+)?([a-z][a-z\s]*?)\s*(?:del? )?(?:numero |no |#)?(\d+)$/)) && (it = N.item(m[3]))) {
+    if ((m = l.match(/^(?:(\d+)\s+)?([a-z][a-z\s]*?)\s*(?:del? )?(?:numero |no |#)?(\d+)$/)) && (it = item(m[3]))) {
       const w = N.tokens(m[2]), nombre = N.tokens(it.nombre);
       // unless the number belongs to a product's name: "la marea de 4" is Marea x4, not number 4 on the list
-      const porNombre = N.item(m[2] + " " + m[3]);
+      const porNombre = item(m[2] + " " + m[3]);
       if (w.length && w.every(x => nombre.includes(x)) && !(porNombre && porNombre !== it && N.tokens(porNombre.nombre).includes(m[3]))) ops.push({ it, cantidad: m[1] ? +m[1] : 1, n: m[3] });
     }
-    if ((m = l.match(/^(.+?)\s*(?:x|×)\s*(\d+)$/)) && (it = N.item(m[1]))) ops.push({ it, cantidad: +m[2], n: null });
-    if ((it = N.item(l))) ops.push({ it, cantidad: 1, n: null });
+    if ((m = l.match(/^(.+?)\s*(?:x|×)\s*(\d+)$/)) && (it = item(m[1]))) ops.push({ it, cantidad: +m[2], n: null });
+    if ((it = item(l))) ops.push({ it, cantidad: 1, n: null });
     return ops.find(o => completo(p, o)) || ops[0] || null;
   }
   const conectores = s => s.replace(/^(?:con|y|mas|tambien|ademas)\s+/, "").trim();
@@ -136,13 +138,14 @@ function createEngine(negocio) {
     const say = m => { m = typeof m === "string" ? { text: m } : m; if (m.buttons) s.offer = m.buttons; out.push(m); };
     const go = step => { s.step = step; };
     let d = s.data;
-    const reset = o => { s.data = d = o || {}; };
+    SUC = d.sucursal || null;
+    const reset = o => { s.data = d = o || {}; SUC = d.sucursal || null; };
     const done = () => ({ state: s, messages: out });
 
     const menuInicio = pre => say({ text: (pre ? pre + "\n\n" : "") + "¿En qué le ayudo?", buttons: MENU });
     const carritoTexto = () => { const c = cuenta(N, d.carrito); return c.lineas.map(l => lineaTexto(l, N.L)).join("\n") + `\n\n*Total: ${N.L(c.total)}*`; };
     const pedirSucursal = (siguiente, pregunta) => {
-      if (!N.variasSucursales) { d.sucursal = N.sucursales[0].id; return false; }
+      if (!N.variasSucursales) { d.sucursal = SUC = N.sucursales[0].id; return false; }
       d.despues = siguiente; go("sucursal");
       say({ text: pregunta, buttons: N.sucursales.map(x => x.nombre) });
       return true;
@@ -166,7 +169,8 @@ function createEngine(negocio) {
       handoff();
     };
     // cupos: day and batch
-    const libre = (fecha, tanda) => CUP.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda)) || 0);
+    const libre = (fecha, tanda) => CUP.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda, d.sucursal)) || 0);
+    const unaTanda = CUP && CUP.tandas.length === 1;
     const tandasCon = fecha => CUP.tandas.filter(x => libre(fecha, x) >= d.cupos);
     const cupTxt = n => `${n} ${n === 1 ? "cupo" : "cupos"}`;
     const mayus = x => x.replace(/^\p{L}/u, c => c.toUpperCase());
@@ -177,21 +181,31 @@ function createEngine(negocio) {
       go("dia_cupo");
       if (!fs.length) { say({ text: `${pre ? pre + "\n\n" : ""}Por ahora no hay días abiertos para pedir. ¿Lo anoto en la lista de espera?`, buttons: [ESPERA, "Volver al inicio"] }); return; }
       const abiertos = d.fechas.filter(f => !f.lleno);
-      say({ text: `${pre ? pre + "\n\n" : ""}📅 ¿Para qué día? Su pedido usa ${cupTxt(d.cupos)}.${d.fechas.some(f => f.lleno) ? `\nYa se llenó: ${d.fechas.filter(f => f.lleno).map(f => f.etiqueta).join(", ")}.` : ""}`, buttons: [...abiertos.map(f => mayus(f.etiqueta)), ESPERA] });
+      say({ text: `${pre ? pre + "\n\n" : ""}📅 ¿Para qué día?${CUP.porPedido ? (CUP.nota && !CUP.salsas.length ? ` ${CUP.nota}` : "") : ` Su pedido usa ${cupTxt(d.cupos)}.`}${d.fechas.some(f => f.lleno) ? `\nYa se llenó: ${d.fechas.filter(f => f.lleno).map(f => f.etiqueta).join(", ")}.` : ""}`, buttons: [...abiertos.map(f => mayus(f.etiqueta)), ESPERA] });
     };
     const pedirTanda = pre => {
       const f = d.fechas.find(x => x.fecha === d.fecha);
       const ts = tandasCon(d.fecha);
-      if (!ts.length) { f.lleno = true; d.fecha = null; pedirFechaOtra(`${pre ? pre + " " : ""}El ${f.etiqueta} ya no tiene ${cupTxt(d.cupos)} libres en ninguna tanda.`); return; }
+      if (!ts.length) { f.lleno = true; d.fecha = null; pedirFechaOtra(`${pre ? pre + " " : ""}${lleno(f)}`); return; }
+      if (unaTanda) { d.tanda = ts[0]; go("nombre"); say(`${pre ? pre + "\n\n" : ""}📅 ${mayus(f.etiqueta)}.\n\n¿A nombre de quién lo dejo?`); return; }
       go("tanda");
       say({ text: `${pre ? pre + "\n\n" : ""}🕒 ¿En qué tanda? (${f.etiqueta})`, buttons: ts.map(x => `${x} · quedan ${libre(d.fecha, x)}`) });
     };
+    const lleno = f => CUP.porPedido || unaTanda ? `El ${f.etiqueta} ya se llenaron los apartados.` : `El ${f.etiqueta} ya no tiene ${cupTxt(d.cupos)} libres en ninguna tanda.`;
     const pedirFechaOtra = pre => {
       const abiertos = d.fechas.filter(f => !f.lleno && tandasCon(f.fecha).length);
       go("dia_cupo");
       say({ text: `${pre}\n\n${abiertos.length ? "¿Otro día, o lo anoto en la lista de espera?" : "¿Lo anoto en la lista de espera? Si alguien cancela, le escribimos."}`, buttons: [...abiertos.map(f => mayus(f.etiqueta)), ESPERA] });
     };
+    // an encargo has its own date: no day, batch or hour to ask
+    const porEncargo = () => {
+      const e = encargoDe(N, d.carrito);
+      if (!e) return false;
+      d.encargo = e; d.dia = e.etiqueta; go("nombre"); say(`🗓️ Es para el *${e.etiqueta}*. ¿A nombre de quién lo dejo?`);
+      return true;
+    };
     const despuesDeEntrega = () => {
+      if (porEncargo()) return;
       if (CUP) { pedirFecha(); return; }
       go("hora"); say({ text: `¿Para cuándo lo quiere?${N.tiempoPreparacion ? ` Lo tenemos listo en unos ${N.tiempoPreparacion}.` : ""}`, buttons: HORAS });
     };
@@ -262,7 +276,7 @@ function createEngine(negocio) {
       case "sucursal": {
         const b = N.sucursal(pick(text, N.sucursales.map(x => x.nombre)) || text);
         if (!b) { say({ text: "¿Cuál de estas sucursales?", buttons: N.sucursales.map(x => x.nombre) }); break; }
-        d.sucursal = b.id;
+        d.sucursal = SUC = b.id;
         if (d.despues === "persona") { handoff(); break; }
         if (d.despues === "reserva") { pedirDia(); break; }
         say(`Perfecto, sucursal *${b.nombre}*.`);
@@ -282,8 +296,10 @@ function createEngine(negocio) {
       case "carrito_ok": {
         const o = pick(text, offered);
         if (o === "Confirmar pedido" || /^(si|listo|confirmo|confirmar|eso es todo|es todo|nada mas|ya)\b/.test(t)) {
-          if (CUP && !cuposDe(N, d.carrito)) { pedirProductos(); out[out.length - 1].text = "Los adicionales van con un combo. ¿Qué combo le preparamos?\n\n" + out[out.length - 1].text; break; }
-          if (CUP && CUP.salsas.length) {
+          const mal = revisarPedido(N, d.carrito, d.sucursal, now);
+          if (mal) { mostrarCarrito(`${mal} Puede agregar algo más o empezar de nuevo.`); break; }
+          if (CUP && !encargoDe(N, d.carrito) && !cuposDe(N, d.carrito)) { pedirProductos(); out[out.length - 1].text = "Los adicionales van con un combo. ¿Qué combo le preparamos?\n\n" + out[out.length - 1].text; break; }
+          if (CUP && CUP.salsas.length && !encargoDe(N, d.carrito)) {
             const i = d.carrito.findIndex(l => !l.nota && (N.items.find(x => x.id === l.id) || {}).cupos);
             if (i >= 0) { d.salsaDe = i; go("salsa"); say({ text: `🌶️ ¿Qué salsa para ${d.carrito[i].cantidad > 1 ? `los ${d.carrito[i].cantidad} ` : "el "}*${N.items.find(x => x.id === d.carrito[i].id).nombre}*?${CUP.nota ? ` ${CUP.nota}` : ""}`, buttons: CUP.salsas }); break; }
           }
@@ -308,6 +324,7 @@ function createEngine(negocio) {
       case "direccion": {
         if (t.length < 6) { say("Para que el repartidor llegue bien, escríbame la colonia, la calle o pasaje y una seña. Por ejemplo: Col. Trejo, 5 calle, casa blanca frente a la pulpería."); break; }
         d.direccion = text.trim().slice(0, 200); d.hora = "A domicilio, lo antes posible";
+        if (porEncargo()) break;
         if (CUP) { pedirFecha(); break; }
         go("nombre"); say("¿A nombre de quién lo dejo?");
         break;
@@ -330,7 +347,7 @@ function createEngine(negocio) {
         }
         const f = (d.fechas || []).find(x => o ? norm(x.etiqueta) === norm(o) : t.length > 2 && norm(x.etiqueta).startsWith(t));
         if (!f) { pedirFechaOtra("¿Cuál de estos días?"); break; }
-        if (f.lleno) { pedirFechaOtra(`El ${f.etiqueta} ya no tiene ${cupTxt(d.cupos)} libres en ninguna tanda.`); break; }
+        if (f.lleno) { pedirFechaOtra(lleno(f)); break; }
         d.fecha = f.fecha; d.dia = f.etiqueta;
         pedirTanda();
         break;
@@ -388,21 +405,25 @@ function createEngine(negocio) {
         d.nombre = text.trim().replace(/^(soy|me llamo|a nombre de|es)\s+/i, "").slice(0, 60).replace(/^\p{L}/u, c => c.toUpperCase());
         const b = N.sucursales.find(x => x.id === d.sucursal) || N.sucursales[0];
         const c = cuenta(N, d.carrito);
-        if (CUP && !d.espera && libre(d.fecha, d.tanda) < d.cupos) { d.tanda = null; pedirTanda(`Perdón, ${d.nombre.split(" ")[0]}: mientras escribía se llenó esa tanda.`); break; }
+        const APARTA = CUP && !d.encargo;
+        if (APARTA && !d.espera && libre(d.fecha, d.tanda) < d.cupos) { d.tanda = null; pedirTanda(`Perdón, ${d.nombre.split(" ")[0]}: mientras escribía se llenó esa tanda.`); break; }
         const n = "PED-" + (++s.seq);
-        if (CUP) d.hora = d.espera ? `Lista de espera: ${d.dia}` : `${mayus(d.dia)}, ${d.tanda}`;
+        if (d.encargo) d.hora = `Encargo: ${d.dia}`;
+        else if (CUP) d.hora = d.espera ? `Lista de espera: ${d.dia}` : unaTanda ? mayus(d.dia) : `${mayus(d.dia)}, ${d.tanda}`;
         s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · "), ...(d.domicilio ? { entrega: "domicilio", direccion: d.direccion } : {}),
-          ...(CUP ? { cupos: d.cupos, dia: d.dia, ...(d.espera ? { estado: "en_espera" } : { diaFecha: d.fecha, tanda: d.tanda }) } : {}) };
-        if (CUP && d.espera) {
+          ...(d.encargo ? { encargo: true, dia: d.dia, diaFecha: d.encargo.fecha } : CUP ? { cupos: d.cupos, dia: d.dia, ...(d.espera ? { estado: "en_espera" } : { diaFecha: d.fecha, tanda: d.tanda }) } : {}) };
+        if (APARTA && d.espera) {
           say({ text: `📝 *Listo, ${d.nombre.split(" ")[0]}.* Lo anotamos en la lista de espera (${n}) para ${d.dia}: ${cupTxt(d.cupos)}.\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n\nSi se libera un cupo le escribimos por aquí. Todavía no tiene que pagar nada.`, buttons: ["Hacer otro pedido", "Volver al inicio"] });
           go("post");
           break;
         }
-        const cuando = CUP ? `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n` : "";
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\nEl costo del envío se lo confirmamos por aquí.` : CUP ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
-        if (requiereCobro(N, c.total, ctx.faltas || 0)) {
-          s.lead.estado = "por_pagar"; s.pago = { n, total: c.total };
-          say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}${donde}\n\nPara mandarlo a cocina, se paga antes:\n${textoCobro(N, n, c.total)}\n\nEn cuanto se confirme el pago entra a cocina y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
+        const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\nEl costo del envío se lo confirmamos por aquí.` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
+          const monto = montoCobro(N, c.lineas);
+          s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
+          const aparta = d.encargo || CUP;
+          say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}${donde}\n\n${aparta ? "Para confirmar el apartado" : "Para mandarlo a cocina"}, se paga antes:\n${textoCobro(N, n, c.total, monto)}\n\n${aparta ? "En cuanto revisemos el pago, su apartado queda confirmado" : "En cuanto se confirme el pago entra a cocina"} y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
           go("pago");
           break;
         }

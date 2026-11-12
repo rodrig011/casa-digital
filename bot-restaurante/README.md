@@ -183,6 +183,25 @@ Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (e
 
 Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje al repartidor sale con la plantilla aprobada (`META_PLANTILLA`). Conviene que cada repartidor le escriba "hola" al número del negocio el día que empieza.
 
+## 10. Menú por sucursal, mínimos, encargos, anticipo y datos privados
+
+En el archivo del negocio, por producto:
+- `"sucursales": ["sps"]`: solo se vende ahí (el menú de cada sucursal muestra solo lo suyo).
+- `"minimo": 5`: pedido mínimo de ese producto.
+- `"encargo": { "fecha": "2026-12-24", "hasta": "2026-12-15" }`: se pide con tiempo para esa fecha, en un pedido aparte, hasta el día "hasta". No usa los cupos de los días normales y no sale en la pantalla de cocina hasta ese día.
+- `"anticipo": 50`: de este producto se paga antes el 50 %. El resto, al recibir.
+
+En `cobro`: `"domicilio": false` (a domicilio no se paga antes: se le paga al repartidor) y `"anticipo"` para todo el negocio.
+En `cupos`: `"porPedido": true` (cada pedido aparta 1 lugar: tope de apartados), `"porSucursal": true` (cada sucursal su propio tope). Con una sola tanda el bot solo pregunta el día.
+
+**Aprobar el pago por WhatsApp:** cuando llega el comprobante, al dueño y a la sucursal les llega "conteste *OK 1001*". Esa respuesta desde el número del dueño o de la sucursal confirma el pago, sin abrir el panel, y al cliente le llega que su apartado quedó confirmado.
+
+**Datos privados:** el repositorio es público. Los WhatsApp de sucursales y repartidores y la cuenta del banco van en la variable `NEGOCIO_PRIVADO` de Render, no en el archivo:
+
+```json
+{ "sucursales": { "sps": { "whatsapp": "+504 ..." } }, "repartidores": [ ... ], "cobro": { "transferencia": "Banco ..., cuenta ..., a nombre de ..." } }
+```
+
 ## Lo que todavía no hace
 
 - Cobrar el costo del envío por zona: el bot pide la dirección y dice que el costo lo confirma el negocio.
