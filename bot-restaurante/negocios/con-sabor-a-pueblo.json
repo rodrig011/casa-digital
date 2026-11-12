@@ -4,7 +4,7 @@
   "color": "#FEBE29",
   "logo": "negocios/con-sabor-a-pueblo-logo.svg",
   "sucursales": [
-    { "id": "tegucigalpa", "nombre": "Tegucigalpa", "direccion": "Col. Palmira, dos cuadras abajo del edificio rojo, frente al edificio Italia", "telefono": "+504 3169-9031", "whatsapp": "", "horario": "Sábados, 10:00 a. m. a 4:00 p. m.", "mapa": "" },
+    { "id": "tegucigalpa", "nombre": "Tegucigalpa", "alias": ["tegus", "tgu"], "direccion": "Col. Palmira, dos cuadras abajo del edificio rojo, frente al edificio Italia", "telefono": "+504 3169-9031", "whatsapp": "", "horario": "Sábados, 10:00 a. m. a 4:00 p. m.", "mapa": "" },
     { "id": "sps", "nombre": "San Pedro Sula", "direccion": "Bazar del Sábado, Expocentro", "telefono": "+504 3169-9031", "whatsapp": "", "horario": "Sábados, 10:00 a. m. a 6:00 p. m.", "mapa": "" }
   ],
   "menu": [

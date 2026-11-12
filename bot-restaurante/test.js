@@ -43,6 +43,15 @@ test("moneda: quetzales en Guatemala, dólares en El Salvador, lempiras si no di
   assert.throws(() => preparar({ ...base, moneda: "EUR" }), /moneda desconocida/);
 });
 
+test("sucursal dicha como la dice la gente: «en San Pedro» es San Pedro Sula y «tegus» es Tegucigalpa", () => {
+  const C = cargarNegocio("negocios/con-sabor-a-pueblo.json");
+  assert.equal(C.sucursalEn("quiero 2 cerditos a domicilio en San Pedro").id, "sps");
+  assert.equal(C.sucursalEn("para Tegus porfa").id, "tegucigalpa");
+  assert.equal(C.sucursalEn("en SPS").id, "sps");
+  assert.equal(C.sucursalEn("hola, buenas"), null);
+  assert.equal(C.sucursal("san pedro").id, "sps");
+});
+
 test("negocio: el archivo de ejemplo es válido y un archivo incompleto se rechaza", () => {
   assert.equal(N.items.length, 5);
   assert.equal(N.item("combo de 3 piezas").id, "c3");

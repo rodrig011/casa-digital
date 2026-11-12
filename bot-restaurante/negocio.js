@@ -47,8 +47,16 @@ function preparar(n) {
   const sucursal = q => {
     const t = norm(q);
     if (!t) return null;
-    return n.sucursales.find(s => norm(s.id) === t || norm(s.nombre) === t) || n.sucursales.find(s => t.length > 2 && (norm(s.nombre).includes(t) || t.includes(norm(s.nombre)))) || null;
+    return n.sucursales.find(s => norm(s.id) === t || norm(s.nombre) === t) || n.sucursales.find(s => t.length > 2 && (norm(s.nombre).includes(t) || t.includes(norm(s.nombre)))) || sucursalEn(q);
   };
+  // a branch named anywhere in a sentence, the way people say it: "a domicilio en San Pedro" -> San Pedro Sula, "tegus" -> Tegucigalpa
+  // (the name, its id, its "alias" from the file, and a 3-word name without its last word)
+  const claves = s => { const w = norm(s.nombre).split(/\s+/); return [norm(s.nombre), norm(s.id), ...(Array.isArray(s.alias) ? s.alias.map(norm) : []), ...(w.length >= 3 ? [w.slice(0, -1).join(" ")] : [])].filter(k => k.length >= 3); };
+  function sucursalEn(q) {
+    const x = ` ${norm(q).replace(/[^\w\s]/g, " ").replace(/\s+/g, " ")} `;
+    const hay = n.sucursales.filter(s => claves(s).some(k => x.includes(` ${k} `)));
+    return hay.length === 1 ? hay[0] : null;
+  }
   // a product by its number in the list, its id, or its name in the customer's words.
   // "combo de 3 piezas" -> Combo 3 piezas (numbers in the name must match); "un combo" matches several equally -> null
   const STOP = new Set(["de", "del", "la", "el", "los", "las", "con", "y", "un", "una", "unas", "unos", "para", "por", "favor", "porfa", "quiero", "me", "da", "deme", "dame"]);
@@ -87,7 +95,7 @@ function preparar(n) {
     reservaciones: prepararReservaciones(n.reservaciones),
     cupos,
     repartidores,
-    items, sucursal, item, tokens,
+    items, sucursal, sucursalEn, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };
 }
