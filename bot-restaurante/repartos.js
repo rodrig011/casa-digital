@@ -34,10 +34,25 @@ function prepararRepartidores(rs, sucursales) {
     if (tels.has(tel)) errores.push(`dos repartidores con el mismo WhatsApp: ${r.whatsapp}`);
     if (r.sucursal && !sucursales.some(s => s.id === r.sucursal)) errores.push(`repartidor ${id}: la sucursal "${r.sucursal}" no existe`);
     ids.add(id); tels.add(tel);
-    return { id, nombre: String(r.nombre || "").trim(), tel, sucursal: r.sucursal || "" };
+    return { id, nombre: String(r.nombre || "").trim(), tel, sucursal: r.sucursal || "", ...(r.activo === false ? { activo: false } : {}) };
   });
   if (errores.length) throw new Error(errores.join("; "));
   return out;
+}
+
+// rows from the panel: a new driver gets an id from his name ("María José" -> maria-jose, maria-jose-2 if taken)
+function idsRepartidores(rs) {
+  const usados = new Set(rs.map(r => String((r && r.id) || "").trim()).filter(Boolean));
+  return rs.map(r => {
+    r = r && typeof r === "object" ? r : {};
+    const fila = { id: String(r.id || "").trim().slice(0, 40), nombre: String(r.nombre || "").trim().slice(0, 60), whatsapp: String(r.whatsapp || "").slice(0, 30), sucursal: String(r.sucursal || ""), activo: r.activo !== false };
+    if (!fila.id) {
+      const base = norm(fila.nombre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "repartidor";
+      let id = base, k = 2; while (usados.has(id)) id = `${base}-${k++}`;
+      usados.add(id); fila.id = id;
+    }
+    return fila;
+  });
 }
 
 const mapa = (p, negocio) => {
@@ -47,8 +62,8 @@ const mapa = (p, negocio) => {
 
 function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x, ubicacion = null }) {
   const links = p => ubicacion ? ubicacion.links(p) : null;
-  const lista = negocio.repartidores || [];
-  const activo = lista.length > 0;
+  if (!negocio.repartidores) negocio.repartidores = [];
+  const lista = negocio.repartidores;
   const nom = p => (p.nombre || "Hola").split(" ")[0];
   const num = p => p.n.replace(/\D/g, "");
   const deTel = from => lista.find(r => r.tel === digits(from)) || null;
@@ -78,7 +93,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
   function escoger(p, excluir = []) {
     const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
-    const ok = lista.filter(r => !excluir.includes(r.id) && (!r.sucursal || (b && r.sucursal === b.id)));
+    const ok = lista.filter(r => r.activo !== false && !excluir.includes(r.id) && (!r.sucursal || (b && r.sucursal === b.id)));
     const ultima = r => Math.max(0, ...store.pedidos.filter(x => x.repartidor && x.repartidor.id === r.id).map(x => new Date(x.t_asignado || 0).getTime()));
     return ok.map(r => [r, enCalle(r).length, ultima(r)]).sort((a, b) => a[1] - b[1] || a[2] - b[2])[0]?.[0] || null;
   }
@@ -87,7 +102,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // or the owner / a driver asking for another driver
   function asignar(n, { excluir = [], por = "bot" } = {}) {
     const p = store.getPedido(n);
-    if (!p || p.entrega !== "domicilio" || !activo) return null;
+    if (!p || p.entrega !== "domicilio" || !lista.length) return null;
     const r = escoger(p, excluir);
     if (!r) {
       store.updatePedido(n, { repartidor: null });
@@ -271,9 +286,19 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return [{ text: q ? `Entendido. *${p.n}* se le pasó a ${q.repartidor.nombre}.` : `Entendido. Le avisamos al negocio que *${p.n}* necesita otro repartidor.` }];
   }
 
-  return { activo, lista, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
+  // the owner edits the team from the panel ("Guardar y aplicar"): it applies at once, to the same list the bot uses.
+  // Someone with deliveries on the street can't be removed (deactivate him instead: he finishes those and gets no new ones).
+  function reemplazar(nuevos) {
+    const quedan = new Set(nuevos.map(r => r.id));
+    const ocupados = lista.filter(r => !quedan.has(r.id) && enCalle(r).length);
+    if (ocupados.length) throw new Error(ocupados.map(r => `${r.nombre} tiene ${enCalle(r).length === 1 ? "1 entrega" : enCalle(r).length + " entregas"} pendientes: desactívelo en vez de borrarlo, o pase sus pedidos a otro`).join("; "));
+    lista.splice(0, lista.length, ...nuevos);
+    return lista;
+  }
+
+  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
 const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
-module.exports = { createRepartos, prepararRepartidores };
+module.exports = { createRepartos, prepararRepartidores, idsRepartidores };
