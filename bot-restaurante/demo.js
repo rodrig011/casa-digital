@@ -3,11 +3,15 @@
 // Los pedidos de la demo no se guardan ni avisan a nadie: solo vuelven a la página para la pantalla de cocina.
 //
 //   POST /demo/chat   { sesion, texto }  ->  { reply, pedido? }      (solo desde DEMO_ORIGENES)
+//   POST /demo/claude { negocio, messages } -> la respuesta de Claude, para las demos de un cliente que corren el bot
+//        en el navegador (demos.js). El sistema, las herramientas y el modelo los pone este servidor; la página solo
+//        manda la conversación. Mismos frenos: por visitante y por día.
 //
 // Frenos: mensajes por visitante (IP) cada 10 minutos, y un tope de respuestas por día para todo el sitio,
 // así nadie puede gastar el saldo de Anthropic. Pasado el tope la página contesta con el menú de siempre.
 const express = require("express");
-const { createIA } = require("./ia");
+const { createIA, system, tools, MODELO } = require("./ia");
+const { negocioDemo } = require("./demos");
 const { createLimite } = require("./seguridad");
 
 const SESION_MIN = 30;     // minutos que se recuerda una conversación de la demo
@@ -15,6 +19,9 @@ const MAX_SESIONES = 500;
 
 function montarDemo(app, { negocio, apiKey, model, client, origenes = [], porVisitante = 15, porDia = 400, log = console.log, ahora = () => Date.now() }) {
   const ia = createIA({ negocio, apiKey, model, client });
+  const claude = client || (apiKey ? new (require("@anthropic-ai/sdk"))({ apiKey, maxRetries: 1, timeout: 15000 }) : null);
+  const demos = new Map();
+  const limiteClaude = createLimite({ max: porVisitante * 5, minutos: 10, ahora });   // one customer message = up to 5 calls (tools)
   const sesiones = new Map();
   const limite = createLimite({ max: porVisitante, minutos: 10, ahora });
   let dia = "", usadas = 0;
@@ -55,6 +62,25 @@ function montarDemo(app, { negocio, apiKey, model, client, origenes = [], porVis
       res.json({ reply: r.reply, ...(r.pedido ? { pedido: r.pedido } : {}) });
     } catch (e) {
       log(`[demo ia] ${e.status || ""} ${e.message}`);
+      res.status(502).json({ error: "ia" });
+    }
+  });
+
+  app.options("/demo/claude", cors);
+  app.post("/demo/claude", cors, express.json({ limit: "48kb" }), async (req, res) => {
+    const id = String((req.body && req.body.negocio) || "");
+    if (!demos.has(id)) { const n = negocioDemo(id); if (n) demos.set(id, { n, system: system(n), tools: tools(n) }); }
+    const d = demos.get(id), messages = req.body && req.body.messages;
+    if (!d || !Array.isArray(messages) || !messages.length || messages.length > 60) return res.status(400).json({ error: "datos" });
+    if (!claude) return res.status(503).json({ error: "sin clave" });
+    if (!limiteClaude.pasa(req.ip) || !hoy()) return res.status(429).json({ error: "limite" });
+    try {
+      usadas += 0.2;
+      const r = await claude.messages.create({ model: model || MODELO, max_tokens: 1024, output_config: { effort: "low" },
+        system: [{ type: "text", text: d.system, cache_control: { type: "ephemeral" } }], tools: d.tools, cache_control: { type: "ephemeral" }, messages });
+      res.json({ content: r.content, stop_reason: r.stop_reason, usage: r.usage });
+    } catch (e) {
+      log(`[demo claude] ${e.status || ""} ${e.message}`);
       res.status(502).json({ error: "ia" });
     }
   });
