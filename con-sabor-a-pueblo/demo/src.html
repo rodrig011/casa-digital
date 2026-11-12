@@ -122,7 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 /*BOT*/
 const LOGO = URL.createObjectURL(new Blob([/*LOGOSVG*/], { type: "image/svg+xml" }));
 document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
-const { preparar, mezclarPrivado, fechasCupos, norm } = BOT.negocio;
+const { preparar, mezclarPrivado, fechasCupos, norm, aplicarMenu, menuDesdePanel } = BOT.negocio;
 const { createEngine } = BOT.engine;
 const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
 const { createRepartos, prepararRepartidores, idsRepartidores } = BOT.repartos;
@@ -273,14 +273,21 @@ function entrar(d) {
   codigo = null; intentos = 0;
   return pantalla("panel");   // demo: email and password only (the real panel can also ask for a WhatsApp code)
 }
+const cartaPanel = () => negocio.menu.flatMap(c => (c.items || []).map(it => ({ id: it.id, nombre: it.nombre, categoria: c.categoria, precio: +it.precio, sucursales: it.sucursales || null, activo: it.activo !== false, ...(it.encargo ? { encargo: it.encargo.fecha || "" } : {}), ...(+it.minimo > 1 ? { minimo: +it.minimo } : {}) })));
 window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o) => {
   const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
-    sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
+    sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(),
     repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
   if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: false, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "" }], eventos: [] });
   let m;
+  if (url.startsWith("/api/menu") && metodo === "POST") {
+    try { aplicarMenu(negocio, menuDesdePanel(negocio, cuerpo.productos)); }
+    catch (e) { return json({ error: e.message.replace(/^Revise el archivo del negocio: /, "") }, 400); }
+    refrescarPanel();
+    return json({ menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel() });
+  }
   if (url.startsWith("/api/repartidores") && metodo === "POST") {
     const rs = cuerpo.repartidores;
     if (!Array.isArray(rs) || rs.length > 50) return json({ error: "lista inválida" }, 400);

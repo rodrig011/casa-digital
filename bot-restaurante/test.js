@@ -1052,6 +1052,46 @@ test("panel: el dueño agrega, pausa y quita repartidores con «Guardar y aplica
   } finally { await new Promise(ok => ctx.srv.close(ok)); }
 });
 
+test("panel: el dueño cambia precios, agrega, pausa y quita productos con «Guardar y aplicar»; el bot lo usa al instante y queda guardado", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const negocio = () => cargarNegocio("negocios/libbys-cajun.json");
+  let ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio: negocio() });
+  const di = async (From, Body) => { const r = textoDe((await post(ctx, "/whatsapp", { From, Body })).xml); await ctx.app.locals.idle(); return r; };
+  const guardar = (cookie, productos, extra = {}) => fetch(ctx.base + "/api/menu", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie, ...extra }, body: JSON.stringify({ productos }) });
+  try {
+    assert.equal((await guardar("", [])).status, 401, "sin sesión no se puede");
+    let cookie = await entrar(ctx);
+    assert.equal((await guardar(cookie, [], { Origin: "https://otro.sitio" })).status, 403);
+    let neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.equal(neg.carta.length, 5);
+    const lista = neg.carta.map(({ id, nombre, categoria, precio, sucursales, activo }) => ({ id, nombre, categoria, precio, sucursales, activo }));
+    lista[0].precio = 1500;                                   // new price
+    lista[1].activo = false;                                  // sold out today
+    lista.splice(2, 1);                                       // removed
+    lista.push({ nombre: "Camarones al ajillo", categoria: "Platos", precio: "390" });   // new product
+    let r = await guardar(cookie, lista);
+    assert.equal(r.status, 200);
+    let d = await r.json();
+    assert.deepEqual(d.menu[0], { id: "catracha", nombre: "Mariscada Catracha Louisiana", categoria: "Mariscadas", precio: 1500 });
+    assert.deepEqual(d.menu.find(x => x.id === "camarones-al-ajillo"), { id: "camarones-al-ajillo", nombre: "Camarones al ajillo", categoria: "Platos", precio: 390 });
+    assert.ok(!d.menu.some(x => x.id === "cajun" || x.id === "sopa"), "pausado y quitado no se ofrecen");
+    assert.ok(d.carta.some(x => x.id === "cajun" && x.activo === false), "el pausado sigue en la carta para volver a prenderlo");
+    assert.equal((await guardar(cookie, [{ nombre: "", precio: 5 }])).status, 400);
+    assert.equal((await guardar(cookie, [{ nombre: "X", precio: "abc" }])).status, 400);
+    assert.equal((await guardar(cookie, [{ nombre: "X", precio: 5, activo: false }])).status, 400, "al menos uno disponible");
+    // the bot shows the new menu right away
+    const menu = await di("whatsapp:+50491115555", "menu");
+    assert.match(menu, /1,500/); assert.match(menu, /Camarones al ajillo/); assert.doesNotMatch(menu, /Mariscos Cajun|Sopa marinera/);
+    // a restart keeps the panel's menu, not the file's
+    await new Promise(ok => ctx.srv.close(ok));
+    ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio: negocio() });
+    cookie = await entrar(ctx);
+    neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(neg.menu.map(x => x.id), d.menu.map(x => x.id));
+    assert.equal(neg.menu[0].precio, 1500);
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+});
+
 test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente lo acepta antes de cocina, y luego SALGO / ENTREGADO / NO PUEDO", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));

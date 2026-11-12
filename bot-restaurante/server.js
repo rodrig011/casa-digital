@@ -24,7 +24,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, fechasCupos, norm } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -105,6 +105,13 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
   const ubicacion = createUbicacion({ store, negocio, now, base: cfg.publicUrl });
   // the drivers the owner set in the panel win over the business file (saved encrypted, see POST /api/repartidores)
+  const cartaPanel = () => negocio.menu.flatMap(c => (c.items || []).map(it => ({ id: it.id, nombre: it.nombre, categoria: c.categoria, precio: +it.precio, sucursales: it.sucursales || null, activo: it.activo !== false, ...(it.encargo ? { encargo: it.encargo.fecha || "" } : {}), ...(+it.minimo > 1 ? { minimo: +it.minimo } : {}) })));
+  // the menu the owner edited in the panel wins over the file's (prices, products, where each one is sold)
+  const archivoMenu = cfg.dataDir ? path.join(cfg.dataDir, "menu.json") : null;
+  if (archivoMenu && fs.existsSync(archivoMenu)) {
+    try { aplicarMenu(negocio, leerJSON(archivoMenu, null, cifra)); }
+    catch (e) { console.log(`Aviso: no se pudo usar el menú guardado desde el panel (${e.message}); uso el del archivo.`); }
+  }
   const archivoRepartidores = cfg.dataDir ? path.join(cfg.dataDir, "repartidores.json") : null;
   if (archivoRepartidores && fs.existsSync(archivoRepartidores)) {
     try { negocio.repartidores = prepararRepartidores(leerJSON(archivoRepartidores, [], cifra), negocio.sucursales); }
@@ -423,7 +430,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
-      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -471,6 +478,20 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const q = repartos.asignar(p.n, { excluir: otros, por });
     bitacora.anotar("repartidor", { correo: por, pedido: p.n, como: q ? q.repartidor.nombre : "sin repartidor", ip: req.ip });
     res.json(q || store.getPedido(p.n));
+  });
+
+  // the owner changes prices, adds, removes or pauses products from the panel and taps "Guardar y aplicar"
+  app.post("/api/menu", express.json({ limit: "60kb" }), (req, res) => {
+    if (sinSesion(req, res)) return;
+    const origen = req.get("Origin");
+    if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
+    try { aplicarMenu(negocio, menuDesdePanel(negocio, (req.body || {}).productos)); }
+    catch (e) { return res.status(400).json({ error: e.message.replace(/^Revise el archivo del negocio: /, "") }); }
+    if (archivoMenu) escribirJSON(archivoMenu, negocio.menu, cifra, 1);
+    const correo = panel.usuarioDe(req).correo;
+    bitacora.anotar("menu", { correo, como: `${negocio.items.length} ${negocio.items.length === 1 ? "producto disponible" : "productos disponibles"}`, ip: req.ip });
+    log(`[panel] menú: ${negocio.items.map(i => `${i.nombre} ${negocio.L(i.precio)}`).join(", ")} (${correo})`);
+    res.json({ menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel() });
   });
 
   // the owner adds, edits, deactivates or removes his drivers from the panel and taps "Guardar y aplicar"

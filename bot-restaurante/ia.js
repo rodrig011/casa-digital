@@ -197,9 +197,9 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
     client = new Anthropic({ apiKey, maxRetries: 1, timeout: timeoutMs });
   }
   model = model || MODELO;
-  const SYSTEM = system(negocio), TOOLS = tools(negocio);
 
   async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado } = {}) {
+    const SYSTEM = system(negocio), TOOLS = tools(negocio);   // cada vez: el dueño puede cambiar el menú desde el panel
     const ctx = { numero, faltas, ocupados, duplicado, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
@@ -240,7 +240,7 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
     } finally { clearTimeout(timer); }
   }
 
-  return { model, turn, SYSTEM, TOOLS };
+  return { model, turn, get SYSTEM() { return system(negocio); }, get TOOLS() { return tools(negocio); } };
 }
 
 module.exports = { createIA, MODELO, ejecutar, system, tools };
