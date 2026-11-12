@@ -4,7 +4,7 @@ name: Página Clientia Tech
 on:
   push:
     branches: [main]
-    paths: ["clientia-tech/**", "steelworks/dist/steelworks-panel.html", "libbys-cajun/panel/dist/libbys-cajun-panel.html", "gambos/panel/dist/gambos-panel.html", "con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo.html", ".github/workflows/pagina-clientia.yml"]
+    paths: ["clientia-tech/**", "steelworks/dist/steelworks-panel.html", "libbys-cajun/panel/dist/libbys-cajun-panel.html", "gambos/panel/dist/gambos-panel.html", "con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo.html", "con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo-panel.html", ".github/workflows/pagina-clientia.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,6 +30,7 @@ jobs:
           cp libbys-cajun/panel/dist/libbys-cajun-panel.html _sitio/demos/libbys-cajun-panel.html
           cp gambos/panel/dist/gambos-panel.html _sitio/demos/gambos-panel.html
           cp con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo.html _sitio/demos/con-sabor-a-pueblo.html
+          cp con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo-panel.html _sitio/demos/con-sabor-a-pueblo-panel.html
           mkdir -p _sitio/firma
           cp clientia-tech/firma/index.html clientia-tech/firma/clientia-tech-firma.png _sitio/firma/
           touch _sitio/.nojekyll

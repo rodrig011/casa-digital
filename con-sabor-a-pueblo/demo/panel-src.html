@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Panel del dueño · Con Sabor a Pueblo</title>
+<meta name="theme-color" content="#ffffff">
+<style>
+html,body{margin:0;height:100%;background:#F3F3F3;font:400 15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#181818;-webkit-font-smoothing:antialiased}
+iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#F3F3F3}
+.espera{position:fixed;inset:0;display:grid;place-items:center;padding:24px}
+.espera div{max-width:420px;background:#fff;border:1px solid #E5E5E5;border-radius:4px;box-shadow:0 2px 2px rgba(0,0,0,.1);padding:24px;display:grid;gap:12px;text-align:center}
+.espera img{width:64px;height:64px;margin:0 auto}
+.espera h1{font-size:18px;margin:0}.espera p{margin:0;color:#706E6B}
+.espera a{display:inline-flex;justify-content:center;align-items:center;height:40px;border-radius:4px;background:#0176D3;color:#fff;font-weight:600;text-decoration:none}
+.espera[hidden],iframe[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="espera" id="espera" hidden><div>
+  <img data-logo alt="">
+  <h1>Abra primero la demo de WhatsApp</h1>
+  <p>Este panel muestra los pedidos que entran por la demo. Ábrala en otra pestaña y este panel se conecta solo.</p>
+  <a href="con-sabor-a-pueblo.html" target="demo-con-sabor">Abrir la demo de WhatsApp</a>
+</div></div>
+<iframe id="panel" title="Panel del dueño" hidden></iframe>
+<script>
+const LOGO = URL.createObjectURL(new Blob([/*LOGOSVG*/], { type: "image/svg+xml" }));
+document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
+const ENTRAR = /*ENTRAR*/;
+const PANEL_HTML = /*PANEL*/;
+const marco = document.getElementById("panel"), espera = document.getElementById("espera");
+let canal = null; const pendientes = new Map(); let sig = 1, conectado = false;
+try { canal = new BroadcastChannel("con-sabor-a-pueblo-demo"); } catch (e) {}
+function pedir(m, ms = 5000) {
+  return new Promise((ok, mal) => {
+    if (!canal) return mal(new Error("sin canal"));
+    const id = "p" + Date.now() + "-" + sig++;
+    const t = setTimeout(() => { pendientes.delete(id); mal(new Error("sin demo")); }, ms);
+    pendientes.set(id, r => { clearTimeout(t); ok(r); });
+    canal.postMessage({ ...m, id });
+  });
+}
+if (canal) canal.onmessage = e => {
+  const m = e.data || {};
+  if (m.re && pendientes.has(m.re)) { pendientes.get(m.re)(m.r); pendientes.delete(m.re); return; }
+  if (m.tipo === "refrescar") { try { const w = marco.contentWindow; if (w && w.cargar) w.cargar(); } catch (x) {} }
+};
+function mostrar(s) {
+  const h = s.k === "panel" ? PANEL_HTML : (ENTRAR[s.k] || ENTRAR.entrar).replace("ERROR_DEMO", s.error || "");
+  marco.srcdoc = h.replaceAll("LOGO_DEMO", LOGO);
+}
+function sinDemo() { conectado = false; marco.hidden = true; espera.hidden = false; }
+window.DEMO = {
+  api: async (url, o) => { try { return await pedir({ tipo: "api", url, o: { method: o.method, body: o.body } }); } catch (e) { sinDemo(); throw e; } },
+  entrar: d => pedir({ tipo: "entrar", d }).then(mostrar, sinDemo),
+  salir: () => pedir({ tipo: "salir" }).then(mostrar, sinDemo),
+};
+async function conectar() {
+  if (conectado) return;
+  try { await pedir({ tipo: "hola" }, 1500); conectado = true; espera.hidden = true; marco.hidden = false; mostrar({ k: "entrar" }); }
+  catch (e) { sinDemo(); }
+}
+conectar();
+setInterval(() => { if (canal) canal.postMessage({ tipo: "latido" }); if (!conectado) conectar(); }, 4000);
+</script>
+</body>
+</html>

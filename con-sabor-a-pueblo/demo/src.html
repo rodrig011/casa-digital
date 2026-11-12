@@ -19,6 +19,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .top .der{margin-left:auto;display:flex;gap:8px;align-items:center}
 .btn{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;transition:transform .12s ease,background .15s}
 .btn:active{transform:scale(.97)}
+.btn.pri{background:#0176D3;border-color:#0176D3;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;position:relative}.btn.pri .n{position:absolute;top:-6px;right:-6px}
 .aviso{font-size:12.5px;color:var(--suave);padding:8px 20px;background:#FBF9F5;border-bottom:1px solid var(--linea)}
 .aviso b{color:var(--tinta);font-weight:600}
 .guia{padding:14px 20px 4px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
@@ -33,9 +34,6 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .tab .n{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--marca);color:#fff;font-size:11px;line-height:18px;padding:0 5px;display:none}
 .tab .n.si{display:block}
 .escena{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:14px 20px 20px;min-height:0;flex-shrink:0;max-width:1500px;width:100%;margin:0 auto}
-body.vpanel .escena{grid-template-columns:minmax(0,1fr) 340px;max-width:none}
-body.vpanel .tel:not([data-k=dueno]),body:not(.vpanel) .pan{display:none}
-body.vpanel .pan{order:-1}
 .vistas{display:flex;background:#EFEBE4;border-radius:999px;padding:3px;gap:2px}
 .vistas button{border:0;background:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--suave);position:relative;transition:background .15s,color .15s}
 .vistas button[aria-pressed=true]{background:#fff;color:var(--tinta);box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -77,9 +75,7 @@ body.vpanel .pan{order:-1}
 .pie{font-size:12px;color:var(--suave);text-align:center;padding:0 20px 16px}
 @media (max-width:899px){
   .tabs{display:flex}
-  .vistas,.ia{display:none}
-  body.vpanel .escena{display:block}
-  body.vpanel .tel.vis,body:not(.vpanel) .pan.vis{display:flex}
+  .vistas,.ia,#abrir-panel{display:none}
   .escena{display:block;padding:10px 12px 12px}
   .tel,.pan{display:none;height:calc(100dvh - 190px);min-height:440px}
   .tel.vis,.pan.vis{display:flex}
@@ -108,7 +104,7 @@ body.vpanel .pan{order:-1}
 <header class="top">
   <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><div class="vistas" role="group" aria-label="Qué ver"><button type="button" data-v="tel" aria-pressed="true">WhatsApp</button><button type="button" data-v="panel" aria-pressed="false">Panel del dueño<span class="n" id="nv-panel"></span></button></div><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El precio del cerdito chuko en San Pedro es el suyo; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -146,7 +142,7 @@ const PASOS = [
   ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Escriba el precio, solo el número: «60»."],
   ["Cliente", "Al cliente le llega el envío. Toque «SÍ»: le llegan los datos para pagar la comida por transferencia."],
   ["Pago", "Toque «📷 Mandar comprobante». Al dueño le llega y lo aprueba con «OK» (o en el panel, «Pago recibido»): entra a cocina."],
-  ["Panel", "Abra el «Panel del dueño» y entre con el código que le llega al dueño. En Pedidos: «A cocina» y «Listo»."],
+  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el código que le llega al dueño. En Pedidos: «A cocina» y «Listo»."],
   ["En camino", "Kevin toca «SALGO». Al cliente le llega el link para ver a Kevin en el mapa, en vivo. Luego «ENTREGADO»."],
 ];
 
@@ -258,23 +254,23 @@ async function turno(tel, text, foto) {
 // ---- the owner panel API (what server.js answers), for the real panel in the frame ----
 const json = (body, status = 200) => ({ status, body });
 // the panel login, as in the real one (auth.js): email and password, then a 6-digit code to the owner's WhatsApp
-const ENTRAR = /*ENTRAR*/, CLAVE_DEMO = "Sabor-2026-demo", CORREO_DEMO = "dueno@consaborapueblo.demo";
+const CLAVE_DEMO = "Sabor-2026-demo", CORREO_DEMO = "dueno@consaborapueblo.demo";
 let codigo = null, intentos = 0;
-const pantalla = h => { $("#panel").srcdoc = h.replaceAll("LOGO_DEMO", LOGO); };
-function salir() { codigo = null; pantalla(ENTRAR.entrar); }
+const pantalla = (k, error) => ({ k, error });
+function salir() { codigo = null; return pantalla("entrar"); }
 function entrar(d) {
   if ("codigo" in d) {
-    if (!codigo || Date.now() > codigo.vence) return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "El código venció. Entre otra vez y le mandamos otro."));
-    if (String(d.codigo).replace(/\D/g, "") !== codigo.c) { if (++intentos >= 5) { codigo = null; return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "Demasiados intentos. Entre otra vez.")); } return pantalla(ENTRAR.codigoError); }
-    codigo = null; intentos = 0; pantalla(PANEL_HTML); return;
+    if (!codigo || Date.now() > codigo.vence) return pantalla("entrarError", "El código venció. Entre otra vez y le mandamos otro.");
+    if (String(d.codigo).replace(/\D/g, "") !== codigo.c) { if (++intentos >= 5) { codigo = null; return pantalla("entrarError", "Demasiados intentos. Entre otra vez."); } return pantalla("codigoError"); }
+    codigo = null; intentos = 0; return pantalla("panel");
   }
-  if (String(d.correo).trim().toLowerCase() !== CORREO_DEMO || d.clave !== CLAVE_DEMO) return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "Correo o contraseña incorrectos."));
+  if (String(d.correo).trim().toLowerCase() !== CORREO_DEMO || d.clave !== CLAVE_DEMO) return pantalla("entrarError", "Correo o contraseña incorrectos.");
   const c = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
   codigo = { c, vence: Date.now() + 5 * 60e3 }; intentos = 0;
-  pantalla(ENTRAR.codigo);
   recibir("dueno", `🔐 Su código para entrar al panel de ${negocio.nombre} es *${c}*. Vence en 5 minutos.\n\nNo se lo dé a nadie: nadie de ${negocio.nombre} ni de Casa Digital se lo va a pedir.`);
+  ver("dueno"); toast("El código llegó al WhatsApp del dueño", "dueno");
+  return pantalla("codigo");
 }
-const PANEL_HTML = /*PANEL*/;
 window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o) => {
   const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
@@ -327,30 +323,26 @@ function armar() {
     <div class="msgs" id="m-${c.k}"><p class="vacio">${c.k === "cliente" ? "Escríbale al negocio como si fuera un cliente. Empiece con «Hola»." : c.k === "kevin" ? "Aquí le llegan a Kevin los envíos que le asigna el bot." : "Aquí le llegan al dueño y a la sucursal los pedidos y avisos."}</p><div class="escribiendo" id="e-${c.k}"><i></i><i></i><i></i></div></div>
     <div class="chips" id="c-${c.k}"></div>
     <form class="barra" data-k="${c.k}"><input autocomplete="off" enterkeyhint="send" placeholder="${c.k === "cliente" ? "Escriba como cliente" : c.k === "kevin" ? "Escriba como Kevin" : "Escriba como dueño"}" aria-label="Mensaje"><button aria-label="Enviar"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg></button></form>
-  </section>`).join("") + `<section class="pan" data-k="panel"><div class="cab"><span class="av" style="background:#0176D3">P</span><div><b>Panel del dueño</b><small>En la computadora, la tablet de la cocina o el celular</small></div></div><iframe id="panel" title="Panel del dueño"></iframe></section>`;
+  </section>`).join("");
   salir();
-  $("#tabs").innerHTML = [...CHATS.map(c => [c.k, c.tab]), ["panel", "Panel"]].map(([k, t]) => `<button class="tab" role="tab" data-k="${k}" aria-selected="${k === activa}">${t}<span class="n" id="n-${k}"></span></button>`).join("");
+  $("#tabs").innerHTML = [...CHATS.map(c => [c.k, c.tab]), ["panel", "Panel ↗"]].map(([k, t]) => `<button class="tab" role="tab" data-k="${k}" aria-selected="${k === activa}">${t}<span class="n" id="n-${k}"></span></button>`).join("");
   document.querySelectorAll(".tab").forEach(b => b.onclick = () => ver(b.dataset.k));
   document.querySelectorAll(".barra").forEach(f => f.onsubmit = e => { e.preventDefault(); const i = f.querySelector("input"); const t = i.value.trim(); if (!t) return; i.value = ""; mandar(f.dataset.k, t); });
   CHATS.forEach(c => chips(c.k));
   ver(activa);
   guia();
 }
-function vista(panel) {
-  document.body.classList.toggle("vpanel", panel);
-  document.querySelectorAll(".vistas button").forEach(b => b.setAttribute("aria-pressed", (b.dataset.v === "panel") === panel));
-  if (panel) { SIN_LEER.panel = 0; marcas(); refrescarPanel(); }
-}
+// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html) and talks to this page by BroadcastChannel
+const PANEL_URL = "con-sabor-a-pueblo-panel.html";
+function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-con-sabor"); }
 function ver(k) {
-  if (!movil()) { vista(k === "panel"); if (k === "panel") return; }
+  if (k === "panel") return abrirPanel();
   activa = k; SIN_LEER[k] = 0;
   document.querySelectorAll(".tel,.pan").forEach(s => s.classList.toggle("vis", s.dataset.k === k));
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
   marcas();
-  if (k === "panel") refrescarPanel();
 }
 function marcas() { for (const k in SIN_LEER) for (const n of [$("#n-" + k), $("#nv-" + k)]) if (n) { n.textContent = SIN_LEER[k]; n.classList.toggle("si", SIN_LEER[k] > 0); } }
-const enPanel = () => document.body.classList.contains("vpanel");
 const movil = () => matchMedia("(max-width:899px)").matches;
 let tt;
 function toast(t, k) {
@@ -368,7 +360,7 @@ function recibir(k, texto) {
     burbuja(k, "bot", texto);
     if (k !== "cliente") BOTONES[k] = [];
     chips(k);
-    if (movil() ? k !== activa : enPanel() && k !== "dueno") { SIN_LEER[k]++; marcas(); toast(`Nuevo mensaje para ${CHATS.find(c => c.k === k).tab === "Dueño" ? "el dueño" : CHATS.find(c => c.k === k).tab}`, k); }
+    if (movil() && k !== activa) { SIN_LEER[k]++; marcas(); toast(`Nuevo mensaje para ${CHATS.find(c => c.k === k).tab === "Dueño" ? "el dueño" : CHATS.find(c => c.k === k).tab}`, k); }
     avanzar(); refrescarPanel();
   }, 450);
 }
@@ -408,7 +400,7 @@ function chips(k) {
 }
 function refrescarPanel() {
   for (const c of CHATS) chips(c.k);
-  try { const w = $("#panel").contentWindow; if (w && w.cargar) w.cargar(); } catch (e) {}
+  if (canal) canal.postMessage({ tipo: "refrescar" });
 }
 // the guide follows what has happened
 function avanzar() {
@@ -418,7 +410,7 @@ function avanzar() {
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;
-  if (paso === 3 && antes !== 3 && !(movil() ? activa === "panel" : enPanel())) { SIN_LEER.panel++; marcas(); toast("El pedido ya está en el panel del dueño. Toque para verlo.", "panel"); }
+  if (paso === 3 && antes !== 3 && !panelVivo()) { SIN_LEER.panel++; marcas(); toast("El pedido ya está en el panel del dueño. Toque para verlo.", "panel"); }
   guia();
 }
 function guia() {
@@ -467,7 +459,19 @@ function compartir(a) { a.outerHTML = '<span style="color:#0E6B45;font-weight:60
 document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
 $("#reiniciar").onclick = () => location.reload();
 pintarIA();
-document.querySelectorAll(".vistas button").forEach(b => b.onclick = () => b.dataset.v === "panel" ? ver("panel") : (vista(false), ver(activa === "panel" ? "cliente" : activa)));
+// the panel tab asks for data, logs in and gets a nudge when something changes; a heartbeat tells this page it is open
+let canal = null, vivoHasta = 0;
+const panelVivo = () => Date.now() < vivoHasta;
+try {
+  canal = new BroadcastChannel("con-sabor-a-pueblo-demo");
+  canal.onmessage = async e => {
+    const m = e.data || {}; vivoHasta = Date.now() + 15000;
+    if (!m.id) return;
+    const r = m.tipo === "api" ? await DEMO.api(String(m.url), m.o || {}) : m.tipo === "entrar" ? DEMO.entrar(m.d || {}) : m.tipo === "salir" ? DEMO.salir() : { ok: true };
+    canal.postMessage({ re: m.id, r });
+  };
+} catch (e) {}
+$("#abrir-panel").onclick = e => { e.preventDefault(); abrirPanel(); };
 armar();
 </script>
 </body>
