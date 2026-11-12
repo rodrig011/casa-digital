@@ -1682,7 +1682,7 @@ const PASOS = [
   ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Escriba el precio, solo el número: «60»."],
   ["Cliente", "Al cliente le llega el envío. Toque «SÍ»: le llegan los datos para pagar la comida por transferencia."],
   ["Pago", "Toque «📷 Mandar comprobante». Al dueño le llega y lo aprueba con «OK» (o en el panel, «Pago recibido»): entra a cocina."],
-  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el código que le llega al dueño. En Pedidos: «A cocina» y «Listo»."],
+  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. En Pedidos: «A cocina» y «Listo»."],
   ["En camino", "Kevin toca «SALGO». Al cliente le llega el link para ver a Kevin en el mapa, en vivo. Luego «ENTREGADO»."],
 ];
 
@@ -1805,11 +1805,8 @@ function entrar(d) {
     codigo = null; intentos = 0; return pantalla("panel");
   }
   if (String(d.correo).trim().toLowerCase() !== CORREO_DEMO || d.clave !== CLAVE_DEMO) return pantalla("entrarError", "Correo o contraseña incorrectos.");
-  const c = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
-  codigo = { c, vence: Date.now() + 5 * 60e3 }; intentos = 0;
-  recibir("dueno", `🔐 Su código para entrar al panel de ${negocio.nombre} es *${c}*. Vence en 5 minutos.\n\nNo se lo dé a nadie: nadie de ${negocio.nombre} ni de Casa Digital se lo va a pedir.`);
-  ver("dueno"); toast("El código llegó al WhatsApp del dueño", "dueno");
-  return pantalla("codigo");
+  codigo = null; intentos = 0;
+  return pantalla("panel");   // demo: email and password only (the real panel can also ask for a WhatsApp code)
 }
 window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o) => {
   const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
@@ -1817,7 +1814,7 @@ window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
     repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
-  if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: true, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "•••• 0000" }], eventos: [] });
+  if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: false, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "" }], eventos: [] });
   let m;
   if (url.startsWith("/api/repartidores") && metodo === "POST") {
     const rs = cuerpo.repartidores;

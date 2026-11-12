@@ -7,8 +7,8 @@
 <title>Panel del restaurante</title>
 <style>
 /* Panel del restaurante, estilo Lightning (Salesforce): cabecera blanca, banda azul, tarjetas de 4px, íconos en mosaico */
-:root{--bg:#F3F3F3;--band:#B0C4DF;--card:#fff;--line:#E5E5E5;--line2:#C9C9C9;--tx:#181818;--tx2:#444;--tx3:#706E6B;--brand:#0176D3;--brand-d:#014486;--sel:#EEF4FF;--hover:#F3F3F3;--acc:#0176D3;
-  --ok:#2E844A;--ok-bg:#CDEFC4;--warn:#8C4B02;--warn-bg:#FEF1CD;--info:#0176D3;--info-bg:#EEF4FF;--red:#BA0517;--red-bg:#FEDED8;--mute-bg:#F3F3F3;--sh:0 2px 2px 0 rgba(0,0,0,.1);color-scheme:light}
+:root{--bg:#F3F3F3;--band:#B0C4DF;--card:#fff;--line:#E8E8E8;--line2:#C9C9C9;--tx:#181818;--tx2:#444;--tx3:#706E6B;--brand:#0176D3;--brand-d:#014486;--sel:#EEF4FF;--hover:#F3F3F3;--acc:#0176D3;
+  --ok:#2E844A;--ok-bg:#CDEFC4;--warn:#8C4B02;--warn-bg:#FEF1CD;--info:#0176D3;--info-bg:#EEF4FF;--red:#BA0517;--red-bg:#FEDED8;--mute-bg:#F3F3F3;--sh:0 0 0 1px rgba(0,0,0,.03),0 1px 2px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.04);color-scheme:light}
 :root[data-theme="dark"]{--bg:#1B1B1B;--band:#16325C;--card:#242424;--line:#3A3A3A;--line2:#4A4A4A;--tx:#F3F3F3;--tx2:#C9C9C9;--tx3:#A0A0A0;--brand:#1B96FF;--brand-d:#78B0FD;--sel:#0B2A4E;--hover:#2E2E2E;
   --ok:#45C65A;--ok-bg:#163A1F;--warn:#FFBA45;--warn-bg:#3D2A06;--info:#1B96FF;--info-bg:#0B2A4E;--red:#FE5C4C;--red-bg:#4A1410;--mute-bg:#2B2B2B;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
@@ -47,13 +47,23 @@ select,.btn{height:32px;border:1px solid var(--line2);background:var(--card);bor
 .card h2{display:flex;align-items:center;gap:10px;font-size:14px;margin:0;padding:12px 16px;font-weight:700;border-bottom:1px solid var(--line)}
 .ct{width:24px;height:24px;border-radius:4px;display:grid;place-items:center;color:#fff;flex:none}.ct svg{width:14px;height:14px}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
-.kpi{padding:12px 16px;display:flex;flex-direction:column-reverse;gap:2px;border-top:3px solid var(--brand)}
-.kpi b{display:block;font-size:24px;font-weight:300;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}.kpi span{font-size:12px;color:var(--tx3)}
+.kpi{padding:14px 16px;display:flex;flex-direction:column-reverse;gap:6px;position:relative;overflow:hidden}.kpi.alerta::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--warn)}
+.kpi b{display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}.kpi span{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)}
 .grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px 16px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--tx3);font-weight:700;background:var(--mute-bg);text-transform:none}tr:last-child td{border-bottom:0}td.r,th.r{text-align:right}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px 16px;border-bottom:1px solid var(--line)}th{font-size:11px;color:var(--tx3);font-weight:600;letter-spacing:.04em;background:var(--mute-bg);text-transform:uppercase}tr:last-child td{border-bottom:0}td.r,th.r{text-align:right}
 @media (hover:hover) and (pointer:fine){tr:hover td{background:var(--hover)}}
 .vacio{padding:28px 16px;text-align:center;color:var(--tx3)}
-.frase{padding:14px 16px;margin-bottom:12px;font-size:16px;line-height:1.5}
+.frase{padding:12px 16px;margin-bottom:12px;font-size:14px;line-height:1.5;color:var(--tx2)}
+/* Hoy: lo que hay que hacer ahora es lo primero que se ve */
+.ahora{margin-bottom:12px}.ahora h2 small{margin-left:auto;font-weight:400;color:var(--tx3);font-size:12px}
+.tarea{display:flex;align-items:center;gap:14px;width:100%;padding:12px 16px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;font:inherit;color:var(--tx);cursor:pointer}
+.tarea:last-child{border-bottom:0}.tarea:active{background:var(--hover)}
+@media (hover:hover) and (pointer:fine){.tarea:hover{background:var(--hover)}.tarea:hover .ir{color:var(--brand);transform:translateX(2px)}}
+.tarea .num{min-width:40px;height:40px;border-radius:8px;display:grid;place-items:center;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--warn-bg);color:var(--warn);flex:none}
+.tarea.urge .num{background:var(--red-bg);color:var(--red)}.tarea.info .num{background:var(--info-bg);color:var(--info)}
+.tarea div{min-width:0;flex:1}.tarea b{display:block;font-weight:600}.tarea small{display:block;color:var(--tx3);font-size:12px}
+.tarea .ir{color:var(--tx3);transition:transform .15s cubic-bezier(.23,1,.32,1),color .15s}
+.aldia{display:flex;align-items:center;gap:12px;padding:16px}.aldia i{width:32px;height:32px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;font-style:normal;font-weight:700;flex:none}
 .cupos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:12px}.cupos h2 small{font-weight:400;color:var(--tx3);margin-left:auto;font-size:12px}
 .tnd{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}.tnd:first-of-type{border-top:0}.tnd i{height:8px;border-radius:4px;background:var(--mute-bg);overflow:hidden}.tnd i b{display:block;height:100%;background:var(--brand)}.tnd.lleno i b{background:var(--tx3)}.tnd span{color:var(--tx2)}
 /* tablero de pedidos */
@@ -263,12 +273,20 @@ function pintar() {
     const espera = filtrados().filter(p => p.tipo === "persona" && p.estado === "nuevo").length;
     const prep = ps.filter(p => p.estado === "nuevo" || p.estado === "cocina").length;
     const libres = N.cupos ? N.cupos.dias.filter(d => d.abierto).slice(0, 2).map(d => { const u = ps.reduce((a, p) => a + (p.diaFecha === d.fecha && !["cancelado", "en_espera"].includes(p.estado) ? p.cupos || 0 : 0), 0); return `${esc(d.etiqueta)} quedan <b>${N.cupos.tandas.length * N.cupos.porTanda - u} cupos</b>`; }) : [];
-    v.innerHTML = `<div class="card frase">Hoy van <b>${h.length} ${h.length === 1 ? "pedido" : "pedidos"}</b> por WhatsApp (${L(total)})${prep ? ` y hay <b>${prep}</b> por preparar` : ""}.${espera ? ` <b>${espera}</b> ${espera === 1 ? "cliente quiere" : "clientes quieren"} hablar con una persona.` : ""}${(() => { const c = ps.filter(p => p.estado === "por_pagar" && p.comprobante).length, e = ps.filter(p => p.estado === "por_envio").length; return (c ? ` <b>${c}</b> ${c === 1 ? "comprobante" : "comprobantes"} por revisar.` : "") + (e ? ` <b>${e}</b> ${e === 1 ? "envío espera" : "envíos esperan"} precio o respuesta del cliente.` : ""); })()}${libres.length ? ` Para ${libres.join(" y para ")}.` : ""}</div>
+    const hacer = [
+      [ps.filter(p => p.estado === "por_pagar" && p.comprobante).length, "urge", "Comprobantes por revisar", "Revise que el dinero esté en la cuenta y toque Pago recibido", "pedidos"],
+      [ps.filter(p => p.estado === "nuevo" && (!p.diaFecha || p.diaFecha <= hoy())).length, "", "Pedidos nuevos para cocina", "Ya están pagados o confirmados: páselos a cocina", "cocina"],
+      [ps.filter(p => p.estado === "por_envio").length, "info", "Envíos esperando precio o respuesta", "El repartidor cotiza y el cliente acepta", "repartidores"],
+      [ps.filter(p => p.entrega === "domicilio" && !p.repartidor && ["por_envio", "listo"].includes(p.estado)).length, "urge", "Envíos sin repartidor", "Nadie lo ha tomado: asígnelo en Pedidos", "pedidos"],
+      [espera, "", "Clientes que quieren hablar con una persona", "Escríbales desde el WhatsApp del negocio", "personas"],
+    ].filter(t => t[0] && todas().some(v => v[0] === t[4]));
+    v.innerHTML = `<div class="card ahora">${H("Para hacer ahora", "actividad", hacer.length ? (n => `<small>${n} ${n === 1 ? "pendiente" : "pendientes"}</small>`)(hacer.reduce((a, t) => a + t[0], 0)) : "")}${hacer.length ? hacer.map(([n, c, t, d, ir]) => `<button class="tarea ${c}" data-ir="${ir}"><span class="num">${n}</span><div><b>${t}</b><small>${d}</small></div><svg class="ir" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>`).join("") : `<div class="aldia"><i>✓</i><div><b>Todo al día</b><small style="display:block;color:var(--tx3)">No hay nada esperando por usted. Los pedidos nuevos aparecen aquí.</small></div></div>`}</div>
+      <div class="card frase">Hoy van <b>${h.length} ${h.length === 1 ? "pedido" : "pedidos"}</b> por WhatsApp (${L(total)})${prep ? ` y hay <b>${prep}</b> por preparar` : ""}.${espera ? ` <b>${espera}</b> ${espera === 1 ? "cliente quiere" : "clientes quieren"} hablar con una persona.` : ""}${libres.length ? ` Para ${libres.join(" y para ")}.` : ""}</div>
       <div class="kpis">
       <div class="card kpi"><b>${h.length}</b><span>Pedidos por WhatsApp hoy</span></div>
       <div class="card kpi"><b>${L(total)}</b><span>Vendido por WhatsApp hoy</span></div>
       <div class="card kpi"><b>${ps.filter(p => p.estado === "nuevo" || p.estado === "cocina").length}</b><span>En preparación</span></div>
-      <div class="card kpi"><b>${espera}</b><span>Clientes esperando a una persona</span></div></div>
+      <div class="card kpi${espera ? " alerta" : ""}"><b>${espera}</b><span>Clientes esperando a una persona</span></div></div>
       <div class="grid2">
         <div class="card">${H("Lo más pedido hoy", "ventas")}${top.length ? `<table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Venta</th></tr>${top.map(([n, [c, s]]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay pedidos hoy.</div>`}</div>
         ${N.sucursales.length > 1 ? `<div class="card">${H("Por sucursal", "hoy")}<table><tr><th>Sucursal</th><th class="r">Pedidos</th><th class="r">Venta</th></tr>${porSuc.map(([n, c, s]) => `<tr><td>${esc(n)}</td><td class="r">${c}</td><td class="r">${L(s)}</td></tr>`).join("")}</table></div>`
@@ -359,6 +377,7 @@ function pintar() {
       <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
   }
   botones(v);
+  v.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => { vista = b.dataset.ir; try { localStorage.setItem("vista", vista); } catch {} pintar(); scrollTo({ top: 0 }); });
   if (abierta) ficha(abierta);
 }
 // ---- Equipo de reparto editable: el dueño agrega, cambia, pausa o quita repartidores y toca «Guardar y aplicar» ----
