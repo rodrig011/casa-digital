@@ -104,7 +104,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <header class="top">
   <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=7ea81dd7" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=d2401217" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El precio del cerdito chuko en San Pedro es el suyo; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -1971,8 +1971,8 @@ function armar() {
   ver(activa);
   guia();
 }
-// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=7ea81dd7) and talks to this page by BroadcastChannel
-const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=7ea81dd7";
+// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=d2401217) and talks to this page by BroadcastChannel
+const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=d2401217";
 function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-con-sabor"); }
 function ver(k) {
   if (k === "panel") return abrirPanel();
