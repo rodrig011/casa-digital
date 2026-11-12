@@ -1040,10 +1040,15 @@ test("repartidores (Libby's Cajun): el bot asigna al más libre, el repartidor c
     await estado("PED-1002", "listo"); await ctx.app.locals.idle();
     assert.match(a(JOSE).at(-1), /José, tiene una entrega: PED-1002/);
 
+    // the driver sets the delivery price; the customer hears it before he leaves
+    assert.match(ficha, /ENVÍO 60/);
+    let r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "Envío 60" })).xml); await ctx.app.locals.idle();
+    assert.match(r, /en total cobra L /);
+    assert.match(a("whatsapp:+50491112222").at(-1), /el envío de su pedido \*PED-1001\* cuesta \*L 60\*. Total a pagarle al repartidor/);
     // the driver answers on the same WhatsApp
-    let r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "Salgo con el pedido" })).xml); await ctx.app.locals.idle();
+    r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "Salgo con el pedido" })).xml); await ctx.app.locals.idle();
     assert.match(r, /Le avisamos al cliente que va en camino/);
-    assert.match(a("whatsapp:+50491112222").at(-1), /PED-1001\* ya va en camino con \*Carlos\*/);
+    assert.match(a("whatsapp:+50491112222").at(-1), /PED-1001\* ya va en camino con \*Carlos\*! Total: L .*con envío de L 60/);
     r = textoDe((await post(ctx, "/whatsapp", { From: CARLOS, Body: "entregado" })).xml); await ctx.app.locals.idle();
     assert.match(r, /PED-1001\* quedó entregado/);
     assert.match(a("whatsapp:+50491112222").at(-1), /fue entregado/);

@@ -58,12 +58,12 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       `📍 ${p.direccion}`,
       ...(p.lineas || []).map(l => lineaTexto(l, negocio.L)),
-      `💰 Cobrar ${negocio.L(p.total)}${p.pagado ? " (ya pagó)" : ""}`,
+      `💰 Cobrar ${negocio.L(p.total)}${p.envio ? ` + envío ${negocio.L(p.envio)} = ${negocio.L(p.total + p.envio)}` : " + el envío"}${p.pagado ? " (la comida ya está pagada)" : ""}`,
       `Mapa: ${mapa(p, negocio)}`,
       `Cliente: https://wa.me/${digits(p.tel)}`,
     ];
-    const body = `🛵 *${r.nombre}, tiene una entrega: ${p.n}*\n\n${lineas.join("\n")}\n\nConteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
-    return { titulo, lineas: [...lineas, "Conteste SALGO, ENTREGADO o NO PUEDO"], body };
+    const body = `🛵 *${r.nombre}, tiene una entrega: ${p.n}*\n\n${lineas.join("\n")}\n\nPara decirle al cliente cuánto es el envío, conteste *ENVÍO* y el precio, por ejemplo *ENVÍO 60*.\nConteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
+    return { titulo, lineas: [...lineas, "Conteste ENVÍO y el precio (ENVÍO 60), SALGO, ENTREGADO o NO PUEDO"], body };
   }
 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
@@ -100,7 +100,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // what the customer hears when the order leaves or arrives (from the driver's WhatsApp or the panel)
   function enCamino(p) {
     const quien = p.repartidor ? ` con *${p.repartidor.nombre}*` : "";
-    return avisos.enviar(waAddr(p.tel), `🛵 ¡${nom(p)}, su pedido *${p.n}* ya va en camino${quien}! Total: ${negocio.L(p.total)}.`);
+    return avisos.enviar(waAddr(p.tel), `🛵 ¡${nom(p)}, su pedido *${p.n}* ya va en camino${quien}! Total: ${negocio.L(p.total + (p.envio || 0))}${p.envio ? ` (con envío de ${negocio.L(p.envio)})` : ""}.`);
   }
   function entregado(p) {
     return avisos.enviar(waAddr(p.tel), `✅ ${nom(p)}, su pedido *${p.n}* fue entregado. ¡Gracias por su compra en *${negocio.nombre}*!`);
@@ -117,6 +117,16 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       : t === "2" || /entregad|\bentregue\b|\blisto\b/.test(t) ? "entregado"
       : t === "3" || /no puedo|no lo puedo|no voy|otro/.test(t) ? "nopuedo" : null;
     if (!mios.length) return [{ text: `Hola, ${r.nombre}. No tiene entregas pendientes. Cuando haya una, le llega por aquí.` }];
+    // "ENVÍO 60" (or "envío 60 1004" with several): the driver sets the delivery price and the customer hears it
+    const env = t.match(/^envio\s*(?:de\s*)?(?:l\.?\s*)?(\d{1,4})(?:\s+(?:ped-?\s*)?(\d{3,}))?$/);
+    if (env) {
+      const precio = +env[1], cual = env[2] ? mios.filter(x => x.n.replace(/\D/g, "").endsWith(env[2])) : mios.length === 1 ? mios : mios.filter(x => x.estado === "listo" && x.envio == null);
+      if (cual.length !== 1) return [{ text: `${r.nombre}, ¿de cuál entrega? Escriba el precio y el número, por ejemplo *ENVÍO ${precio} ${mios[0].n.replace(/\D/g, "")}*:\n${lista()}` }];
+      const q = store.updatePedido(cual[0].n, { envio: precio, envioPor: "repartidor:" + r.id });
+      track(avisos.enviar(waAddr(q.tel), `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${negocio.L(q.total + precio)}*.`));
+      log(`[${q.n}] envío ${precio} (${r.nombre})`);
+      return [{ text: `👍 Listo. Le avisamos al cliente que el envío de *${q.n}* es ${negocio.L(precio)}: en total cobra ${negocio.L(q.total + precio)}.${q.estado === "listo" ? " Cuando salga, conteste *SALGO*." : ""}`, buttons: q.estado === "listo" ? ["Salgo con el pedido"] : ["Entregado"] }];
+    }
     if (!accion) return [{ text: `${r.nombre}, sus entregas:\n${lista()}`, buttons: BOTONES }];
     // which order: the number in the message, else the only one that fits. SALGO with several ready takes them all.
     const num = (text.match(/\d{3,}/) || [])[0];

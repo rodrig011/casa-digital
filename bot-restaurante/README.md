@@ -177,6 +177,7 @@ Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (e
 3. El repartidor contesta en el mismo chat:
    - **SALGO**: el pedido pasa a *En camino* y al cliente le llega "va en camino con Carlos". Si tiene varios listos, salen todos.
    - **ENTREGADO**: se cierra y al cliente le llega "fue entregado, gracias"; al dueño, quién lo entregó. Con varios en la calle, el número: "entregado 1004".
+   - **ENVÍO 60**: le dice al cliente que el envío cuesta L60 y cuánto pagar en total (con varias entregas: "envío 60 1004"). Así no hace falta tabla de precios por zona.
    - **NO PUEDO**: el bot se lo pasa al siguiente repartidor, nunca de vuelta a uno que ya dijo que no. Si no queda nadie, avisa al dueño.
    - Cualquier otra cosa: le recuerda sus entregas pendientes. Al número de un repartidor el bot no le contesta como a un cliente.
 4. En el panel, la tarjeta dice quién lo lleva y tiene **En camino**, **Entregado** y **Otro repartidor** (al anterior le llega que ya no lo lleva).
