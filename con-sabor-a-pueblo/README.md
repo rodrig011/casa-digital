@@ -28,14 +28,24 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 
 30 días gratis. Instalación L15,000 en dos pagos (día 30 y día 60) y L2,500 al mes desde el día 31, sin comisión. El acuerdo de servicio no va en este envío: es una plantilla que todavía no revisó un abogado y se firma antes del primer pago.
 
+## El bot de verdad: `bot-restaurante/negocios/con-sabor-a-pueblo.json`
+
+Con lo que el dueño mandó el 11-nov-2026 (por WhatsApp a Rodrigo):
+- San Pedro Sula: solo cerdito chuko, L195.
+- Apartados: tope de 50 por sábado (puesto por ciudad), hasta la 1:00 p. m. del sábado, con depósito antes de confirmarse. El dueño o la sucursal lo aprueban contestando *OK 1001* al aviso del comprobante.
+- A domicilio: se le paga al repartidor al recibir (no paga antes). Costo del envío: por definir.
+- Pierna de cerdo deshuesada: L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre, apartado con el 50 %.
+- Los pedidos llegan a un WhatsApp distinto por ciudad (en `NEGOCIO_PRIVADO`, no en el repositorio).
+
 ## Antes de prender el bot con ellos
 
-1. Menú y precios confirmados por ellos (hoy no tenemos ninguno).
-2. Zonas y costo del envío, quiénes reparten y cómo se les avisa.
-2b. Repartidores: **ya está en el bot** (`bot-restaurante/README.md`, sección 9): asigna al más libre de la sucursal, le manda la entrega por WhatsApp, el repartidor contesta SALGO / ENTREGADO / NO PUEDO y al cliente le llegan los avisos. Falta solo el nombre y WhatsApp de cada repartidor y su ciudad. Los avisos a proveedores siguen siendo demostración.
-3. Hasta qué hora se aparta y si quieren tope de apartados por sábado (el bot ya maneja cupos; hay que configurarlos a su manera).
-4. Cómo quieren los encargos de las piernas: precio, mínimo, fecha límite y dónde se entregan.
-5. La prueba real del bot en WhatsApp, que sigue pendiente (`bot-restaurante/PRUEBA-REAL.md`).
+1. Menú y precios de Tegucigalpa (hoy el bot de Tegus solo ofrece la pierna).
+2. La cuenta para los depósitos: sin cuenta, el bot no puede pedir depósito y los apartados quedan sin cobro.
+3. El WhatsApp de Tegucigalpa para los avisos y el WhatsApp personal del dueño (el 3169-9031 será el número del bot, no puede recibir sus propios avisos).
+4. Si el tope de 50 es por ciudad (así está) o entre las dos.
+5. Pierna: cuántas libras caben en total y dónde se entrega el 24 (el puesto es solo los sábados).
+6. Repartidores: nombre, WhatsApp y ciudad de cada uno; zonas y costo del envío.
+7. La prueba real del bot en WhatsApp (`bot-restaurante/PRUEBA-REAL.md`).
 
 ## Regenerar los PDF
 
