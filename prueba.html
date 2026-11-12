@@ -669,6 +669,8 @@ function createEngine(negocio) {
     const carritoTexto = () => { const c = cuenta(N, d.carrito); return c.lineas.map(l => lineaTexto(l, N.L)).join("\n") + `\n\n*Total: ${N.L(c.total)}*`; };
     const pedirSucursal = (siguiente, pregunta) => {
       if (!N.variasSucursales) { d.sucursal = SUC = N.sucursales[0].id; return false; }
+      const dicha = N.sucursales.find(x => t.includes(norm(x.nombre)) || new RegExp(`\\b${x.id}\\b`).test(t));   // "un pedido para San Pedro Sula"
+      if (dicha) { d.sucursal = SUC = dicha.id; say(`Perfecto, sucursal *${dicha.nombre}*.`); return false; }
       d.despues = siguiente; go("sucursal");
       say({ text: pregunta, buttons: N.sucursales.map(x => x.nombre) });
       return true;
