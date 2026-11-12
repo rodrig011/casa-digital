@@ -111,6 +111,9 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 .sw span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .18s cubic-bezier(.23,1,.32,1)}
 .sw input:checked+span{background:var(--ok)}.sw input:checked+span::after{transform:translateX(14px)}.sw input:focus-visible+span{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--brand)}
 .sw em{font-style:normal;font-size:12px;color:var(--tx2);min-width:52px}
+.sub-t{display:block;font-size:12px;color:var(--tx3);margin-top:2px;font-weight:400}.tabla-ed .sub-t{margin:4px 0 0 2px}
+tr.apagado td{color:var(--tx3)}tr.apagado b{font-weight:500}td.num,input.num{font-variant-numeric:tabular-nums}
+.tabla-menu input[data-k=precio]{min-width:90px;max-width:120px;text-align:right}.tabla-menu input[data-k=nombre]{min-width:200px}
 .quitar{color:var(--tx3)}.quitar:not(:disabled):hover{color:var(--red);border-color:var(--line2)}.quitar:disabled{opacity:.35;cursor:not-allowed}
 .agregar{padding:10px 16px 12px;border-bottom:1px solid var(--line)}
 .pie-ed{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;justify-content:flex-end;padding:10px 16px;background:var(--mute-bg);border-top:1px solid var(--line);border-radius:0 0 4px 4px}
@@ -151,6 +154,10 @@ table tfoot td{font-weight:700;border-bottom:0}
   .tabla-ed tr[data-i] td{padding:0;border:0}.tabla-ed tr[data-i] td:first-child{grid-column:1/-1}.tabla-ed tr[data-i] td.r{text-align:right}
   .tabla-ed input:not([type]),.tabla-ed select{min-width:0;height:40px;font-size:16px}
   .pie-ed{bottom:calc(56px + env(safe-area-inset-bottom))}
+  .tabla-menu tr[data-i]{grid-template-columns:1fr 1fr auto;align-items:end}.tabla-menu tr[data-i] td{background:none}
+  .tabla-menu tr[data-i] td[data-l="Precio (L)"]{grid-column:2/-1}.tabla-menu input[data-k=precio]{max-width:none}.tabla-menu input[data-k=nombre]{min-width:0}
+  .tabla-menu td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--tx3);margin:0 0 4px 2px}
+  .tabla-menu .sw{min-height:40px}
   .gh-nav{display:none}.band{top:52px;height:110px}main{padding:12px 12px 96px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.board{grid-template-columns:1fr}
   .vivo{display:none}.kpi span{min-height:3em}
@@ -259,6 +266,7 @@ function tarjeta(p, grande) {
 function pintar() {
   if (!N) return;
   if (editRep && vista === "repartidores" && $("#rep-edit") && $("#rep-edit").contains(document.activeElement) && !repGuardando && !pintar.forzar) { nav(); return; }
+  if (editMenu && vista === "menu" && $("#menu-edit") && $("#menu-edit").contains(document.activeElement) && !menuGuardando && !pintar.forzar) { nav(); return; }
   nav();
   $("#titulo").textContent = todas().find(v => v[0] === vista)[1];
   $("#tile").innerHTML = svg(vista); $("#tile").style.background = ICONO[vista][1];
@@ -372,9 +380,7 @@ function pintar() {
   } else if (vista === "seguridad") {
     pintarSeguridad(v);
   } else {
-    const cats = [...new Set(N.menu.map(i => i.categoria))];
-    v.innerHTML = `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Para cambiar un precio o agregar un producto, avísele a Casa Digital y queda actualizado el mismo día.</p>
-      <div class="card"><table><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">Precio</th></tr>${cats.map(c => N.menu.filter(i => i.categoria === c).map(i => `<tr><td>${N.menu.indexOf(i) + 1}</td><td>${esc(i.nombre)}</td><td>${esc(c)}</td><td class="r">${L(i.precio)}</td></tr>`).join("")).join("")}</table></div>`;
+    pintarMenu(v);
   }
   botones(v);
   v.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => { vista = b.dataset.ir; try { localStorage.setItem("vista", vista); } catch {} pintar(); scrollTo({ top: 0 }); });
@@ -428,6 +434,73 @@ async function guardarEquipo() {
   repGuardando = false; repintar();
 }
 let repAviso = "";
+// ---- Menú editable: el dueño cambia precios, agrega, quita o marca agotado un producto, y dónde se vende ----
+let editMenu = null, menuError = "", menuGuardando = false, menuAviso = "";
+const carta = () => N.carta || N.menu.map(i => ({ ...i, sucursales: null, activo: true }));
+const dondeTxt = s => !s || !s.length ? "Todas" : s.map(id => (N.sucursales.find(b => b.id === id) || {}).nombre || id).join(" y ");
+const extraTxt = i => [i.encargo ? `Encargo para el ${new Date(i.encargo + "T12:00").toLocaleDateString("es-HN", { day: "numeric", month: "short" })}` : "", i.minimo > 1 ? `mínimo ${i.minimo}` : ""].filter(Boolean).join(" · ");
+const menuOriginal = () => JSON.stringify(carta().map(i => [i.id, i.nombre, i.categoria, String(i.precio), (i.sucursales || []).join(","), i.activo]));
+const menuActual = () => JSON.stringify(editMenu.filter(i => i.id || i.nombre.trim() || String(i.precio).trim()).map(i => [i.id, i.nombre.trim(), i.categoria.trim(), String(i.precio).trim(), i.suc, i.activo]));
+function pintarMenu(v) {
+  const C = carta(), varias = N.sucursales.length > 1, disp = C.filter(i => i.activo).length;
+  if (editMenu) { v.innerHTML = (menuAviso ? `<p class="ayuda ok" role="status">✓ ${esc(menuAviso)}</p>` : "") + menuEditable(); montarMenu(); return; }
+  v.innerHTML = `${menuAviso ? `<p class="ayuda ok" role="status">✓ ${esc(menuAviso)}</p>` : `<p class="ayuda">Esto es lo que el bot ofrece y cobra. Usted cambia precios, agrega o quita productos, o marca algo <b>Agotado</b> con <b>Editar menú</b>; el bot lo usa desde que toca Guardar.</p>`}
+    <div class="card">${H(`Menú · ${disp} ${disp === 1 ? "producto disponible" : "productos disponibles"}`, "menu", `<button class="btn h-acc" id="menu-editar">Editar menú</button>`)}
+    <table><tr><th>Producto</th><th class="solo-pc">Categoría</th>${varias ? "<th>Se vende en</th>" : ""}<th class="r">Precio</th><th class="solo-pc">Estado</th></tr>
+    ${C.map(i => `<tr${i.activo ? "" : ' class="apagado"'}><td><b>${esc(i.nombre)}</b>${extraTxt(i) ? `<small class="sub-t">${esc(extraTxt(i))}</small>` : ""}${i.activo ? "" : ` <span class="tag solo-cel">Agotado</span>`}</td><td class="solo-pc">${esc(i.categoria)}</td>${varias ? `<td>${esc(dondeTxt(i.sucursales))}</td>` : ""}<td class="r num">${L(i.precio)}</td><td class="solo-pc">${i.activo ? `<span class="tag t-listo">Disponible</span>` : `<span class="tag">Agotado</span>`}</td></tr>`).join("")}</table></div>`;
+  $("#menu-editar").onclick = () => { editMenu = C.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, precio: String(i.precio), suc: (i.sucursales || []).join(","), activo: i.activo, extra: extraTxt(i) })); menuError = ""; menuAviso = ""; pintar(); const x = document.querySelector("#menu-edit input"); if (x) x.focus(); };
+  if (menuAviso) { clearTimeout(pintar.tMenu); pintar.tMenu = setTimeout(() => { menuAviso = ""; if (vista === "menu") repintar(); }, 7000); }
+}
+function menuEditable() {
+  const varias = N.sucursales.length > 1, cambios = menuActual() !== menuOriginal();
+  const cats = [...new Set(editMenu.map(i => i.categoria.trim()).filter(Boolean))];
+  const opciones = r => { const o = [["", "Todas"], ...N.sucursales.map(s => [s.id, s.nombre])]; if (r.suc && !o.some(x => x[0] === r.suc)) o.push([r.suc, dondeTxt(r.suc.split(","))]); return o.map(([k, t]) => `<option value="${esc(k)}" ${k === r.suc ? "selected" : ""}>${esc(t)}</option>`).join(""); };
+  return `<div class="card editando" id="menu-edit">${H("Menú", "menu", `<span class="h-acc sub">Editando</span>`)}
+    <p class="nota-ed">Cambie lo que quiera y toque <b>Guardar y aplicar</b>. Los pedidos que ya entraron se quedan con el precio que tenían. <b>Agotado</b> lo esconde sin borrarlo, para volver a prenderlo el sábado que viene.</p>
+    <datalist id="cats">${cats.map(c => `<option value="${esc(c)}">`).join("")}</datalist>
+    <div class="tabla-ed tabla-menu"><table><tr><th>Producto</th><th>Categoría</th><th>Precio (L)</th>${varias ? "<th>Se vende en</th>" : ""}<th>Disponible</th><th><span class="sr">Quitar</span></th></tr>
+    ${editMenu.map((r, i) => `<tr data-i="${i}"><td><input data-k="nombre" value="${esc(r.nombre)}" placeholder="Nombre del producto" aria-label="Producto" maxlength="80" autocomplete="off">${r.extra ? `<small class="sub-t">${esc(r.extra)}</small>` : ""}</td>
+      <td data-l="Categoría"><input data-k="categoria" value="${esc(r.categoria)}" list="cats" placeholder="Categoría" aria-label="Categoría" maxlength="40" autocomplete="off"></td>
+      <td data-l="Precio (L)"><input data-k="precio" value="${esc(r.precio)}" placeholder="0" aria-label="Precio en lempiras" inputmode="decimal" maxlength="9" autocomplete="off" class="num"></td>
+      ${varias ? `<td data-l="Se vende en"><select data-k="suc" aria-label="Se vende en">${opciones(r)}</select></td>` : ""}
+      <td><label class="sw"><input type="checkbox" data-k="activo" ${r.activo ? "checked" : ""}><span></span><em>${r.activo ? "Sí" : "Agotado"}</em></label></td>
+      <td class="r"><button class="iconbtn quitar" data-quitar="${i}" aria-label="Quitar ${esc(r.nombre || "este producto")}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></td></tr>`).join("")}
+    </table></div>
+    <div class="agregar"><button class="btn" id="menu-mas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Agregar producto</button></div>
+    ${menuError ? `<p class="ayuda alerta error" role="alert" style="margin:0 16px 12px">${esc(menuError)}</p>` : ""}
+    <div class="pie-ed"><span id="menu-cambios">${cambios ? "Cambios sin guardar" : "Sin cambios"}</span><button class="btn" id="menu-cancelar">Cancelar</button><button class="btn pri" id="menu-guardar" ${cambios && !menuGuardando ? "" : "disabled"}>${menuGuardando ? "Guardando…" : "Guardar y aplicar"}</button></div></div>`;
+}
+function montarMenu() {
+  const caja = $("#menu-edit"); if (!caja) return;
+  const avisar = () => { const c = menuActual() !== menuOriginal(); $("#menu-cambios").textContent = c ? "Cambios sin guardar" : "Sin cambios"; $("#menu-guardar").disabled = !c || menuGuardando; };
+  caja.querySelectorAll("tr[data-i] [data-k]").forEach(el => el.oninput = el.onchange = () => {
+    const r = editMenu[+el.closest("tr").dataset.i], k = el.dataset.k;
+    r[k] = el.type === "checkbox" ? el.checked : el.value;
+    if (k === "activo") el.parentNode.querySelector("em").textContent = el.checked ? "Sí" : "Agotado";
+    avisar();
+  });
+  caja.querySelectorAll("[data-quitar]").forEach(b => b.onclick = () => { editMenu.splice(+b.dataset.quitar, 1); menuError = ""; repintar(); });
+  $("#menu-mas").onclick = () => { const u = editMenu.find(x => !x.extra) || editMenu[0]; editMenu.push({ id: "", nombre: "", categoria: u ? u.categoria : "", precio: "", suc: $("#suc").value || "", activo: true, extra: "" }); repintar(); const filas = document.querySelectorAll("#menu-edit tr[data-i]"); filas[filas.length - 1].querySelector("input").focus(); };
+  $("#menu-cancelar").onclick = () => { editMenu = null; menuError = ""; repintar(); };
+  $("#menu-guardar").onclick = guardarMenu;
+}
+async function guardarMenu() {
+  const filas = editMenu.filter(i => i.id || i.nombre.trim() || String(i.precio).trim());
+  const precioOk = t => /^\d+(\.\d+)?$/.test(String(t).replace(/[L\s,]/gi, ""));
+  const falta = filas.find(i => !i.nombre.trim() || !precioOk(i.precio));
+  if (falta) { menuError = !falta.nombre.trim() ? "A un producto le falta el nombre." : `Revise el precio de ${falta.nombre.trim()}: solo números, por ejemplo 195.`; return repintar(); }
+  if (!filas.some(i => i.activo)) { menuError = "Deje al menos un producto disponible."; return repintar(); }
+  menuGuardando = true; menuError = ""; repintar();
+  try {
+    const r = await fetch("/api/menu", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productos: filas.map(i => ({ id: i.id, nombre: i.nombre.trim(), categoria: i.categoria.trim(), precio: String(i.precio).trim(), sucursales: i.suc ? i.suc.split(",") : null, activo: i.activo })) }) });
+    if (r.status === 401) return location.href = "/panel/entrar";
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "No se pudo guardar.");
+    N.menu = d.menu; N.carta = d.carta; editMenu = null;
+    menuAviso = `Guardado y aplicado. El bot ya ofrece ${d.menu.length} ${d.menu.length === 1 ? "producto" : "productos"} con estos precios.`;
+  } catch (e) { menuError = e.message === "Failed to fetch" ? "Sin conexión. Revise el internet y toque Guardar y aplicar otra vez." : e.message; }
+  menuGuardando = false; repintar();
+}
 function repintar() { pintar.forzar = true; try { pintar(); } finally { pintar.forzar = false; } }
 const botones = el => el.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => b.dataset.e === "_rep" ? otroRepartidor(b.dataset.n, b) : cambiar(b.dataset.n, b.dataset.e, b));
 
@@ -479,7 +552,7 @@ $("#velo").onclick = cerrarFicha;
 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
-const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto" };
+const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto", menu: "Cambió el menú" };
 const MALOS = ["fallo", "bloqueado", "codigo_malo"];
 const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
 const equipoCorto = ua => /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : ua ? "Otro" : "";

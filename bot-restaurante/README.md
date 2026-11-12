@@ -184,6 +184,10 @@ Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (e
 
 Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje al repartidor sale con la plantilla aprobada (`META_PLANTILLA`). Conviene que cada repartidor le escriba "hola" al número del negocio el día que empieza.
 
+### El dueño cambia su menú desde el panel
+
+En **Menú > Editar menú** el dueño cambia precios y nombres, agrega o quita productos, marca algo **Agotado** (el bot deja de ofrecerlo sin borrarlo) y elige en qué sucursal se vende. Al tocar **Guardar y aplicar** el bot y la IA usan el menú nuevo al instante, sin reiniciar. Se revisa con las mismas reglas que el archivo del negocio y queda guardado (cifrado) en `DATA_DIR/menu.json`, que manda sobre el menú del archivo. Lo que el panel no toca de cada producto (mínimo, anticipo, encargo, descripción) se conserva. Los pedidos que ya entraron se quedan con su precio.
+
 ### El dueño cambia su equipo desde el panel
 
 En **Repartidores › Editar equipo** el dueño agrega, cambia, pausa o quita repartidores (nombre, WhatsApp, sucursal y «Recibe envíos») y toca **Guardar y aplicar**. Se aplica al instante: el próximo envío ya lo reparte con el equipo nuevo. Un repartidor pausado termina lo que tiene pero no recibe nuevos; uno con entregas pendientes no se puede quitar (hay que pausarlo). Lo guardado queda cifrado en `DATA_DIR/repartidores.json` y, desde ese momento, manda sobre `repartidores` del archivo del negocio y de `NEGOCIO_PRIVADO`. Cada cambio queda en Seguridad › Actividad.

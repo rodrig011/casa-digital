@@ -27,6 +27,7 @@ function preparar(n) {
   const items = [];
   const ids = new Set();
   for (const c of n.menu || []) for (const it of c.items || []) {
+    if (it && it.activo === false) { if (it.id) { if (ids.has(it.id)) errores.push(`id repetido: ${it.id}`); ids.add(it.id); } continue; }   // agotado o pausado: el bot no lo ofrece
     if (!it.id || !it.nombre || !(+it.precio >= 0)) { errores.push(`producto incompleto en ${c.categoria}: ${JSON.stringify(it)}`); continue; }
     if (ids.has(it.id)) errores.push(`id repetido: ${it.id}`);
     ids.add(it.id);
@@ -82,7 +83,7 @@ function preparar(n) {
     }
     return mejor.length === 1 ? mejor[0] : null;
   };
-  return {
+  const listo = {
     ...n,
     color: n.color || "#C8102E",
     ...(Array.isArray(n.proveedores) ? { proveedores: n.proveedores.filter(x => x && x.nombre).map((x, i) => { const d = String(x.whatsapp || "").replace(/\D/g, ""); return { id: String(x.id || `p${i + 1}`), nombre: String(x.nombre), producto: String(x.producto || ""), whatsapp: d.length === 8 ? "504" + d : d, sucursal: String(x.sucursal || ""), nota: String(x.nota || "") }; }) } : {}),
@@ -98,6 +99,8 @@ function preparar(n) {
     items, sucursal, sucursalEn, item, tokens,
     variasSucursales: n.sucursales.length > 1,
   };
+  Object.defineProperty(listo, "_crudo", { value: n, writable: true });   // el archivo tal cual, para volver a revisar un menú nuevo
+  return listo;
 }
 
 // Reservaciones (opcional): el bot toma día, hora, personas y ocasión, y el restaurante confirma desde el panel.
@@ -268,4 +271,45 @@ function cuenta(negocio, lineas) {
 }
 const lineaTexto = (l, fmt = L) => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""} · ${fmt(l.subtotal)}`;
 
-module.exports = { cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+// El dueño cambia el menú desde el panel: se revisa con las mismas reglas que el archivo y se cambia en el
+// mismo objeto, así el bot, la IA y el panel ven el menú nuevo al instante sin reiniciar.
+function aplicarMenu(N, menu) {
+  const p = preparar({ ...(N._crudo || N), menu });
+  N._crudo = p._crudo;
+  N.menu = p.menu; N.items = p.items; N.item = p.item; N.tokens = p.tokens;
+  return N;
+}
+
+// Lo que manda el panel (una lista plana) -> el menú por categorías. Solo cambia nombre, precio, categoría,
+// dónde se vende y si está disponible; lo demás de cada producto (mínimo, anticipo, encargo...) se conserva.
+function menuDesdePanel(N, productos) {
+  if (!Array.isArray(productos) || productos.length > 200) throw new Error("lista inválida");
+  const viejos = new Map(N.menu.flatMap(c => (c.items || []).map(it => [it.id, it])));
+  const sids = new Set(N.sucursales.map(s => s.id)), usados = new Set();
+  const slug = t => norm(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "producto";
+  const cats = new Map();
+  for (const x of productos) {
+    const nombre = String((x && x.nombre) || "").replace(/\s+/g, " ").trim().slice(0, 80);
+    if (!nombre) throw new Error("A un producto le falta el nombre.");
+    const limpio = typeof x.precio === "string" ? x.precio.replace(/[L\s,]/gi, "") : x.precio;   // "L 1,500" -> 1500
+    const precio = limpio === "" || limpio == null || !/^\d+(\.\d+)?$/.test(String(limpio)) ? NaN : +limpio;
+    if (!(precio >= 0) || precio > 1000000) throw new Error(`Revise el precio de ${nombre}.`);
+    const categoria = String(x.categoria || "").replace(/\s+/g, " ").trim().slice(0, 40) || "Menú";
+    const suc = (Array.isArray(x.sucursales) ? x.sucursales : x.sucursal ? [x.sucursal] : []).map(String).filter(Boolean);
+    if (suc.some(v => !sids.has(v))) throw new Error(`Sucursal desconocida en ${nombre}.`);
+    const viejo = x.id && viejos.get(String(x.id));
+    let id = viejo ? viejo.id : slug(nombre);
+    if (!viejo) { const base = id; let k = 2; while (usados.has(id) || viejos.has(id)) id = `${base}-${k++}`; }
+    if (usados.has(id)) throw new Error(`${nombre} está repetido.`);
+    usados.add(id);
+    const it = { ...(viejo || {}), id, nombre, precio: Math.round(precio * 100) / 100 };
+    if (suc.length && suc.length < sids.size) it.sucursales = suc; else delete it.sucursales;
+    if (x.activo === false) it.activo = false; else delete it.activo;
+    if (!cats.has(categoria)) cats.set(categoria, []);
+    cats.get(categoria).push(it);
+  }
+  if (![...cats.values()].some(its => its.some(it => it.activo !== false))) throw new Error("Deje al menos un producto disponible.");
+  return [...cats].map(([categoria, items]) => ({ categoria, items }));
+}
+
+module.exports = { aplicarMenu, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };

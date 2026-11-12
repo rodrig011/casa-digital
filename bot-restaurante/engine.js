@@ -41,7 +41,7 @@ function createEngine(negocio) {
   const soloEn = it => it.sucursales && !SUC && N.variasSucursales ? ` (solo ${it.sucursales.map(x => (N.sucursales.find(b => b.id === x) || {}).nombre).join(" y ")})` : "";
   // numbered menu, grouped by category; corto = one line per product (for the cart step)
   function menuTexto(corto) {
-    return N.menu.map(c => [c.categoria, (c.items || []).map(i => N.items.find(x => x.id === i.id)).filter(it => vendeEn(it, SUC))]).filter(([, its]) => its.length).map(([cat, its]) => `*${cat}*\n` + its.map(it =>
+    return N.menu.map(c => [c.categoria, (c.items || []).map(i => N.items.find(x => x.id === i.id)).filter(it => it && vendeEn(it, SUC))]).filter(([, its]) => its.length).map(([cat, its]) => `*${cat}*\n` + its.map(it =>
       `${it.num}. ${it.nombre} · ${N.L(it.precio)}${soloEn(it)}${!corto && it.desc ? `\n    ${it.desc}` : ""}`).join("\n")).join("\n\n");
   }
   function sucursalesTexto() {
