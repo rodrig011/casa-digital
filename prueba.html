@@ -397,8 +397,12 @@ function prepararCupos(c) {
   const cierre = /^\d{1,2}:\d{2}$/.test(String(c.cierre || "").trim()) ? String(c.cierre).trim() : "21:00";
   const num = (v, d) => (v === "" || v == null || !(+v >= 0) ? d : Math.round(+v));
   const salsas = (Array.isArray(c.salsas) ? c.salsas : []).map(s => String(s).trim()).filter(Boolean).slice(0, 6);
+  // topes: un máximo distinto por sucursal ({ "sps": 30 }); cerrados: fechas en que no se abre ("2026-12-26")
+  const topes = {};
+  for (const [k, v] of Object.entries(c.topes && typeof c.topes === "object" ? c.topes : {})) if (+v >= 1) topes[String(k)] = Math.round(+v);
+  const cerrados = [...new Set((Array.isArray(c.cerrados) ? c.cerrados : []).map(String).filter(f => /^\d{4}-\d{2}-\d{2}$/.test(f)))].sort().slice(0, 60);
   return { dias, tandas, porTanda, anticipacion: num(c.anticipacion, 1), cierre, verDias: num(c.verDias, 7) || 7, salsas, nota: String(c.nota || "").trim(),
-    porPedido: !!c.porPedido, porSucursal: !!c.porSucursal };
+    porPedido: !!c.porPedido, porSucursal: !!c.porSucursal, topes, cerrados };
 }
 // the days a customer can still order for, from now (Honduras time, UTC-6 all year): [{ fecha: "2026-10-30", etiqueta: "viernes 30 de octubre" }]
 // todos: also days already closed (for the panel)
@@ -411,13 +415,15 @@ function fechasCupos(negocio, now, todos = false) {
   const out = [];
   for (let k = 0; k <= C.verDias; k++) {
     const d = new Date(hoy + k * 864e5);
-    if (!C.dias.includes(d.getUTCDay())) continue;
+    if (!C.dias.includes(d.getUTCDay()) || (C.cerrados || []).includes(d.toISOString().slice(0, 10))) continue;
     const cierra = hoy + (k - C.anticipacion) * 864e5 + (hh * 60 + mm) * 6e4;
     if (!todos && (k < C.anticipacion || local.getTime() >= cierra)) continue;
     out.push({ fecha: d.toISOString().slice(0, 10), etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}` });
   }
   return out;
 }
+// el máximo de una tanda: el de esa sucursal si el dueño le puso uno, o el general
+const topeDe = (C, suc) => (C.porSucursal && suc && C.topes && C.topes[suc]) || C.porTanda;
 // how many cupos an order needs: [{ id, cantidad }]
 const cuposDe = (negocio, lineas) => negocio.cupos && negocio.cupos.porPedido ? ((lineas || []).length ? 1 : 0) : (lineas || []).reduce((a, l) => { const it = negocio.items.find(i => i.id === l.id); return a + (it ? it.cupos * Math.max(1, Math.round(+l.cantidad || 1)) : 0); }, 0);
 
@@ -573,7 +579,68 @@ function menuDesdePanel(N, productos) {
   return [...cats].map(([categoria, items]) => ({ categoria, items }));
 }
 
-module.exports = { aplicarMenu, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+// Configuración que el dueño cambia desde el panel (DATA_DIR/ajustes.json, gana al archivo). Se cambia en los
+// mismos objetos que ya usan el bot, la IA y el panel, así todo toma el valor nuevo al instante sin reiniciar.
+const DIAS_PANEL = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+const texto = (v, max) => String(v == null ? "" : v).replace(/\r/g, "").trim().slice(0, max);
+function ajustesDe(N) {
+  const C = N.cupos, B = N.cobro;
+  return {
+    pausa: { activo: !!(N.pausa && N.pausa.activo), mensaje: (N.pausa && N.pausa.mensaje) || "" },
+    cupos: C ? { porTanda: C.porTanda, porSucursal: C.porSucursal, topes: { ...C.topes }, dias: C.dias.map(d => DIAS[d]), cierre: C.cierre, anticipacion: C.anticipacion, verDias: C.verDias, cerrados: [...C.cerrados], nota: C.nota, tandas: C.tandas.length } : null,
+    cobro: { anticipo: B.anticipo, desde: B.desde === Infinity ? "" : B.desde, domicilio: B.domicilio, faltas: B.faltas, transferencia: B.transferencia },
+    sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", horario: s.horario || "" })),
+    zona: (N.domicilio && N.domicilio.zona) || "", tiempoPreparacion: N.tiempoPreparacion || "", domicilioPropio: !!(N.domicilio && N.domicilio.propio),
+  };
+}
+function aplicarAjustes(N, a) {
+  if (!a || typeof a !== "object") throw new Error("ajustes inválidos");
+  const crudo = N._crudo || N;
+  const cambios = {};
+  if (a.pausa) cambios.pausa = { activo: !!a.pausa.activo, mensaje: texto(a.pausa.mensaje, 300) };
+  if (a.cupos && N.cupos) {
+    const x = a.cupos, num = (v, min, max, nombre) => { const n = Math.round(+v); if (v === "" || !(n >= min && n <= max)) throw new Error(`Revise ${nombre}.`); return n; };
+    const dias = (Array.isArray(x.dias) ? x.dias : []).map(d => norm(d)).filter(d => DIAS.includes(d));
+    if (!dias.length) throw new Error("Escoja al menos un día para los apartados.");
+    if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(String(x.cierre || ""))) throw new Error("Revise la hora de cierre de los apartados.");
+    const topes = {};
+    for (const [k, v] of Object.entries(x.topes && typeof x.topes === "object" ? x.topes : {})) {
+      if (!N.sucursales.some(s => s.id === k)) throw new Error("Sucursal desconocida en los topes.");
+      if (v !== "" && v != null) topes[k] = num(v, 1, 100000, "el máximo de apartados de " + N.sucursales.find(s => s.id === k).nombre);
+    }
+    const cerrados = (Array.isArray(x.cerrados) ? x.cerrados : []).map(String);
+    if (cerrados.some(f => !/^\d{4}-\d{2}-\d{2}$/.test(f))) throw new Error("Revise las fechas cerradas.");
+    cambios.cupos = { ...(crudo.cupos || {}), dias, porTanda: num(x.porTanda, 1, 100000, "el máximo de apartados"), topes, cierre: String(x.cierre),
+      anticipacion: num(x.anticipacion, 0, 30, "los días de anticipación"), verDias: num(x.verDias, 1, 90, "cuántos días se ofrecen"), cerrados, nota: texto(x.nota, 300) };
+  }
+  if (a.cobro) {
+    const x = a.cobro, desde = String(x.desde == null ? "" : x.desde).replace(/[L\s,]/gi, "");
+    if (desde !== "" && !/^\d+(\.\d+)?$/.test(desde)) throw new Error("Revise desde qué monto se paga antes.");
+    const anticipo = Math.round(+x.anticipo);
+    if (!(anticipo >= 1 && anticipo <= 100)) throw new Error("El porcentaje que se paga antes va de 1 a 100.");
+    const faltas = Math.round(+x.faltas || 0);
+    if (!(faltas >= 0 && faltas <= 20)) throw new Error("Revise las veces que no vino.");
+    cambios.cobro = { ...(crudo.cobro || {}), ...(N.cobro.transferencia && !crudo.cobro?.transferencia ? { transferencia: N.cobro.transferencia } : {}), ...(N.cobro.tarjeta && !crudo.cobro?.tarjeta ? { tarjeta: N.cobro.tarjeta } : {}),
+      desde: desde === "" ? "" : +desde, anticipo, domicilio: !!x.domicilio, faltas, ...(x.transferencia != null ? { transferencia: texto(x.transferencia, 400) } : {}) };
+  }
+  if (Array.isArray(a.sucursales)) for (const x of a.sucursales) if (!N.sucursales.some(s => s.id === x.id)) throw new Error("Sucursal desconocida.");
+  // todo revisado con las mismas reglas que el archivo antes de tocar nada
+  const p = preparar({ ...crudo, ...(cambios.cupos ? { cupos: cambios.cupos } : {}), ...(cambios.cobro ? { cobro: cambios.cobro } : {}) });
+  if (cambios.pausa) { N.pausa = cambios.pausa; crudo.pausa = cambios.pausa; }
+  if (cambios.cupos) { for (const k of Object.keys(N.cupos)) delete N.cupos[k]; Object.assign(N.cupos, p.cupos); crudo.cupos = cambios.cupos; }
+  if (cambios.cobro) { const pasarela = N.cobro.pasarela; Object.assign(N.cobro, p.cobro, { pasarela }); if (pasarela) N.cobro.activo = true; crudo.cobro = cambios.cobro; }
+  if (Array.isArray(a.sucursales)) for (const x of a.sucursales) {
+    const s = N.sucursales.find(y => y.id === x.id), c = (crudo.sucursales || []).find(y => y.id === x.id);
+    for (const k of ["direccion", "horario"]) if (x[k] != null) { s[k] = texto(x[k], 200); if (c && c !== s) c[k] = s[k]; }
+  }
+  if (a.zona != null && N.domicilio) N.domicilio.zona = texto(a.zona, 200);
+  if (a.tiempoPreparacion != null) N.tiempoPreparacion = crudo.tiempoPreparacion = texto(a.tiempoPreparacion, 120);
+  return ajustesDe(N);
+}
+// lo que contesta el bot mientras el dueño tiene los pedidos en pausa (null = abierto)
+const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
+
+module.exports = { aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
 
 },"./engine":function(module,exports,require){// Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
@@ -590,7 +657,7 @@ module.exports = { aplicarMenu, menuDesdePanel, cargarNegocio, preparar, cuenta,
 // solo ofrece tandas con cupo (ctx.ocupados(fecha, tanda) = cupos ya apartados, server.js los cuenta) y, si está lleno,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe } = require("./negocio");
 const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
@@ -749,7 +816,7 @@ function createEngine(negocio) {
       handoff();
     };
     // cupos: day and batch
-    const libre = (fecha, tanda) => CUP.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda, d.sucursal)) || 0);
+    const libre = (fecha, tanda) => topeDe(CUP, d.sucursal) - ((ctx.ocupados && ctx.ocupados(fecha, tanda, d.sucursal)) || 0);
     const unaTanda = CUP && CUP.tandas.length === 1;
     const tandasCon = fecha => CUP.tandas.filter(x => libre(fecha, x) >= d.cupos);
     const cupTxt = n => `${n} ${n === 1 ? "cupo" : "cupos"}`;

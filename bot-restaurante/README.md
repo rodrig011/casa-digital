@@ -188,6 +188,15 @@ Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje 
 
 En un pedido a domicilio el bot pide, además de la dirección escrita, la ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). Si el cliente manda el pin en vez de escribir la dirección, también sirve. El pin se guarda en el pedido y al repartidor le llega como ubicación de WhatsApp (con Meta) y como link exacto de Google Maps en el texto; en el panel la ficha del pedido tiene «Ver la ubicación exacta». Si el cliente manda el pin después, se lo reenvía al repartidor que ya tiene el envío.
 
+### El dueño cambia la configuración desde el panel
+
+En **Configuración** el dueño cambia, sin llamar a nadie: pausar o abrir los pedidos por WhatsApp (con su mensaje),
+el máximo de apartados (general y por sucursal), los días que abre, la hora de cierre, la anticipación, las fechas
+cerradas (feriados), cuánto se paga antes y desde qué monto, si a domicilio paga antes, los datos para transferencia,
+y la dirección y el horario de cada sucursal. `POST /api/ajustes` lo revisa con las mismas reglas que el archivo del
+negocio, lo aplica al instante (bot, IA y panel) y lo guarda cifrado en `DATA_DIR/ajustes.json`, que gana al archivo.
+El respaldo (`respaldo.js`) incluye `menu.json`, `repartidores.json` y `ajustes.json`.
+
 ### El dueño cambia su menú desde el panel
 
 En **Menú > Editar menú** el dueño cambia precios y nombres, agrega o quita productos, marca algo **Agotado** (el bot deja de ofrecerlo sin borrarlo) y elige en qué sucursal se vende. Al tocar **Guardar y aplicar** el bot y la IA usan el menú nuevo al instante, sin reiniciar. Se revisa con las mismas reglas que el archivo del negocio y queda guardado (cifrado) en `DATA_DIR/menu.json`, que manda sobre el menú del archivo. Lo que el panel no toca de cada producto (mínimo, anticipo, encargo, descripción) se conserva. Los pedidos que ya entraron se quedan con su precio.

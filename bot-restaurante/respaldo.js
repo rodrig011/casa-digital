@@ -15,7 +15,7 @@ const path = require("path");
 const { createCifra, leerJSON } = require("./cifrado");
 const { createStore } = require("./store");
 
-const ARCHIVOS = ["pedidos.json", "resumen.json", "usuarios.json", "sesiones-cerradas.json", "bitacora.log"];
+const ARCHIVOS = ["pedidos.json", "resumen.json", "usuarios.json", "sesiones-cerradas.json", "bitacora.log", "menu.json", "repartidores.json", "ajustes.json"];
 
 function crearRespaldo(dir, now = new Date()) {
   const archivos = {};
