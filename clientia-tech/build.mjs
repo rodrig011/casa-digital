@@ -18,7 +18,7 @@ const WA_ICON = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
 
 // the bot's own CommonJS files, wired with a tiny require() so they run in the browser untouched
 const mod = f => `function(module,exports,require){${leer(bot, f).toString()}\n}`;
-const BOT = `const BOT=(()=>{const defs={"./negocio":${mod("negocio.js")},"./engine":${mod("engine.js")}},cache={};
+const BOT = `const BOT=(()=>{const defs={"./negocio":${mod("negocio.js")},"./engine":${mod("engine.js")},"./repartos":${mod("repartos.js")},"./avisos":${mod("avisos.js")}},cache={};
 function req(n){if(n==="fs"||n==="path")return{};if(cache[n])return cache[n].exports;const m={exports:{}};cache[n]=m;defs[n](m,m.exports,req);return m.exports}
 const ng=req("./negocio"),en=req("./engine");
 return{preparar:ng.preparar,cuenta:ng.cuenta,L:ng.L,createEngine:en.createEngine,NEGOCIO:${leer(bot, "negocios", "ejemplo.json").toString()}}})();`;
