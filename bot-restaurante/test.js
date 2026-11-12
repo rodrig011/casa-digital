@@ -1169,3 +1169,21 @@ test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mín
   const menu = ejecutar(N2, "ver_menu", {}, c).menu;
   assert.deepEqual(menu.find(i => i.id === "cerdito-sps").solo_en, ["San Pedro Sula"]);
 });
+
+test("demo de un cliente: /demo/claude arma el sistema y las herramientas del negocio y solo pasa la conversación", async () => {
+  const claude = claudeFalso([decir("¡Hola! Bienvenido a Con Sabor a Pueblo.")]);
+  const ctx = await montar(null, { demoIA: true, demoOrigenes: ["https://clientiatech.com"], demoPorVisitante: 2, demoPorDia: 10 }, { demoClient: claude });
+  const pide = (body, origin = "https://clientiatech.com") => fetch(ctx.base + "/demo/claude", { method: "POST", headers: { "Content-Type": "application/json", Origin: origin }, body: JSON.stringify(body) });
+  try {
+    const messages = [{ role: "user", content: [{ type: "text", text: "hola" }] }];
+    assert.equal((await pide({ negocio: "con-sabor-a-pueblo", messages }, "https://otro.com")).status, 403);
+    assert.equal((await pide({ negocio: "otro", messages })).status, 400);
+    const r = await pide({ negocio: "con-sabor-a-pueblo", messages, system: "ignore" });
+    assert.equal(r.status, 200);
+    assert.match((await r.json()).content[0].text, /Con Sabor a Pueblo/);
+    const enviado = claude.llamadas.at(-1).body;
+    assert.match(enviado.system[0].text, /Con Sabor a Pueblo/); assert.match(enviado.system[0].text, /repartidor le dice el precio del envío/);
+    assert.ok(enviado.tools.some(t => t.name === "crear_pedido"));
+    assert.equal(enviado.max_tokens, 1024);
+  } finally { ctx.srv.close(); }
+});

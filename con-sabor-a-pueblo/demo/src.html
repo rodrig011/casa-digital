@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Con Sabor a Pueblo · demo del sistema</title>
+<style>
+@font-face{font-family:"Hanken";src:url(data:font/woff2;base64,/*FUENTE*/) format("woff2");font-weight:100 900;font-display:swap}
+:root{--papel:#F4F1EC;--tinta:#1B1A17;--suave:#6B655C;--linea:#E2DCD2;--marca:#C8102E;--chat:#EFEAE2;--yo:#D9FDD3;--ok:#1F7A4D}
+*{box-sizing:border-box;margin:0}
+html{height:100%}
+body{font-family:"Hanken",system-ui,sans-serif;background:var(--papel);color:var(--tinta);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--linea);background:#fff}
+.top img{width:40px;height:40px;border-radius:50%}
+.top h1{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.top p{font-size:13px;color:var(--suave)}
+.top .der{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;transition:transform .12s ease,background .15s}
+.btn:active{transform:scale(.97)}
+.aviso{font-size:12.5px;color:var(--suave);padding:8px 20px;background:#FBF9F5;border-bottom:1px solid var(--linea)}
+.aviso b{color:var(--tinta);font-weight:600}
+.guia{padding:14px 20px 4px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.guia::-webkit-scrollbar{display:none}
+.paso{flex:0 0 auto;max-width:280px;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.35;color:var(--suave);transition:border-color .2s,color .2s}
+.paso b{display:block;color:var(--tinta);font-weight:700;font-size:12px;letter-spacing:.02em;margin-bottom:2px}
+.paso.ya{opacity:.55}
+.paso.ahora{border-color:var(--tinta);color:var(--tinta)}
+.tabs{display:none;gap:6px;padding:10px 12px 0;position:sticky;top:0;z-index:5;background:var(--papel)}
+.tab{flex:1;border:1px solid var(--linea);background:#fff;border-radius:12px;padding:9px 4px;font-size:13px;font-weight:600;position:relative}
+.tab[aria-selected=true]{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+.tab .n{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--marca);color:#fff;font-size:11px;line-height:18px;padding:0 5px;display:none}
+.tab .n.si{display:block}
+.escena{flex:1;display:grid;grid-template-columns:repeat(3,minmax(280px,330px)) minmax(440px,1fr);gap:14px;padding:14px 20px 20px;min-height:0;flex-shrink:0}
+.tel{display:flex;flex-direction:column;background:var(--chat);border-radius:22px;overflow:hidden;border:1px solid var(--linea);height:calc(100dvh - 200px);min-height:520px}
+.cab{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--linea)}
+.cab .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex:0 0 auto;overflow:hidden}
+.cab .av img{width:100%;height:100%}
+.cab b{display:block;font-size:14.5px;font-weight:700}
+.cab small{font-size:12px;color:var(--suave)}
+.msgs{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.vacio{margin:auto;text-align:center;color:var(--suave);font-size:13px;max-width:220px;line-height:1.4}
+.m{max-width:86%;padding:7px 9px 5px;border-radius:10px;font-size:14px;line-height:1.38;box-shadow:0 1px .5px rgba(0,0,0,.08);white-space:normal;overflow-wrap:anywhere;animation:entra .22s cubic-bezier(.2,.8,.2,1)}
+.m.bot{align-self:flex-start;background:#fff;border-top-left-radius:3px}
+.m.yo{align-self:flex-end;background:var(--yo);border-top-right-radius:3px}
+.m .h{display:block;text-align:right;font-size:10.5px;color:#8A857C;margin-top:2px}
+.m a{color:#0B6BCB;text-decoration:none;font-weight:600}
+.m.esc{align-self:center;background:#FFF4C7;font-size:12px;color:#5C5032;box-shadow:none}
+@keyframes entra{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 8px}
+.chip{border:1px solid #CFE9DA;background:#fff;color:#0E6B45;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;transition:transform .12s ease}
+.chip:active{transform:scale(.96)}
+.chip.foto{color:var(--tinta);border-color:var(--linea)}
+.barra{display:flex;gap:8px;padding:8px 10px;background:#F7F5F1;border-top:1px solid var(--linea)}
+.barra input{flex:1;border:1px solid var(--linea);border-radius:999px;padding:10px 14px;font:inherit;font-size:16px;background:#fff;min-width:0}
+.barra input:focus{outline:2px solid #B7DCC8;outline-offset:0}
+.barra button{width:42px;height:42px;border-radius:50%;border:0;background:var(--ok);color:#fff;display:grid;place-items:center;flex:0 0 auto}
+.escribiendo{align-self:flex-start;background:#fff;border-radius:10px;padding:8px 12px;display:none;gap:4px}
+.escribiendo.si{display:flex}
+.escribiendo i{width:6px;height:6px;border-radius:50%;background:#9A958C;animation:pt 1s infinite}
+.escribiendo i:nth-child(2){animation-delay:.15s}.escribiendo i:nth-child(3){animation-delay:.3s}
+@keyframes pt{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.pan{border-radius:22px;overflow:hidden;border:1px solid var(--linea);background:#fff;height:calc(100dvh - 200px);min-height:520px;display:flex;flex-direction:column}
+.pan .cab{border-radius:0}
+.pan iframe{flex:1;border:0;width:100%}
+.toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,20px);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1);z-index:9;max-width:92vw;text-align:center}
+.toast.si{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.pie{font-size:12px;color:var(--suave);text-align:center;padding:0 20px 16px}
+@media (max-width:1399px){.escena{grid-template-columns:repeat(3,minmax(0,1fr))}.pan{grid-column:1/-1;height:760px}}
+@media (max-width:899px){
+  .tabs{display:flex}
+  .escena{display:block;padding:10px 12px 12px}
+  .tel,.pan{display:none;height:calc(100dvh - 190px);min-height:440px}
+  .tel.vis,.pan.vis{display:flex}
+  .guia{padding:10px 12px 0}
+  .top{padding:12px}
+  .aviso{padding:8px 12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="/*LOGO*/" alt="">
+  <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
+  <div class="der"><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+</header>
+<div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El precio del cerdito chuko en San Pedro es el suyo; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
+<div class="guia" id="guia"></div>
+<nav class="tabs" role="tablist" id="tabs"></nav>
+<main class="escena" id="escena"></main>
+<p class="pie">Hecho por Clientia Tech</p>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/*BOT*/
+const { preparar, mezclarPrivado, fechasCupos, norm } = BOT.negocio;
+const { createEngine } = BOT.engine;
+const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
+const { createRepartos } = BOT.repartos;
+const { createStore } = BOT.store;
+const { createIA } = BOT.ia;
+
+const negocio = preparar(mezclarPrivado(NEGOCIO_JSON, PRIVADO));
+const TEL = { cliente: "+50495550101", kevin: "+50400000001", dueno: "+50400000003" };
+const QUIEN = Object.fromEntries(Object.entries(TEL).map(([k, v]) => [digits(v), k]));
+const CHATS = [
+  { k: "cliente", nombre: "Con Sabor a Pueblo", sub: "Así lo ve el cliente", tab: "Cliente", av: "logo" },
+  { k: "kevin", nombre: "Con Sabor a Pueblo · Entregas", sub: "Así lo ve Kevin, el repartidor", tab: "Kevin", av: "K" },
+  { k: "dueno", nombre: "Avisos de pedidos", sub: "WhatsApp del dueño y de la sucursal", tab: "Dueño", av: "D" },
+];
+const PASOS = [
+  ["Cliente", "Toque «Pedir a domicilio», escoja San Pedro Sula y escriba «2 cerdito chuko». También puede escribir con sus palabras."],
+  ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Toque «ENVÍO 60» para decir el precio."],
+  ["Cliente", "Al cliente le llega el precio del envío. Toque «SÍ»: recién ahí el pedido pasa a cocina."],
+  ["Panel", "En el panel, en Pedidos, toque «A cocina» y luego «Listo», como lo haría la cocina."],
+  ["Kevin", "A Kevin le llega «pase a recogerlo». Toque «SALGO» y después «ENTREGADO»: el cliente se entera de cada paso."],
+  ["Apartado", "Haga otro pedido para recoger: pide depósito. Toque «📷 Mandar comprobante» y, como dueño, «OK» para aprobarlo."],
+];
+
+// ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
+const ahora = () => new Date();
+const store = createStore(null, { now: () => Date.now() });
+const client = { messages: { create: async m => { recibir(QUIEN[digits(m.to)] || "dueno", m.body); return { sid: "SM" }; } } };
+const avisos = createNotifier({ client, from: "whatsapp:+10000000000", contentSid: "", sandbox: false, owner: TEL.dueno, negocio, log: () => {} });
+const track = p => p;
+const repartos = createRepartos({ negocio, store, avisos, now: ahora, log: () => {}, track });
+const motor = createEngine(negocio);
+const sesiones = new Map();
+const numero = pre => pre + "-" + (store.seq = store.seq + 1);
+const ocupados = (fecha, tanda, sucursalId) => store.pedidos.reduce((a, p) => a + (p.tipo === "pedido" && p.diaFecha === fecha && p.tanda === tanda && !["cancelado", "en_espera"].includes(p.estado) && (!negocio.cupos || !negocio.cupos.porSucursal || !sucursalId || p.sucursalId === sucursalId) ? p.cupos || 0 : 0), 0);
+const ultimoDe = tel => store.pedidos.findLast(p => p.tipo === "pedido" && digits(p.tel) === digits(tel) && !["cancelado", "entregado", "no_vino"].includes(p.estado)) || null;
+const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
+
+function guardar(base, tel) {
+  const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && (base.estado || "nuevo") === "nuevo";
+  const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: ahora().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo" });
+  if (cotiza) repartos.asignar(p.n, { por: "bot" }); else avisos.ficha(p);
+  refrescarPanel();
+  return p;
+}
+function confirmarPago(p, por) {
+  const q = store.updatePedido(p.n, { estado: "nuevo", t_nuevo: ahora().toISOString(), pagado: true, t_pagado: ahora().toISOString(), metodoPago: "manual", por });
+  avisos.pagado(q);
+  return q;
+}
+function conversar(tel, text) {
+  const sess = sesiones.get(tel) || { state: null };
+  if (sess.state) sess.state.seq = store.seq;
+  const r = motor.handle(sess.state, text, ahora(), { faltas: store.faltas(tel), ocupados, ultimo: ultimoDe(tel) });
+  if (r.state.lead) { store.seq = r.state.seq; guardar(r.state.lead, tel); delete r.state.lead; }
+  if (r.state.handoff) { guardar({ tipo: "persona", nombre: null, sucursal: r.state.handoff, motivo: r.state.handoffMotivo || "" }, tel); delete r.state.handoff; delete r.state.handoffMotivo; }
+  if (r.state.cancelar) { const p = store.getPedido(r.state.cancelar); if (p && p.estado === "por_pagar") store.updatePedido(p.n, { estado: "cancelado", por: "cliente" }); delete r.state.cancelar; refrescarPanel(); }
+  sess.state = r.state; sesiones.set(tel, sess);
+  return r.messages.filter(m => m.text);
+}
+// Claude through the demo server (it adds the system prompt, the tools and the key); the tools run here
+const ia = IA_URL ? createIA({ negocio, timeoutMs: 25000, client: { messages: { create: async (body, opts) => {
+  const r = await fetch(IA_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ negocio: "con-sabor-a-pueblo", messages: body.messages }), signal: opts && opts.signal });
+  if (!r.ok) throw Object.assign(new Error("demo " + r.status), { status: r.status });
+  return r.json();
+} } } }) : null;
+let iaViva = !!ia;
+if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).catch(() => {});   // wakes the server up
+async function conversarIA(tel, text) {
+  const sess = sesiones.get(tel) || { state: null };
+  try {
+    const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null });
+    sess.ia = r.history; sesiones.set(tel, sess);
+    if (r.pedido) guardar(r.pedido, tel);
+    if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
+    return [{ text: r.reply }];
+  } catch (e) {
+    if (e.pedido) guardar(e.pedido, tel);
+    if (e.status === 429 || e.status === 503) iaViva = false;
+    return null;
+  }
+}
+const esNegocio = tel => digits(tel) === digits(TEL.dueno);
+function aprobar(tel, text) {
+  const m = norm(text).match(/^(?:ok|aprobar|aprobado|aprobada|confirmar|confirmado|pago recibido|recibido)\s*(?:ped-?\s*)?(\d{3,})$/);
+  if (!m) return null;
+  const p = store.pedidos.findLast(x => x.n.replace(/\D/g, "").endsWith(m[1]));
+  if (!p) return `No encuentro el pedido ${m[1]}.`;
+  if (p.estado !== "por_pagar") return `${p.n} no está esperando pago.`;
+  const q = confirmarPago(p, "whatsapp:dueño");
+  return `✅ ${q.n} aprobado. Al cliente ya le llegó que su ${q.encargo || q.diaFecha ? "apartado" : "pedido"} quedó confirmado.`;
+}
+function pendientes() {
+  const ls = store.pedidos.filter(p => ["por_pagar", "por_envio", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
+  if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
+  return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
+}
+async function turno(tel, text, foto) {
+  const rr = repartos.mensaje(tel, text);
+  if (rr) return rr;
+  let reply;
+  if ((reply = repartos.respuestaCliente(tel, text))) return [{ text: reply }];
+  if (esNegocio(tel)) {
+    if (/^(pedidos|pendientes)$/i.test(text.trim())) return [{ text: pendientes() }];
+    if ((reply = aprobar(tel, text) || repartos.envioNegocio(text, "whatsapp:dueño"))) return [{ text: reply }];
+    return [{ text: "Desde el número del negocio puede escribir:\n*pedidos*: lo pendiente\n*OK 1001*: aprobar el depósito de un pedido\n*ENVÍO 60 1001*: poner el precio de un envío" }];
+  }
+  if (foto) {
+    const p = porPagar(tel);
+    if (p) {
+      store.updatePedido(p.n, { comprobante: true, t_comprobante: ahora().toISOString() });
+      avisos.comprobante(p);
+      const s = sesiones.get(tel); if (s && s.state && s.state.step === "pago") { s.state.step = "post"; s.state.pago = null; s.state.offer = null; }
+      return [{ text: `📩 Recibimos su comprobante del pedido *${p.n}*. Lo revisamos y, en cuanto se confirme, le avisamos por aquí.` }];
+    }
+    return [{ text: "Recibimos su foto. ¿En qué le ayudo?" }];
+  }
+  if (iaViva && (reply = await conversarIA(tel, text))) return reply;
+  return conversar(tel, text);
+}
+
+// ---- the owner panel API (what server.js answers), for the real panel in the frame ----
+const json = (body, status = 200) => ({ status, body });
+window.DEMO = { api: async (url, o) => {
+  const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
+  if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
+    cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
+    sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
+    repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: iaViva, usuario: "Dueño" });
+  if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: true, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "•••• 0000" }], eventos: [] });
+  let m;
+  if ((m = url.match(/^\/api\/pedidos\/([^/]+)\/estado$/)) && metodo === "POST") {
+    const n = decodeURIComponent(m[1]), estado = String(cuerpo.estado || ""), antes = store.getPedido(n);
+    if (!antes) return json({ error: "no existe" }, 404);
+    const estadoAntes = antes.estado, yaAvisado = antes.avisoListo;
+    if (antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido") confirmarPago(antes, "panel");
+    const p = store.updatePedido(n, { estado, ["t_" + estado]: ahora().toISOString(), por: "dueno@ejemplo.hn" });
+    const conRepartidor = repartos.activo && p.tipo === "pedido" && p.entrega === "domicilio";
+    if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) { store.updatePedido(n, { avisoListo: true }); if (conRepartidor) repartos.listo(p); else avisos.listo(p); }
+    if (conRepartidor && estado === "en_camino" && estadoAntes !== estado) repartos.enCamino(p);
+    if (conRepartidor && estado === "entregado" && estadoAntes !== estado && p.repartidor) repartos.entregado(p);
+    if (estado === "cancelado" && estadoAntes !== "cancelado" && p.tipo === "pedido") avisos.cancelado(p);
+    return json(store.getPedido(n));
+  }
+  if ((m = url.match(/^\/api\/pedidos\/([^/]+)\/repartidor$/)) && metodo === "POST") {
+    const p = store.getPedido(decodeURIComponent(m[1]));
+    if (!p) return json({ error: "no existe" }, 404);
+    const q = repartos.asignar(p.n, { excluir: p.repartidor ? [...(p.rechazos || []), p.repartidor.id] : [], por: "dueno@ejemplo.hn" });
+    return json(q || store.getPedido(p.n));
+  }
+  if (url.startsWith("/api/pedidos")) return json(store.pedidos.slice(-500).reverse());
+  return json({ error: "no existe" }, 404);
+} };
+
+// ---- the page ----
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hora = () => new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
+const ESTADO = { cliente: [], kevin: [], dueno: [] }, BOTONES = { cliente: [], kevin: [], dueno: [] }, SIN_LEER = { cliente: 0, kevin: 0, dueno: 0, panel: 0 };
+let activa = "cliente", paso = 0;
+
+function formato(t) {
+  return esc(t)
+    .replace(/https:\/\/www\.google\.com\/maps\/\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
+    .replace(/https:\/\/wa\.me\/\S+/g, '<a href="#" onclick="return false">💬 Escribirle al cliente</a>')
+    .replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/(^|\s)_([^_\n]+)_/g, "$1<i>$2</i>").replace(/\n/g, "<br>");
+}
+function armar() {
+  $("#escena").innerHTML = CHATS.map(c => `<section class="tel" data-k="${c.k}" aria-label="${esc(c.sub)}">
+    <div class="cab"><span class="av" style="background:${c.k === "kevin" ? "#0E6B45" : c.k === "dueno" ? "#1B1A17" : "#fff"}">${c.av === "logo" ? `<img src="/*LOGO*/" alt="">` : c.av}</span><div><b>${esc(c.nombre)}</b><small>${esc(c.sub)}</small></div></div>
+    <div class="msgs" id="m-${c.k}"><p class="vacio">${c.k === "cliente" ? "Escríbale al negocio como si fuera un cliente. Empiece con «Hola»." : c.k === "kevin" ? "Aquí le llegan a Kevin los envíos que le asigna el bot." : "Aquí le llegan al dueño y a la sucursal los pedidos y avisos."}</p><div class="escribiendo" id="e-${c.k}"><i></i><i></i><i></i></div></div>
+    <div class="chips" id="c-${c.k}"></div>
+    <form class="barra" data-k="${c.k}"><input autocomplete="off" enterkeyhint="send" placeholder="${c.k === "cliente" ? "Escriba como cliente" : c.k === "kevin" ? "Escriba como Kevin" : "Escriba como dueño"}" aria-label="Mensaje"><button aria-label="Enviar"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg></button></form>
+  </section>`).join("") + `<section class="pan" data-k="panel"><div class="cab"><span class="av" style="background:#0176D3">P</span><div><b>Panel del dueño</b><small>En la computadora, la tablet de la cocina o el celular</small></div></div><iframe id="panel" title="Panel del dueño"></iframe></section>`;
+  $("#panel").srcdoc = /*PANEL*/;
+  $("#tabs").innerHTML = [...CHATS.map(c => [c.k, c.tab]), ["panel", "Panel"]].map(([k, t]) => `<button class="tab" role="tab" data-k="${k}" aria-selected="${k === activa}">${t}<span class="n" id="n-${k}"></span></button>`).join("");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => ver(b.dataset.k));
+  document.querySelectorAll(".barra").forEach(f => f.onsubmit = e => { e.preventDefault(); const i = f.querySelector("input"); const t = i.value.trim(); if (!t) return; i.value = ""; mandar(f.dataset.k, t); });
+  CHATS.forEach(c => chips(c.k));
+  ver(activa);
+  guia();
+}
+function ver(k) {
+  activa = k; SIN_LEER[k] = 0;
+  document.querySelectorAll(".tel,.pan").forEach(s => s.classList.toggle("vis", s.dataset.k === k));
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
+  marcas();
+  if (k === "panel") refrescarPanel();
+}
+function marcas() { for (const k in SIN_LEER) { const n = $("#n-" + k); if (n) { n.textContent = SIN_LEER[k]; n.classList.toggle("si", SIN_LEER[k] > 0); } } }
+const movil = () => matchMedia("(max-width:899px)").matches;
+let tt;
+function toast(t, k) {
+  const el = $("#toast"); el.textContent = t; el.classList.add("si"); el.onclick = () => ver(k);
+  clearTimeout(tt); tt = setTimeout(() => el.classList.remove("si"), 2600);
+}
+function burbuja(k, de, texto) {
+  const box = $("#m-" + k), v = box.querySelector(".vacio"); if (v) v.remove();
+  const d = document.createElement("div"); d.className = "m " + de; d.innerHTML = `${formato(texto)}<span class="h">${hora()}</span>`;
+  box.insertBefore(d, $("#e-" + k)); box.scrollTop = box.scrollHeight;
+}
+// a message that the bot sends to a phone on its own (avisos)
+function recibir(k, texto) {
+  setTimeout(() => {
+    burbuja(k, "bot", texto);
+    if (k !== "cliente") BOTONES[k] = [];
+    chips(k);
+    if (movil() && k !== activa) { SIN_LEER[k]++; marcas(); toast(`Nuevo mensaje para ${CHATS.find(c => c.k === k).tab === "Dueño" ? "el dueño" : CHATS.find(c => c.k === k).tab}`, k); }
+    avanzar(); refrescarPanel();
+  }, 450);
+}
+async function mandar(k, texto, foto = false) {
+  burbuja(k, "yo", foto ? "📷 Foto del comprobante" : texto);
+  BOTONES[k] = []; chips(k);
+  $("#e-" + k).classList.add("si"); $("#m-" + k).scrollTop = 1e9;
+  let out;
+  try { out = await turno(TEL[k], foto ? "📷 foto" : texto, foto); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
+  await new Promise(r => setTimeout(r, 350));
+  $("#e-" + k).classList.remove("si");
+  for (const m of out) { burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
+  chips(k); avanzar(); refrescarPanel();
+}
+function chips(k) {
+  let ls = BOTONES[k].slice(0, 6);
+  const extra = [];
+  if (k === "kevin") {
+    const mios = repartos.enCalle(repartos.lista[0]);
+    if (mios.some(p => p.estado === "por_envio" && p.envio == null)) extra.push("ENVÍO 60");
+    if (mios.some(p => p.estado === "listo")) extra.push("SALGO");
+    if (mios.some(p => p.estado === "en_camino")) extra.push("ENTREGADO");
+    if (mios.some(p => ["por_envio", "nuevo", "cocina", "listo"].includes(p.estado))) extra.push("NO PUEDO");
+  }
+  if (k === "cliente") {
+    if (store.pedidos.some(p => p.estado === "por_envio" && p.envio != null && digits(p.tel) === digits(TEL.cliente))) ls = ["SÍ", "RECOGER", "CANCELAR"];
+    if (porPagar(TEL.cliente) && !porPagar(TEL.cliente).comprobante) extra.push("📷 Mandar comprobante");
+  }
+  if (k === "dueno") {
+    const p = store.pedidos.findLast(x => x.estado === "por_pagar" && x.comprobante);
+    if (p) extra.push("OK " + p.n.replace(/\D/g, ""));
+    extra.push("pedidos");
+  }
+  ls = [...new Set(ls.concat(extra))];
+  $("#c-" + k).innerHTML = ls.map(b => `<button class="chip${b.startsWith("📷") ? " foto" : ""}" type="button">${esc(b)}</button>`).join("");
+  $("#c-" + k).querySelectorAll(".chip").forEach(b => b.onclick = () => b.textContent.startsWith("📷") ? mandar(k, "", true) : mandar(k, b.textContent));
+}
+function refrescarPanel() {
+  for (const c of CHATS) chips(c.k);
+  try { const w = $("#panel").contentWindow; if (w && w.cargar) w.cargar(); } catch (e) {}
+}
+// the guide follows what has happened
+function avanzar() {
+  const ps = store.pedidos.filter(p => p.tipo === "pedido");
+  const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
+  const hechos = [!!dom, !!(dom && dom.envio != null), !!(dom && !["por_envio"].includes(dom.estado)), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado)), !!(dom && dom.estado === "entregado"), ps.some(p => p.pagado && p.metodoPago === "manual")];
+  const nuevo = hechos.findIndex(x => !x);
+  paso = nuevo < 0 ? PASOS.length : nuevo;
+  guia();
+}
+function guia() {
+  $("#guia").innerHTML = PASOS.map(([t, d], i) => `<div class="paso ${i < paso ? "ya" : i === paso ? "ahora" : ""}"><b>${i + 1}. ${t}${i < paso ? " ✓" : ""}</b>${esc(d)}</div>`).join("");
+  const a = $("#guia .ahora"); if (a) a.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+}
+$("#reiniciar").onclick = () => location.reload();
+armar();
+</script>
+</body>
+</html>
