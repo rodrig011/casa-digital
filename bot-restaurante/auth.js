@@ -162,7 +162,7 @@ function cookies(req) {
 }
 
 // ---- the login page (same look as the panel) ----
-function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaurante", color = "#C8102E", paso = null } = {}) {
+function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaurante", color = "#C8102E", logo = "", paso = null } = {}) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>Entrar · Panel ${esc(marca)}</title><meta name="theme-color" content="#F3F3F3">
@@ -171,7 +171,7 @@ function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaur
 @media (prefers-color-scheme:dark){:root{--bg:#1B1B1B;--band:#16325C;--card:#242424;--line:#3A3A3A;--line2:#4A4A4A;--tx:#F3F3F3;--tx2:#C9C9C9;--tx3:#A0A0A0;--brand:#1B96FF;--brand-d:#78B0FD;--red:#FE5C4C;--red-bg:#4A1410;--ok-bg:#0B2A4E;color-scheme:dark;}}
 *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:linear-gradient(var(--band) 0 220px,var(--bg) 220px);color:var(--tx);font:400 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;padding:16px;-webkit-font-smoothing:antialiased}
 main{width:min(400px,100%);min-width:0}
-.brand{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:16px;font-weight:700}.brand i{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;font-style:normal;font-size:16px;background:${esc(color)}}.brand small{display:block;font-weight:400;font-size:12px;color:var(--tx2)}
+.brand{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:16px;font-weight:700}.brand i{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;color:#fff;font-style:normal;font-size:16px;background:${esc(color)}}.brand img{width:44px;height:44px;border-radius:50%;flex:none}.brand small{display:block;font-weight:400;font-size:12px;color:var(--tx2)}
 form{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:0 2px 2px rgba(0,0,0,.1);padding:24px;display:grid;gap:14px}
 h1{margin:0;font-size:18px;font-weight:700}p{margin:0;color:var(--tx3);font-size:13px}
 label{display:grid;gap:4px;font-size:12px;color:var(--tx2)}
@@ -185,7 +185,7 @@ input.codigo{font-size:24px;letter-spacing:.4em;text-align:center;font-variant-n
 label.si{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2)}label.si input{flex:none;width:18px;height:18px;margin:0;accent-color:var(--brand)}
 .candado{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--tx3);font-size:12px;margin-top:10px}
 </style></head><body><main>
-<div class="brand"><i>${esc(String(marca).trim()[0] || "?").toUpperCase()}</i><div>${esc(marca)}<small>Panel del dueño · Casa Digital</small></div></div>
+<div class="brand">${logo ? `<img src="${esc(logo)}" alt="">` : `<i>${esc(String(marca).trim()[0] || "?").toUpperCase()}</i>`}<div>${esc(marca)}<small>Panel del dueño · Casa Digital</small></div></div>
 ${paso ? `<form method="post" action="/panel/codigo" autocomplete="off">
 <div><h1>Código de WhatsApp</h1><p>Le mandamos un código de 6 números al WhatsApp que termina en ${esc(paso.final)}. Vence en ${MIN_CODIGO} minutos.</p></div>
 ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}
@@ -209,8 +209,8 @@ ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<d
 // (the brand color can be dark red; it is only used for the button and the focus ring)
 // enviarCodigo(whatsapp, codigo) -> true if it went out; without it nobody gets the second step.
 // bitacora(evento, datos) writes down every login, failed try and logout.
-function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = null, marca, color, log = console.log, freno = createFreno(), enviarCodigo = null, bitacora = () => {} }) {
-  const pagina = o => paginaEntrar({ marca, color, ...o });
+function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = null, marca, color, logo = "", log = console.log, freno = createFreno(), enviarCodigo = null, bitacora = () => {} }) {
+  const pagina = o => paginaEntrar({ marca, color, logo, ...o });
   const ses = secret ? createSesiones(secret, HORAS, { file: archivoSesiones }) : null;
   const sPaso = secret ? createSello(secret, "paso") : null, sEquipo = secret ? createSello(secret, "equipo") : null;
   const codigos = new Map();          // pending second steps: id -> { hash of the code, wrong tries }

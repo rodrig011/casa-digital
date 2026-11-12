@@ -380,7 +380,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (meta) return meta.codigo(wa, c, texto);
     return !!(await avisos.enviar(waAddr(wa), texto, { titulo: `Código para entrar al panel: ${c}`, lineas: ["Vence en 5 minutos. No se lo dé a nadie."] }));
   } : null;
-  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, log, enviarCodigo: deps.enviarCodigo || enviarCodigo, bitacora: bitacora.anotar });
+  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, logo: negocio.logo ? "/panel/logo" : "", log, enviarCodigo: deps.enviarCodigo || enviarCodigo, bitacora: bitacora.anotar });
   const sinSesion = (req, res) => { if (panel.usuarioDe(req)) return false; res.status(401).json({ error: "sin sesión" }); return true; };
 
   app.get("/api/pedidos", (req, res) => {
@@ -403,9 +403,15 @@ function createApp(cfg = loadConfig(), deps = {}) {
     bitacora.anotar("respaldo", { correo: conToken ? "token" : panel.usuarioDe(req).correo, ip: req.ip });
     res.set("Content-Disposition", `attachment; filename="respaldo-${now().toISOString().slice(0, 10)}.json"`).json(crearRespaldo(cfg.dataDir, now()));
   });
+  // the business's logo (public: it is on the login page). Only an .svg or .png inside negocios/, served so it can't run anything
+  const logoArchivo = negocio.logo && /^negocios\/[\w-]+\.(svg|png)$/.test(negocio.logo) ? path.join(__dirname, negocio.logo) : null;
+  app.get("/panel/logo", (req, res) => {
+    if (!logoArchivo) return res.status(404).end();
+    res.set({ "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'", "X-Content-Type-Options": "nosniff", "Cache-Control": "public, max-age=86400" }).sendFile(logoArchivo);
+  });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
       sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });

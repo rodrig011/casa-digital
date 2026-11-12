@@ -32,7 +32,15 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .tab[aria-selected=true]{background:var(--tinta);color:#fff;border-color:var(--tinta)}
 .tab .n{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--marca);color:#fff;font-size:11px;line-height:18px;padding:0 5px;display:none}
 .tab .n.si{display:block}
-.escena{flex:1;display:grid;grid-template-columns:repeat(3,minmax(280px,330px)) minmax(440px,1fr);gap:14px;padding:14px 20px 20px;min-height:0;flex-shrink:0}
+.escena{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:14px 20px 20px;min-height:0;flex-shrink:0;max-width:1500px;width:100%;margin:0 auto}
+body.vpanel .escena{grid-template-columns:minmax(0,1fr) 340px;max-width:none}
+body.vpanel .tel:not([data-k=dueno]),body:not(.vpanel) .pan{display:none}
+body.vpanel .pan{order:-1}
+.vistas{display:flex;background:#EFEBE4;border-radius:999px;padding:3px;gap:2px}
+.vistas button{border:0;background:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--suave);position:relative;transition:background .15s,color .15s}
+.vistas button[aria-pressed=true]{background:#fff;color:var(--tinta);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.vistas .n{position:absolute;top:-5px;right:-3px;min-width:18px;height:18px;border-radius:9px;background:var(--marca);color:#fff;font-size:11px;line-height:18px;padding:0 5px;display:none}.vistas .n.si{display:block}
+.ia{font-size:12px;color:var(--suave);display:flex;align-items:center;gap:6px;white-space:nowrap}.ia i{width:8px;height:8px;border-radius:50%;background:#C9C3B8}.ia.on i{background:#1F9D55}
 .tel{display:flex;flex-direction:column;background:var(--chat);border-radius:22px;overflow:hidden;border:1px solid var(--linea);height:calc(100dvh - 200px);min-height:520px}
 .cab{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--linea)}
 .cab .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex:0 0 auto;overflow:hidden}
@@ -61,15 +69,17 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .escribiendo i{width:6px;height:6px;border-radius:50%;background:#9A958C;animation:pt 1s infinite}
 .escribiendo i:nth-child(2){animation-delay:.15s}.escribiendo i:nth-child(3){animation-delay:.3s}
 @keyframes pt{0%,60%,100%{opacity:.3}30%{opacity:1}}
-.pan{border-radius:22px;overflow:hidden;border:1px solid var(--linea);background:#fff;height:calc(100dvh - 200px);min-height:520px;display:flex;flex-direction:column}
+.pan{border-radius:14px;overflow:hidden;border:1px solid var(--linea);background:#fff;height:calc(100dvh - 190px);min-height:560px;display:flex;flex-direction:column}
 .pan .cab{border-radius:0}
 .pan iframe{flex:1;border:0;width:100%}
 .toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,20px);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1);z-index:9;max-width:92vw;text-align:center}
 .toast.si{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .pie{font-size:12px;color:var(--suave);text-align:center;padding:0 20px 16px}
-@media (max-width:1399px){.escena{grid-template-columns:repeat(3,minmax(0,1fr))}.pan{grid-column:1/-1;height:760px}}
 @media (max-width:899px){
   .tabs{display:flex}
+  .vistas,.ia{display:none}
+  body.vpanel .escena{display:block}
+  body.vpanel .tel.vis,body:not(.vpanel) .pan.vis{display:flex}
   .escena{display:block;padding:10px 12px 12px}
   .tel,.pan{display:none;height:calc(100dvh - 190px);min-height:440px}
   .tel.vis,.pan.vis{display:flex}
@@ -82,9 +92,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 </head>
 <body>
 <header class="top">
-  <img src="/*LOGO*/" alt="">
+  <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><div class="vistas" role="group" aria-label="Qué ver"><button type="button" data-v="tel" aria-pressed="true">WhatsApp</button><button type="button" data-v="panel" aria-pressed="false">Panel del dueño<span class="n" id="nv-panel"></span></button></div><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El precio del cerdito chuko en San Pedro es el suyo; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -94,6 +104,8 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <div class="toast" id="toast" role="status"></div>
 <script>
 /*BOT*/
+const LOGO = URL.createObjectURL(new Blob([/*LOGOSVG*/], { type: "image/svg+xml" }));
+document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
 const { preparar, mezclarPrivado, fechasCupos, norm } = BOT.negocio;
 const { createEngine } = BOT.engine;
 const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
@@ -113,7 +125,7 @@ const PASOS = [
   ["Cliente", "Toque «Pedir a domicilio», escoja San Pedro Sula y escriba «2 cerdito chuko». También puede escribir con sus palabras."],
   ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Toque «ENVÍO 60» para decir el precio."],
   ["Cliente", "Al cliente le llega el precio del envío. Toque «SÍ»: recién ahí el pedido pasa a cocina."],
-  ["Panel", "En el panel, en Pedidos, toque «A cocina» y luego «Listo», como lo haría la cocina."],
+  ["Panel", "Abra el «Panel del dueño» y entre: el código le llega al WhatsApp del dueño. En Pedidos, toque «A cocina» y luego «Listo»."],
   ["Kevin", "A Kevin le llega «pase a recogerlo». Toque «SALGO» y después «ENTREGADO»: el cliente se entera de cada paso."],
   ["Apartado", "Haga otro pedido para recoger: pide depósito. Toque «📷 Mandar comprobante» y, como dueño, «OK» para aprobarlo."],
 ];
@@ -161,18 +173,24 @@ const ia = IA_URL ? createIA({ negocio, timeoutMs: 25000, client: { messages: { 
   return r.json();
 } } } }) : null;
 let iaViva = !!ia;
-if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).catch(() => {});   // wakes the server up
+function pintarIA(t) {
+  const el = document.getElementById("ia"); if (!el) return;
+  el.classList.toggle("on", iaViva && t === "on");
+  el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : "Despertando la IA…";
+}
+if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => pintarIA("on"), () => pintarIA());   // wakes the server up
 async function conversarIA(tel, text) {
   const sess = sesiones.get(tel) || { state: null };
   try {
     const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null });
-    sess.ia = r.history; sesiones.set(tel, sess);
+    sess.ia = r.history; sesiones.set(tel, sess); pintarIA("on");
     if (r.pedido) guardar(r.pedido, tel);
     if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
     return [{ text: r.reply }];
   } catch (e) {
     if (e.pedido) guardar(e.pedido, tel);
     if (e.status === 429 || e.status === 503) iaViva = false;
+    pintarIA(iaViva ? "on" : "off");
     return null;
   }
 }
@@ -217,9 +235,27 @@ async function turno(tel, text, foto) {
 
 // ---- the owner panel API (what server.js answers), for the real panel in the frame ----
 const json = (body, status = 200) => ({ status, body });
-window.DEMO = { api: async (url, o) => {
+// the panel login, as in the real one (auth.js): email and password, then a 6-digit code to the owner's WhatsApp
+const ENTRAR = /*ENTRAR*/, CLAVE_DEMO = "Sabor-2026-demo", CORREO_DEMO = "dueno@consaborapueblo.demo";
+let codigo = null, intentos = 0;
+const pantalla = h => { $("#panel").srcdoc = h.replaceAll("LOGO_DEMO", LOGO); };
+function salir() { codigo = null; pantalla(ENTRAR.entrar); }
+function entrar(d) {
+  if ("codigo" in d) {
+    if (!codigo || Date.now() > codigo.vence) return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "El código venció. Entre otra vez y le mandamos otro."));
+    if (String(d.codigo).replace(/\D/g, "") !== codigo.c) { if (++intentos >= 5) { codigo = null; return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "Demasiados intentos. Entre otra vez.")); } return pantalla(ENTRAR.codigoError); }
+    codigo = null; intentos = 0; pantalla(PANEL_HTML); return;
+  }
+  if (String(d.correo).trim().toLowerCase() !== CORREO_DEMO || d.clave !== CLAVE_DEMO) return pantalla(ENTRAR.entrarError.replace("ERROR_DEMO", "Correo o contraseña incorrectos."));
+  const c = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+  codigo = { c, vence: Date.now() + 5 * 60e3 }; intentos = 0;
+  pantalla(ENTRAR.codigo);
+  recibir("dueno", `🔐 Su código para entrar al panel de ${negocio.nombre} es *${c}*. Vence en 5 minutos.\n\nNo se lo dé a nadie: nadie de ${negocio.nombre} ni de Casa Digital se lo va a pedir.`);
+}
+const PANEL_HTML = /*PANEL*/;
+window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o) => {
   const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
-  if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
+  if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
     repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: iaViva, usuario: "Dueño" });
@@ -263,12 +299,12 @@ function formato(t) {
 }
 function armar() {
   $("#escena").innerHTML = CHATS.map(c => `<section class="tel" data-k="${c.k}" aria-label="${esc(c.sub)}">
-    <div class="cab"><span class="av" style="background:${c.k === "kevin" ? "#0E6B45" : c.k === "dueno" ? "#1B1A17" : "#fff"}">${c.av === "logo" ? `<img src="/*LOGO*/" alt="">` : c.av}</span><div><b>${esc(c.nombre)}</b><small>${esc(c.sub)}</small></div></div>
+    <div class="cab"><span class="av" style="background:${c.k === "kevin" ? "#0E6B45" : c.k === "dueno" ? "#1B1A17" : "#fff"}">${c.av === "logo" ? `<img src="${LOGO}" alt="">` : c.av}</span><div><b>${esc(c.nombre)}</b><small>${esc(c.sub)}</small></div></div>
     <div class="msgs" id="m-${c.k}"><p class="vacio">${c.k === "cliente" ? "Escríbale al negocio como si fuera un cliente. Empiece con «Hola»." : c.k === "kevin" ? "Aquí le llegan a Kevin los envíos que le asigna el bot." : "Aquí le llegan al dueño y a la sucursal los pedidos y avisos."}</p><div class="escribiendo" id="e-${c.k}"><i></i><i></i><i></i></div></div>
     <div class="chips" id="c-${c.k}"></div>
     <form class="barra" data-k="${c.k}"><input autocomplete="off" enterkeyhint="send" placeholder="${c.k === "cliente" ? "Escriba como cliente" : c.k === "kevin" ? "Escriba como Kevin" : "Escriba como dueño"}" aria-label="Mensaje"><button aria-label="Enviar"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg></button></form>
   </section>`).join("") + `<section class="pan" data-k="panel"><div class="cab"><span class="av" style="background:#0176D3">P</span><div><b>Panel del dueño</b><small>En la computadora, la tablet de la cocina o el celular</small></div></div><iframe id="panel" title="Panel del dueño"></iframe></section>`;
-  $("#panel").srcdoc = /*PANEL*/;
+  salir();
   $("#tabs").innerHTML = [...CHATS.map(c => [c.k, c.tab]), ["panel", "Panel"]].map(([k, t]) => `<button class="tab" role="tab" data-k="${k}" aria-selected="${k === activa}">${t}<span class="n" id="n-${k}"></span></button>`).join("");
   document.querySelectorAll(".tab").forEach(b => b.onclick = () => ver(b.dataset.k));
   document.querySelectorAll(".barra").forEach(f => f.onsubmit = e => { e.preventDefault(); const i = f.querySelector("input"); const t = i.value.trim(); if (!t) return; i.value = ""; mandar(f.dataset.k, t); });
@@ -276,14 +312,21 @@ function armar() {
   ver(activa);
   guia();
 }
+function vista(panel) {
+  document.body.classList.toggle("vpanel", panel);
+  document.querySelectorAll(".vistas button").forEach(b => b.setAttribute("aria-pressed", (b.dataset.v === "panel") === panel));
+  if (panel) { SIN_LEER.panel = 0; marcas(); refrescarPanel(); }
+}
 function ver(k) {
+  if (!movil()) { vista(k === "panel"); if (k === "panel") return; }
   activa = k; SIN_LEER[k] = 0;
   document.querySelectorAll(".tel,.pan").forEach(s => s.classList.toggle("vis", s.dataset.k === k));
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
   marcas();
   if (k === "panel") refrescarPanel();
 }
-function marcas() { for (const k in SIN_LEER) { const n = $("#n-" + k); if (n) { n.textContent = SIN_LEER[k]; n.classList.toggle("si", SIN_LEER[k] > 0); } } }
+function marcas() { for (const k in SIN_LEER) for (const n of [$("#n-" + k), $("#nv-" + k)]) if (n) { n.textContent = SIN_LEER[k]; n.classList.toggle("si", SIN_LEER[k] > 0); } }
+const enPanel = () => document.body.classList.contains("vpanel");
 const movil = () => matchMedia("(max-width:899px)").matches;
 let tt;
 function toast(t, k) {
@@ -301,7 +344,7 @@ function recibir(k, texto) {
     burbuja(k, "bot", texto);
     if (k !== "cliente") BOTONES[k] = [];
     chips(k);
-    if (movil() && k !== activa) { SIN_LEER[k]++; marcas(); toast(`Nuevo mensaje para ${CHATS.find(c => c.k === k).tab === "Dueño" ? "el dueño" : CHATS.find(c => c.k === k).tab}`, k); }
+    if (movil() ? k !== activa : enPanel() && k !== "dueno") { SIN_LEER[k]++; marcas(); toast(`Nuevo mensaje para ${CHATS.find(c => c.k === k).tab === "Dueño" ? "el dueño" : CHATS.find(c => c.k === k).tab}`, k); }
     avanzar(); refrescarPanel();
   }, 450);
 }
@@ -349,7 +392,9 @@ function avanzar() {
   const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
   const hechos = [!!dom, !!(dom && dom.envio != null), !!(dom && !["por_envio"].includes(dom.estado)), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado)), !!(dom && dom.estado === "entregado"), ps.some(p => p.pagado && p.metodoPago === "manual")];
   const nuevo = hechos.findIndex(x => !x);
+  const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;
+  if (paso === 3 && antes !== 3 && !(movil() ? activa === "panel" : enPanel())) { SIN_LEER.panel++; marcas(); toast("El pedido ya está en el panel del dueño. Toque para verlo.", "panel"); }
   guia();
 }
 function guia() {
@@ -357,6 +402,8 @@ function guia() {
   const a = $("#guia .ahora"); if (a) a.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
 }
 $("#reiniciar").onclick = () => location.reload();
+pintarIA();
+document.querySelectorAll(".vistas button").forEach(b => b.onclick = () => b.dataset.v === "panel" ? ver("panel") : (vista(false), ver(activa === "panel" ? "cliente" : activa)));
 armar();
 </script>
 </body>

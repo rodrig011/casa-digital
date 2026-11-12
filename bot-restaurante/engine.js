@@ -275,6 +275,8 @@ function createEngine(negocio) {
 
       case "sucursal": {
         const b = N.sucursal(pick(text, N.sucursales.map(x => x.nombre)) || text);
+        if (!b && PROPIO && d.despues !== "persona" && d.despues !== "reserva" && quiereDomicilio(t)) { d.domicilio = true; say({ text: `${domicilioTexto()}\n\n¿De qué sucursal se lo mandamos?`, buttons: N.sucursales.map(x => x.nombre) }); break; }
+        if (!b && quiereMenu(t)) { say({ text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}\n\n¿En qué sucursal?`, buttons: N.sucursales.map(x => x.nombre) }); break; }
         if (!b) { say({ text: "¿Cuál de estas sucursales?", buttons: N.sucursales.map(x => x.nombre) }); break; }
         d.sucursal = SUC = b.id;
         if (d.despues === "persona") { handoff(); break; }

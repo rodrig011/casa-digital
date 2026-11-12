@@ -1152,6 +1152,12 @@ test("Con Sabor a Pueblo: menú por ciudad, tope de apartados por sábado, depó
     assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /Su apartado quedó confirmado para el \*sábado 17 de octubre\*/);
     assert.match(textoDe((await post(srv, "/whatsapp", { From: SPS, Body: "ok 1001" })).xml), /no está esperando pago/);
     assert.match(textoDe((await post(srv, "/whatsapp", { From: cli, Body: "ok 1001" })).xml), /Con Sabor a Pueblo|ayudo/i, "un cliente no puede aprobar");
+    // their logo: on the login page and in the panel, served so that it can't run code
+    const logo = await fetch(srv.base + "/panel/logo");
+    assert.equal(logo.status, 200); assert.match(logo.headers.get("content-type"), /svg/); assert.match(logo.headers.get("content-security-policy"), /default-src 'none'/);
+    assert.match(await (await fetch(srv.base + "/panel/entrar")).text(), /<img src="\/panel\/logo"/);
+    const neg = await (await fetch(srv.base + "/api/negocio", { headers: { Cookie: await entrar(srv) } })).json();
+    assert.equal(neg.logo, "/panel/logo");
   } finally { srv.srv.close(); }
 });
 

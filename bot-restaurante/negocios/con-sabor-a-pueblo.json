@@ -1,7 +1,8 @@
 {
   "_nota": "Con Sabor a Pueblo (Tegucigalpa y San Pedro Sula, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp el 11-nov-2026: en San Pedro solo se vende el cerdito chuko a L195; pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.; a domicilio se le paga al repartidor al recibir. POR CONFIRMAR antes de prender el bot: menú y precios de Tegucigalpa, la cuenta para depósitos, si el tope de 50 es por ciudad, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp de cada ciudad, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render.",
   "nombre": "Con Sabor a Pueblo",
-  "color": "#C8102E",
+  "color": "#FEBE29",
+  "logo": "negocios/con-sabor-a-pueblo-logo.svg",
   "sucursales": [
     { "id": "tegucigalpa", "nombre": "Tegucigalpa", "direccion": "Col. Palmira, dos cuadras abajo del edificio rojo, frente al edificio Italia", "telefono": "+504 3169-9031", "whatsapp": "", "horario": "Sábados, 10:00 a. m. a 4:00 p. m.", "mapa": "" },
     { "id": "sps", "nombre": "San Pedro Sula", "direccion": "Bazar del Sábado, Expocentro", "telefono": "+504 3169-9031", "whatsapp": "", "horario": "Sábados, 10:00 a. m. a 6:00 p. m.", "mapa": "" }
