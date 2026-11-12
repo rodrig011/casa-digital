@@ -122,7 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 /*BOT*/
 const LOGO = URL.createObjectURL(new Blob([/*LOGOSVG*/], { type: "image/svg+xml" }));
 document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
-const { preparar, mezclarPrivado, fechasCupos, norm, aplicarMenu, menuDesdePanel } = BOT.negocio;
+const { preparar, mezclarPrivado, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa } = BOT.negocio;
 const { createEngine } = BOT.engine;
 const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
 const { createRepartos, prepararRepartidores, idsRepartidores } = BOT.repartos;
@@ -251,6 +251,8 @@ async function turno(tel, text, foto, ubic = null) {
     if ((reply = aprobar(tel, text) || repartos.envioNegocio(text, "whatsapp:dueño"))) return [{ text: reply }];
     return [{ text: "Desde el número del negocio puede escribir:\n*pedidos*: lo pendiente\n*OK 1001*: aprobar el depósito de un pedido\n*ENVÍO 60 1001*: poner el precio de un envío" }];
   }
+  const pausa = textoPausa(negocio);
+  if (pausa) return [{ text: pausa }];
   if (foto) {
     const p = porPagar(tel);
     if (p) {
@@ -288,9 +290,9 @@ const cartaPanel = () => negocio.menu.flatMap(c => (c.items || []).map(it => ({ 
 window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o) => {
   const metodo = (o.method || "GET").toUpperCase(), cuerpo = o.body ? JSON.parse(o.body) : {};
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
-    cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
+    cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, porSucursal: negocio.cupos.porSucursal, cierre: negocio.cupos.cierre, topes: negocio.cupos.topes, cerrados: negocio.cupos.cerrados, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(),
-    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
+    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, ajustes: ajustesDe(negocio), usuario: "Dueño" });
   if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: false, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "" }], eventos: [] });
   let m;
   if (url.startsWith("/api/menu") && metodo === "POST") {
@@ -298,6 +300,13 @@ window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o
     catch (e) { return json({ error: e.message.replace(/^Revise el archivo del negocio: /, "") }, 400); }
     refrescarPanel();
     return json({ menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel() });
+  }
+  if (url.startsWith("/api/ajustes") && metodo === "POST") {
+    let ajustes;
+    try { ajustes = aplicarAjustes(negocio, cuerpo); }
+    catch (e) { return json({ error: e.message.replace(/^Revise el archivo del negocio: /, "") }, 400); }
+    refrescarPanel();
+    return json({ ajustes });
   }
   if (url.startsWith("/api/repartidores") && metodo === "POST") {
     const rs = cuerpo.repartidores;

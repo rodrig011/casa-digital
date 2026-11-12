@@ -1390,3 +1390,57 @@ test("demo de un cliente: /demo/claude arma el sistema y las herramientas del ne
     assert.equal(v["con-sabor-a-pueblo"].hoy, 2); assert.equal(v["con-sabor-a-pueblo"].total, 2); assert.ok(v["con-sabor-a-pueblo"].ultima);
   } finally { ctx.srv.close(); }
 });
+
+test("panel: Configuración cambia el máximo de apartados (general y por ciudad), los días, las fechas cerradas, los pagos y pausa los pedidos; queda guardado", async () => {
+  const { mezclarPrivado, fechasCupos, topeDe, aplicarAjustes } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const negocio = () => preparar(mezclarPrivado(base, { cobro: { transferencia: "Banco de prueba (ejemplo)" } }));
+  // reglas, sin servidor
+  const N = negocio();
+  assert.throws(() => aplicarAjustes(N, { cupos: { ...N.cupos, dias: [] } }), /al menos un día/);
+  assert.throws(() => aplicarAjustes(N, { cupos: { ...N.cupos, dias: ["sabado"], porTanda: 0 } }), /máximo de apartados/);
+  assert.throws(() => aplicarAjustes(N, { cobro: { anticipo: 0 } }), /1 a 100/);
+  assert.equal(N.cupos.porTanda, 50, "un error no cambia nada");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  let ctx = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: negocio() });
+  const guardar = (cookie, cuerpo, extra = {}) => fetch(ctx.base + "/api/ajustes", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie, ...extra }, body: JSON.stringify(cuerpo) });
+  try {
+    assert.equal((await guardar("", {})).status, 401, "sin sesión no se puede");
+    let cookie = await entrar(ctx);
+    assert.equal((await guardar(cookie, {}, { Origin: "https://otro.sitio" })).status, 403);
+    let neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    const a = neg.ajustes;
+    assert.equal(a.cupos.porTanda, 50); assert.deepEqual(a.cupos.dias, ["sabado"]); assert.equal(a.cupos.cierre, "13:00"); assert.equal(a.pausa.activo, false);
+    const primero = fechasCupos(ctx.app.locals.negocio || negocio(), NOW)[0];
+    let r = await guardar(cookie, { ...a, cupos: { ...a.cupos, porTanda: 40, topes: { sps: 25 }, cerrados: [primero ? primero.fecha : "2026-12-26"], cierre: "12:30" }, cobro: { ...a.cobro, anticipo: 50 },
+      sucursales: a.sucursales.map(s => s.id === "sps" ? { ...s, horario: "Sábados, 9:00 a. m. a 5:00 p. m." } : s) });
+    assert.equal(r.status, 200);
+    const d = (await r.json()).ajustes;
+    assert.equal(d.cupos.porTanda, 40); assert.deepEqual(d.cupos.topes, { sps: 25 }); assert.equal(d.cupos.cierre, "12:30"); assert.equal(d.cobro.anticipo, 50);
+    assert.equal(d.cobro.transferencia, "Banco de prueba (ejemplo)", "la cuenta del banco se conserva");
+    assert.equal((await guardar(cookie, { cupos: { ...d.cupos, cierre: "25:00" } })).status, 400);
+    // the bot uses it right away: Tegucigalpa 40, San Pedro 25, the closed Saturday is not offered
+    neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(neg.cupos.topes, { sps: 25 }); assert.equal(neg.cupos.porTanda, 40);
+    if (primero) assert.ok(!neg.cupos.dias.some(x => x.fecha === primero.fecha), "la fecha cerrada no sale");
+    // pause: customers get the message, nothing is taken
+    r = await guardar(cookie, { pausa: { activo: true, mensaje: "Hoy no abrimos por lluvia. ¡Nos vemos el otro sábado!" } });
+    assert.equal(r.status, 200);
+    const cli = "whatsapp:+50495550001";
+    assert.match(textoDe((await post(ctx, "/whatsapp", { From: cli, Body: "quiero 2 cerditos" })).xml), /no abrimos por lluvia/);
+    await ctx.app.locals.idle();
+    assert.equal((await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json()).filter(p => p.tipo === "pedido").length, 0);
+    // a restart keeps the panel's settings
+    await new Promise(ok => ctx.srv.close(ok));
+    ctx = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: negocio() });
+    cookie = await entrar(ctx);
+    neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.equal(neg.ajustes.cupos.porTanda, 40); assert.equal(neg.ajustes.pausa.activo, true);
+    assert.equal(neg.ajustes.sucursales.find(s => s.id === "sps").horario, "Sábados, 9:00 a. m. a 5:00 p. m.");
+    await guardar(cookie, { pausa: { activo: false, mensaje: "" } });
+    assert.doesNotMatch(textoDe((await post(ctx, "/whatsapp", { From: cli, Body: "hola" })).xml), /lluvia/);
+    await ctx.app.locals.idle();
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+  const T = { porTanda: 40, porSucursal: true, topes: { sps: 25 } };
+  assert.equal(topeDe(T, "sps"), 25); assert.equal(topeDe(T, "tegucigalpa"), 40); assert.equal(topeDe({ ...T, porSucursal: false }, "sps"), 40);
+});

@@ -5,7 +5,7 @@
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -101,7 +101,7 @@ function tools(N) {
 }
 
 // free cupos in one batch: ctx.ocupados(fecha, tanda) counts the orders already saved (server.js)
-const libre = (N, ctx, fecha, tanda, suc) => N.cupos.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda, suc)) || 0);
+const libre = (N, ctx, fecha, tanda, suc) => topeDe(N.cupos, suc) - ((ctx.ocupados && ctx.ocupados(fecha, tanda, suc)) || 0);
 function ejecutar(N, name, input, ctx) {
   const b = id => N.sucursales.find(s => s.id === id) || N.sucursales[0];
   switch (name) {

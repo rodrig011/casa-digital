@@ -24,7 +24,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -111,6 +111,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
   if (archivoMenu && fs.existsSync(archivoMenu)) {
     try { aplicarMenu(negocio, leerJSON(archivoMenu, null, cifra)); }
     catch (e) { console.log(`Aviso: no se pudo usar el menú guardado desde el panel (${e.message}); uso el del archivo.`); }
+  }
+  // the settings the owner changed in the panel (apartados, pause, payments, hours) win over the file's
+  const archivoAjustes = cfg.dataDir ? path.join(cfg.dataDir, "ajustes.json") : null;
+  if (archivoAjustes && fs.existsSync(archivoAjustes)) {
+    try { aplicarAjustes(negocio, leerJSON(archivoAjustes, null, cifra)); }
+    catch (e) { console.log(`Aviso: no se pudo usar la configuración guardada desde el panel (${e.message}); uso la del archivo.`); }
   }
   const archivoRepartidores = cfg.dataDir ? path.join(cfg.dataDir, "repartidores.json") : null;
   if (archivoRepartidores && fs.existsSync(archivoRepartidores)) {
@@ -343,6 +349,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
       return [{ text: "Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí." }];
     }
     if (esNegocio(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
+    // the owner paused WhatsApp orders from the panel: customers get his message, nothing is taken
+    const pausa = !esNegocio(from) && textoPausa(negocio);
+    if (pausa) return [{ text: pausa }];
     if (esNegocio(from) && (reply = aprobar(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
@@ -434,8 +443,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
-      cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
-      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+      cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, porSucursal: negocio.cupos.porSucursal, cierre: negocio.cupos.cierre, topes: negocio.cupos.topes, cerrados: negocio.cupos.cerrados, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, ajustes: ajustesDe(negocio), usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -497,6 +506,21 @@ function createApp(cfg = loadConfig(), deps = {}) {
     bitacora.anotar("menu", { correo, como: `${negocio.items.length} ${negocio.items.length === 1 ? "producto disponible" : "productos disponibles"}`, ip: req.ip });
     log(`[panel] menú: ${negocio.items.map(i => `${i.nombre} ${negocio.L(i.precio)}`).join(", ")} (${correo})`);
     res.json({ menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel() });
+  });
+
+  // the owner changes the business settings from the panel (Configuración) and taps "Guardar"
+  app.post("/api/ajustes", express.json({ limit: "20kb" }), (req, res) => {
+    if (sinSesion(req, res)) return;
+    const origen = req.get("Origin");
+    if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
+    let ajustes;
+    try { ajustes = aplicarAjustes(negocio, req.body || {}); }
+    catch (e) { return res.status(400).json({ error: e.message.replace(/^Revise el archivo del negocio: /, "") }); }
+    if (archivoAjustes) escribirJSON(archivoAjustes, ajustes, cifra, 1);
+    const correo = panel.usuarioDe(req).correo;
+    bitacora.anotar("ajustes", { correo, como: ajustes.pausa.activo ? "pedidos en pausa" : "pedidos abiertos", ip: req.ip });
+    log(`[panel] configuración: ${ajustes.pausa.activo ? "PAUSA" : "abierto"}${ajustes.cupos ? `, máximo ${ajustes.cupos.porTanda} por tanda` : ""} (${correo})`);
+    res.json({ ajustes });
   });
 
   // the owner adds, edits, deactivates or removes his drivers from the panel and taps "Guardar y aplicar"

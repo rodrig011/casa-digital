@@ -13,7 +13,7 @@
 // solo ofrece tandas con cupo (ctx.ocupados(fecha, tanda) = cupos ya apartados, server.js los cuenta) y, si está lleno,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe } = require("./negocio");
 const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
@@ -172,7 +172,7 @@ function createEngine(negocio) {
       handoff();
     };
     // cupos: day and batch
-    const libre = (fecha, tanda) => CUP.porTanda - ((ctx.ocupados && ctx.ocupados(fecha, tanda, d.sucursal)) || 0);
+    const libre = (fecha, tanda) => topeDe(CUP, d.sucursal) - ((ctx.ocupados && ctx.ocupados(fecha, tanda, d.sucursal)) || 0);
     const unaTanda = CUP && CUP.tandas.length === 1;
     const tandasCon = fecha => CUP.tandas.filter(x => libre(fecha, x) >= d.cupos);
     const cupTxt = n => `${n} ${n === 1 ? "cupo" : "cupos"}`;
