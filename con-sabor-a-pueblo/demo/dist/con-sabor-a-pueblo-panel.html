@@ -54,8 +54,9 @@ function mostrar(s) {
 function sinDemo() { conectado = false; marco.hidden = true; espera.hidden = false; }
 window.DEMO = {
   api: async (url, o) => { try { return await pedir({ tipo: "api", url, o: { method: o.method, body: o.body } }); } catch (e) { sinDemo(); throw e; } },
-  entrar: d => pedir({ tipo: "entrar", d }).then(mostrar, sinDemo),
-  salir: () => pedir({ tipo: "salir" }).then(mostrar, sinDemo),
+  // the demo login is checked here (email and password, no WhatsApp code), so it never depends on the other tab's version
+  entrar: d => mostrar(String(d.correo || "").trim().toLowerCase() === "dueno@consaborapueblo.demo" && d.clave === "Sabor-2026-demo" ? { k: "panel" } : { k: "entrarError", error: "Correo o contraseña incorrectos." }),
+  salir: () => mostrar({ k: "entrar" }),
 };
 async function conectar() {
   if (conectado) return;

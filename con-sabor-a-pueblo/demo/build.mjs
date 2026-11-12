@@ -58,5 +58,8 @@ const panelPag = leer(aqui, "panel-src.html")
   .replace("/*PANEL*/", () => JSON.stringify(panel).replace(/<\/script>/gi, "<\\/script>"))
   .replace("/*ENTRAR*/", () => JSON.stringify(ENTRAR).replace(/<\/script>/gi, "<\\/script>"));
 writeFileSync(join(aqui, "dist", "con-sabor-a-pueblo-panel.html"), panelPag);
+// the demo links to the panel with a version, so a phone never opens an old cached copy
+const ver = (await import("node:crypto")).createHash("sha256").update(panelPag).digest("hex").slice(0, 8);
+writeFileSync(join(aqui, "dist", "con-sabor-a-pueblo.html"), html.replaceAll("con-sabor-a-pueblo-panel.html", "con-sabor-a-pueblo-panel.html?v=" + ver));
 console.log("dist/con-sabor-a-pueblo-panel.html", Math.round(panelPag.length / 1024) + " KB");
 console.log("dist/con-sabor-a-pueblo.html", Math.round(html.length / 1024) + " KB", IA_URL ? "con IA: " + IA_URL : "sin IA (menú de opciones)");
