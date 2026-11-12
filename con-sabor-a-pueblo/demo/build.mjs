@@ -36,7 +36,7 @@ const FORM = `<script>document.addEventListener("click",e=>{if(e.target.closest(
 addEventListener("DOMContentLoaded",()=>{const c=document.querySelector("input[name=clave]");if(c)c.value="Sabor-2026-demo"})</script>`;
 const N = require(join(bot, "negocio.js")).cargarNegocio(D.archivo, D.privado);
 const pag = o => paginaEntrar({ marca: N.nombre, color: N.color, logo: "LOGO_DEMO", ...o }).replace("</head>", FORM + "</head>");
-const demoAviso = "Demo: el correo y la contraseña ya están puestos. Toque Entrar y el código le llega al WhatsApp del dueño, aquí al lado.";
+const demoAviso = "Demo: el correo y la contraseña ya están puestos. Toque Entrar.";
 const ENTRAR = {
   entrar: pag({ correo: "dueno@consaborapueblo.demo", aviso: demoAviso }),
   entrarError: pag({ correo: "dueno@consaborapueblo.demo", error: "ERROR_DEMO" }),
