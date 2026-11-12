@@ -36,3 +36,48 @@ services:
         value: claude-haiku-5-5
       - key: BOT_IA                  # sin Twilio no hay WhatsApp en este servicio
         value: "off"
+
+  # Prueba real del bot de Con Sabor a Pueblo por WhatsApp (número de prueba gratis de Meta, nunca el del negocio).
+  # Gratis y sin disco: se duerme sin mensajes y los pedidos se borran al reiniciar. Para el cliente de verdad
+  # se pasa al plan pagado con disco (bot-restaurante/render.yaml).
+  - type: web
+    name: con-sabor-bot-prueba
+    runtime: node
+    region: virginia
+    plan: free
+    rootDir: bot-restaurante
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: America/Tegucigalpa
+      - key: DATA_DIR
+        value: ""
+      - key: NEGOCIO
+        value: negocios/con-sabor-a-pueblo.json
+      - key: META_PHONE_ID         # Meta > WhatsApp > Configuración de la API > Identificador del número de teléfono
+        sync: false
+      - key: META_TOKEN            # el token de esa misma pantalla (el temporal dura 24 h)
+        sync: false
+      - key: META_APP_SECRET       # Meta > Configuración de la app > Básica > Clave secreta de la app
+        sync: false
+      - key: META_VERIFY_TOKEN     # se copia en Meta > WhatsApp > Configuración > Webhook
+        generateValue: true
+      - key: OWNER_WHATSAPP        # el celular de Rodrigo haciendo de dueño (nunca el del negocio)
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: BOT_IA
+        value: "on"
+      - key: PANEL_SECRET
+        generateValue: true
+      - key: DATA_KEY
+        generateValue: true
+      - key: PANEL_USUARIOS        # opcional, para entrar al panel: npm run usuario -- linea ...
+        sync: false
