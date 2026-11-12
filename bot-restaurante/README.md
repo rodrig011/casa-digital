@@ -210,3 +210,11 @@ En `cupos`: `"porPedido": true` (cada pedido aparta 1 lugar: tope de apartados),
 - Inventario y aviso automático a proveedores (está en los paneles de demostración, falta conectarlo aquí).
 - Nunca se ha probado con WhatsApp real (Meta o Twilio) ni con una clave real de Claude. Las pruebas de `npm test` simulan los dos. La prueba real se hace con el número de prueba de Meta, nunca con el número de un negocio.
 - El respaldo diario no es automático todavía: hay que correr `respaldo.js bajar` (o programarlo en una computadora).
+
+## 11. Ubicación en vivo, pago antes del envío y proveedores
+
+- **Precio del envío**: el repartidor contesta solo el número ("120", "son 120", "L 120"). "ENVÍO 120" también sirve.
+- **Pago por transferencia también a domicilio** (`cobro.domicilio: true`): primero el repartidor dice el envío, el cliente lo acepta y le llegan los datos para pagar la comida. Con el comprobante aprobado ("OK 1001" o "Pago recibido" en el panel) el pedido entra a cocina. El envío se le paga al repartidor al recibir.
+- **Ubicación en vivo** (`ubicacion.js`, necesita `PUBLIC_URL`): con SALGO, el repartidor recibe un link `/r/<código>` para compartir su ubicación con la página abierta, y el cliente recibe `/seguir/<código>` con el mapa. Son códigos al azar, distintos para cada uno. La ubicación solo vive en la memoria y deja de funcionar al entregar.
+- **Proveedores** (en `NEGOCIO_PRIVADO`, porque llevan teléfonos): `"proveedores": [{ "id", "nombre", "producto", "whatsapp", "sucursal", "nota" }]`. El panel muestra lo que ya está pedido para los próximos días y arma el mensaje de WhatsApp para cada proveedor.
+- **Panel**: tiene vista de Repartidores (equipo, quién está libre, envíos de hoy) y Pedidos en tablero o en lista con buscador.

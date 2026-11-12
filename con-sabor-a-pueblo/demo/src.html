@@ -87,6 +87,20 @@ body.vpanel .pan{order:-1}
   .top{padding:12px}
   .aviso{padding:8px 12px}
 }
+.velo{position:fixed;inset:0;background:rgba(27,26,23,.45);display:none;place-items:center;z-index:20;padding:16px}
+.velo.si{display:grid}
+.seg-card{width:min(420px,100%);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.seg-card .cab{border-bottom:1px solid var(--linea)}
+.seg-card .cab button{margin-left:auto;border:0;background:#F1EEE8;border-radius:999px;width:32px;height:32px;font-size:18px;line-height:1}
+.seg-est{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13.5px;font-weight:600}
+.seg-est i{width:9px;height:9px;border-radius:50%;background:#1F9D55;box-shadow:0 0 0 4px rgba(31,157,85,.18);flex:none}
+.seg-est.fin i{background:#9A958C;box-shadow:none}
+.mapa{position:relative;height:300px;overflow:hidden;background:#E9E5DC}
+.mapa img{position:absolute;width:256px;height:256px;user-select:none;pointer-events:none}
+.mapa svg{position:absolute;inset:0;width:100%;height:100%}
+.moto{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;border:3px solid #0E6B45;display:grid;place-items:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:left 1s linear,top 1s linear}
+.seg-pie{font-size:11.5px;color:var(--suave);padding:8px 14px 12px}
+.seg-pie a{color:inherit}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -102,6 +116,12 @@ body.vpanel .pan{order:-1}
 <main class="escena" id="escena"></main>
 <p class="pie">Hecho por Clientia Tech</p>
 <div class="toast" id="toast" role="status"></div>
+<div class="velo" id="velo" role="dialog" aria-modal="true" aria-label="Seguimiento del pedido"><div class="seg-card">
+  <div class="cab"><span class="av"><img data-logo alt=""></span><div><b id="seg-t">Su pedido</b><small>Así lo ve el cliente al tocar el link</small></div><button type="button" id="seg-x" aria-label="Cerrar">×</button></div>
+  <div class="seg-est" id="seg-e"><i></i><span></span></div>
+  <div class="mapa" id="seg-m"></div>
+  <p class="seg-pie">Demo: ruta de ejemplo. En el sistema real se ve el GPS del celular del repartidor mientras comparte su ubicación. Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></p>
+</div></div>
 <script>
 /*BOT*/
 const LOGO = URL.createObjectURL(new Blob([/*LOGOSVG*/], { type: "image/svg+xml" }));
@@ -122,12 +142,12 @@ const CHATS = [
   { k: "dueno", nombre: "Avisos de pedidos", sub: "WhatsApp del dueño y de la sucursal", tab: "Dueño", av: "D" },
 ];
 const PASOS = [
-  ["Cliente", "Toque «Pedir a domicilio», escoja San Pedro Sula y escriba «2 cerdito chuko». También puede escribir con sus palabras."],
-  ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Toque «ENVÍO 60» para decir el precio."],
-  ["Cliente", "Al cliente le llega el precio del envío. Toque «SÍ»: recién ahí el pedido pasa a cocina."],
-  ["Panel", "Abra el «Panel del dueño» y entre: el código le llega al WhatsApp del dueño. En Pedidos, toque «A cocina» y luego «Listo»."],
-  ["Kevin", "A Kevin le llega «pase a recogerlo». Toque «SALGO» y después «ENTREGADO»: el cliente se entera de cada paso."],
-  ["Apartado", "Haga otro pedido para recoger: pide depósito. Toque «📷 Mandar comprobante» y, como dueño, «OK» para aprobarlo."],
+  ["Cliente", "Escriba como cliente, por ejemplo «quiero 2 cerditos a domicilio en San Pedro». O toque «Pedir a domicilio»."],
+  ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Escriba el precio, solo el número: «60»."],
+  ["Cliente", "Al cliente le llega el envío. Toque «SÍ»: le llegan los datos para pagar la comida por transferencia."],
+  ["Pago", "Toque «📷 Mandar comprobante». Al dueño le llega y lo aprueba con «OK» (o en el panel, «Pago recibido»): entra a cocina."],
+  ["Panel", "Abra el «Panel del dueño» y entre con el código que le llega al dueño. En Pedidos: «A cocina» y «Listo»."],
+  ["En camino", "Kevin toca «SALGO». Al cliente le llega el link para ver a Kevin en el mapa, en vivo. Luego «ENTREGADO»."],
 ];
 
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
@@ -136,7 +156,9 @@ const store = createStore(null, { now: () => Date.now() });
 const client = { messages: { create: async m => { recibir(QUIEN[digits(m.to)] || "dueno", m.body); return { sid: "SM" }; } } };
 const avisos = createNotifier({ client, from: "whatsapp:+10000000000", contentSid: "", sandbox: false, owner: TEL.dueno, negocio, log: () => {} });
 const track = p => p;
-const repartos = createRepartos({ negocio, store, avisos, now: ahora, log: () => {}, track });
+// live location: the real server gives the driver and the customer a link each (ubicacion.js); here they open the map on this page
+const ubicacion = { preparar: p => store.updatePedido(p.n, { seguimiento: { rep: "r" + p.n, cli: "c" + p.n } }), links: p => p.seguimiento ? { rep: "https://seguir.demo/r/" + p.n, cli: "https://seguir.demo/seguir/" + p.n } : null, cerrar() {} };
+const repartos = createRepartos({ negocio, store, avisos, now: ahora, log: () => {}, track, ubicacion });
 const motor = createEngine(negocio);
 const sesiones = new Map();
 const numero = pre => pre + "-" + (store.seq = store.seq + 1);
@@ -145,8 +167,8 @@ const ultimoDe = tel => store.pedidos.findLast(p => p.tipo === "pedido" && digit
 const porPagar = tel => store.pedidos.findLast(p => p.estado === "por_pagar" && digits(p.tel) === digits(tel)) || null;
 
 function guardar(base, tel) {
-  const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && (base.estado || "nuevo") === "nuevo";
-  const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: ahora().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo" });
+  const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && ["nuevo", "por_pagar"].includes(base.estado || "nuevo");
+  const p = store.addPedido({ ...base, ...(cotiza && base.estado === "por_pagar" ? { pagaAntes: true } : {}), n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: ahora().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo" });
   if (cotiza) repartos.asignar(p.n, { por: "bot" }); else avisos.ficha(p);
   refrescarPanel();
   return p;
@@ -258,7 +280,7 @@ window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
-    repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: iaViva, usuario: "Dueño" });
+    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel }) => ({ id, nombre, sucursal, tel })), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
   if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: true, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "•••• 0000" }], eventos: [] });
   let m;
   if ((m = url.match(/^\/api\/pedidos\/([^/]+)\/estado$/)) && metodo === "POST") {
@@ -294,6 +316,8 @@ let activa = "cliente", paso = 0;
 function formato(t) {
   return esc(t)
     .replace(/https:\/\/www\.google\.com\/maps\/\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
+    .replace(/📡[^\n]*?https:\/\/seguir\.demo\/r\/(\S+)/g, '<a href="#" onclick="compartir(this);return false">📡 Compartir mi ubicación con el cliente</a>')
+    .replace(/📍 Vea dónde va[^\n]*?https:\/\/seguir\.demo\/seguir\/(\S+)/g, '<a href="#" onclick="seguir(\'$1\');return false">📍 Ver dónde va, en vivo</a>')
     .replace(/https:\/\/wa\.me\/\S+/g, '<a href="#" onclick="return false">💬 Escribirle al cliente</a>')
     .replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/(^|\s)_([^_\n]+)_/g, "$1<i>$2</i>").replace(/\n/g, "<br>");
 }
@@ -364,7 +388,7 @@ function chips(k) {
   const extra = [];
   if (k === "kevin") {
     const mios = repartos.enCalle(repartos.lista[0]);
-    if (mios.some(p => p.estado === "por_envio" && p.envio == null)) extra.push("ENVÍO 60");
+    if (mios.some(p => p.estado === "por_envio" && p.envio == null)) extra.push("60");
     if (mios.some(p => p.estado === "listo")) extra.push("SALGO");
     if (mios.some(p => p.estado === "en_camino")) extra.push("ENTREGADO");
     if (mios.some(p => ["por_envio", "nuevo", "cocina", "listo"].includes(p.estado))) extra.push("NO PUEDO");
@@ -390,7 +414,7 @@ function refrescarPanel() {
 function avanzar() {
   const ps = store.pedidos.filter(p => p.tipo === "pedido");
   const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
-  const hechos = [!!dom, !!(dom && dom.envio != null), !!(dom && !["por_envio"].includes(dom.estado)), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado)), !!(dom && dom.estado === "entregado"), ps.some(p => p.pagado && p.metodoPago === "manual")];
+  const hechos = [!!dom, !!(dom && dom.envio != null), !!(dom && !["por_envio"].includes(dom.estado)), !!(dom && dom.pagado), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado)), !!(dom && dom.estado === "entregado")];
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;
@@ -401,6 +425,46 @@ function guia() {
   $("#guia").innerHTML = PASOS.map(([t, d], i) => `<div class="paso ${i < paso ? "ya" : i === paso ? "ahora" : ""}"><b>${i + 1}. ${t}${i < paso ? " ✓" : ""}</b>${esc(d)}</div>`).join("");
   const a = $("#guia .ahora"); if (a) a.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
 }
+// ---- live location (simulated route; the real one comes from the driver's phone, see bot-restaurante/ubicacion.js) ----
+const RUTAS = { sps: [[15.5326, -88.0113], [15.5301, -88.0160], [15.5268, -88.0207], [15.5251, -88.0262], [15.5222, -88.0301], [15.5199, -88.0349]],
+  tegucigalpa: [[14.0951, -87.1906], [14.0912, -87.1889], [14.0861, -87.1874], [14.0806, -87.1858], [14.0757, -87.1849], [14.0712, -87.1831]] };
+const Z = 14, MUNDO = 256 * 2 ** Z;
+const px = ([la, lo]) => [(lo + 180) / 360 * MUNDO, (1 - Math.log(Math.tan(la * Math.PI / 180) + 1 / Math.cos(la * Math.PI / 180)) / Math.PI) / 2 * MUNDO];
+const km = (a, b) => Math.hypot(a[0] - b[0], (a[1] - b[1]) * Math.cos(a[0] * Math.PI / 180)) * 111.2;
+let siguiendo = null, relojSeg = null;
+function enRuta(ruta, f) {
+  const tramos = ruta.slice(1).map((p, i) => km(ruta[i], p)), total = tramos.reduce((a, b) => a + b, 0);
+  let d = Math.max(0, Math.min(1, f)) * total;
+  for (let i = 0; i < tramos.length; i++) { if (d <= tramos[i]) { const t = tramos[i] ? d / tramos[i] : 0; return { pos: [ruta[i][0] + (ruta[i + 1][0] - ruta[i][0]) * t, ruta[i][1] + (ruta[i + 1][1] - ruta[i][1]) * t], falta: total * (1 - f) }; } d -= tramos[i]; }
+  return { pos: ruta.at(-1), falta: 0 };
+}
+function seguir(n) {
+  const p = store.getPedido(n); if (!p) return;
+  siguiendo = n; $("#velo").classList.add("si"); const ruta = RUTAS[p.sucursalId] || RUTAS.sps, m = $("#seg-m");
+  const W = m.clientWidth || 380, Hh = m.clientHeight || 300;
+  const pts = ruta.map(px), cx = (Math.min(...pts.map(q => q[0])) + Math.max(...pts.map(q => q[0]))) / 2, cy = (Math.min(...pts.map(q => q[1])) + Math.max(...pts.map(q => q[1]))) / 2;
+  const x0 = cx - W / 2, y0 = cy - Hh / 2, tiles = [];
+  for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W) / 256); tx++) for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + Hh) / 256); ty++)
+    tiles.push(`<img alt="" src="https://tile.openstreetmap.org/${Z}/${tx}/${ty}.png" style="left:${tx * 256 - x0}px;top:${ty * 256 - y0}px">`);
+  const loc = q => [q[0] - x0, q[1] - y0];
+  m.innerHTML = tiles.join("") + `<svg viewBox="0 0 ${W} ${Hh}"><polyline points="${pts.map(q => loc(q).join(",")).join(" ")}" fill="none" stroke="#0E6B45" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><circle cx="${loc(pts.at(-1))[0]}" cy="${loc(pts.at(-1))[1]}" r="9" fill="#C8102E" stroke="#fff" stroke-width="3"/></svg><div class="moto" id="moto">🛵</div>`;
+  $("#seg-t").textContent = `Su pedido ${p.n}`;
+  $("#velo").classList.add("si");
+  const pintarSeg = () => {
+    const q = store.getPedido(siguiendo); if (!q) return;
+    const t0 = new Date(q.t_en_camino || Date.now()), f = q.estado === "entregado" ? 1 : Math.min(.96, (Date.now() - t0) / 90000);
+    const { pos, falta } = enRuta(ruta, f), [x, y] = loc(px(pos));
+    const moto = $("#moto"); moto.style.left = x + "px"; moto.style.top = y + "px";
+    const e = $("#seg-e"); e.classList.toggle("fin", q.estado === "entregado");
+    e.lastChild.textContent = q.estado === "entregado" ? "✅ Entregado. ¡Gracias!" : `${q.repartidor ? q.repartidor.nombre : "El repartidor"} va en camino · a ${falta < 1 ? Math.round(falta * 1000) + " m" : falta.toFixed(1) + " km"}`;
+  };
+  pintarSeg(); clearInterval(relojSeg); relojSeg = setInterval(pintarSeg, 1000);
+}
+function cerrarSeg() { $("#velo").classList.remove("si"); clearInterval(relojSeg); siguiendo = null; }
+$("#seg-x").onclick = cerrarSeg; $("#velo").onclick = e => { if (e.target.id === "velo") cerrarSeg(); };
+addEventListener("keydown", e => { if (e.key === "Escape") cerrarSeg(); });
+function compartir(a) { a.outerHTML = '<span style="color:#0E6B45;font-weight:600">📡 Compartiendo su ubicación con el cliente</span>'; toast("Kevin comparte su ubicación: el cliente lo ve en el mapa", "cliente"); }
+document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
 $("#reiniciar").onclick = () => location.reload();
 pintarIA();
 document.querySelectorAll(".vistas button").forEach(b => b.onclick = () => b.dataset.v === "panel" ? ver("panel") : (vista(false), ver(activa === "panel" ? "cliente" : activa)));

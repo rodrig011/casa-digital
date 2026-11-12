@@ -1,5 +1,5 @@
 {
-  "_nota": "Con Sabor a Pueblo (Tegucigalpa y San Pedro Sula, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp el 11-nov-2026: en San Pedro solo se vende el cerdito chuko a L195; pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.; a domicilio se le paga al repartidor al recibir. POR CONFIRMAR antes de prender el bot: menú y precios de Tegucigalpa, la cuenta para depósitos, si el tope de 50 es por ciudad, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp de cada ciudad, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render.",
+  "_nota": "Con Sabor a Pueblo (Tegucigalpa y San Pedro Sula, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp el 11-nov-2026: el cerdito chuko a L195 en las dos ciudades (rodrigo, 11-nov: «en San Pedro solo venden cerdo chuko pero en Tegucigalpa también»; precio de Tegucigalpa supuesto igual, POR CONFIRMAR); la comida se paga por transferencia con comprobante antes de cocina, también a domicilio (el envío se le paga al repartidor); pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.. POR CONFIRMAR antes de prender el bot: si en Tegucigalpa hay más productos y el precio del cerdito ahí, la cuenta para depósitos, si el tope de 50 es por ciudad, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp de cada ciudad, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render.",
   "nombre": "Con Sabor a Pueblo",
   "color": "#FEBE29",
   "logo": "negocios/con-sabor-a-pueblo-logo.svg",
@@ -9,7 +9,7 @@
   ],
   "menu": [
     { "categoria": "Sábados", "items": [
-      { "id": "cerdito-sps", "nombre": "Cerdito chuko", "precio": 195, "sucursales": ["sps"] }
+      { "id": "cerdito-sps", "nombre": "Cerdito chuko", "precio": 195 }
     ] },
     { "categoria": "Encargos de Navidad", "items": [
       { "id": "pierna", "nombre": "Pierna de cerdo deshuesada (libra)", "precio": 320, "minimo": 5, "anticipo": 50,
@@ -18,9 +18,9 @@
     ] }
   ],
   "recoger": true,
-  "pago": "Si se lo llevamos, se le paga al repartidor al recibir.",
+  "pago": "La comida se paga por transferencia y con el comprobante revisado entra a cocina. Si se lo llevamos, el envío se le paga al repartidor al recibir.",
   "tiempoPreparacion": "",
-  "cobro": { "desde": 0, "faltas": 0, "domicilio": false, "transferencia": "", "tarjeta": "" },
+  "cobro": { "desde": 0, "faltas": 0, "domicilio": true, "transferencia": "", "tarjeta": "" },
   "domicilio": { "propio": true, "zona": "", "apps": [] },
   "cupos": {
     "dias": ["sabado"],

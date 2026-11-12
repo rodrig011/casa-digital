@@ -35,6 +35,7 @@ const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
+const { createUbicacion } = require("./ubicacion");
 const { createMeta, mensajes: mensajesMeta } = require("./meta");
 const { crearRespaldo } = require("./respaldo");
 
@@ -101,7 +102,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const ia = "ia" in deps ? deps.ia : cfg.anthropicKey ? createIA({ negocio, apiKey: cfg.anthropicKey, model: cfg.anthropicModel }) : null;
   const pending = new Set();                      // messages in flight (tests wait on them)
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
-  const repartos = createRepartos({ negocio, store, avisos, now, log, track });
+  const ubicacion = createUbicacion({ store, negocio, now, base: cfg.publicUrl });
+  const repartos = createRepartos({ negocio, store, avisos, now, log, track, ubicacion });
 
   const app = express();
   app.set("trust proxy", true);
@@ -134,8 +136,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function guardar(base, tel, convo) {
     const faltas = base.tipo === "pedido" ? faltasDe(tel) : 0;
     // own drivers: a delivery order waits for the driver's price and the customer's yes before the kitchen gets it
-    const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && (base.estado || "nuevo") === "nuevo";
-    const p = store.addPedido({ ...base, n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
+    // if it pays before (transfer), the payment data goes out after the customer accepts the delivery price
+    const cotiza = base.tipo === "pedido" && base.entrega === "domicilio" && repartos.activo && ["nuevo", "por_pagar"].includes(base.estado || "nuevo");
+    const p = store.addPedido({ ...base, ...(cotiza && base.estado === "por_pagar" ? { pagaAntes: true } : {}), n: base.n || numero({ persona: "AS", reservacion: "RES" }[base.tipo] || "PED"), tel: "+" + digits(tel), fecha: now().toISOString(), estado: cotiza ? "por_envio" : base.estado || "nuevo", ...(faltas ? { faltas } : {}), convo });
     log(`[${p.tipo} ${p.n} · ${p.sucursal}] ${p.tel} ${p.tipo === "pedido" ? negocio.L(p.total) : p.tipo === "reservacion" ? p.resumen : p.motivo || ""}`);
     if (cotiza) repartos.asignar(p.n, { por: "bot" }); else track(avisos.ficha(p));
     return p;
@@ -413,7 +416,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
-      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal }) => ({ id, nombre, sucursal })), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel }) => ({ id, nombre, sucursal, tel })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -501,6 +504,7 @@ ${wa ? `<a href="${wa}" style="display:inline-block;background:${esc(negocio.col
   }
 
   app.get("/", (req, res) => res.type("text/plain").send(`${negocio.nombre} · bot activo`));
+  ubicacion.montar(app, express);
   // quick check of the AI demo, without secrets: is it on, is there a key
   app.get("/demo/estado", (req, res) => res.json({ demoIA: !!cfg.demoIA, clave: !!cfg.demoKey }));
 

@@ -77,6 +77,7 @@ function preparar(n) {
   return {
     ...n,
     color: n.color || "#C8102E",
+    ...(Array.isArray(n.proveedores) ? { proveedores: n.proveedores.filter(x => x && x.nombre).map((x, i) => { const d = String(x.whatsapp || "").replace(/\D/g, ""); return { id: String(x.id || `p${i + 1}`), nombre: String(x.nombre), producto: String(x.producto || ""), whatsapp: d.length === 8 ? "504" + d : d, sucursal: String(x.sucursal || ""), nota: String(x.nota || "") }; }) } : {}),
     moneda: n.moneda || "HNL",
     pais: n.pais || (MONEDAS[n.moneda] || MONEDAS.HNL).pais,
     L: dinero(n.moneda),
@@ -240,6 +241,7 @@ function mezclarPrivado(n, extra) {
     sucursales: (n.sucursales || []).map(s => ({ ...s, ...((x.sucursales || {})[s.id] || {}) })),
     ...(x.repartidores ? { repartidores: x.repartidores } : {}),
     ...(x.cobro ? { cobro: { ...(n.cobro || {}), ...x.cobro } } : {}),
+    ...(x.proveedores ? { proveedores: x.proveedores } : {}),
   };
 }
 
