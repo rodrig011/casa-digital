@@ -20,7 +20,7 @@ svg{display:block}
 .gh{position:sticky;top:0;z-index:20;background:var(--card);box-shadow:0 2px 3px rgba(0,0,0,.08)}
 .gh-top{display:flex;align-items:center;gap:12px;height:52px;padding:0 16px}
 .marca{display:flex;align-items:center;gap:10px;min-width:0}.marca .logo{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;background:var(--marca,#032D60);flex:none}
-.marca b{display:block;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.marca small{display:block;font-size:12px;color:var(--tx3);line-height:1.2}
+.marca .logo.img{background:none;border-radius:50%;overflow:hidden}.marca .logo img{width:100%;height:100%;display:block}.marca b{display:block;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.marca small{display:block;font-size:12px;color:var(--tx3);line-height:1.2}
 .sp{flex:1}
 .iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--tx3);border:1px solid transparent;background:none}
 .avatar{border:0;cursor:pointer;font-family:inherit;width:32px;height:32px;border-radius:50%;background:#032D60;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
@@ -57,15 +57,15 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 .cupos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:12px}.cupos h2 small{font-weight:400;color:var(--tx3);margin-left:auto;font-size:12px}
 .tnd{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}.tnd:first-of-type{border-top:0}.tnd i{height:8px;border-radius:4px;background:var(--mute-bg);overflow:hidden}.tnd i b{display:block;height:100%;background:var(--brand)}.tnd.lleno i b{background:var(--tx3)}.tnd span{color:var(--tx2)}
 /* tablero de pedidos */
-.board{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:12px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(236px,1fr));gap:12px;align-items:start;overflow-x:auto;padding-bottom:4px}
 .col{background:var(--card);border:1px solid var(--line);border-radius:4px;box-shadow:var(--sh);padding:0 8px 8px}
 .col h3{font-size:13px;font-weight:700;color:var(--tx);margin:0 -8px 8px;padding:10px 12px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--mute-bg);border-radius:4px 4px 0 0}.col h3 span{color:var(--tx3);font-weight:400}
 .col .card{box-shadow:none}
 .ped{padding:10px 12px;margin-bottom:8px;display:grid;gap:6px}
-.ped .l1{display:flex;justify-content:space-between;gap:8px;font-weight:700;color:var(--brand)}.ped .l1 span{color:var(--tx3);font-weight:400;font-size:12px;white-space:nowrap}
+.ped .l1{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;font-weight:700;color:var(--brand)}.ped .l1 span{color:var(--tx3);font-weight:400;font-size:12px;white-space:nowrap}
 .ped ul{margin:0;padding:0;list-style:none;color:var(--tx2)}.ped li{overflow-wrap:anywhere}
 .ped .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
-.ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:28px;padding:0 10px;font-size:12px}
+.ped .tag{white-space:normal;height:auto;min-height:20px;padding:2px 8px;line-height:1.35}.ped .acc{display:flex;gap:6px;flex-wrap:wrap}.ped .acc .btn{height:28px;padding:0 10px;font-size:12px}
 .tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:15px;font-size:12px;white-space:nowrap;background:var(--mute-bg);color:var(--tx2)}
 .t-nuevo,.t-en_camino{background:var(--info-bg);color:var(--info)}.t-cocina,.t-por_pagar,.t-por_envio,.t-por_confirmar,.t-en_espera{background:var(--warn-bg);color:var(--warn)}.t-listo,.t-comp,.t-confirmada{background:var(--ok-bg);color:var(--ok)}.t-entregado,.t-atendido,.t-cancelado,.t-no_vino,.t-sin_cupo{background:var(--mute-bg);color:var(--tx3)}
 .ped .aviso{font-size:12px;color:var(--red);font-weight:700}
@@ -330,7 +330,7 @@ async function cargar() {
   document.title = `Panel · ${N.nombre}`;
   $("#marca").textContent = N.nombre; $("#ey").textContent = N.nombre;
   $("#sub").textContent = `Panel del dueño${N.modoIA ? " · asistente con IA" : ""}`;
-  $("#logo").textContent = (N.nombre || "?").trim()[0].toUpperCase(); $("#logo").style.setProperty("--marca", N.color);
+  if (N.logo) { $("#logo").innerHTML = `<img src="${esc(N.logo)}" alt="">`; $("#logo").classList.add("img"); } else $("#logo").textContent = (N.nombre || "?").trim()[0].toUpperCase(); $("#logo").style.setProperty("--marca", N.color);
   $("#quien").textContent = String(N.usuario || "?").split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase(); $("#quien").title = N.usuario || "";
   $("#suc").innerHTML += N.sucursales.map(s => `<option value="${esc(s.id)}">${esc(s.nombre)}</option>`).join("");
   if (N.sucursales.length < 2) $("#suc").style.display = "none";

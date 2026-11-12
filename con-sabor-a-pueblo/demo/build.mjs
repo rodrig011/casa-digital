@@ -27,15 +27,31 @@ const NEGOCIO_JSON=${leer(bot, D.archivo)};const PRIVADO=${JSON.stringify(D.priv
 
 // the owner panel, with fetch() answered by the bot running in this page
 const SHIM = `<script>window.fetch=async(u,o)=>{const r=await window.parent.DEMO.api(String(u),o||{});return new Response(JSON.stringify(r.body),{status:r.status,headers:{"Content-Type":"application/json"}})};</script>`;
-const panel = leer(bot, "panel", "panel.html").replace("<script>", SHIM + "<script>");
+const SALIR = `<script>document.addEventListener("click",e=>{const a=e.target.closest('a[href="/panel/salir"],a[href="/panel/entrar"]');if(a){e.preventDefault();window.parent.DEMO.salir()}})</script>`;
+const panel = leer(bot, "panel", "panel.html").replace("<script>", SHIM + SALIR + "<script>");
+
+// the real login page (auth.js), with the form answered by this page; the demo's email and password are shown on it
+const { paginaEntrar } = require(join(bot, "auth.js"));
+const FORM = `<script>document.addEventListener("click",e=>{if(e.target.closest("a[href^='/panel/']")){e.preventDefault();window.parent.DEMO.salir()}});document.addEventListener("submit",e=>{e.preventDefault();window.parent.DEMO.entrar(Object.fromEntries(new FormData(e.target)))});
+addEventListener("DOMContentLoaded",()=>{const c=document.querySelector("input[name=clave]");if(c)c.value="Sabor-2026-demo"})</script>`;
+const N = require(join(bot, "negocio.js")).cargarNegocio(D.archivo, D.privado);
+const pag = o => paginaEntrar({ marca: N.nombre, color: N.color, logo: "LOGO_DEMO", ...o }).replace("</head>", FORM + "</head>");
+const demoAviso = "Demo: el correo y la contraseña ya están puestos. Toque Entrar y el código le llega al WhatsApp del dueño, aquí al lado.";
+const ENTRAR = {
+  entrar: pag({ correo: "dueno@consaborapueblo.demo", aviso: demoAviso }),
+  entrarError: pag({ correo: "dueno@consaborapueblo.demo", error: "ERROR_DEMO" }),
+  codigo: pag({ paso: { final: "0003" } }),
+  codigoError: pag({ paso: { final: "0003" }, error: "Código incorrecto. Revise el WhatsApp y vuelva a probar." }),
+};
 
 const fuente = readFileSync(join(raiz, "clientia-tech", "src", "fonts", "hanken-grotesk-latin.woff2")).toString("base64");
-const logo = readFileSync(join(raiz, "con-sabor-a-pueblo", "redes", "logo-tiktok.jpg")).toString("base64");
+const logo = leer(bot, N.logo);
 let html = leer(aqui, "src.html")
   .replace("/*BOT*/", () => BOT)
   .replace("/*PANEL*/", () => JSON.stringify(panel).replace(/<\/script>/gi, "<\\/script>"))
   .replace("/*FUENTE*/", fuente)
-  .replace(/\/\*LOGO\*\//g, "data:image/jpeg;base64," + logo);
+  .replace("/*LOGOSVG*/", () => JSON.stringify(logo))
+  .replace("/*ENTRAR*/", () => JSON.stringify(ENTRAR).replace(/<\/script>/gi, "<\\/script>"));
 mkdirSync(join(aqui, "dist"), { recursive: true });
 writeFileSync(join(aqui, "dist", "con-sabor-a-pueblo.html"), html);
 console.log("dist/con-sabor-a-pueblo.html", Math.round(html.length / 1024) + " KB", IA_URL ? "con IA: " + IA_URL : "sin IA (menú de opciones)");
