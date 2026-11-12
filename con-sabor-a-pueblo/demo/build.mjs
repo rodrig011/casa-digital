@@ -48,10 +48,15 @@ const fuente = readFileSync(join(raiz, "clientia-tech", "src", "fonts", "hanken-
 const logo = leer(bot, N.logo);
 let html = leer(aqui, "src.html")
   .replace("/*BOT*/", () => BOT)
-  .replace("/*PANEL*/", () => JSON.stringify(panel).replace(/<\/script>/gi, "<\\/script>"))
   .replace("/*FUENTE*/", fuente)
-  .replace("/*LOGOSVG*/", () => JSON.stringify(logo))
-  .replace("/*ENTRAR*/", () => JSON.stringify(ENTRAR).replace(/<\/script>/gi, "<\\/script>"));
+  .replace("/*LOGOSVG*/", () => JSON.stringify(logo));
 mkdirSync(join(aqui, "dist"), { recursive: true });
 writeFileSync(join(aqui, "dist", "con-sabor-a-pueblo.html"), html);
+// the owner panel on its own link: the real panel full screen, connected to the demo tab (BroadcastChannel)
+const panelPag = leer(aqui, "panel-src.html")
+  .replace("/*LOGOSVG*/", () => JSON.stringify(logo))
+  .replace("/*PANEL*/", () => JSON.stringify(panel).replace(/<\/script>/gi, "<\\/script>"))
+  .replace("/*ENTRAR*/", () => JSON.stringify(ENTRAR).replace(/<\/script>/gi, "<\\/script>"));
+writeFileSync(join(aqui, "dist", "con-sabor-a-pueblo-panel.html"), panelPag);
+console.log("dist/con-sabor-a-pueblo-panel.html", Math.round(panelPag.length / 1024) + " KB");
 console.log("dist/con-sabor-a-pueblo.html", Math.round(html.length / 1024) + " KB", IA_URL ? "con IA: " + IA_URL : "sin IA (menú de opciones)");
