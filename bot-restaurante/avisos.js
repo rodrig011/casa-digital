@@ -33,7 +33,7 @@ function fichaTexto(p, fmt = L) {
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       ...(p.lineas || []).map(l => lineaTexto(l, fmt)),
       `💰 Total ${fmt(p.total)}`,
-      p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}` : p.tanda || espera || p.encargo ? "📍 Lo recoge" : p.hora ? `🕒 Recoge: ${p.hora}` : null,
+      p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}${p.envio != null ? ` · envío ${fmt(p.envio)} (total ${fmt(p.total + p.envio)})` : ""}` : p.tanda || espera || p.encargo ? "📍 Lo recoge" : p.hora ? `🕒 Recoge: ${p.hora}` : null,
       `Responder: https://wa.me/${digits(p.tel)}`,
     ].filter(Boolean),
   };
