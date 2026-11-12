@@ -1018,6 +1018,40 @@ test("respaldo: se baja cifrado, se restaura en una carpeta nueva y el bot sigue
   } finally { ctx2.srv.close(); }
 });
 
+test("panel: el dueño agrega, pausa y quita repartidores con «Guardar y aplicar»; queda guardado y el bot lo usa al instante", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
+  const negocio = () => preparar({ ...base, repartidores: [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }] });
+  let ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio: negocio() });
+  const di = async (From, Body) => { const r = textoDe((await post(ctx, "/whatsapp", { From, Body })).xml); await ctx.app.locals.idle(); return r; };
+  const guardar = (cookie, repartidores, extra = {}) => fetch(ctx.base + "/api/repartidores", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie, ...extra }, body: JSON.stringify({ repartidores }) });
+  try {
+    assert.equal((await guardar("", [])).status, 401, "sin sesión no se puede");
+    let cookie = await entrar(ctx);
+    assert.equal((await guardar(cookie, [], { Origin: "https://otro.sitio" })).status, 403);
+    let r = await guardar(cookie, [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }, { nombre: "María José", whatsapp: "9111-0009" }]);
+    assert.equal(r.status, 200);
+    let d = await r.json();
+    assert.deepEqual(d.repartidores.map(x => [x.id, x.nombre, x.tel, x.activo]), [["carlos", "Carlos", "50491110001", true], ["maria-jose", "María José", "50491110009", true]]);
+    assert.equal((await guardar(cookie, [{ nombre: "Sin número", whatsapp: "12" }])).status, 400);
+    assert.equal((await guardar(cookie, [{ nombre: "A", whatsapp: "9111-0001" }, { nombre: "B", whatsapp: "+504 9111-0001" }])).status, 400, "mismo WhatsApp dos veces");
+    // Carlos paused: the next delivery goes to María José; she can't be removed while she has it
+    await guardar(cookie, [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps", activo: false }, { id: "maria-jose", nombre: "María José", whatsapp: "9111-0009" }]);
+    for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", "Col. Trejo, casa 2", "Marta"]) await di("whatsapp:+50491112222", Body);
+    const p = (await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json()).find(y => y.n === "PED-1001");
+    assert.equal(p.repartidor.nombre, "María José");
+    assert.ok(ctx.sent.some(m => m.to === "whatsapp:+50491110009" && /nuevo envío: PED-1001/.test(m.body)), "a la nueva le llega el envío");
+    r = await guardar(cookie, [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }]);
+    assert.equal(r.status, 400); assert.match((await r.json()).error, /María José tiene 1 entrega/);
+    // saved encrypted-or-not on disk: a restart keeps the panel's team, not the file's
+    await new Promise(ok => ctx.srv.close(ok));
+    ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio: negocio() });
+    cookie = await entrar(ctx);
+    const neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(neg.repartidores.map(x => [x.nombre, x.activo]), [["Carlos", false], ["María José", true]]);
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+});
+
 test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente lo acepta antes de cocina, y luego SALGO / ENTREGADO / NO PUEDO", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));

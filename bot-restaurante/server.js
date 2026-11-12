@@ -20,6 +20,7 @@
 // El restaurante (menú, precios, sucursales) está en negocios/<cliente>.json; NEGOCIO dice cuál.
 // Con ANTHROPIC_API_KEY, WhatsApp contesta en modo IA (ia.js, Claude); si la API falla contesta el menú de engine.js.
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
@@ -27,10 +28,10 @@ const { cargarNegocio, LINK, fechasCupos, norm } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
-const { createCifra } = require("./cifrado");
+const { createCifra, leerJSON, escribirJSON } = require("./cifrado");
 const { createBitacora } = require("./bitacora");
 const { createNotifier, fichaTexto, waAddr, digits } = require("./avisos");
-const { createRepartos } = require("./repartos");
+const { createRepartos, prepararRepartidores, idsRepartidores } = require("./repartos");
 const { createUsuarios, montarPanel } = require("./auth");
 const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
@@ -103,6 +104,12 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const pending = new Set();                      // messages in flight (tests wait on them)
   const track = p => { pending.add(p); p.finally(() => pending.delete(p)); return p; };
   const ubicacion = createUbicacion({ store, negocio, now, base: cfg.publicUrl });
+  // the drivers the owner set in the panel win over the business file (saved encrypted, see POST /api/repartidores)
+  const archivoRepartidores = cfg.dataDir ? path.join(cfg.dataDir, "repartidores.json") : null;
+  if (archivoRepartidores && fs.existsSync(archivoRepartidores)) {
+    try { negocio.repartidores = prepararRepartidores(leerJSON(archivoRepartidores, [], cifra), negocio.sucursales); }
+    catch (e) { log(`[repartidores] no se pudo leer lo guardado en el panel: ${e.message}`); }
+  }
   const repartos = createRepartos({ negocio, store, avisos, now, log, track, ubicacion });
 
   const app = express();
@@ -416,7 +423,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (sinSesion(req, res)) return;
     res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
-      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel }) => ({ id, nombre, sucursal, tel })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
+      sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, usuario: panel.usuarioDe(req).nombre });
   });
   app.post("/api/pedidos/:n/estado", express.json({ limit: "2kb" }), (req, res) => {
     if (sinSesion(req, res)) return;
@@ -464,6 +471,23 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const q = repartos.asignar(p.n, { excluir: otros, por });
     bitacora.anotar("repartidor", { correo: por, pedido: p.n, como: q ? q.repartidor.nombre : "sin repartidor", ip: req.ip });
     res.json(q || store.getPedido(p.n));
+  });
+
+  // the owner adds, edits, deactivates or removes his drivers from the panel and taps "Guardar y aplicar"
+  app.post("/api/repartidores", express.json({ limit: "20kb" }), (req, res) => {
+    if (sinSesion(req, res)) return;
+    const origen = req.get("Origin");
+    if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
+    const rs = (req.body || {}).repartidores;
+    if (!Array.isArray(rs) || rs.length > 50) return res.status(400).json({ error: "lista inválida" });
+    let nuevos;
+    try { nuevos = prepararRepartidores(idsRepartidores(rs), negocio.sucursales); repartos.reemplazar(nuevos); }
+    catch (e) { return res.status(400).json({ error: e.message.replace(/^repartidores: /, "") }); }
+    if (archivoRepartidores) escribirJSON(archivoRepartidores, repartos.lista.map(({ id, nombre, tel, sucursal, activo }) => ({ id, nombre, whatsapp: "+" + tel, sucursal, ...(activo === false ? { activo: false } : {}) })), cifra, 1);
+    const correo = panel.usuarioDe(req).correo;
+    bitacora.anotar("repartidores", { correo, como: `${repartos.lista.length} ${repartos.lista.length === 1 ? "repartidor" : "repartidores"}`, ip: req.ip });
+    log(`[panel] repartidores: ${repartos.lista.map(r => r.nombre + (r.activo === false ? " (inactivo)" : "")).join(", ")} (${correo})`);
+    res.json({ repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })) });
   });
 
   // who has access, whether the data is encrypted, and the last logins and changes

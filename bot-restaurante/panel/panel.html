@@ -87,6 +87,26 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 .sk{background:linear-gradient(90deg,var(--mute-bg) 25%,var(--hover) 50%,var(--mute-bg) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:4px}
 @keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.sk{animation:none}}
+/* equipo de reparto editable (edición en línea, como Lightning: la barra de abajo guarda y aplica) */
+.card h2 .h-acc{margin-left:auto;font-weight:400}.card h2 .h-acc.sub{font-size:12px;color:var(--brand);background:var(--sel);border-radius:15px;padding:2px 10px}
+.card h2 .btn.h-acc{height:28px;font-size:12px}
+.editando{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.nota-ed{margin:0;padding:10px 16px 4px;color:var(--tx3);font-size:12px}
+.tabla-ed{overflow-x:auto}.tabla-ed td{padding:6px 8px;vertical-align:middle}.tabla-ed td:first-child,.tabla-ed th:first-child{padding-left:16px}
+.tabla-ed input:not([type]),.tabla-ed select{width:100%;min-width:120px;height:32px;border:1px solid var(--line2);border-radius:4px;background:var(--card);color:var(--tx);padding:0 10px;font:inherit}
+.tabla-ed input:not([type]):focus,.tabla-ed select:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.tabla-ed input[data-k=whatsapp]{font-variant-numeric:tabular-nums}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap;min-height:32px}.sw input{position:absolute;opacity:0;width:1px;height:1px}
+.sw span{width:34px;height:20px;border-radius:10px;background:var(--line2);position:relative;transition:background .15s ease-out;flex:none}
+.sw span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .18s cubic-bezier(.23,1,.32,1)}
+.sw input:checked+span{background:var(--ok)}.sw input:checked+span::after{transform:translateX(14px)}.sw input:focus-visible+span{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--brand)}
+.sw em{font-style:normal;font-size:12px;color:var(--tx2);min-width:52px}
+.quitar{color:var(--tx3)}.quitar:not(:disabled):hover{color:var(--red);border-color:var(--line2)}.quitar:disabled{opacity:.35;cursor:not-allowed}
+.agregar{padding:10px 16px 12px;border-bottom:1px solid var(--line)}
+.pie-ed{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;justify-content:flex-end;padding:10px 16px;background:var(--mute-bg);border-top:1px solid var(--line);border-radius:0 0 4px 4px}
+.pie-ed span{margin-right:auto;font-size:12px;color:var(--tx3)}.pie-ed .btn:disabled{opacity:.5;cursor:not-allowed}
+.ayuda.ok{border-left-color:var(--ok)}.ayuda.error{border-left-color:var(--red);color:var(--red)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 /* ficha del pedido: un registro de Lightning (encabezado, Path, detalles, productos, actividad) */
 [data-ficha]{cursor:pointer}[data-ficha]:hover{text-decoration:underline}
 .velo{position:fixed;inset:0;background:rgba(8,7,7,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .18s ease-out}.velo.on{opacity:1;pointer-events:auto}
@@ -116,6 +136,11 @@ table tfoot td{font-weight:700;border-bottom:0}
 .tabs{display:none}
 .grid-seg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px}.solo-cel{display:none}
 @media (max-width:900px){
+  .tabla-ed table,.tabla-ed tbody{display:block}.tabla-ed tr:first-child{display:none}
+  .tabla-ed tr[data-i]{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .tabla-ed tr[data-i] td{padding:0;border:0}.tabla-ed tr[data-i] td:first-child{grid-column:1/-1}.tabla-ed tr[data-i] td.r{text-align:right}
+  .tabla-ed input:not([type]),.tabla-ed select{min-width:0;height:40px;font-size:16px}
+  .pie-ed{bottom:calc(56px + env(safe-area-inset-bottom))}
   .gh-nav{display:none}.band{top:52px;height:110px}main{padding:12px 12px 96px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.board{grid-template-columns:1fr}
   .vivo{display:none}.kpi span{min-height:3em}
@@ -166,6 +191,7 @@ const ICONO = {
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONO[k][0]}"/></svg>`;
 const H = (t, k, r = "") => `<h2><span class="ct" style="background:${ICONO[k][1]}">${svg(k)}</span>${t}${r}</h2>`;
 const ESTADO_TXT = { por_pagar: "Esperando pago", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", en_camino: "En camino", por_envio: "Esperando envío", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
+let editRep = null, repError = "", repGuardando = false;
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false, modoPedidos = "tablero", busca = "";
 try { modoPedidos = localStorage.getItem("modoPedidos") || "tablero"; } catch {}
 // tema claro u oscuro: el que eligió, o el del celular
@@ -222,6 +248,7 @@ function tarjeta(p, grande) {
 
 function pintar() {
   if (!N) return;
+  if (editRep && vista === "repartidores" && $("#rep-edit") && $("#rep-edit").contains(document.activeElement) && !repGuardando && !pintar.forzar) { nav(); return; }
   nav();
   $("#titulo").textContent = todas().find(v => v[0] === vista)[1];
   $("#tile").innerHTML = svg(vista); $("#tile").style.background = ICONO[vista][1];
@@ -275,8 +302,11 @@ function pintar() {
       <div class="card kpi"><b>${ent.length}</b><span>Entregados hoy</span></div>
       <div class="card kpi"><b>${L(ent.reduce((a, p) => a + (p.envio || 0), 0))}</b><span>Envíos cobrados hoy</span></div></div>
       ${sinRep.length ? `<p class="ayuda alerta">${sinRep.length === 1 ? "Hay 1 envío" : `Hay ${sinRep.length} envíos`} sin repartidor: ${sinRep.map(p => `<b>${esc(p.n)}</b>`).join(", ")}. Asígnelo en <b>Pedidos</b> con «Buscar repartidor».</p>` : ""}
-      <div class="card" style="margin-bottom:12px">${H("Equipo de reparto", "repartidores")}${R.length ? `<table><tr><th>Repartidor</th><th class="solo-pc">Sucursal</th><th>Ahora</th><th class="r solo-pc">Hoy</th><th class="r solo-pc">Envíos hoy</th><th></th></tr>${R.map(r => { const a = de(r).filter(p => calle.includes(p.estado)), h = hoyEnt(r); const camino = a.filter(p => p.estado === "en_camino").length; return `<tr><td><div class="per"><span class="ini">${esc(r.nombre.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase())}</span><div><b>${esc(r.nombre)}</b><small class="tel">${esc(telTxt(r.tel))}</small></div></div></td><td class="solo-pc">${esc(sucNom(r.sucursal))}</td><td>${a.length ? `<span class="tag t-${camino ? "en_camino" : "por_envio"}">${camino ? `En camino${a.length > 1 ? ` · ${a.length} pedidos` : ""}` : `${a.length} ${a.length === 1 ? "pedido" : "pedidos"} asignado${a.length === 1 ? "" : "s"}`}</span>` : `<span class="tag t-listo">Libre</span>`}</td><td class="r solo-pc">${h.length}</td><td class="r solo-pc">${L(h.reduce((x, p) => x + (p.envio || 0), 0))}</td><td class="r">${r.tel ? `<a class="btn" href="${wa(r.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(r.nombre)}"><span class="solo-pc">WhatsApp</span><span class="solo-cel">💬</span></a>` : ""}</td></tr>`; }).join("")}</table>` : `<div class="vacio">No hay repartidores en esta sucursal.</div>`}</div>
+      ${repAviso ? `<p class="ayuda ok" role="status">✓ ${esc(repAviso)}</p>` : ""}${editRep ? equipoEditable() : `<div class="card" style="margin-bottom:12px">${H("Equipo de reparto", "repartidores", `<button class="btn h-acc" id="rep-editar">Editar equipo</button>`)}${R.length ? `<table><tr><th>Repartidor</th><th class="solo-pc">Sucursal</th><th>Ahora</th><th class="r solo-pc">Hoy</th><th class="r solo-pc">Envíos hoy</th><th></th></tr>${R.map(r => { const a = de(r).filter(p => calle.includes(p.estado)), h = hoyEnt(r); const camino = a.filter(p => p.estado === "en_camino").length; return `<tr><td><div class="per"><span class="ini">${esc(r.nombre.replace(/[^\p{L}\s]/gu, "").split(/\s+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase())}</span><div><b>${esc(r.nombre)}</b>${r.activo === false ? ` <span class="tag">Pausado</span>` : ""}<small class="tel">${esc(telTxt(r.tel))}</small></div></div></td><td class="solo-pc">${esc(sucNom(r.sucursal))}</td><td>${a.length ? `<span class="tag t-${camino ? "en_camino" : "por_envio"}">${camino ? `En camino${a.length > 1 ? ` · ${a.length} pedidos` : ""}` : `${a.length} ${a.length === 1 ? "pedido" : "pedidos"} asignado${a.length === 1 ? "" : "s"}`}</span>` : r.activo === false ? `<span class="tag">No recibe envíos</span>` : `<span class="tag t-listo">Libre</span>`}</td><td class="r solo-pc">${h.length}</td><td class="r solo-pc">${L(h.reduce((x, p) => x + (p.envio || 0), 0))}</td><td class="r">${r.tel ? `<a class="btn" href="${wa(r.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(r.nombre)}"><span class="solo-pc">WhatsApp</span><span class="solo-cel">💬</span></a>` : ""}</td></tr>`; }).join("")}</table>` : `<div class="vacio">Todavía no hay repartidores${$("#suc").value ? " en esta sucursal" : ""}. Toque <b>Editar equipo</b> para agregar el primero.</div>`}</div>`}
       <div class="card">${H("Envíos de hoy", "pedidos")}${activos.length + ent.length ? `<table><tr><th>Pedido</th><th class="solo-pc">Repartidor</th><th>Estado</th><th class="solo-pc">Dirección</th><th class="r">Envío</th></tr>${activos.concat(ent).map(p => `<tr><td><b class="lnk" data-ficha="${esc(p.n)}" role="button" tabindex="0">${esc(p.n)}</b><small class="tel">${esc(p.nombre || "")}</small></td><td class="solo-pc">${esc(p.repartidor.nombre)}</td><td><span class="tag t-${p.estado}">${ESTADO_TXT[p.estado] || esc(p.estado)}</span>${p.seguimiento && p.estado === "en_camino" ? ` <span class="tag t-listo">📍 En vivo</span>` : ""}</td><td class="solo-pc">${esc(p.direccion || "")}</td><td class="r">${p.envio != null ? L(p.envio) : "—"}</td></tr>`).join("")}</table>` : `<div class="vacio">Todavía no hay envíos hoy.</div>`}</div>`;
+    const be = $("#rep-editar"); if (be) be.onclick = () => { editRep = N.repartidores.map(r => ({ id: r.id, nombre: r.nombre, whatsapp: telTxt(r.tel), sucursal: r.sucursal || "", activo: r.activo !== false })); repError = ""; pintar(); const x = document.querySelector("#rep-edit input"); if (x) x.focus(); };
+    if (editRep) montarEquipo();
+    if (repAviso) { clearTimeout(pintar.tAviso); pintar.tAviso = setTimeout(() => { repAviso = ""; if (vista === "repartidores") repintar(); }, 7000); }
   } else if (vista === "proveedores") {
     // what has been ordered for the coming days, per product and branch: what to buy
     const prox = {}; ps.filter(p => p.diaFecha && p.diaFecha >= hoy() && !["cancelado", "en_espera", "no_vino"].includes(p.estado)).forEach(p => (p.lineas || []).forEach(l => {
@@ -331,6 +361,55 @@ function pintar() {
   botones(v);
   if (abierta) ficha(abierta);
 }
+// ---- Equipo de reparto editable: el dueño agrega, cambia, pausa o quita repartidores y toca «Guardar y aplicar» ----
+const repOriginal = () => JSON.stringify(N.repartidores.map(r => [r.id, r.nombre, telTxt(r.tel), r.sucursal || "", r.activo !== false]));
+const repActual = () => JSON.stringify(editRep.filter(r => r.id || r.nombre.trim() || r.whatsapp.trim()).map(r => [r.id, r.nombre.trim(), r.whatsapp.trim(), r.sucursal, r.activo]));
+function equipoEditable() {
+  const varias = N.sucursales.length > 1, cambios = repActual() !== repOriginal();
+  const ocupado = id => P.some(p => p.repartidor && p.repartidor.id === id && ["por_envio", "por_pagar", "nuevo", "cocina", "listo", "en_camino"].includes(p.estado));
+  return `<div class="card editando" id="rep-edit" style="margin-bottom:12px">${H("Equipo de reparto", "repartidores", `<span class="h-acc sub">Editando</span>`)}
+    <p class="nota-ed">El bot le reparte los envíos a quien tenga <b>Recibe envíos</b> encendido, en su sucursal. Los cambios se aplican al tocar <b>Guardar y aplicar</b>.</p>
+    <div class="tabla-ed"><table><tr><th>Nombre</th><th>WhatsApp</th>${varias ? "<th>Sucursal</th>" : ""}<th>Recibe envíos</th><th><span class="sr">Quitar</span></th></tr>
+    ${editRep.map((r, i) => `<tr data-i="${i}"><td><input data-k="nombre" value="${esc(r.nombre)}" placeholder="Nombre" aria-label="Nombre" maxlength="60" autocomplete="off"></td>
+      <td><input data-k="whatsapp" value="${esc(r.whatsapp)}" placeholder="+504 9999-9999" aria-label="WhatsApp" inputmode="tel" maxlength="30" autocomplete="off"></td>
+      ${varias ? `<td><select data-k="sucursal" aria-label="Sucursal"><option value="">Todas</option>${N.sucursales.map(s => `<option value="${esc(s.id)}" ${s.id === r.sucursal ? "selected" : ""}>${esc(s.nombre)}</option>`).join("")}</select></td>` : ""}
+      <td><label class="sw"><input type="checkbox" data-k="activo" ${r.activo ? "checked" : ""}><span></span><em>${r.activo ? "Sí" : "Pausado"}</em></label></td>
+      <td class="r"><button class="iconbtn quitar" data-quitar="${i}" aria-label="Quitar a ${esc(r.nombre || "este repartidor")}" ${r.id && ocupado(r.id) ? 'disabled title="Tiene entregas pendientes: páselo a Pausado"' : ""}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></td></tr>`).join("")}
+    </table></div>
+    <div class="agregar"><button class="btn" id="rep-mas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Agregar repartidor</button></div>
+    ${repError ? `<p class="ayuda alerta error" role="alert" style="margin:0 16px 12px">${esc(repError)}</p>` : ""}
+    <div class="pie-ed"><span id="rep-cambios">${cambios ? "Cambios sin guardar" : "Sin cambios"}</span><button class="btn" id="rep-cancelar">Cancelar</button><button class="btn pri" id="rep-guardar" ${cambios && !repGuardando ? "" : "disabled"}>${repGuardando ? "Guardando…" : "Guardar y aplicar"}</button></div></div>`;
+}
+function montarEquipo() {
+  const caja = $("#rep-edit"); if (!caja) return;
+  const avisar = () => { const c = repActual() !== repOriginal(); $("#rep-cambios").textContent = c ? "Cambios sin guardar" : "Sin cambios"; $("#rep-guardar").disabled = !c || repGuardando; };
+  caja.querySelectorAll("tr[data-i] [data-k]").forEach(el => el.oninput = el.onchange = () => {
+    const r = editRep[+el.closest("tr").dataset.i], k = el.dataset.k;
+    r[k] = el.type === "checkbox" ? el.checked : el.value;
+    if (k === "activo") el.parentNode.querySelector("em").textContent = el.checked ? "Sí" : "Pausado";
+    avisar();
+  });
+  caja.querySelectorAll("[data-quitar]").forEach(b => b.onclick = () => { editRep.splice(+b.dataset.quitar, 1); repError = ""; repintar(); });
+  $("#rep-mas").onclick = () => { editRep.push({ id: "", nombre: "", whatsapp: "", sucursal: $("#suc").value || "", activo: true }); repintar(); const filas = document.querySelectorAll("#rep-edit tr[data-i]"); filas[filas.length - 1].querySelector("input").focus(); };
+  $("#rep-cancelar").onclick = () => { editRep = null; repError = ""; repintar(); };
+  $("#rep-guardar").onclick = guardarEquipo;
+}
+async function guardarEquipo() {
+  const filas = editRep.filter(r => r.id || r.nombre.trim() || r.whatsapp.trim());
+  const falta = filas.find(r => !r.nombre.trim() || r.whatsapp.replace(/\D/g, "").length < 8);
+  if (falta) { repError = !falta.nombre.trim() ? "A un repartidor le falta el nombre." : `A ${falta.nombre.trim()} le falta el WhatsApp completo (8 números, o con +504).`; return repintar(); }
+  repGuardando = true; repError = ""; repintar();
+  try {
+    const r = await fetch("/api/repartidores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repartidores: filas.map(({ id, nombre, whatsapp, sucursal, activo }) => ({ id, nombre: nombre.trim(), whatsapp: whatsapp.trim(), sucursal, activo })) }) });
+    if (r.status === 401) return location.href = "/panel/entrar";
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "No se pudo guardar.");
+    N.repartidores = d.repartidores; editRep = null; repAviso = `Guardado y aplicado. ${d.repartidores.filter(x => x.activo).length} ${d.repartidores.filter(x => x.activo).length === 1 ? "repartidor recibe" : "repartidores reciben"} envíos desde ya.`;
+  } catch (e) { repError = e.message === "Failed to fetch" ? "Sin conexión. Revise el internet y toque Guardar y aplicar otra vez." : e.message; }
+  repGuardando = false; repintar();
+}
+let repAviso = "";
+function repintar() { pintar.forzar = true; try { pintar(); } finally { pintar.forzar = false; } }
 const botones = el => el.querySelectorAll("button[data-e]").forEach(b => b.onclick = () => b.dataset.e === "_rep" ? otroRepartidor(b.dataset.n, b) : cambiar(b.dataset.n, b.dataset.e, b));
 
 // ---- ficha del pedido: todo el pedido en un solo lugar, con el camino que lleva (Path) y lo que pasó (Actividad) ----
@@ -381,7 +460,7 @@ $("#velo").onclick = cerrarFicha;
 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
-const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor" };
+const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto" };
 const MALOS = ["fallo", "bloqueado", "codigo_malo"];
 const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
 const equipoCorto = ua => /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : ua ? "Otro" : "";
@@ -458,7 +537,7 @@ async function cargar() {
   N = await r.json();
   if (N.reservaciones) VISTAS.splice(3, 0, ["reservas", "Reservaciones"]);
   if (N.cupos) VISTAS.splice(1, 0, ["cupos", "Cupos"]);
-  if (N.repartidores && N.repartidores.length) VISTAS.splice(VISTAS.findIndex(v => v[0] === "cocina") + 1, 0, ["repartidores", "Repartidores"]);
+  if ((N.repartidores && N.repartidores.length) || N.domicilioPropio) VISTAS.splice(VISTAS.findIndex(v => v[0] === "cocina") + 1, 0, ["repartidores", "Repartidores"]);
   if (N.proveedores) VISTAS.splice(VISTAS.findIndex(v => v[0] === "menu"), 0, ["proveedores", "Proveedores"]);
   if (!todas().some(v => v[0] === vista)) vista = "hoy";
   $("#quien").onclick = () => { vista = "seguridad"; try { localStorage.setItem("vista", vista); } catch {} pintar(); };

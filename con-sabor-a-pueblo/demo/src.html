@@ -125,7 +125,7 @@ document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
 const { preparar, mezclarPrivado, fechasCupos, norm } = BOT.negocio;
 const { createEngine } = BOT.engine;
 const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
-const { createRepartos } = BOT.repartos;
+const { createRepartos, prepararRepartidores, idsRepartidores } = BOT.repartos;
 const { createStore } = BOT.store;
 const { createIA } = BOT.ia;
 
@@ -133,9 +133,10 @@ const negocio = preparar(mezclarPrivado(NEGOCIO_JSON, PRIVADO));
 const TEL = { cliente: "+50495550101", kevin: "+50400000001", dueno: "+50400000003" };
 const QUIEN = Object.fromEntries(Object.entries(TEL).map(([k, v]) => [digits(v), k]));
 // the drivers' chat shows whichever driver the bot wrote to last: Kevin (San Pedro) or Tegusgo (Tegucigalpa)
-const REPS = Object.fromEntries((negocio.repartidores || []).map(r => [digits(r.tel), r]));
+if (!negocio.repartidores) negocio.repartidores = [];
+// the drivers are live: the owner can add or change them in the panel, so look them up each time
+const REPS = new Proxy({}, { get: (_, d) => negocio.repartidores.find(r => r.tel === String(d)) });
 let repTel = TEL.kevin;
-for (const d in REPS) QUIEN[d] = "kevin";
 const CHATS = [
   { k: "cliente", nombre: "Con Sabor a Pueblo", sub: "Así lo ve el cliente", tab: "Cliente", av: "logo" },
   { k: "kevin", nombre: "Con Sabor a Pueblo · Entregas", sub: "Así lo ve Kevin, el repartidor de San Pedro", tab: "Repartidor", av: "K" },
@@ -153,7 +154,7 @@ const PASOS = [
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
 const ahora = () => new Date();
 const store = createStore(null, { now: () => Date.now() });
-const client = { messages: { create: async m => { const d = digits(m.to); if (REPS[d]) { repTel = "+" + d; quienRep(); } recibir(QUIEN[d] || "dueno", m.body); return { sid: "SM" }; } } };
+const client = { messages: { create: async m => { const d = digits(m.to); if (REPS[d]) { repTel = "+" + d; quienRep(); } recibir(REPS[d] ? "kevin" : QUIEN[d] || "dueno", m.body); return { sid: "SM" }; } } };
 const avisos = createNotifier({ client, from: "whatsapp:+10000000000", contentSid: "", sandbox: false, owner: TEL.dueno, negocio, log: () => {} });
 const track = p => p;
 // live location: the real server gives the driver and the customer a link each (ubicacion.js); here they open the map on this page
@@ -280,9 +281,17 @@ window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
-    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel }) => ({ id, nombre, sucursal, tel })), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
+    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
   if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: true, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "•••• 0000" }], eventos: [] });
   let m;
+  if (url.startsWith("/api/repartidores") && metodo === "POST") {
+    const rs = cuerpo.repartidores;
+    if (!Array.isArray(rs) || rs.length > 50) return json({ error: "lista inválida" }, 400);
+    try { repartos.reemplazar(prepararRepartidores(idsRepartidores(rs), negocio.sucursales)); }
+    catch (e) { return json({ error: e.message.replace(/^repartidores: /, "") }, 400); }
+    refrescarPanel();
+    return json({ repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })) });
+  }
   if ((m = url.match(/^\/api\/pedidos\/([^/]+)\/estado$/)) && metodo === "POST") {
     const n = decodeURIComponent(m[1]), estado = String(cuerpo.estado || ""), antes = store.getPedido(n);
     if (!antes) return json({ error: "no existe" }, 404);

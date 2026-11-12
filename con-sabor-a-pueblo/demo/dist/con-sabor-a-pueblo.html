@@ -1017,10 +1017,25 @@ function prepararRepartidores(rs, sucursales) {
     if (tels.has(tel)) errores.push(`dos repartidores con el mismo WhatsApp: ${r.whatsapp}`);
     if (r.sucursal && !sucursales.some(s => s.id === r.sucursal)) errores.push(`repartidor ${id}: la sucursal "${r.sucursal}" no existe`);
     ids.add(id); tels.add(tel);
-    return { id, nombre: String(r.nombre || "").trim(), tel, sucursal: r.sucursal || "" };
+    return { id, nombre: String(r.nombre || "").trim(), tel, sucursal: r.sucursal || "", ...(r.activo === false ? { activo: false } : {}) };
   });
   if (errores.length) throw new Error(errores.join("; "));
   return out;
+}
+
+// rows from the panel: a new driver gets an id from his name ("María José" -> maria-jose, maria-jose-2 if taken)
+function idsRepartidores(rs) {
+  const usados = new Set(rs.map(r => String((r && r.id) || "").trim()).filter(Boolean));
+  return rs.map(r => {
+    r = r && typeof r === "object" ? r : {};
+    const fila = { id: String(r.id || "").trim().slice(0, 40), nombre: String(r.nombre || "").trim().slice(0, 60), whatsapp: String(r.whatsapp || "").slice(0, 30), sucursal: String(r.sucursal || ""), activo: r.activo !== false };
+    if (!fila.id) {
+      const base = norm(fila.nombre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "repartidor";
+      let id = base, k = 2; while (usados.has(id)) id = `${base}-${k++}`;
+      usados.add(id); fila.id = id;
+    }
+    return fila;
+  });
 }
 
 const mapa = (p, negocio) => {
@@ -1030,8 +1045,8 @@ const mapa = (p, negocio) => {
 
 function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x, ubicacion = null }) {
   const links = p => ubicacion ? ubicacion.links(p) : null;
-  const lista = negocio.repartidores || [];
-  const activo = lista.length > 0;
+  if (!negocio.repartidores) negocio.repartidores = [];
+  const lista = negocio.repartidores;
   const nom = p => (p.nombre || "Hola").split(" ")[0];
   const num = p => p.n.replace(/\D/g, "");
   const deTel = from => lista.find(r => r.tel === digits(from)) || null;
@@ -1061,7 +1076,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
   function escoger(p, excluir = []) {
     const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
-    const ok = lista.filter(r => !excluir.includes(r.id) && (!r.sucursal || (b && r.sucursal === b.id)));
+    const ok = lista.filter(r => r.activo !== false && !excluir.includes(r.id) && (!r.sucursal || (b && r.sucursal === b.id)));
     const ultima = r => Math.max(0, ...store.pedidos.filter(x => x.repartidor && x.repartidor.id === r.id).map(x => new Date(x.t_asignado || 0).getTime()));
     return ok.map(r => [r, enCalle(r).length, ultima(r)]).sort((a, b) => a[1] - b[1] || a[2] - b[2])[0]?.[0] || null;
   }
@@ -1070,7 +1085,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // or the owner / a driver asking for another driver
   function asignar(n, { excluir = [], por = "bot" } = {}) {
     const p = store.getPedido(n);
-    if (!p || p.entrega !== "domicilio" || !activo) return null;
+    if (!p || p.entrega !== "domicilio" || !lista.length) return null;
     const r = escoger(p, excluir);
     if (!r) {
       store.updatePedido(n, { repartidor: null });
@@ -1254,12 +1269,22 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return [{ text: q ? `Entendido. *${p.n}* se le pasó a ${q.repartidor.nombre}.` : `Entendido. Le avisamos al negocio que *${p.n}* necesita otro repartidor.` }];
   }
 
-  return { activo, lista, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
+  // the owner edits the team from the panel ("Guardar y aplicar"): it applies at once, to the same list the bot uses.
+  // Someone with deliveries on the street can't be removed (deactivate him instead: he finishes those and gets no new ones).
+  function reemplazar(nuevos) {
+    const quedan = new Set(nuevos.map(r => r.id));
+    const ocupados = lista.filter(r => !quedan.has(r.id) && enCalle(r).length);
+    if (ocupados.length) throw new Error(ocupados.map(r => `${r.nombre} tiene ${enCalle(r).length === 1 ? "1 entrega" : enCalle(r).length + " entregas"} pendientes: desactívelo en vez de borrarlo, o pase sus pedidos a otro`).join("; "));
+    lista.splice(0, lista.length, ...nuevos);
+    return lista;
+  }
+
+  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
 const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
-module.exports = { createRepartos, prepararRepartidores };
+module.exports = { createRepartos, prepararRepartidores, idsRepartidores };
 
 },"./store":function(module,exports,require){// Memoria del bot: conversaciones en curso y pedidos, guardados en archivos JSON.
 // dir = carpeta de datos (DATA_DIR). Sin dir todo queda solo en memoria (pruebas).
@@ -1635,7 +1660,7 @@ document.querySelectorAll("img[data-logo]").forEach(i => i.src = LOGO);
 const { preparar, mezclarPrivado, fechasCupos, norm } = BOT.negocio;
 const { createEngine } = BOT.engine;
 const { createNotifier, fichaTexto, waAddr, digits } = BOT.avisos;
-const { createRepartos } = BOT.repartos;
+const { createRepartos, prepararRepartidores, idsRepartidores } = BOT.repartos;
 const { createStore } = BOT.store;
 const { createIA } = BOT.ia;
 
@@ -1643,9 +1668,10 @@ const negocio = preparar(mezclarPrivado(NEGOCIO_JSON, PRIVADO));
 const TEL = { cliente: "+50495550101", kevin: "+50400000001", dueno: "+50400000003" };
 const QUIEN = Object.fromEntries(Object.entries(TEL).map(([k, v]) => [digits(v), k]));
 // the drivers' chat shows whichever driver the bot wrote to last: Kevin (San Pedro) or Tegusgo (Tegucigalpa)
-const REPS = Object.fromEntries((negocio.repartidores || []).map(r => [digits(r.tel), r]));
+if (!negocio.repartidores) negocio.repartidores = [];
+// the drivers are live: the owner can add or change them in the panel, so look them up each time
+const REPS = new Proxy({}, { get: (_, d) => negocio.repartidores.find(r => r.tel === String(d)) });
 let repTel = TEL.kevin;
-for (const d in REPS) QUIEN[d] = "kevin";
 const CHATS = [
   { k: "cliente", nombre: "Con Sabor a Pueblo", sub: "Así lo ve el cliente", tab: "Cliente", av: "logo" },
   { k: "kevin", nombre: "Con Sabor a Pueblo · Entregas", sub: "Así lo ve Kevin, el repartidor de San Pedro", tab: "Repartidor", av: "K" },
@@ -1663,7 +1689,7 @@ const PASOS = [
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
 const ahora = () => new Date();
 const store = createStore(null, { now: () => Date.now() });
-const client = { messages: { create: async m => { const d = digits(m.to); if (REPS[d]) { repTel = "+" + d; quienRep(); } recibir(QUIEN[d] || "dueno", m.body); return { sid: "SM" }; } } };
+const client = { messages: { create: async m => { const d = digits(m.to); if (REPS[d]) { repTel = "+" + d; quienRep(); } recibir(REPS[d] ? "kevin" : QUIEN[d] || "dueno", m.body); return { sid: "SM" }; } } };
 const avisos = createNotifier({ client, from: "whatsapp:+10000000000", contentSid: "", sandbox: false, owner: TEL.dueno, negocio, log: () => {} });
 const track = p => p;
 // live location: the real server gives the driver and the customer a link each (ubicacion.js); here they open the map on this page
@@ -1790,9 +1816,17 @@ window.DEMO = { entrar: d => entrar(d), salir: () => salir(), api: async (url, o
   if (url.startsWith("/api/negocio")) return json({ nombre: negocio.nombre, color: negocio.color, logo: LOGO, moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
     cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, dias: fechasCupos(negocio, ahora(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, ahora()).some(x => x.fecha === f.fecha) })) } : null,
     sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })),
-    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel }) => ({ id, nombre, sucursal, tel })), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
+    repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), proveedores: negocio.proveedores || [], modoIA: iaViva, usuario: "Dueño" });
   if (url.startsWith("/api/seguridad")) return json({ cifrado: true, disco: true, dosPasos: true, sesionHoras: 12, usuarios: [{ correo: "dueno@ejemplo.hn", nombre: "Dueño", whatsapp: "•••• 0000" }], eventos: [] });
   let m;
+  if (url.startsWith("/api/repartidores") && metodo === "POST") {
+    const rs = cuerpo.repartidores;
+    if (!Array.isArray(rs) || rs.length > 50) return json({ error: "lista inválida" }, 400);
+    try { repartos.reemplazar(prepararRepartidores(idsRepartidores(rs), negocio.sucursales)); }
+    catch (e) { return json({ error: e.message.replace(/^repartidores: /, "") }, 400); }
+    refrescarPanel();
+    return json({ repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })) });
+  }
   if ((m = url.match(/^\/api\/pedidos\/([^/]+)\/estado$/)) && metodo === "POST") {
     const n = decodeURIComponent(m[1]), estado = String(cuerpo.estado || ""), antes = store.getPedido(n);
     if (!antes) return json({ error: "no existe" }, 404);
