@@ -132,9 +132,13 @@ const { createIA } = BOT.ia;
 const negocio = preparar(mezclarPrivado(NEGOCIO_JSON, PRIVADO));
 const TEL = { cliente: "+50495550101", kevin: "+50400000001", dueno: "+50400000003" };
 const QUIEN = Object.fromEntries(Object.entries(TEL).map(([k, v]) => [digits(v), k]));
+// the drivers' chat shows whichever driver the bot wrote to last: Kevin (San Pedro) or Tegusgo (Tegucigalpa)
+const REPS = Object.fromEntries((negocio.repartidores || []).map(r => [digits(r.tel), r]));
+let repTel = TEL.kevin;
+for (const d in REPS) QUIEN[d] = "kevin";
 const CHATS = [
   { k: "cliente", nombre: "Con Sabor a Pueblo", sub: "Así lo ve el cliente", tab: "Cliente", av: "logo" },
-  { k: "kevin", nombre: "Con Sabor a Pueblo · Entregas", sub: "Así lo ve Kevin, el repartidor", tab: "Kevin", av: "K" },
+  { k: "kevin", nombre: "Con Sabor a Pueblo · Entregas", sub: "Así lo ve Kevin, el repartidor de San Pedro", tab: "Repartidor", av: "K" },
   { k: "dueno", nombre: "Avisos de pedidos", sub: "WhatsApp del dueño y de la sucursal", tab: "Dueño", av: "D" },
 ];
 const PASOS = [
@@ -149,7 +153,7 @@ const PASOS = [
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
 const ahora = () => new Date();
 const store = createStore(null, { now: () => Date.now() });
-const client = { messages: { create: async m => { recibir(QUIEN[digits(m.to)] || "dueno", m.body); return { sid: "SM" }; } } };
+const client = { messages: { create: async m => { const d = digits(m.to); if (REPS[d]) { repTel = "+" + d; quienRep(); } recibir(QUIEN[d] || "dueno", m.body); return { sid: "SM" }; } } };
 const avisos = createNotifier({ client, from: "whatsapp:+10000000000", contentSid: "", sandbox: false, owner: TEL.dueno, negocio, log: () => {} });
 const track = p => p;
 // live location: the real server gives the driver and the customer a link each (ubicacion.js); here they open the map on this page
@@ -369,17 +373,23 @@ async function mandar(k, texto, foto = false) {
   BOTONES[k] = []; chips(k);
   $("#e-" + k).classList.add("si"); $("#m-" + k).scrollTop = 1e9;
   let out;
-  try { out = await turno(TEL[k], foto ? "📷 foto" : texto, foto); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
+  try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
   await new Promise(r => setTimeout(r, 350));
   $("#e-" + k).classList.remove("si");
   for (const m of out) { burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
   chips(k); avanzar(); refrescarPanel();
 }
+function quienRep() {
+  const r = REPS[digits(repTel)]; if (!r) return;
+  const sec = document.querySelector('.tel[data-k=kevin]'); if (!sec) return;
+  sec.querySelector(".cab small").textContent = `Así lo ve ${r.nombre}, el repartidor${r.sucursal === "tegucigalpa" ? " de Tegucigalpa" : r.sucursal === "sps" ? " de San Pedro" : ""}`;
+  sec.querySelector(".cab .av").textContent = r.nombre[0].toUpperCase();
+}
 function chips(k) {
   let ls = BOTONES[k].slice(0, 6);
   const extra = [];
   if (k === "kevin") {
-    const mios = repartos.enCalle(repartos.lista[0]);
+    const mios = repartos.enCalle(REPS[digits(repTel)] || repartos.lista[0]);
     if (mios.some(p => p.estado === "por_envio" && p.envio == null)) extra.push("60");
     if (mios.some(p => p.estado === "listo")) extra.push("SALGO");
     if (mios.some(p => p.estado === "en_camino")) extra.push("ENTREGADO");
