@@ -38,7 +38,7 @@ const { montarDemo } = require("./demo");
 const { createMeta, mensajes: mensajesMeta } = require("./meta");
 const { crearRespaldo } = require("./respaldo");
 
-const on = v => /^(1|true|si|sí|yes)$/i.test(String(v || "").trim());
+const on = v => /^(1|true|on|si|sí|yes)$/i.test(String(v || "").trim());
 const ESTADOS = ["por_pagar", "nuevo", "cocina", "listo", "en_camino", "por_envio", "entregado", "no_vino", "cancelado", "atendido", "por_confirmar", "confirmada", "sin_cupo", "en_espera"];
 
 function loadConfig(env = process.env) {
@@ -76,7 +76,7 @@ function loadConfig(env = process.env) {
     limiteIA: +env.LIMITE_IA_DIA || 80,
     // demostración con IA para la página de Clientia Tech (demo.js): DEMO_IA=on y la misma ANTHROPIC_API_KEY
     demoIA: on(env.DEMO_IA),
-    demoKey: env.ANTHROPIC_API_KEY || "",
+    demoKey: String(env.ANTHROPIC_API_KEY || "").trim(),
     demoOrigenes: String(env.DEMO_ORIGENES || "https://clientiatech.com,https://www.clientiatech.com").split(",").map(s => s.trim()).filter(Boolean),
     demoPorVisitante: +env.DEMO_LIMITE_VISITANTE || 15,
     demoPorDia: +env.DEMO_LIMITE_DIA || 400,
@@ -501,6 +501,8 @@ ${wa ? `<a href="${wa}" style="display:inline-block;background:${esc(negocio.col
   }
 
   app.get("/", (req, res) => res.type("text/plain").send(`${negocio.nombre} · bot activo`));
+  // quick check of the AI demo, without secrets: is it on, is there a key
+  app.get("/demo/estado", (req, res) => res.json({ demoIA: !!cfg.demoIA, clave: !!cfg.demoKey }));
 
   app.locals.store = store;
   app.locals.negocio = negocio;
