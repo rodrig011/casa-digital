@@ -184,6 +184,10 @@ Si el negocio reparte con su propia gente, se ponen en el archivo del cliente (e
 
 Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje al repartidor sale con la plantilla aprobada (`META_PLANTILLA`). Conviene que cada repartidor le escriba "hola" al número del negocio el día que empieza.
 
+### La ubicación del cliente llega al repartidor
+
+En un pedido a domicilio el bot pide, además de la dirección escrita, la ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). Si el cliente manda el pin en vez de escribir la dirección, también sirve. El pin se guarda en el pedido y al repartidor le llega como ubicación de WhatsApp (con Meta) y como link exacto de Google Maps en el texto; en el panel la ficha del pedido tiene «Ver la ubicación exacta». Si el cliente manda el pin después, se lo reenvía al repartidor que ya tiene el envío.
+
 ### El dueño cambia su menú desde el panel
 
 En **Menú > Editar menú** el dueño cambia precios y nombres, agrega o quita productos, marca algo **Agotado** (el bot deja de ofrecerlo sin borrarlo) y elige en qué sucursal se vende. Al tocar **Guardar y aplicar** el bot y la IA usan el menú nuevo al instante, sin reiniciar. Se revisa con las mismas reglas que el archivo del negocio y queda guardado (cifrado) en `DATA_DIR/menu.json`, que manda sobre el menú del archivo. Lo que el panel no toca de cada producto (mínimo, anticipo, encargo, descripción) se conserva. Los pedidos que ya entraron se quedan con su precio.

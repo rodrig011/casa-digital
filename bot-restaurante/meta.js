@@ -94,10 +94,12 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
     } catch (e) { log(`[meta] el código no salió a ${to}: ${e.message}`); return false; }
   }
 
-  return { responder, enviar, reenviable, firmaOk, formato, codigo };
+  // the customer's pin, forwarded to the driver as a real WhatsApp location
+  const ubicacion = (to, u) => mandar(to, { type: "location", location: { latitude: u.lat, longitude: u.lng, ...(u.nombre ? { name: u.nombre } : {}), ...(u.direccion ? { address: u.direccion } : {}) } }).catch(e => { log(`[meta] la ubicación no salió a ${to}: ${e.message}`); return null; });
+  return { responder, enviar, reenviable, firmaOk, formato, codigo, ubicacion };
 }
 
-// the messages inside one webhook post: [{ id, from, nombre, text, foto }]
+// the messages inside one webhook post: [{ id, from, nombre, text, foto, ubic }]; ubic = the customer's location pin
 // a tapped button or list row comes back as its number; a photo comes with its media id
 function mensajes(body) {
   const out = [];
@@ -111,7 +113,9 @@ function mensajes(body) {
         : m.type === "button" ? (m.button || {}).text || ""
         : m.type === "image" ? (m.image && m.image.caption) || ""
         : "";
-      out.push({ id: m.id, from: m.from, nombre: nombres[m.from] || "", text: String(text).slice(0, 1000), foto: m.type === "image" ? m.image.id : null, tipo: m.type });
+      const l = m.type === "location" && m.location;
+      const ubic = l && Number.isFinite(+l.latitude) && Number.isFinite(+l.longitude) ? { lat: +(+l.latitude).toFixed(6), lng: +(+l.longitude).toFixed(6), ...(l.name ? { nombre: String(l.name).slice(0, 80) } : {}), ...(l.address ? { direccion: String(l.address).slice(0, 160) } : {}) } : null;
+      out.push({ id: m.id, from: m.from, nombre: nombres[m.from] || "", text: String(text).slice(0, 1000), foto: m.type === "image" ? m.image.id : null, ubic, tipo: m.type });
     }
   }
   return out;

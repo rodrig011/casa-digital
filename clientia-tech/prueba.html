@@ -591,6 +591,7 @@ module.exports = { aplicarMenu, menuDesdePanel, cargarNegocio, preparar, cuenta,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
 const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe } = require("./negocio");
+const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
 const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|hablar con|me llamen|queja|reclamo/.test(t);
@@ -903,6 +904,14 @@ function createEngine(negocio) {
         s.step = "carrito_ok"; return handle({ ...s, offer: ["Confirmar pedido"] }, "Confirmar pedido", now, ctx);
       }
       case "direccion": {
+        if (ctx.ubic) {   // the customer sent his WhatsApp pin instead of writing the address
+          d.ubicacion = ctx.ubic; d.direccion = [ctx.ubic.nombre, ctx.ubic.direccion].filter(Boolean).join(", ").slice(0, 200) || "Ubicación enviada por WhatsApp"; d.hora = "A domicilio, lo antes posible";
+          say("📍 Recibimos su ubicación.");
+          if (porEncargo()) break;
+          if (CUP) { pedirFecha(); break; }
+          go("nombre"); say("¿A nombre de quién lo dejo?");
+          break;
+        }
         if (t.length < 6) { say("Para que el repartidor llegue bien, escríbame la colonia, la calle o pasaje y una seña. Por ejemplo: Col. Trejo, 5 calle, casa blanca frente a la pulpería."); break; }
         d.direccion = text.trim().slice(0, 200); d.hora = "A domicilio, lo antes posible";
         if (porEncargo()) break;
@@ -991,7 +1000,7 @@ function createEngine(negocio) {
         const n = "PED-" + (++s.seq);
         if (d.encargo) d.hora = `Encargo: ${d.dia}`;
         else if (CUP) d.hora = d.espera ? `Lista de espera: ${d.dia}` : unaTanda ? mayus(d.dia) : `${mayus(d.dia)}, ${d.tanda}`;
-        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · "), ...(d.domicilio ? { entrega: "domicilio", direccion: d.direccion } : {}),
+        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · "), ...(d.domicilio ? { entrega: "domicilio", direccion: d.direccion, ...(d.ubicacion ? { ubicacion: d.ubicacion } : {}) } : {}),
           ...(d.encargo ? { encargo: true, dia: d.dia, diaFecha: d.encargo.fecha } : CUP ? { cupos: d.cupos, dia: d.dia, ...(d.espera ? { estado: "en_espera" } : { diaFecha: d.fecha, tanda: d.tanda }) } : {}) };
         if (APARTA && d.espera) {
           say({ text: `📝 *Listo, ${d.nombre.split(" ")[0]}.* Lo anotamos en la lista de espera (${n}) para ${d.dia}: ${cupTxt(d.cupos)}.\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n\nSi se libera un cupo le escribimos por aquí. Todavía no tiene que pagar nada.`, buttons: ["Hacer otro pedido", "Volver al inicio"] });
@@ -999,13 +1008,13 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
           const aparta = d.encargo || CUP;
           if (d.domicilio && N.repartidores && N.repartidores.length) {
-            say({ text: `🧾 *Pedido ${n} recibido, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}🛵 A domicilio: ${d.direccion}\n\nEn un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, le pasamos los datos para pagar la comida por transferencia; con el comprobante revisado, entra a cocina. El envío se le paga al repartidor al recibir.` });
+            say({ text: `🧾 *Pedido ${n} recibido, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}🛵 A domicilio: ${d.direccion}\n\nEn un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, le pasamos los datos para pagar la comida por transferencia; con el comprobante revisado, entra a cocina. El envío se le paga al repartidor al recibir.${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` });
             go("post");
             break;
           }
@@ -1113,10 +1122,14 @@ function idsRepartidores(rs) {
   });
 }
 
+// the exact pin the customer sent, or a search by the written address
 const mapa = (p, negocio) => {
+  if (p.ubicacion) return `https://maps.google.com/?q=${p.ubicacion.lat},${p.ubicacion.lng}`;
   const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.direccion}, ${b ? b.nombre : ""}, ${negocio.pais}`)}`;
 };
+// what the bot asks the customer right after a delivery order, so the driver gets the exact spot
+const PIDE_UBICACION = "📍 Para que el repartidor llegue sin preguntar, mándenos su ubicación: toque el clip 📎, elija *Ubicación* y *Enviar su ubicación actual*.";
 
 function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x, ubicacion = null }) {
   const links = p => ubicacion ? ubicacion.links(p) : null;
@@ -1135,7 +1148,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const titulo = `${cotiza ? "Envío por cotizar" : "Entrega"} ${p.n} · ${p.sucursal}`;
     const lineas = [
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
-      `📍 ${p.direccion}`,
+      `📍 ${p.direccion}${p.ubicacion ? " (mandó su ubicación exacta: vea el mapa)" : ""}`,
       ...(p.lineas || []).map(l => lineaTexto(l, negocio.L)),
       p.pagado || p.pagaAntes ? `💰 Comida ${negocio.L(p.total)} (se paga por transferencia)${p.envio != null ? ` · usted cobra solo el envío: ${negocio.L(p.envio)}` : ""}` : `💰 Comida ${negocio.L(p.total)}${p.envio != null ? ` + envío ${negocio.L(p.envio)} = cobrar ${negocio.L(p.total + p.envio)}` : ""}`,
       `Mapa: ${mapa(p, negocio)}`,
@@ -1173,12 +1186,28 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const f = fichaRepartidor(q, r);
     log(`[${n}] asignado a ${r.nombre}${antes ? ` (antes ${antes.nombre})` : ""}`);
     track(avisos.enviar(waAddr(r.tel), f.body, f));
+    if (q.ubicacion) track(avisos.ubicacion(waAddr(r.tel), q.ubicacion));
     const previo = antes && antes.id !== r.id && por !== "repartidor:" + antes.id && lista.find(x => x.id === antes.id);
     if (previo) aRep(previo, `ℹ️ ${previo.nombre}, la entrega *${q.n}* se le pasó a ${r.nombre}. Ya no tiene que llevarla.`);
     if (!antes && q.estado === "listo") track(avisos.enviar(waAddr(q.tel), `✅ ¡${nom(q)}, su pedido *${q.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     track(aDueno(q, q.estado === "por_envio" ? `${q.n}: ${r.nombre} cotiza el envío` : `${q.n} asignado a ${r.nombre}`, [`📍 ${q.direccion}`, `💰 Comida ${negocio.L(q.total)}`,
       antes ? `${antes.nombre} no lo pudo llevar.` : q.estado === "por_envio" ? "Cuando el cliente acepte el precio del envío, le llega el pedido para cocina." : "Se le avisó por WhatsApp."]));
     return q;
+  }
+
+  // the customer sent his WhatsApp pin: it goes on his open delivery order and, if a driver already has it, to the driver.
+  // Returns the reply for the customer, or null when this number has no delivery order open.
+  function ubicacionCliente(from, u) {
+    const p = store.pedidos.findLast(x => x.entrega === "domicilio" && !["entregado", "cancelado"].includes(x.estado) && digits(x.tel) === digits(from));
+    if (!p) return null;
+    const q = store.updatePedido(p.n, { ubicacion: { lat: u.lat, lng: u.lng, ...(u.nombre ? { nombre: u.nombre } : {}), ...(u.direccion ? { direccion: u.direccion } : {}) }, t_ubicacion: now().toISOString() });
+    const r = deRep(q);
+    if (r) {
+      aRep(r, `📍 El cliente de *${q.n}* (${q.nombre || "sin nombre"}) mandó su ubicación exacta: ${mapa(q, negocio)}\n${q.direccion}`);
+      track(avisos.ubicacion(waAddr(r.tel), q.ubicacion));
+    }
+    log(`[${q.n}] ubicación del cliente${r ? ` -> ${r.nombre}` : ""}`);
+    return `📍 ¡Gracias, ${nom(q)}! Ya tenemos su ubicación para el pedido *${q.n}*${r ? `; se la pasamos a ${r.nombre}` : ""}.`;
   }
 
   // the price of the delivery, from the driver ("ENVÍO 60") or the owner ("ENVÍO 60 1004"): the customer accepts it before cooking
@@ -1248,7 +1277,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   function listo(p) {
     const r = deRep(p);
     if (!r) return asignar(p.n, { por: "cocina" });
-    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
+    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\nMapa: ${mapa(p, negocio)}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
     track(avisos.enviar(waAddr(p.tel), `✅ ¡${nom(p)}, su pedido *${p.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     return p;
   }
@@ -1354,12 +1383,12 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return lista;
   }
 
-  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
+  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, ubicacionCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
 const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
-module.exports = { createRepartos, prepararRepartidores, idsRepartidores };
+module.exports = { createRepartos, prepararRepartidores, idsRepartidores, mapa, PIDE_UBICACION };
 
 },"./avisos":function(module,exports,require){// Avisos por WhatsApp: cada pedido nuevo y cada "quiero hablar con una persona" le llegan al dueño
 // y a la sucursal que lo atiende (si tiene WhatsApp propio en negocios/<cliente>.json).
@@ -1425,6 +1454,8 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
 
   return {
     destinos,
+    // the customer's pin as a WhatsApp location (only Meta can send one; with Twilio the map link in the text is enough)
+    ubicacion: (to, u) => canal && canal.ubicacion ? canal.ubicacion(to, u) : Promise.resolve(null),
     async ficha(p) {
       const t = fichaTexto(p, negocio.L), to = destinos(p.sucursal);
       const body = `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`;

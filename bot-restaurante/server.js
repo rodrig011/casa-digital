@@ -160,10 +160,10 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const persona = (motivo, sucursal, tel, convo) => guardar({ tipo: "persona", nombre: null, sucursal, motivo }, tel, convo);
 
   // one turn of the menu engine
-  function conversar(key, text) {
+  function conversar(key, text, ubic = null) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
-    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key) });
+    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key), ubic });
     const out = r.messages.map(toText).filter(Boolean);
     out.mensajes = r.messages.filter(m => m.text);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
@@ -176,11 +176,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
 
   // AI mode: Claude answers; on any API error or timeout this message goes to the menu engine
-  async function conversarIA(key, text, base) {
+  async function conversarIA(key, text, base, ubic = null) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c) });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), ubic });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
@@ -327,7 +327,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     cola.then(() => { if (colas.get(k) === cola) colas.delete(k); });
     return este;
   }
-  async function turnoUno(from, text, { foto, media, base }) {
+  // the customer's WhatsApp pin: on his open delivery order (and to the driver); otherwise it answers the address question
+  const textoUbic = u => `[ubicación de WhatsApp: ${[u.nombre, u.direccion].filter(Boolean).join(", ") || `${u.lat}, ${u.lng}`}]`;
+  async function turnoUno(from, text, { foto, media, base, ubic = null }) {
     let reply;
     // too many messages from one number: one notice, then silence until the window passes
     // the restaurant's own drivers answer SALGO / ENTREGADO / NO PUEDO on the same number
@@ -343,19 +345,22 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (esNegocio(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
     if (esNegocio(from) && (reply = aprobar(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
-    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base))) return [{ text: reply.slice(0, 1590) }];
-    const out = conversar(from, text);
+    if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
+    if (ubic) text = textoUbic(ubic);
+    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [{ text: reply.slice(0, 1590) }];
+    const out = conversar(from, text, ubic);
     return Promise.all(out.mensajes.map(async m => ({ ...m, text: (out.pedido ? await conLink(m.text, out.pedido, base) : m.text).split(LINK).join("") })));
   }
 
   app.post("/whatsapp", firma, async (req, res) => {
     const p = req.body || {};
     const foto = Number(p.NumMedia || 0) > 0;
+    const ubic = p.Latitude != null && p.Latitude !== "" && Number.isFinite(+p.Latitude) && Number.isFinite(+p.Longitude) ? { lat: +(+p.Latitude).toFixed(6), lng: +(+p.Longitude).toFixed(6), ...(p.Label ? { nombre: String(p.Label).slice(0, 80) } : {}), ...(p.Address ? { direccion: String(p.Address).slice(0, 160) } : {}) } : null;
     const text = (foto && !p.Body ? "📷 foto" : String(p.Body || "")).slice(0, 1000);
     const tw = new twilio.twiml.MessagingResponse();
     // one WhatsApp message per turn keeps the order and costs one message
     let buf = "";
-    for (const t of (await turno(p.From || "anon", text, { foto, media: p.MediaUrl0, base: baseDe(req) })).map(toText)) { if (buf && (buf + "\n\n" + t).length > 1590) { tw.message(buf); buf = t; } else buf = buf ? buf + "\n\n" + t : t; }
+    for (const t of (await turno(p.From || "anon", text, { foto, media: p.MediaUrl0, base: baseDe(req), ubic })).map(toText)) { if (buf && (buf + "\n\n" + t).length > 1590) { tw.message(buf); buf = t; } else buf = buf ? buf + "\n\n" + t : t; }
     if (buf) tw.message(buf.slice(0, 1590));
     res.type("text/xml").send(tw.toString());
   });
@@ -377,11 +382,11 @@ function createApp(cfg = loadConfig(), deps = {}) {
           if (vistos.has(m.id)) continue;                 // Meta can deliver the same message twice
           vistos.add(m.id); if (vistos.size > 2000) vistos.delete(vistos.values().next().value);
           const foto = !!m.foto;
-          if (!foto && !m.text) { await meta.responder(m.from, "Por ahora solo leo texto y fotos. ¿Me lo puede escribir?").catch(e => log(`[meta] ${e.message}`)); continue; }
+          if (!foto && !m.text && !m.ubic) { await meta.responder(m.from, "Por ahora solo leo texto y fotos. ¿Me lo puede escribir?").catch(e => log(`[meta] ${e.message}`)); continue; }
           let id = null;
           const media = foto ? () => (id = id || meta.reenviable(m.foto).catch(e => { log(`[meta] foto: ${e.message}`); return null; })) : null;
           try {
-            const out = await turno(m.from, foto && !m.text ? "📷 foto" : m.text, { foto, media, base });
+            const out = await turno(m.from, foto && !m.text ? "📷 foto" : m.text, { foto, media, base, ubic: m.ubic });
             for (const r of out) await meta.responder(m.from, r);
           } catch (e) { log(`[meta] no se pudo contestar a ${m.from}: ${e.message}`); }
         }
