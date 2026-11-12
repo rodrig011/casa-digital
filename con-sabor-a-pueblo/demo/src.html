@@ -176,9 +176,9 @@ let iaViva = !!ia;
 function pintarIA(t) {
   const el = document.getElementById("ia"); if (!el) return;
   el.classList.toggle("on", iaViva && t === "on");
-  el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : "Despertando la IA…";
+  el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : "IA: esperando la primera respuesta";
 }
-if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => pintarIA("on"), () => pintarIA());   // wakes the server up
+if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => pintarIA(), () => pintarIA());   // wakes the server up
 async function conversarIA(tel, text) {
   const sess = sesiones.get(tel) || { state: null };
   try {

@@ -769,8 +769,7 @@ function createEngine(negocio) {
     if (!state || SALUDO.test(t)) {
       reset(); go("inicio");
       if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
-      menuInicio();
-      return done();
+      if (!(quiereDomicilio(t) || quiereMenu(t) || quierePedir(t) || quiereSucursal(t))) { menuInicio(); return done(); }
     }
 
     switch (s.step) {
@@ -779,6 +778,7 @@ function createEngine(negocio) {
         if (o === OP.persona || (!o && quierePersona(t))) { pasarPersona(); break; }
         if (RES && (o === OP.reservar || (!o && quiereReservar(t)))) { empezarReserva(); break; }
         if (o === OP.domicilio && PROPIO) { empezarPedido([], true); break; }
+        if (!o && PROPIO && quiereDomicilio(t)) { const l = leerPedido(text); if (l.encontrados.length || quierePedir(t)) { empezarPedido(l.encontrados, true); break; } }
         if (o === OP.domicilio || (!o && quiereDomicilio(t))) { reset(); go("post"); say({ text: domicilioTexto(), buttons: [PROPIO ? OP.domicilio : OP.pedido, OP.menu] }); break; }
         if (o === OP.sucursales || (!o && quiereSucursal(t))) { reset(); go("post"); say(sucursalesTexto()); say({ text: "¿Algo más?", buttons: [OP.pedido, OP.menu] }); break; }
         if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); say({ text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
