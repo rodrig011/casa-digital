@@ -104,7 +104,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <header class="top">
   <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=f6d7c0e7" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=7ea81dd7" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El precio del cerdito chuko en San Pedro es el suyo; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -451,6 +451,7 @@ module.exports = { aplicarMenu, menuDesdePanel, cargarNegocio, preparar, cuenta,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
 const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe } = require("./negocio");
+const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
 const quierePersona = t => /persona|asesor|humano|alguien|encargad|gerente|hablar con|me llamen|queja|reclamo/.test(t);
@@ -763,6 +764,14 @@ function createEngine(negocio) {
         s.step = "carrito_ok"; return handle({ ...s, offer: ["Confirmar pedido"] }, "Confirmar pedido", now, ctx);
       }
       case "direccion": {
+        if (ctx.ubic) {   // the customer sent his WhatsApp pin instead of writing the address
+          d.ubicacion = ctx.ubic; d.direccion = [ctx.ubic.nombre, ctx.ubic.direccion].filter(Boolean).join(", ").slice(0, 200) || "Ubicación enviada por WhatsApp"; d.hora = "A domicilio, lo antes posible";
+          say("📍 Recibimos su ubicación.");
+          if (porEncargo()) break;
+          if (CUP) { pedirFecha(); break; }
+          go("nombre"); say("¿A nombre de quién lo dejo?");
+          break;
+        }
         if (t.length < 6) { say("Para que el repartidor llegue bien, escríbame la colonia, la calle o pasaje y una seña. Por ejemplo: Col. Trejo, 5 calle, casa blanca frente a la pulpería."); break; }
         d.direccion = text.trim().slice(0, 200); d.hora = "A domicilio, lo antes posible";
         if (porEncargo()) break;
@@ -851,7 +860,7 @@ function createEngine(negocio) {
         const n = "PED-" + (++s.seq);
         if (d.encargo) d.hora = `Encargo: ${d.dia}`;
         else if (CUP) d.hora = d.espera ? `Lista de espera: ${d.dia}` : unaTanda ? mayus(d.dia) : `${mayus(d.dia)}, ${d.tanda}`;
-        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · "), ...(d.domicilio ? { entrega: "domicilio", direccion: d.direccion } : {}),
+        s.lead = { tipo: "pedido", n, nombre: d.nombre, sucursal: b.nombre, sucursalId: b.id, lineas: c.lineas, total: c.total, hora: d.hora, resumen: c.lineas.map(l => lineaTexto(l, N.L)).join(" · "), ...(d.domicilio ? { entrega: "domicilio", direccion: d.direccion, ...(d.ubicacion ? { ubicacion: d.ubicacion } : {}) } : {}),
           ...(d.encargo ? { encargo: true, dia: d.dia, diaFecha: d.encargo.fecha } : CUP ? { cupos: d.cupos, dia: d.dia, ...(d.espera ? { estado: "en_espera" } : { diaFecha: d.fecha, tanda: d.tanda }) } : {}) };
         if (APARTA && d.espera) {
           say({ text: `📝 *Listo, ${d.nombre.split(" ")[0]}.* Lo anotamos en la lista de espera (${n}) para ${d.dia}: ${cupTxt(d.cupos)}.\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n\nSi se libera un cupo le escribimos por aquí. Todavía no tiene que pagar nada.`, buttons: ["Hacer otro pedido", "Volver al inicio"] });
@@ -859,13 +868,13 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
           const aparta = d.encargo || CUP;
           if (d.domicilio && N.repartidores && N.repartidores.length) {
-            say({ text: `🧾 *Pedido ${n} recibido, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}🛵 A domicilio: ${d.direccion}\n\nEn un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, le pasamos los datos para pagar la comida por transferencia; con el comprobante revisado, entra a cocina. El envío se le paga al repartidor al recibir.` });
+            say({ text: `🧾 *Pedido ${n} recibido, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}🛵 A domicilio: ${d.direccion}\n\nEn un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, le pasamos los datos para pagar la comida por transferencia; con el comprobante revisado, entra a cocina. El envío se le paga al repartidor al recibir.${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` });
             go("post");
             break;
           }
@@ -980,6 +989,8 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
 
   return {
     destinos,
+    // the customer's pin as a WhatsApp location (only Meta can send one; with Twilio the map link in the text is enough)
+    ubicacion: (to, u) => canal && canal.ubicacion ? canal.ubicacion(to, u) : Promise.resolve(null),
     async ficha(p) {
       const t = fichaTexto(p, negocio.L), to = destinos(p.sucursal);
       const body = `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
@@ -1082,10 +1093,14 @@ function idsRepartidores(rs) {
   });
 }
 
+// the exact pin the customer sent, or a search by the written address
 const mapa = (p, negocio) => {
+  if (p.ubicacion) return `https://maps.google.com/?q=${p.ubicacion.lat},${p.ubicacion.lng}`;
   const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.direccion}, ${b ? b.nombre : ""}, ${negocio.pais}`)}`;
 };
+// what the bot asks the customer right after a delivery order, so the driver gets the exact spot
+const PIDE_UBICACION = "📍 Para que el repartidor llegue sin preguntar, mándenos su ubicación: toque el clip 📎, elija *Ubicación* y *Enviar su ubicación actual*.";
 
 function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x, ubicacion = null }) {
   const links = p => ubicacion ? ubicacion.links(p) : null;
@@ -1104,7 +1119,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const titulo = `${cotiza ? "Envío por cotizar" : "Entrega"} ${p.n} · ${p.sucursal}`;
     const lineas = [
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
-      `📍 ${p.direccion}`,
+      `📍 ${p.direccion}${p.ubicacion ? " (mandó su ubicación exacta: vea el mapa)" : ""}`,
       ...(p.lineas || []).map(l => lineaTexto(l, negocio.L)),
       p.pagado || p.pagaAntes ? `💰 Comida ${negocio.L(p.total)} (se paga por transferencia)${p.envio != null ? ` · usted cobra solo el envío: ${negocio.L(p.envio)}` : ""}` : `💰 Comida ${negocio.L(p.total)}${p.envio != null ? ` + envío ${negocio.L(p.envio)} = cobrar ${negocio.L(p.total + p.envio)}` : ""}`,
       `Mapa: ${mapa(p, negocio)}`,
@@ -1142,12 +1157,28 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const f = fichaRepartidor(q, r);
     log(`[${n}] asignado a ${r.nombre}${antes ? ` (antes ${antes.nombre})` : ""}`);
     track(avisos.enviar(waAddr(r.tel), f.body, f));
+    if (q.ubicacion) track(avisos.ubicacion(waAddr(r.tel), q.ubicacion));
     const previo = antes && antes.id !== r.id && por !== "repartidor:" + antes.id && lista.find(x => x.id === antes.id);
     if (previo) aRep(previo, `ℹ️ ${previo.nombre}, la entrega *${q.n}* se le pasó a ${r.nombre}. Ya no tiene que llevarla.`);
     if (!antes && q.estado === "listo") track(avisos.enviar(waAddr(q.tel), `✅ ¡${nom(q)}, su pedido *${q.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     track(aDueno(q, q.estado === "por_envio" ? `${q.n}: ${r.nombre} cotiza el envío` : `${q.n} asignado a ${r.nombre}`, [`📍 ${q.direccion}`, `💰 Comida ${negocio.L(q.total)}`,
       antes ? `${antes.nombre} no lo pudo llevar.` : q.estado === "por_envio" ? "Cuando el cliente acepte el precio del envío, le llega el pedido para cocina." : "Se le avisó por WhatsApp."]));
     return q;
+  }
+
+  // the customer sent his WhatsApp pin: it goes on his open delivery order and, if a driver already has it, to the driver.
+  // Returns the reply for the customer, or null when this number has no delivery order open.
+  function ubicacionCliente(from, u) {
+    const p = store.pedidos.findLast(x => x.entrega === "domicilio" && !["entregado", "cancelado"].includes(x.estado) && digits(x.tel) === digits(from));
+    if (!p) return null;
+    const q = store.updatePedido(p.n, { ubicacion: { lat: u.lat, lng: u.lng, ...(u.nombre ? { nombre: u.nombre } : {}), ...(u.direccion ? { direccion: u.direccion } : {}) }, t_ubicacion: now().toISOString() });
+    const r = deRep(q);
+    if (r) {
+      aRep(r, `📍 El cliente de *${q.n}* (${q.nombre || "sin nombre"}) mandó su ubicación exacta: ${mapa(q, negocio)}\n${q.direccion}`);
+      track(avisos.ubicacion(waAddr(r.tel), q.ubicacion));
+    }
+    log(`[${q.n}] ubicación del cliente${r ? ` -> ${r.nombre}` : ""}`);
+    return `📍 ¡Gracias, ${nom(q)}! Ya tenemos su ubicación para el pedido *${q.n}*${r ? `; se la pasamos a ${r.nombre}` : ""}.`;
   }
 
   // the price of the delivery, from the driver ("ENVÍO 60") or the owner ("ENVÍO 60 1004"): the customer accepts it before cooking
@@ -1217,7 +1248,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   function listo(p) {
     const r = deRep(p);
     if (!r) return asignar(p.n, { por: "cocina" });
-    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
+    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\nMapa: ${mapa(p, negocio)}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
     track(avisos.enviar(waAddr(p.tel), `✅ ¡${nom(p)}, su pedido *${p.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     return p;
   }
@@ -1323,12 +1354,12 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return lista;
   }
 
-  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
+  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, ubicacionCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
 const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
-module.exports = { createRepartos, prepararRepartidores, idsRepartidores };
+module.exports = { createRepartos, prepararRepartidores, idsRepartidores, mapa, PIDE_UBICACION };
 
 },"./store":function(module,exports,require){// Memoria del bot: conversaciones en curso y pedidos, guardados en archivos JSON.
 // dir = carpeta de datos (DATA_DIR). Sin dir todo queda solo en memoria (pruebas).
@@ -1444,6 +1475,7 @@ Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
 - Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
+${N.domicilio.propio ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
@@ -1559,16 +1591,16 @@ function ejecutar(N, name, input, ctx) {
         }
       }
       const hora = cup ? (cup.encargo ? `Encargo: ${cup.dia}` : cup.tanda ? `${cup.dia.replace(/^\p{L}/u, x => x.toUpperCase())}${N.cupos.tandas.length > 1 ? `, ${cup.tanda}` : ""}` : `Lista de espera: ${cup.dia}`) : direccion ? "A domicilio" : String(input.hora || "").slice(0, 60);
-      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora, resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion } : {}), ...(cup || {}) };
+      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora, resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion, ...(ctx.ubic ? { ubicacion: ctx.ubic } : {}) } : {}), ...(cup || {}) };
       const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre, ...(cup ? { cupos: cup.cupos, dia: cup.dia, ...(cup.tanda ? { tanda: cup.tanda } : {}) } : {}) };
       if (cup && cup.estado === "en_espera") return { ...base, nota: "Quedó en la lista de espera, sin cupo apartado y sin pagar nada. Si se libera un cupo, el restaurante le escribe por este chat." };
       if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!direccion, lineas: c.lineas })) {
         const monto = montoCobro(N, c.lineas);
         ctx.pedido.estado = "por_pagar"; if (monto < c.total) ctx.pedido.anticipo = monto;
-        if (direccion && N.repartidores && N.repartidores.length) return { ...base, nota: "Todavía no va a cocina. Primero el repartidor le dice por este chat cuánto es el envío; cuando el cliente lo acepte, le llegan los datos para pagar la comida por transferencia, y con el comprobante revisado entra a cocina. El envío se le paga al repartidor al recibir. No le dé datos de pago todavía." };
+        if (direccion && N.repartidores && N.repartidores.length) return { ...base, nota: "Todavía no va a cocina. Primero el repartidor le dice por este chat cuánto es el envío; cuando el cliente lo acepte, le llegan los datos para pagar la comida por transferencia, y con el comprobante revisado entra a cocina. El envío se le paga al repartidor al recibir. No le dé datos de pago todavía." + (ctx.ubic ? "" : " Pídale su ubicación de WhatsApp (clip 📎 > Ubicación) para el repartidor.") };
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total, monto), nota: "Todavía NO va a cocina ni queda confirmado: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando el negocio confirme el pago se le avisa." };
       }
-      if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." };
+      if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." + (ctx.ubic ? "" : " Pídale su ubicación de WhatsApp (clip 📎 > Ubicación) para el repartidor.") };
       return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
     }
     case "crear_reservacion": {
@@ -1612,9 +1644,9 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   }
   model = model || MODELO;
 
-  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado } = {}) {
+  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, ubic = null } = {}) {
     const SYSTEM = system(negocio), TOOLS = tools(negocio);   // cada vez: el dueño puede cambiar el menú desde el panel
-    const ctx = { numero, faltas, ocupados, duplicado, now, pedido: null, persona: null, reservacion: null };
+    const ctx = { numero, faltas, ocupados, duplicado, ubic, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();
@@ -1723,6 +1755,7 @@ const CHATS = [
 ];
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «quiero 2 cerditos a domicilio en San Pedro». O toque «Pedir a domicilio»."],
+  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación»: a Kevin le llega el punto exacto en el mapa."],
   ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Escriba el precio, solo el número: «60»."],
   ["Cliente", "Al cliente le llega el envío. Toque «SÍ»: le llegan los datos para pagar la comida por transferencia."],
   ["Pago", "Toque «📷 Mandar comprobante». Al dueño le llega y lo aprueba con «OK» (o en el panel, «Pago recibido»): entra a cocina."],
@@ -1758,10 +1791,10 @@ function confirmarPago(p, por) {
   avisos.pagado(q);
   return q;
 }
-function conversar(tel, text) {
+function conversar(tel, text, ubic = null) {
   const sess = sesiones.get(tel) || { state: null };
   if (sess.state) sess.state.seq = store.seq;
-  const r = motor.handle(sess.state, text, ahora(), { faltas: store.faltas(tel), ocupados, ultimo: ultimoDe(tel) });
+  const r = motor.handle(sess.state, text, ahora(), { faltas: store.faltas(tel), ocupados, ultimo: ultimoDe(tel), ubic });
   if (r.state.lead) { store.seq = r.state.seq; guardar(r.state.lead, tel); delete r.state.lead; }
   if (r.state.handoff) { guardar({ tipo: "persona", nombre: null, sucursal: r.state.handoff, motivo: r.state.handoffMotivo || "" }, tel); delete r.state.handoff; delete r.state.handoffMotivo; }
   if (r.state.cancelar) { const p = store.getPedido(r.state.cancelar); if (p && p.estado === "por_pagar") store.updatePedido(p.n, { estado: "cancelado", por: "cliente" }); delete r.state.cancelar; refrescarPanel(); }
@@ -1785,10 +1818,10 @@ function pintarIA(t) {
   el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : despierta ? "IA lista" : "IA: despertando (la primera respuesta tarda hasta un minuto)";
 }
 if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => { despierta = true; pintarIA(); }, () => pintarIA());   // wakes the server up
-async function conversarIA(tel, text) {
+async function conversarIA(tel, text, ubic = null) {
   const sess = sesiones.get(tel) || { state: null };
   try {
-    const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null });
+    const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null, ubic });
     sess.ia = r.history; sess.fallo = false; sesiones.set(tel, sess); pintarIA("on");
     if (r.pedido) guardar(r.pedido, tel);
     if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
@@ -1817,7 +1850,8 @@ function pendientes() {
   if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
   return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
 }
-async function turno(tel, text, foto) {
+const textoUbic = u => `[ubicación de WhatsApp: ${[u.nombre, u.direccion].filter(Boolean).join(", ") || `${u.lat}, ${u.lng}`}]`;
+async function turno(tel, text, foto, ubic = null) {
   const rr = repartos.mensaje(tel, text);
   if (rr) return rr;
   let reply;
@@ -1837,8 +1871,10 @@ async function turno(tel, text, foto) {
     }
     return [{ text: "Recibimos su foto. ¿En qué le ayudo?" }];
   }
-  if (iaViva && (reply = await conversarIA(tel, text))) return reply;
-  return conversar(tel, text);
+  if (ubic && (reply = repartos.ubicacionCliente(tel, ubic))) return [{ text: reply }];
+  if (ubic) text = textoUbic(ubic);
+  if (iaViva && (reply = await conversarIA(tel, text, ubic))) return reply;
+  return conversar(tel, text, ubic);
 }
 
 // ---- the owner panel API (what server.js answers), for the real panel in the frame ----
@@ -1913,7 +1949,7 @@ let activa = "cliente", paso = 0;
 
 function formato(t) {
   return esc(t)
-    .replace(/https:\/\/www\.google\.com\/maps\/\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
+    .replace(/https:\/\/(?:www\.google\.com\/maps\/|maps\.google\.com\/\?q=)\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
     .replace(/📡[^\n]*?https:\/\/seguir\.demo\/r\/(\S+)/g, '<a href="#" onclick="compartir(this);return false">📡 Compartir mi ubicación con el cliente</a>')
     .replace(/📍 Vea dónde va[^\n]*?https:\/\/seguir\.demo\/seguir\/(\S+)/g, '<a href="#" onclick="seguir(\'$1\');return false">📍 Ver dónde va, en vivo</a>')
     .replace(/https:\/\/wa\.me\/\S+/g, '<a href="#" onclick="return false">💬 Escribirle al cliente</a>')
@@ -1934,8 +1970,8 @@ function armar() {
   ver(activa);
   guia();
 }
-// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=f6d7c0e7) and talks to this page by BroadcastChannel
-const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=f6d7c0e7";
+// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=7ea81dd7) and talks to this page by BroadcastChannel
+const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=7ea81dd7";
 function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-con-sabor"); }
 function ver(k) {
   if (k === "panel") return abrirPanel();
@@ -1966,12 +2002,14 @@ function recibir(k, texto) {
     avanzar(); refrescarPanel();
   }, 450);
 }
-async function mandar(k, texto, foto = false) {
-  burbuja(k, "yo", foto ? "📷 Foto del comprobante" : texto);
+// the pin a customer would send from WhatsApp (clip > Ubicación); here a fixed example spot
+const UBIC_EJEMPLO = { lat: 15.5047, lng: -88.025, nombre: "Ubicación del cliente (ejemplo)" };
+async function mandar(k, texto, foto = false, ubic = null) {
+  burbuja(k, "yo", foto ? "📷 Foto del comprobante" : ubic ? "📍 Ubicación enviada (ejemplo)" : texto);
   BOTONES[k] = []; chips(k);
   $("#e-" + k).classList.add("si"); $("#m-" + k).scrollTop = 1e9;
   let out;
-  try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
+  try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto, ubic); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
   await new Promise(r => setTimeout(r, 350));
   $("#e-" + k).classList.remove("si");
   for (const m of out) { burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
@@ -1996,6 +2034,9 @@ function chips(k) {
   if (k === "cliente") {
     if (store.pedidos.some(p => p.estado === "por_envio" && p.envio != null && digits(p.tel) === digits(TEL.cliente))) ls = ["SÍ", "RECOGER", "CANCELAR"];
     if (porPagar(TEL.cliente) && !porPagar(TEL.cliente).comprobante) extra.push("📷 Mandar comprobante");
+    const sc = (sesiones.get(TEL.cliente) || {}).state;
+    const sinPin = store.pedidos.some(p => p.entrega === "domicilio" && !p.ubicacion && !["entregado", "cancelado"].includes(p.estado) && digits(p.tel) === digits(TEL.cliente));
+    if (sinPin || (sc && sc.step === "direccion")) extra.push("📍 Mandar ubicación");
   }
   if (k === "dueno") {
     const p = store.pedidos.findLast(x => x.estado === "por_pagar" && x.comprobante);
@@ -2003,8 +2044,8 @@ function chips(k) {
     extra.push("pedidos");
   }
   ls = [...new Set(ls.concat(extra))];
-  $("#c-" + k).innerHTML = ls.map(b => `<button class="chip${b.startsWith("📷") ? " foto" : ""}" type="button">${esc(b)}</button>`).join("");
-  $("#c-" + k).querySelectorAll(".chip").forEach(b => b.onclick = () => b.textContent.startsWith("📷") ? mandar(k, "", true) : mandar(k, b.textContent));
+  $("#c-" + k).innerHTML = ls.map(b => `<button class="chip${/^[📷📍]/u.test(b) ? " foto" : ""}" type="button">${esc(b)}</button>`).join("");
+  $("#c-" + k).querySelectorAll(".chip").forEach(b => b.onclick = () => b.textContent.startsWith("📷") ? mandar(k, "", true) : b.textContent.startsWith("📍") ? mandar(k, "", false, UBIC_EJEMPLO) : mandar(k, b.textContent));
 }
 function refrescarPanel() {
   for (const c of CHATS) chips(c.k);

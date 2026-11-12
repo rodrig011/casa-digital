@@ -144,6 +144,7 @@ const CHATS = [
 ];
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «quiero 2 cerditos a domicilio en San Pedro». O toque «Pedir a domicilio»."],
+  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación»: a Kevin le llega el punto exacto en el mapa."],
   ["Kevin", "A Kevin le llega el envío con la dirección y el mapa. Escriba el precio, solo el número: «60»."],
   ["Cliente", "Al cliente le llega el envío. Toque «SÍ»: le llegan los datos para pagar la comida por transferencia."],
   ["Pago", "Toque «📷 Mandar comprobante». Al dueño le llega y lo aprueba con «OK» (o en el panel, «Pago recibido»): entra a cocina."],
@@ -179,10 +180,10 @@ function confirmarPago(p, por) {
   avisos.pagado(q);
   return q;
 }
-function conversar(tel, text) {
+function conversar(tel, text, ubic = null) {
   const sess = sesiones.get(tel) || { state: null };
   if (sess.state) sess.state.seq = store.seq;
-  const r = motor.handle(sess.state, text, ahora(), { faltas: store.faltas(tel), ocupados, ultimo: ultimoDe(tel) });
+  const r = motor.handle(sess.state, text, ahora(), { faltas: store.faltas(tel), ocupados, ultimo: ultimoDe(tel), ubic });
   if (r.state.lead) { store.seq = r.state.seq; guardar(r.state.lead, tel); delete r.state.lead; }
   if (r.state.handoff) { guardar({ tipo: "persona", nombre: null, sucursal: r.state.handoff, motivo: r.state.handoffMotivo || "" }, tel); delete r.state.handoff; delete r.state.handoffMotivo; }
   if (r.state.cancelar) { const p = store.getPedido(r.state.cancelar); if (p && p.estado === "por_pagar") store.updatePedido(p.n, { estado: "cancelado", por: "cliente" }); delete r.state.cancelar; refrescarPanel(); }
@@ -206,10 +207,10 @@ function pintarIA(t) {
   el.lastChild.textContent = !IA_URL ? "Sin IA: contesta el menú" : !iaViva ? "IA en pausa: contesta el menú" : t === "on" ? "Contesta Claude (IA)" : despierta ? "IA lista" : "IA: despertando (la primera respuesta tarda hasta un minuto)";
 }
 if (IA_URL) fetch(IA_URL.replace(/\/demo\/claude$/, "/"), { mode: "no-cors" }).then(() => { despierta = true; pintarIA(); }, () => pintarIA());   // wakes the server up
-async function conversarIA(tel, text) {
+async function conversarIA(tel, text, ubic = null) {
   const sess = sesiones.get(tel) || { state: null };
   try {
-    const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null });
+    const r = await ia.turn(sess.ia || [], text, ahora(), { numero: (pre = "PED") => numero(pre), faltas: store.faltas(tel), ocupados, duplicado: () => null, ubic });
     sess.ia = r.history; sess.fallo = false; sesiones.set(tel, sess); pintarIA("on");
     if (r.pedido) guardar(r.pedido, tel);
     if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
@@ -238,7 +239,8 @@ function pendientes() {
   if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
   return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
 }
-async function turno(tel, text, foto) {
+const textoUbic = u => `[ubicación de WhatsApp: ${[u.nombre, u.direccion].filter(Boolean).join(", ") || `${u.lat}, ${u.lng}`}]`;
+async function turno(tel, text, foto, ubic = null) {
   const rr = repartos.mensaje(tel, text);
   if (rr) return rr;
   let reply;
@@ -258,8 +260,10 @@ async function turno(tel, text, foto) {
     }
     return [{ text: "Recibimos su foto. ¿En qué le ayudo?" }];
   }
-  if (iaViva && (reply = await conversarIA(tel, text))) return reply;
-  return conversar(tel, text);
+  if (ubic && (reply = repartos.ubicacionCliente(tel, ubic))) return [{ text: reply }];
+  if (ubic) text = textoUbic(ubic);
+  if (iaViva && (reply = await conversarIA(tel, text, ubic))) return reply;
+  return conversar(tel, text, ubic);
 }
 
 // ---- the owner panel API (what server.js answers), for the real panel in the frame ----
@@ -334,7 +338,7 @@ let activa = "cliente", paso = 0;
 
 function formato(t) {
   return esc(t)
-    .replace(/https:\/\/www\.google\.com\/maps\/\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
+    .replace(/https:\/\/(?:www\.google\.com\/maps\/|maps\.google\.com\/\?q=)\S+/g, '<a href="$&" target="_blank" rel="noopener">📍 Abrir en el mapa</a>')
     .replace(/📡[^\n]*?https:\/\/seguir\.demo\/r\/(\S+)/g, '<a href="#" onclick="compartir(this);return false">📡 Compartir mi ubicación con el cliente</a>')
     .replace(/📍 Vea dónde va[^\n]*?https:\/\/seguir\.demo\/seguir\/(\S+)/g, '<a href="#" onclick="seguir(\'$1\');return false">📍 Ver dónde va, en vivo</a>')
     .replace(/https:\/\/wa\.me\/\S+/g, '<a href="#" onclick="return false">💬 Escribirle al cliente</a>')
@@ -387,12 +391,14 @@ function recibir(k, texto) {
     avanzar(); refrescarPanel();
   }, 450);
 }
-async function mandar(k, texto, foto = false) {
-  burbuja(k, "yo", foto ? "📷 Foto del comprobante" : texto);
+// the pin a customer would send from WhatsApp (clip > Ubicación); here a fixed example spot
+const UBIC_EJEMPLO = { lat: 15.5047, lng: -88.025, nombre: "Ubicación del cliente (ejemplo)" };
+async function mandar(k, texto, foto = false, ubic = null) {
+  burbuja(k, "yo", foto ? "📷 Foto del comprobante" : ubic ? "📍 Ubicación enviada (ejemplo)" : texto);
   BOTONES[k] = []; chips(k);
   $("#e-" + k).classList.add("si"); $("#m-" + k).scrollTop = 1e9;
   let out;
-  try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
+  try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto, ubic); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
   await new Promise(r => setTimeout(r, 350));
   $("#e-" + k).classList.remove("si");
   for (const m of out) { burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
@@ -417,6 +423,9 @@ function chips(k) {
   if (k === "cliente") {
     if (store.pedidos.some(p => p.estado === "por_envio" && p.envio != null && digits(p.tel) === digits(TEL.cliente))) ls = ["SÍ", "RECOGER", "CANCELAR"];
     if (porPagar(TEL.cliente) && !porPagar(TEL.cliente).comprobante) extra.push("📷 Mandar comprobante");
+    const sc = (sesiones.get(TEL.cliente) || {}).state;
+    const sinPin = store.pedidos.some(p => p.entrega === "domicilio" && !p.ubicacion && !["entregado", "cancelado"].includes(p.estado) && digits(p.tel) === digits(TEL.cliente));
+    if (sinPin || (sc && sc.step === "direccion")) extra.push("📍 Mandar ubicación");
   }
   if (k === "dueno") {
     const p = store.pedidos.findLast(x => x.estado === "por_pagar" && x.comprobante);
@@ -424,8 +433,8 @@ function chips(k) {
     extra.push("pedidos");
   }
   ls = [...new Set(ls.concat(extra))];
-  $("#c-" + k).innerHTML = ls.map(b => `<button class="chip${b.startsWith("📷") ? " foto" : ""}" type="button">${esc(b)}</button>`).join("");
-  $("#c-" + k).querySelectorAll(".chip").forEach(b => b.onclick = () => b.textContent.startsWith("📷") ? mandar(k, "", true) : mandar(k, b.textContent));
+  $("#c-" + k).innerHTML = ls.map(b => `<button class="chip${/^[📷📍]/u.test(b) ? " foto" : ""}" type="button">${esc(b)}</button>`).join("");
+  $("#c-" + k).querySelectorAll(".chip").forEach(b => b.onclick = () => b.textContent.startsWith("📷") ? mandar(k, "", true) : b.textContent.startsWith("📍") ? mandar(k, "", false, UBIC_EJEMPLO) : mandar(k, b.textContent));
 }
 function refrescarPanel() {
   for (const c of CHATS) chips(c.k);

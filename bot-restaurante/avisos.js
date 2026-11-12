@@ -62,6 +62,8 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
 
   return {
     destinos,
+    // the customer's pin as a WhatsApp location (only Meta can send one; with Twilio the map link in the text is enough)
+    ubicacion: (to, u) => canal && canal.ubicacion ? canal.ubicacion(to, u) : Promise.resolve(null),
     async ficha(p) {
       const t = fichaTexto(p, negocio.L), to = destinos(p.sucursal);
       const body = `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`;

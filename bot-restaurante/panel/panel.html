@@ -257,7 +257,7 @@ function tarjeta(p, grande) {
     ${p.tanda ? `<div><span class="tag t-por_confirmar">📅 ${esc(p.dia)}${N.cupos && N.cupos.tandas.length > 1 ? ` · ${esc(p.tanda)} · ${p.cupos} ${p.cupos === 1 ? "cupo" : "cupos"}` : ""}</span></div>` : ""}
     ${p.encargo ? `<div><span class="tag t-por_confirmar">🗓️ Encargo para el ${esc(p.dia)}</span></div>` : ""}
     <ul>${(p.lineas || []).map(l => `<li>${l.cantidad} × ${esc(l.nombre)}${l.nota ? ` <em>(${esc(l.nota)})</em>` : ""}</li>`).join("")}</ul>
-    <div class="l3"><span>${grande ? "" : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado]}</span> `}<b>${L(p.total)}</b> · ${esc(p.sucursal)}</span><span>${p.entrega === "domicilio" ? `🛵 ${esc(p.direccion)}${p.envio != null ? ` · envío ${L(p.envio)}` : ""}` : `Recoge: ${esc(p.hora || "—")}`}</span></div>
+    <div class="l3"><span>${grande ? "" : `<span class="tag t-${p.estado}">${ESTADO_TXT[p.estado]}</span> `}<b>${L(p.total)}</b> · ${esc(p.sucursal)}</span><span>${p.entrega === "domicilio" ? `🛵 ${esc(p.direccion)}${p.ubicacion ? ` <a href="${mapaDe(p)}" target="_blank" rel="noopener">📍 Mapa</a>` : ""}${p.envio != null ? ` · envío ${L(p.envio)}` : ""}` : `Recoge: ${esc(p.hora || "—")}`}</span></div>
     ${reparto && (p.repartidor || ["listo", "por_envio"].includes(p.estado)) && !["entregado", "cancelado"].includes(p.estado) ? `<div><span class="tag t-${p.repartidor ? "en_camino" : "por_confirmar"}">🛵 ${p.repartidor ? `${p.estado === "por_envio" ? (p.envio != null ? `Envío ${L(p.envio)}: esperando que el cliente acepte · ` : "Cotiza el envío: ") : "Lo lleva "}${esc(p.repartidor.nombre)}` : "Sin repartidor"}</span></div>` : ""}
     <div class="acc">${acciones(p)}${grande ? "" : `<a class="btn" href="${wa(p.tel)}" target="_blank" rel="noopener">WhatsApp</a>`}</div>
   </div>`;
@@ -535,7 +535,7 @@ function ficha(n) {
       ${campo("Cliente", esc(p.nombre || "Sin nombre"))}${campo("Teléfono", esc(telTxt(p.tel)))}
       ${campo("Entrega", p.entrega === "domicilio" ? "A domicilio" : `Recoge${p.hora ? ` · ${esc(p.hora)}` : ""}`)}${campo("Pago", pago)}
       ${campo("Para", p.dia ? esc(p.dia.replace(/^\p{L}/u, c => c.toUpperCase())) : "")}${campo("Repartidor", p.repartidor ? esc(p.repartidor.nombre) + (p.seguimiento && p.estado === "en_camino" ? ` <span class="tag t-listo">📍 En vivo</span>` : "") : "")}
-      ${campo("Dirección", p.direccion ? esc(p.direccion) : "", true)}</dl></div>
+      ${campo("Dirección", p.direccion ? esc(p.direccion) + (p.ubicacion ? ` · <a href="${mapaDe(p)}" target="_blank" rel="noopener">📍 Ver la ubicación exacta</a>` : p.entrega === "domicilio" ? ` <span class="tag">Sin ubicación de WhatsApp</span>` : "") : "", true)}</dl></div>
     <div class="card">${H("Productos", "ventas")}<table><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th></tr>${(p.lineas || []).map(l => `<tr><td>${esc(l.nombre)}${l.nota ? `<small class="tel">${esc(l.nota)}</small>` : ""}</td><td class="r">${l.cantidad}</td><td class="r">${L(l.subtotal != null ? l.subtotal : l.precio * l.cantidad)}</td></tr>`).join("")}
       <tfoot>${envio ? `<tr><td colspan="2">Comida</td><td class="r">${L(p.total)}</td></tr><tr><td colspan="2" style="font-weight:400">Envío <small class="tel">se le paga al repartidor</small></td><td class="r" style="font-weight:400">${L(p.envio)}</td></tr>` : ""}<tr><td colspan="2">Total</td><td class="r">${L(p.total + (envio ? p.envio : 0))}</td></tr></tfoot></table></div>
     <div class="card">${H("Actividad", "actividad")}<ol class="linea-t">${hechos.map(([k, t]) => `<li><span>${t}</span><small>${fechaHora(p[k])}</small></li>`).join("")}</ol></div>`;
@@ -552,6 +552,7 @@ $("#velo").onclick = cerrarFicha;
 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
+const mapaDe = p => `https://maps.google.com/?q=${+p.ubicacion.lat},${+p.ubicacion.lng}`;
 const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto", menu: "Cambió el menú" };
 const MALOS = ["fallo", "bloqueado", "codigo_malo"];
 const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });

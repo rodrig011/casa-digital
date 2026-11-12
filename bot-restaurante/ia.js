@@ -30,6 +30,7 @@ Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
 - Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
+${N.domicilio.propio ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
@@ -145,16 +146,16 @@ function ejecutar(N, name, input, ctx) {
         }
       }
       const hora = cup ? (cup.encargo ? `Encargo: ${cup.dia}` : cup.tanda ? `${cup.dia.replace(/^\p{L}/u, x => x.toUpperCase())}${N.cupos.tandas.length > 1 ? `, ${cup.tanda}` : ""}` : `Lista de espera: ${cup.dia}`) : direccion ? "A domicilio" : String(input.hora || "").slice(0, 60);
-      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora, resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion } : {}), ...(cup || {}) };
+      ctx.pedido = { tipo: "pedido", n: ctx.numero ? ctx.numero() : null, nombre, sucursal: s.nombre, sucursalId: s.id, lineas: c.lineas, total: c.total, hora, resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), ...(direccion ? { entrega: "domicilio", direccion, ...(ctx.ubic ? { ubicacion: ctx.ubic } : {}) } : {}), ...(cup || {}) };
       const base = { ok: true, numero: ctx.pedido.n, total: N.L(c.total), detalle: c.lineas.map(l => `${l.cantidad} × ${l.nombre}${l.nota ? ` (${l.nota})` : ""}: ${N.L(l.subtotal)}`), sucursal: s.nombre, ...(cup ? { cupos: cup.cupos, dia: cup.dia, ...(cup.tanda ? { tanda: cup.tanda } : {}) } : {}) };
       if (cup && cup.estado === "en_espera") return { ...base, nota: "Quedó en la lista de espera, sin cupo apartado y sin pagar nada. Si se libera un cupo, el restaurante le escribe por este chat." };
       if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!direccion, lineas: c.lineas })) {
         const monto = montoCobro(N, c.lineas);
         ctx.pedido.estado = "por_pagar"; if (monto < c.total) ctx.pedido.anticipo = monto;
-        if (direccion && N.repartidores && N.repartidores.length) return { ...base, nota: "Todavía no va a cocina. Primero el repartidor le dice por este chat cuánto es el envío; cuando el cliente lo acepte, le llegan los datos para pagar la comida por transferencia, y con el comprobante revisado entra a cocina. El envío se le paga al repartidor al recibir. No le dé datos de pago todavía." };
+        if (direccion && N.repartidores && N.repartidores.length) return { ...base, nota: "Todavía no va a cocina. Primero el repartidor le dice por este chat cuánto es el envío; cuando el cliente lo acepte, le llegan los datos para pagar la comida por transferencia, y con el comprobante revisado entra a cocina. El envío se le paga al repartidor al recibir. No le dé datos de pago todavía." + (ctx.ubic ? "" : " Pídale su ubicación de WhatsApp (clip 📎 > Ubicación) para el repartidor.") };
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total, monto), nota: "Todavía NO va a cocina ni queda confirmado: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando el negocio confirme el pago se le avisa." };
       }
-      if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." };
+      if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." + (ctx.ubic ? "" : " Pídale su ubicación de WhatsApp (clip 📎 > Ubicación) para el repartidor.") };
       return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "La cocina ya lo tiene. Se le avisa por este chat cuando esté listo." };
     }
     case "crear_reservacion": {
@@ -198,9 +199,9 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   }
   model = model || MODELO;
 
-  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado } = {}) {
+  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, ubic = null } = {}) {
     const SYSTEM = system(negocio), TOOLS = tools(negocio);   // cada vez: el dueño puede cambiar el menú desde el panel
-    const ctx = { numero, faltas, ocupados, duplicado, now, pedido: null, persona: null, reservacion: null };
+    const ctx = { numero, faltas, ocupados, duplicado, ubic, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
     const ac = new AbortController();

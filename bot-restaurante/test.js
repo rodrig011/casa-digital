@@ -1092,6 +1092,63 @@ test("panel: el dueño cambia precios, agrega, pausa y quita productos con «Gua
   } finally { await new Promise(ok => ctx.srv.close(ok)); }
 });
 
+test("ubicación: el cliente manda su pin de WhatsApp y le llega al repartidor con el mapa exacto; en la dirección también sirve", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
+  const negocio = preparar({ ...base, repartidores: [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }] });
+  const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" }, { negocio });
+  const CARLOS = "whatsapp:+50491110001", MARTA = "whatsapp:+50491112222", ANA = "whatsapp:+50491114444";
+  const a = to => ctx.sent.filter(m => m.to === to).map(m => m.body);
+  const di = async (From, Body, extra = {}) => { const r = textoDe((await post(ctx, "/whatsapp", { From, Body, ...extra })).xml); await ctx.app.locals.idle(); return r; };
+  try {
+    const cookie = await entrar(ctx);
+    const pedido = async n => (await (await fetch(ctx.base + "/api/pedidos", { headers: { Cookie: cookie } })).json()).find(y => y.n === n);
+    // a pin with no delivery order open: nothing breaks, the menu answers
+    assert.ok(await di(ANA, "", { Latitude: "15.5", Longitude: "-88.02" }));
+    let fin;
+    for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", "Col. Trejo, 5 calle, casa blanca", "Marta López"]) fin = await di(MARTA, Body);
+    assert.match(fin, /mándenos su ubicación: toque el clip/, "después del pedido pide el pin");
+    assert.equal((await pedido("PED-1001")).ubicacion, undefined);
+    const r = await di(MARTA, "", { Latitude: "15.504700", Longitude: "-88.025000", Address: "Col. Trejo, San Pedro Sula" });
+    assert.match(r, /Ya tenemos su ubicación para el pedido \*PED-1001\*; se la pasamos a Carlos/);
+    const p = await pedido("PED-1001");
+    assert.deepEqual(p.ubicacion, { lat: 15.5047, lng: -88.025, direccion: "Col. Trejo, San Pedro Sula" });
+    assert.match(a(CARLOS).at(-1), /mandó su ubicación exacta: https:\/\/maps\.google\.com\/\?q=15\.5047,-88\.025/);
+    // the pin instead of writing the address
+    for (const Body of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio"]) fin = await di(ANA, Body);
+    assert.match(fin, /¿A qué dirección/);
+    fin = await di(ANA, "", { Latitude: "15.51", Longitude: "-88.03", Label: "Casa de Ana" });
+    assert.match(fin, /Recibimos su ubicación/); assert.match(fin, /nombre de quién/);
+    fin = await di(ANA, "Ana");
+    assert.doesNotMatch(fin, /toque el clip/, "ya mandó el pin: no se lo vuelve a pedir");
+    const q = await pedido("PED-1002");
+    assert.equal(q.direccion, "Casa de Ana"); assert.deepEqual(q.ubicacion, { lat: 15.51, lng: -88.03, nombre: "Casa de Ana" });
+    assert.match(a(CARLOS).at(-1), /maps\.google\.com\/\?q=15\.51,-88\.03/, "la ficha del repartidor lleva el mapa exacto");
+    // Meta: a location message is parsed and the pin goes out to the driver as a real location
+    const { mensajes } = require("./meta");
+    const [m] = mensajes({ entry: [{ changes: [{ value: { messages: [{ id: "wamid.1", from: "50491112222", type: "location", location: { latitude: 15.5, longitude: -88.02, name: "Mi casa" } }] } }] }] });
+    assert.deepEqual(m.ubic, { lat: 15.5, lng: -88.02, nombre: "Mi casa" }); assert.equal(m.text, "");
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+});
+
+test("meta: el pin del cliente le llega al repartidor como ubicación de WhatsApp", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M = metaFalsa();
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
+  const negocio = preparar({ ...base, repartidores: [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }] });
+  const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json", meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "v", plantilla: "", idioma: "es" } }, { metaFetch: M.fetch, negocio });
+  try {
+    for (const b of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", "Col. Trejo, 5 calle, casa blanca", "Marta López"]) await postMeta(ctx, [texto(b, "50491112222")]);
+    await postMeta(ctx, [{ id: "wamid.loc", from: "50491112222", type: "location", location: { latitude: 15.5047, longitude: -88.025, address: "Col. Trejo" } }]);
+    const aCarlos = M.enviados().filter(x => x.to === "50491110001");
+    const loc = aCarlos.find(x => x.type === "location");
+    assert.ok(loc, "le llega la ubicación de WhatsApp"); assert.deepEqual(loc.location, { latitude: 15.5047, longitude: -88.025, address: "Col. Trejo" });
+    assert.ok(aCarlos.some(x => x.type === "text" && /maps\.google\.com\/\?q=15\.5047,-88\.025/.test(x.text.body)));
+    const aMarta = M.enviados().filter(x => x.to === "50491112222");
+    assert.match(JSON.stringify(aMarta.at(-1)), /Ya tenemos su ubicación/);
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+});
+
 test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente lo acepta antes de cocina, y luego SALGO / ENTREGADO / NO PUEDO", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
