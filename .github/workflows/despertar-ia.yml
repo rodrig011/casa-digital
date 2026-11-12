@@ -1,0 +1,14 @@
+# El servidor gratis de la IA (Render) se duerme a los 15 minutos sin visitas y tarda hasta un minuto en despertar:
+# en una demo eso se ve como que el bot no contesta. Esto lo toca cada 10 minutos de 6 a. m. a 11 p. m. de Honduras.
+name: Mantener despierta la IA de las demos
+on:
+  schedule:
+    - cron: "*/10 0-5,12-23 * * *"   # UTC: 6:00 a. m. a 11:59 p. m. en Honduras (UTC-6)
+  workflow_dispatch:
+permissions: {}
+jobs:
+  tocar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS -m 90 --retry 2 https://clientia-demo-ia.onrender.com/demo/estado
