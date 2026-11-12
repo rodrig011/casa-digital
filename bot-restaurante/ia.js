@@ -151,6 +151,7 @@ function ejecutar(N, name, input, ctx) {
       if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!direccion, lineas: c.lineas })) {
         const monto = montoCobro(N, c.lineas);
         ctx.pedido.estado = "por_pagar"; if (monto < c.total) ctx.pedido.anticipo = monto;
+        if (direccion && N.repartidores && N.repartidores.length) return { ...base, nota: "Todavía no va a cocina. Primero el repartidor le dice por este chat cuánto es el envío; cuando el cliente lo acepte, le llegan los datos para pagar la comida por transferencia, y con el comprobante revisado entra a cocina. El envío se le paga al repartidor al recibir. No le dé datos de pago todavía." };
         return { ...base, cobro: textoCobro(N, ctx.pedido.n, c.total, monto), nota: "Todavía NO va a cocina ni queda confirmado: se paga antes. Pásele los datos de cobro tal cual y pídale la foto del comprobante por este chat. Cuando el negocio confirme el pago se le avisa." };
       }
       if (direccion && N.repartidores && N.repartidores.length) return { ...base, ...(N.pago ? { pago: N.pago } : {}), nota: "Todavía no va a cocina: en un momento el repartidor le dice por este chat cuánto es el envío, y cuando el cliente lo acepte pasa a cocina." };

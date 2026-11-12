@@ -3,7 +3,7 @@
 // 1. Entra un pedido a domicilio: queda "Esperando envío" (no va a cocina). El bot escoge al repartidor de esa
 //    sucursal con menos entregas (si empatan, al que hace más rato no recibe una) y le manda por WhatsApp qué
 //    lleva, a dónde, el teléfono del cliente y el mapa, y le pregunta cuánto es el envío.
-// 2. El repartidor contesta ENVÍO 60. Al cliente le llega el precio y el total, y contesta:
+// 2. El repartidor contesta el precio (60, «son 60», «ENVÍO 60»). Al cliente le llega el precio y el total, y contesta:
 //      SÍ        -> el pedido va a cocina (al dueño y a la sucursal les llega como pedido nuevo)
 //      RECOGER   -> pasa a ser para recoger, va a cocina y el repartidor queda libre
 //      CANCELAR  -> se cancela y se avisa al repartidor y al dueño
@@ -14,9 +14,9 @@
 // Los repartidores no instalan nada ni entran al panel. Desde el panel se puede marcar En camino, Entregado
 // o pasar el pedido a otro repartidor.
 const { waAddr, digits } = require("./avisos");
-const { lineaTexto } = require("./negocio");
+const { lineaTexto, textoCobro } = require("./negocio");
 
-const EN_CALLE = ["por_envio", "nuevo", "cocina", "listo", "en_camino"];
+const EN_CALLE = ["por_envio", "por_pagar", "nuevo", "cocina", "listo", "en_camino"];
 const BOTONES = ["Salgo con el pedido", "Entregado", "No puedo llevarlo"];
 const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
@@ -45,7 +45,8 @@ const mapa = (p, negocio) => {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.direccion}, ${b ? b.nombre : ""}, ${negocio.pais}`)}`;
 };
 
-function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x }) {
+function createRepartos({ negocio, store, avisos, now, log = console.log, track = x => x, ubicacion = null }) {
+  const links = p => ubicacion ? ubicacion.links(p) : null;
   const lista = negocio.repartidores || [];
   const activo = lista.length > 0;
   const nom = p => (p.nombre || "Hola").split(" ")[0];
@@ -63,15 +64,15 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       `👤 ${p.nombre || "Sin nombre"} · +${digits(p.tel)}`,
       `📍 ${p.direccion}`,
       ...(p.lineas || []).map(l => lineaTexto(l, negocio.L)),
-      `💰 Comida ${negocio.L(p.total)}${p.envio != null ? ` + envío ${negocio.L(p.envio)} = cobrar ${negocio.L(p.total + p.envio)}` : ""}${p.pagado ? " (la comida ya está pagada)" : ""}`,
+      p.pagado || p.pagaAntes ? `💰 Comida ${negocio.L(p.total)} (se paga por transferencia)${p.envio != null ? ` · usted cobra solo el envío: ${negocio.L(p.envio)}` : ""}` : `💰 Comida ${negocio.L(p.total)}${p.envio != null ? ` + envío ${negocio.L(p.envio)} = cobrar ${negocio.L(p.total + p.envio)}` : ""}`,
       `Mapa: ${mapa(p, negocio)}`,
       `Cliente: https://wa.me/${digits(p.tel)}`,
     ];
     const pide = cotiza
-      ? `¿Cuánto es el envío? Conteste *ENVÍO* y el precio, por ejemplo *ENVÍO 60*. El cliente lo acepta y entonces pasa a cocina. Si no puede llevarlo, conteste *NO PUEDO*.`
+      ? `¿Cuánto es el envío? Conteste solo el precio, por ejemplo *60*. El cliente lo acepta y entonces pasa a cocina. Si no puede llevarlo, conteste *NO PUEDO*.`
       : `Conteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
     const body = `🛵 *${r.nombre}, ${cotiza ? "nuevo envío" : "tiene una entrega"}: ${p.n}*\n\n${lineas.join("\n")}\n\n${pide}`;
-    return { titulo, lineas: [...lineas, cotiza ? "Conteste ENVÍO y el precio (ENVÍO 60) o NO PUEDO" : "Conteste SALGO, ENTREGADO o NO PUEDO"], body };
+    return { titulo, lineas: [...lineas, cotiza ? "Conteste el precio del envío (por ejemplo 60) o NO PUEDO" : "Conteste SALGO, ENTREGADO o NO PUEDO"], body };
   }
 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
@@ -113,7 +114,9 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const q = store.updatePedido(p.n, { envio: precio, envioPor: por, t_envio: now().toISOString() });
     const total = negocio.L(q.total + precio);
     track(avisos.enviar(waAddr(q.tel), cotiza
-      ? `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*.\nTotal: *${total}* (comida ${negocio.L(q.total)} + envío), se paga al recibir.\n\n¿Lo confirmamos? Conteste *SÍ* para mandarlo a cocina, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`
+      ? (q.pagaAntes
+        ? `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*: se le paga al repartidor al recibir.\nLa comida (${negocio.L(q.total)}) se paga por transferencia antes de cocina.\n\n¿Lo confirmamos? Conteste *SÍ* y le mandamos los datos para pagar, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`
+        : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*.\nTotal: *${total}* (comida ${negocio.L(q.total)} + envío), se paga al recibir.\n\n¿Lo confirmamos? Conteste *SÍ* para mandarlo a cocina, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`)
       : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${total}*.`));
     log(`[${q.n}] envío ${precio} (${por})`);
     return q;
@@ -128,6 +131,23 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const recoger = /recog|recoj|paso yo|yo paso|voy yo|yo voy|paso por|pasar por/.test(t) || t === "2";
     const cancelar = /cancel|no gracias|muy caro|caro|^no\b/.test(t) || t === "3";
     const t0 = now().toISOString();
+    // it pays before: accepted -> waiting for the transfer, the kitchen gets it when the payment is confirmed
+    const cobrar = (q, que) => {
+      track(avisos.ficha(q));
+      const monto = q.anticipo || q.total;
+      return `✅ Listo, ${nom(q)}. ${que}\n\nPara mandarlo a cocina, la comida se paga antes:\n${textoCobro(negocio, q.n, q.total, monto)}\n\nEn cuanto revisemos el pago, entra a cocina y le avisamos por aquí.`;
+    };
+    if (si && !recoger && !cancelar && p.pagaAntes) {
+      const q = store.updatePedido(p.n, { estado: "por_pagar", envioAceptado: true });
+      aRep(r, `✅ El cliente aceptó el envío de *${q.n}* (${negocio.L(q.envio)}). Está pagando la comida; cuando la cocina lo tenga listo le avisamos para que pase a recogerlo.`);
+      log(`[${q.n}] envío aceptado, esperando pago`);
+      return cobrar(q, `Envío de ${negocio.L(q.envio)} aceptado para *${q.n}*: se le paga al repartidor al recibir.`);
+    }
+    if (recoger && p.pagaAntes) {
+      const q = store.updatePedido(p.n, { estado: "por_pagar", entrega: "recoger", envio: null, repartidor: null, hora: p.diaFecha ? p.hora : "Lo antes posible" });
+      aRep(r, `ℹ️ ${r ? r.nombre : ""}, el cliente de *${q.n}* mejor pasa a recogerlo. Ya no tiene que llevarlo.`);
+      return cobrar(q, `Su pedido *${q.n}* lo recoge en *${q.sucursal}*.`);
+    }
     if (si && !recoger && !cancelar) {
       const q = store.updatePedido(p.n, { estado: "nuevo", t_nuevo: t0, envioAceptado: true });
       track(avisos.ficha(q));
@@ -155,7 +175,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   function listo(p) {
     const r = deRep(p);
     if (!r) return asignar(p.n, { por: "cocina" });
-    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\n💰 Cobrar ${negocio.L(p.total + (p.envio || 0))}${p.pagado ? " (la comida ya está pagada: cobre solo el envío)" : ""}\n\nCuando salga, conteste *SALGO*.`);
+    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
     track(avisos.enviar(waAddr(p.tel), `✅ ¡${nom(p)}, su pedido *${p.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     return p;
   }
@@ -163,7 +183,8 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   // what the customer hears when the order leaves or arrives (from the driver's WhatsApp or the panel)
   function enCamino(p) {
     const quien = p.repartidor ? ` con *${p.repartidor.nombre}*` : "";
-    return avisos.enviar(waAddr(p.tel), `🛵 ¡${nom(p)}, su pedido *${p.n}* ya va en camino${quien}! Total: ${negocio.L(p.total + (p.envio || 0))}${p.envio ? ` (con envío de ${negocio.L(p.envio)})` : ""}.`);
+    const l = links(p);
+    return avisos.enviar(waAddr(p.tel), `🛵 ¡${nom(p)}, su pedido *${p.n}* ya va en camino${quien}! ${p.pagado ? `La comida ya está pagada${p.envio ? `; el envío (${negocio.L(p.envio)}) se le paga a ${p.repartidor ? p.repartidor.nombre : "el repartidor"} al recibir` : ""}.` : `Total: ${negocio.L(p.total + (p.envio || 0))}${p.envio ? ` (con envío de ${negocio.L(p.envio)})` : ""}.`}${l ? `\n\n📍 Vea dónde va, en tiempo real: ${l.cli}` : ""}`);
   }
   function entregado(p) {
     return avisos.enviar(waAddr(p.tel), `✅ ${nom(p)}, su pedido *${p.n}* fue entregado. ¡Gracias por su compra en *${negocio.nombre}*!`);
@@ -188,12 +209,17 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const lista = () => mios.map(p => `• *${p.n}* · ${ESTADO[p.estado]} · ${p.nombre || "Sin nombre"} · ${p.direccion}`).join("\n");
     if (!mios.length) return [{ text: `Hola, ${r.nombre}. No tiene entregas pendientes. Cuando haya una, le llega por aquí.` }];
     // "ENVÍO 60" (or "envío 60 1004" with several)
-    const env = t.match(/^envio\s*(?:de\s*)?(?:l\.?\s*)?(\d{1,4})(?:\s+(?:ped-?\s*)?(\d{3,}))?$/);
-    if (/^envio\b/.test(t) && !env) return [{ text: `Escriba *ENVÍO* y el precio en números, por ejemplo *ENVÍO 60*.` }];
+    // also just "120", "son 120", "L 120", "120 lempiras", "120 1004" while a quote is pending
+    const pendientes = mios.filter(x => x.estado === "por_envio" && x.envio == null);
+    const limpio = t.replace(/\b(el|la|envio|es|son|cuesta|vale|precio|seria|sale|le|cobro|cobra|de|lps?|lempiras|l)\b\.?/g, " ").replace(/[.,:]/g, " ").replace(/\s+/g, " ").trim();
+    const m = limpio.match(/^(\d{1,4})(?:\s+(?:ped-?\s*)?(\d{3,}))?$/);
+    const conPalabra = /\benvio\b/.test(t);
+    const env = m && (conPalabra || (pendientes.length && +m[1] >= 10 && +m[1] <= 999)) ? m : null;
+    if (conPalabra && !env && /^envio\b/.test(t)) return [{ text: `Escriba solo el precio del envío en números, por ejemplo *60*.` }];
     if (env) {
-      const precio = +env[1], porCotizar = mios.filter(x => x.estado === "por_envio" && x.envio == null);
+      const precio = +env[1], porCotizar = pendientes;
       const cual = env[2] ? mios.filter(x => num(x).endsWith(env[2])) : porCotizar.length === 1 ? porCotizar : mios.length === 1 ? mios : [];
-      if (cual.length !== 1) return [{ text: `${r.nombre}, ¿de cuál entrega? Escriba el precio y el número, por ejemplo *ENVÍO ${precio} ${num(mios[0])}*:\n${lista()}` }];
+      if (cual.length !== 1) return [{ text: `${r.nombre}, ¿de cuál entrega? Escriba el precio y el número, por ejemplo *${precio} ${num(mios[0])}*:\n${lista()}` }];
       const q = fijarEnvio(cual[0], precio, "repartidor:" + r.id);
       return [{ text: q.estado === "por_envio"
         ? `👍 Le preguntamos al cliente si acepta el envío de ${negocio.L(precio)} para *${q.n}*. Si dice que sí, le avisamos y pasa a cocina.`
@@ -221,16 +247,18 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       const van = ps.filter(x => x.estado === "listo");
       if (!van.length) return [{ text: p.estado === "en_camino" ? `${p.n} ya estaba en camino. Cuando lo entregue, conteste *ENTREGADO*.` : `${p.n} todavía no está listo. Le avisamos por aquí cuando lo esté.`, buttons: p.estado === "en_camino" ? ["Entregado"] : undefined }];
       for (const x of van) {
-        const q = store.updatePedido(x.n, { estado: "en_camino", t_en_camino: t0, por: "repartidor:" + r.id });
+        let q = store.updatePedido(x.n, { estado: "en_camino", t_en_camino: t0, por: "repartidor:" + r.id });
+        if (ubicacion) q = ubicacion.preparar(q);
         track(enCamino(q));
         log(`[${x.n}] en camino con ${r.nombre}`);
       }
-      const det = van.map(x => `*${x.n}* · ${x.nombre || "Sin nombre"}\n📍 ${x.direccion}\nMapa: ${mapa(x, negocio)}`).join("\n\n");
+      const det = van.map(x => { const l = links(store.getPedido(x.n)); return `*${x.n}* · ${x.nombre || "Sin nombre"}\n📍 ${x.direccion}\nMapa: ${mapa(x, negocio)}${l ? `\n📡 Compartir su ubicación con el cliente (deje la página abierta): ${l.rep}` : ""}`; }).join("\n\n");
       return [{ text: `👍 Listo, ${r.nombre}. Le avisamos ${van.length > 1 ? "a los clientes" : "al cliente"} que va en camino.\n\n${det}\n\nCuando ${van.length > 1 ? "entregue cada uno, conteste *ENTREGADO* con el número" : "lo entregue, conteste *ENTREGADO*"}.`, buttons: ["Entregado"] }];
     }
     if (accion === "entregado") {
       if (!["listo", "en_camino"].includes(p.estado)) return [{ text: `${p.n} todavía no ha salido. Le avisamos cuando esté listo.` }];
       const q = store.updatePedido(p.n, { estado: "entregado", t_entregado: t0, por: "repartidor:" + r.id });
+      if (ubicacion) ubicacion.cerrar(q);
       track(entregado(q));
       track(aDueno(q, `${q.n} entregado por ${r.nombre}`, [`💰 ${negocio.L(q.total + (q.envio || 0))}${q.envio ? ` (con envío de ${negocio.L(q.envio)})` : ""}`, `📍 ${q.direccion}`]));
       log(`[${p.n}] entregado por ${r.nombre}`);
@@ -246,6 +274,6 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   return { activo, lista, asignar, listo, mensaje, respuestaCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
-const ESTADO = { por_envio: "esperando su precio de envío", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
+const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
 
 module.exports = { createRepartos, prepararRepartidores };

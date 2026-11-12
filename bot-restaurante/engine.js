@@ -427,6 +427,11 @@ function createEngine(negocio) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
           const aparta = d.encargo || CUP;
+          if (d.domicilio && N.repartidores && N.repartidores.length) {
+            say({ text: `🧾 *Pedido ${n} recibido, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}🛵 A domicilio: ${d.direccion}\n\nEn un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, le pasamos los datos para pagar la comida por transferencia; con el comprobante revisado, entra a cocina. El envío se le paga al repartidor al recibir.` });
+            go("post");
+            break;
+          }
           say({ text: `🧾 *Pedido ${n} apartado, ${d.nombre.split(" ")[0]}.*\n\n${c.lineas.map(l => lineaTexto(l, N.L)).join("\n")}\n*Total: ${N.L(c.total)}*\n${cuando}${donde}\n\n${aparta ? "Para confirmar el apartado" : "Para mandarlo a cocina"}, se paga antes:\n${textoCobro(N, n, c.total, monto)}\n\n${aparta ? "En cuanto revisemos el pago, su apartado queda confirmado" : "En cuanto se confirme el pago entra a cocina"} y le avisamos por aquí.`, buttons: ["Cancelar pedido"] });
           go("pago");
           break;

@@ -1035,7 +1035,7 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
     let p = await pedido("PED-1001");
     assert.equal(p.estado, "por_envio"); assert.equal(p.repartidor.nombre, "Carlos");
     const ficha = a(CARLOS).at(-1);
-    assert.match(ficha, /Carlos, nuevo envío: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.match(ficha, /google.com\/maps/); assert.match(ficha, /ENVÍO 60/);
+    assert.match(ficha, /Carlos, nuevo envío: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.match(ficha, /google.com\/maps/); assert.match(ficha, /Conteste solo el precio, por ejemplo \*60\*/);
     assert.ok(!a(DUENO).some(b => /Nuevo pedido PED-1001/.test(b)), "la cocina todavía no lo tiene");
     assert.ok(a(DUENO).some(b => /PED-1001: Carlos cotiza el envío/.test(b)));
     await pedir(PEDRO, "Res. Los Álamos, casa 4", "Pedro");
@@ -1045,7 +1045,8 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
 
     // Carlos has two to quote: he says which; Marta accepts -> kitchen
     assert.match(await di(CARLOS, "envío 60"), /¿de cuál entrega\?/);
-    assert.match(await di(CARLOS, "Envío 60 1001"), /Le preguntamos al cliente/);
+    assert.match(await di(CARLOS, "60"), /¿de cuál entrega\?/, "solo el número también vale");
+    assert.match(await di(CARLOS, "son 60 lps 1001"), /Le preguntamos al cliente/);
     assert.match(a(MARTA).at(-1), /el envío de su pedido \*PED-1001\* a Col. Trejo.* cuesta \*L 60\*/s); assert.match(a(MARTA).at(-1), /Conteste \*SÍ\*/);
     assert.match(await di(MARTA, "si"), /PED-1001\* ya va a cocina/);
     assert.equal((await pedido("PED-1001")).estado, "nuevo");
@@ -1110,12 +1111,12 @@ test("Con Sabor a Pueblo: menú por ciudad, tope de apartados por sábado, depó
   assert.equal(st.lead.total, 390); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "sps");
   assert.equal(st.lead.diaFecha, "2026-10-17"); assert.equal(st.lead.cupos, 1);
   assert.match(ult, /Para confirmar el apartado, se paga antes/); assert.match(ult, /Banco de prueba/); assert.doesNotMatch(ult, /tanda/);
-  // Tegucigalpa does not sell it
+  // Tegucigalpa sells it too
   ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "2 cerdito chuko"]));
-  assert.doesNotMatch(ult, /Cerdito chuko · L 390/);
-  // delivery pays the driver: no deposit
+  assert.match(ult, /Cerdito chuko · L 390/);
+  // delivery also pays the food by transfer before the kitchen (the delivery fee goes to the driver)
   ({ st } = correr(["hola", "Pedir a domicilio", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Col. Trejo, 5 calle, casa azul", "Sábado 17 de octubre", "Mario"]));
-  assert.equal(st.lead.entrega, "domicilio"); assert.equal(st.lead.estado, undefined);
+  assert.equal(st.lead.entrega, "domicilio"); assert.equal(st.lead.estado, "por_pagar");
   // 50 apartados in San Pedro: full there, Tegucigalpa still open
   ocup = { sps: 50 };
   ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Para recoger"]));
@@ -1167,13 +1168,63 @@ test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mín
   const { ejecutar } = require("./ia");
   if (!ejecutar) return;
   const c = { now: NOW, numero: () => "PED-2001", ocupados: () => 0 };
-  assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "cerdito-sps", cantidad: 1 }], fecha: "2026-10-17" }, { ...c }).error, /En Tegucigalpa no tenemos/);
+  assert.ok(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "cerdito-sps", cantidad: 1 }], fecha: "2026-10-17" }, { ...c }).ok, "en Tegucigalpa también hay cerdito");
   assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 2 }], fecha: "2026-12-24" }, { ...c }).error, /mínimo/);
   const k = { ...c };
   const ok = ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 5 }], fecha: "2026-12-24" }, k);
   assert.match(ok.cobro, /Anticipo: \*L 800\* de L 1,600/); assert.equal(k.pedido.encargo, true); assert.equal(k.pedido.anticipo, 800);
   const menu = ejecutar(N2, "ver_menu", {}, c).menu;
-  assert.deepEqual(menu.find(i => i.id === "cerdito-sps").solo_en, ["San Pedro Sula"]);
+  assert.equal(menu.find(i => i.id === "cerdito-sps").solo_en, undefined);
+});
+
+test("Con Sabor a Pueblo a domicilio: el repartidor dice solo «120», el cliente acepta, paga la comida por transferencia y con el OK pasa a cocina", async () => {
+  const { mezclarPrivado } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const privado = { repartidores: [{ id: "kevin", nombre: "Kevin", whatsapp: "+504 7777-0001", sucursal: "sps" }], cobro: { transferencia: "Banco de prueba, cuenta 000" } };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const srv = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: preparar(mezclarPrivado(base, privado)) });
+  try {
+    const cli = "whatsapp:+50495550000", SPS = "whatsapp:+50488881111", KEVIN = "whatsapp:+50477770001";
+    const di = async (From, Body) => { const r = textoDe((await post(srv, "/whatsapp", { From, Body })).xml); await srv.app.locals.idle(); return r; };
+    let r;
+    for (const Body of ["hola", "Pedir a domicilio", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Col. Trejo, 5 calle, casa azul", "Sábado 17 de octubre"]) r = await di(cli, Body);
+    r = await di(cli, "Mario");
+    assert.match(r, /el repartidor le dice por aquí cuánto es el envío/); assert.doesNotMatch(r, /Banco de prueba/, "los datos de pago van después del envío");
+    const ped = () => srv.app.locals.store.getPedido("PED-1001");
+    assert.equal(ped().estado, "por_envio"); assert.equal(ped().pagaAntes, true);
+    assert.match(srv.sent.filter(m => m.to === KEVIN).at(-1).body, /Conteste solo el precio/);
+    assert.match(await di(KEVIN, "120"), /Le preguntamos al cliente/);
+    assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /cuesta \*L 120\*/);
+    r = await di(cli, "sí");
+    assert.match(r, /Envío de L 120 aceptado/); assert.match(r, /Banco de prueba/); assert.match(r, /Monto: \*L 390\*/);
+    assert.equal(ped().estado, "por_pagar");
+    await post(srv, "/whatsapp", { From: cli, Body: "", NumMedia: "1", MediaUrl0: "https://example.test/comprobante.jpg" }); await srv.app.locals.idle();
+    assert.match(srv.sent.filter(m => m.to === SPS).at(-1).body, /OK 1001/);
+    assert.match(await di(SPS, "ok 1001"), /aprobado/);
+    assert.equal(ped().estado, "nuevo"); assert.equal(ped().repartidor.nombre, "Kevin");
+
+    // the kitchen marks it ready; Kevin leaves and shares his location; the customer follows it on a map
+    const cookie = await entrar(srv);
+    const est = e => fetch(srv.base + "/api/pedidos/PED-1001/estado", { method: "POST", headers: { Cookie: cookie, "Content-Type": "application/json", Origin: srv.base }, body: JSON.stringify({ estado: e }) });
+    assert.equal((await est("listo")).status, 200); await srv.app.locals.idle();
+    assert.match(srv.sent.filter(m => m.to === KEVIN).at(-1).body, /cobre solo el envío, L 120/);
+    const sale = await di(KEVIN, "salgo");
+    const rep = sale.match(/\/r\/([\w-]{20,})/), sig = srv.sent.filter(m => m.to === cli).at(-1).body.match(/\/seguir\/([\w-]{20,})/);
+    assert.ok(rep && sig, "links de ubicación"); assert.notEqual(rep[1], sig[1]);
+    assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /La comida ya está pagada; el envío \(L 120\) se le paga a Kevin/);
+    assert.equal((await fetch(srv.base + "/r/" + rep[1])).status, 200);
+    assert.equal((await fetch(srv.base + "/seguir/" + rep[1] + "/donde")).status, 404, "el link del repartidor no sirve para ver");
+    const manda = (lat, lng) => fetch(srv.base + "/r/" + rep[1], { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat, lng, acc: 12 }) });
+    assert.equal((await manda(15.5, -88.02)).status, 200);
+    assert.equal((await manda("x", 1)).status, 400);
+    let d = await (await fetch(srv.base + "/seguir/" + sig[1] + "/donde")).json();
+    assert.deepEqual([d.pos.lat, d.pos.lng, d.repartidor, d.fin], [15.5, -88.02, "Kevin", false]);
+    assert.match(await (await fetch(srv.base + "/seguir/" + sig[1])).text(), /Su pedido PED-1001/);
+    await di(KEVIN, "entregado");
+    d = await (await fetch(srv.base + "/seguir/" + sig[1] + "/donde")).json();
+    assert.equal(d.fin, true); assert.equal(d.pos, null);
+    assert.equal((await manda(15.5, -88.02)).status, 410, "al entregar deja de recibir la ubicación");
+  } finally { srv.srv.close(); }
 });
 
 test("demo de un cliente: /demo/claude arma el sistema y las herramientas del negocio y solo pasa la conversación", async () => {
