@@ -7,7 +7,7 @@ Hasta el 1-nov-2026 el bot solo se ha probado con WhatsApp y Claude simulados (`
 | Qué | Quién | Costo |
 |---|---|---|
 | Cuenta de desarrollador de Meta y una app de WhatsApp (developers.facebook.com, con el Facebook de Rodrigo). Meta da un **número de prueba** gratis que puede escribir a hasta 5 teléfonos registrados. | Rodrigo (10 min) | Gratis |
-| Su celular agregado como destinatario de prueba (Meta manda un código). Ese celular hace de cliente, y un segundo celular (por ejemplo el de Dylan) de dueño/sucursal. | Rodrigo | Gratis |
+| Su celular agregado como destinatario de prueba (Meta manda un código). Ese celular hace de cliente, un segundo celular (por ejemplo el de Dylan) de dueño/sucursal y un tercero de repartidor. | Rodrigo | Gratis |
 | Clave de la API de Claude (console.anthropic.com) con crédito. | Rodrigo | Compra mínima de crédito (unos $5). La prueba entera gasta centavos con Haiku. |
 | Una dirección https pública para el webhook: la PC de Rodrigo con un túnel gratis de Cloudflare (`cloudflared tunnel --url http://localhost:3000`), o Render. | Claude, en la PC de Rodrigo | Gratis |
 
@@ -24,6 +24,12 @@ Las claves las escribe Rodrigo en `.env` en su PC, nunca en el chat.
 7. Otro pedido: el cliente escribe "cancelar mi pedido": a la sucursal le llega el aviso con el número; el pedido no se cancela solo.
 8. La sucursal lo cancela en el panel: al cliente le llega "canceló su pedido" una sola vez.
 9. Se baja el respaldo (`node respaldo.js bajar ...`), se restaura en una carpeta nueva y el bot arranca con los mismos pedidos.
-10. Se apaga la clave de Claude (`BOT_IA=off`) y se repite el paso 2: contesta el menú.
+10. Repartidores: en el archivo del negocio de prueba se pone un repartidor con el WhatsApp del tercer celular (registrado en Meta). Ese celular le escribe "hola" al número de prueba antes de empezar, para abrir la ventana de 24 h. El cliente hace un pedido **a domicilio**, la cocina lo marca Listo y pasa esto:
+    - al repartidor le llega la entrega con la dirección, lo que lleva, cuánto cobrar y el mapa;
+    - al cliente le llega "lo lleva …";
+    - el repartidor contesta SALGO y al cliente le llega "va en camino";
+    - el repartidor contesta ENTREGADO y al cliente y al dueño les llega el aviso;
+    - con dos repartidores, NO PUEDO se lo pasa al otro.
+11. Se apaga la clave de Claude (`BOT_IA=off`) y se repite el paso 2: contesta el menú.
 
 Lo que salga mal se anota aquí con la fecha y se corrige antes de instalar con un cliente.
