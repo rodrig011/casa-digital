@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Loca Luna · video de propuesta v2</title>
+<style>
+@font-face{font-family:"Bricolage";src:url(src/bricolage.woff2) format("woff2-variations");font-weight:200 800;font-stretch:75% 100%;}
+:root{
+  --sol:#FFC928;            /* el amarillo exacto de su logo */
+  --tinta:#121211; --hueso:#EDECE8; --blanco:#FFFFFF;
+  --tinta-2:#4A4332;        /* secundario sobre amarillo */
+  --gris-n:#A9A69C;         /* secundario sobre negro */
+  --gris-c:#5E5C56;         /* secundario sobre claro */
+  --hn:#00BCE4;             /* azul turquesa de la bandera de Honduras */
+  --wa-fondo:#ECE5DD; --wa-sale:#D9FDD3; --wa-entra:#FFFFFF; --wa-barra:#075E54;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--tinta);}
+body{font-family:"Bricolage",sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;font-optical-sizing:auto;}
+.scene{position:absolute;inset:0;visibility:hidden;overflow:hidden;}
+.noche{background:var(--tinta);color:var(--blanco);} .claro{background:var(--hueso);color:var(--tinta);} .sol{background:var(--sol);color:var(--tinta);} .blanco{background:var(--blanco);color:var(--tinta);}
+.pad{position:absolute;left:84px;right:84px;}
+.h{font-stretch:78%;font-weight:750;line-height:.94;letter-spacing:-.02em;}
+.h .ln{display:block;overflow:hidden;padding-bottom:.12em;margin-bottom:-.12em;white-space:nowrap;}
+.h .ln>span{display:inline-block;}
+.b{font-stretch:100%;font-weight:480;line-height:1.28;letter-spacing:-.005em;}
+.nota{font-size:32px;font-weight:480;line-height:1.3;}
+.noche .nota{color:var(--gris-n);} .claro .nota,.blanco .nota{color:var(--gris-c);} .sol .nota{color:var(--tinta-2);}
+
+/* 1 · apertura */
+#s1 .logo{position:absolute;left:84px;top:110px;width:400px;height:400px;display:block;}
+#s1 .h1{top:600px;}
+#s1 .nota{top:1620px;font-size:42px;color:var(--blanco);}
+
+/* 2 · lo que ya son */
+#s2 .foto{position:absolute;right:0;top:0;width:540px;height:960px;display:block;}   /* 540 px: tamaño original de su video */
+#s2 .desde{left:84px;right:auto;width:400px;top:120px;font-size:190px;color:var(--sol);}
+#s2 .tres{left:84px;right:auto;width:400px;top:800px;font-size:46px;}
+#s2 ul{position:absolute;left:84px;right:84px;top:1010px;list-style:none;}
+#s2 li{font-stretch:78%;font-weight:750;font-size:196px;line-height:.98;letter-spacing:-.02em;white-space:nowrap;}
+#s2 .del{top:1640px;font-size:52px;}
+#s2 .nota{top:1790px;}
+
+/* 3 · su menú */
+#s3 .banda{position:absolute;left:0;right:0;top:0;height:600px;background:var(--hueso);z-index:2;}
+#s3 .h1{top:110px;}
+#s3 .sub{top:420px;font-size:44px;}
+#s3 .hoja{position:absolute;left:-24px;top:600px;width:1129px;}   /* 1129 px: el ancho original de su PDF */
+#s3 .hoja img{display:block;width:1129px;height:1600px;}
+
+/* 4 · un solo WhatsApp */
+#s4 .h1{top:110px;}
+#s4 .tel{position:absolute;left:84px;right:84px;top:520px;height:1180px;background:var(--wa-fondo);overflow:hidden;}
+#s4 .barra{height:128px;background:var(--wa-barra);display:flex;align-items:center;gap:26px;padding:0 36px;color:#fff;}
+#s4 .barra img{width:84px;height:84px;border-radius:50%;}
+#s4 .barra b{display:block;font-size:40px;font-weight:650;line-height:1.1;}
+#s4 .barra small{font-size:28px;font-weight:450;opacity:.85;}
+#s4 .hilo{padding:40px 36px;display:flex;flex-direction:column;gap:30px;}
+.m{max-width:86%;padding:26px 32px 28px;border-radius:24px;font-size:48px;line-height:1.24;font-weight:480;color:#111B21;}
+.m.c{align-self:flex-end;background:var(--wa-sale);border-top-right-radius:6px;transform-origin:100% 100%;}
+.m.r{align-self:flex-start;background:var(--wa-entra);border-top-left-radius:6px;transform-origin:0 100%;}
+.m b{font-weight:720;}
+#s4 .nota{top:1744px;}
+
+/* 5 · cada pedido a su cocina */
+#s5 .h1{top:110px;}
+#s5 .carril{position:absolute;left:84px;right:84px;height:330px;background:var(--tinta);color:var(--sol);padding:30px 36px;overflow:hidden;}
+#s5 .c1{top:560px;} #s5 .c2{top:914px;} #s5 .c3{top:1268px;}
+#s5 .carril h2{font-stretch:78%;font-weight:750;font-size:80px;line-height:1;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:baseline;}
+#s5 .carril h2 span{font-stretch:100%;font-weight:480;font-size:34px;letter-spacing:0;color:var(--gris-n);}
+#s5 .tk{position:absolute;left:36px;right:36px;height:78px;background:var(--hueso);color:var(--tinta);display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:36px;font-weight:560;}
+#s5 .tk b{font-weight:480;color:var(--gris-c);}
+#s5 .t1{top:136px;} #s5 .t2{top:224px;}
+#s5 .nota{top:1650px;}
+
+/* 6, 7 y 8 · el panel real en pantalla grande: la cámara se acerca a lo que importa */
+.banda-t{position:absolute;left:0;right:0;top:0;height:480px;z-index:3;}
+.claro .banda-t{background:var(--hueso);} .noche .banda-t{background:var(--tinta);}
+.banda-t .h1{top:110px;}
+.pie{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:3;}
+.claro .pie{background:var(--hueso);} .noche .pie{background:var(--tinta);}
+.pie .nota{top:38px;}
+/* el acercamiento cambia tamaño y posición reales (no una transformación), así cada cuadro se dibuja completo y nítido */
+.tab{--k:1;position:absolute;left:0;top:0;width:calc(1000px*var(--k));padding:calc(20px*var(--k));background:#0B0B0B;border-radius:calc(34px*var(--k));}
+.tab img{display:block;width:calc(960px*var(--k));height:calc(667px*var(--k));border-radius:calc(14px*var(--k));}
+
+/* 9 · de hondureños para hondureños */
+#s9 .bandera{position:absolute;left:84px;top:130px;width:912px;height:456px;display:block;}
+#s9 .h1{top:690px;}
+#s9 .p1{top:1040px;font-size:52px;}
+#s9 ul{position:absolute;left:84px;right:84px;top:1330px;list-style:none;}
+#s9 li{font-size:46px;font-weight:480;line-height:1.25;padding:26px 0 0;margin-top:26px;position:relative;}
+#s9 li::before{content:"";position:absolute;left:0;top:0;width:120px;height:8px;background:var(--hn);}
+
+/* 10 · cierre */
+#s10 .h1{top:250px;}
+#s10 .cta{top:760px;font-size:54px;}
+#s10 .quien{top:1140px;font-size:44px;}
+#s10 .quien b{display:block;font-stretch:78%;font-weight:750;font-size:122px;line-height:1;letter-spacing:-.02em;margin-top:14px;white-space:nowrap;}
+#s10 .by{position:absolute;left:84px;bottom:120px;display:flex;align-items:center;gap:26px;font-size:42px;font-weight:480;}
+#s10 .by img{width:74px;height:84px;filter:brightness(0);}
+#s10 .by b{font-weight:720;}
+</style>
+</head>
+<body>
+
+<section class="scene noche" id="s1">
+  <img class="logo" src="src/logo.jpg" alt="" data-fade="0">
+  <div class="pad h h1" data-fit="912" data-lines="0.5"><span class="ln"><span>Tres</span></span><span class="ln"><span>sucursales.</span></span><span class="ln"><span>Un solo</span></span><span class="ln"><span>WhatsApp.</span></span></div>
+  <div class="pad b nota" data-in="2.5">Una propuesta de Casa Digital para Loca Luna.</div>
+</section>
+
+<section class="scene noche" id="s2">
+  <img class="foto" src="src/alita.jpg" alt="" data-fade="0">
+  <div class="pad h desde" data-lines="0.1"><span class="ln"><span>Desde</span></span><span class="ln"><span>2006.</span></span></div>
+  <div class="pad b tres" data-in="1">Y hoy ustedes publican tres sucursales:</div>
+  <ul>
+    <li data-side="1.5">Los Castaños</li>
+    <li data-side="2">Las Hadas</li>
+    <li data-side="2.5">Choluteca</li>
+  </ul>
+  <div class="pad b del" data-in="3.5">Con delivery de 10 am a 10 pm.</div>
+  <div class="pad nota" data-in="3.9">Datos de su Instagram y su TikTok. Foto de uno de sus videos.</div>
+</section>
+
+<section class="scene claro" id="s3">
+  <div class="hoja"><img src="src/menu-1.jpg" alt=""><img src="src/menu-2.jpg" alt=""></div>
+  <div class="banda">
+    <div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>Su menú completo,</span></span><span class="ln"><span>con sus 11 salsas.</span></span></div>
+    <div class="pad b sub" data-in="0.8">El WhatsApp lo aprende tal como está: los mismos nombres y los mismos precios.</div>
+  </div>
+</section>
+
+<section class="scene claro" id="s4">
+  <div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>El cliente escribe</span></span><span class="ln"><span>a un solo número.</span></span></div>
+  <div class="tel" data-in="0.5">
+    <div class="barra"><img src="src/logo.jpg" alt=""><div><b>Loca Luna</b><small>Cuenta de empresa</small></div></div>
+    <div class="hilo">
+      <div class="m c" data-pop="1">Buenas, quiero 12 alitas búfalo para recoger en Las Hadas</div>
+      <div class="m r" data-pop="3">¡Con gusto! <b>12 Alas de Pollo en salsa Búfalo, L 320.</b> ¿A nombre de quién?</div>
+      <div class="m c" data-pop="5.5">Carlos</div>
+      <div class="m r" data-pop="6.5">Listo, Carlos. Su pedido ya está en <b>la cocina de Las Hadas.</b> Le aviso cuando esté listo.</div>
+    </div>
+  </div>
+  <div class="pad nota" data-in="1">Conversación de ejemplo. L 320 es el precio de su menú.</div>
+</section>
+
+<section class="scene claro" id="s5">
+  <div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>Y cada pedido cae</span></span><span class="ln"><span>en su cocina.</span></span></div>
+  <div class="carril c1" data-in="0.5"><h2>Los Castaños <span>cocina</span></h2>
+    <div class="tk t1" data-tk="2"><span>12 Boneless · Honey Mustard</span><b>domicilio</b></div>
+    <div class="tk t2" data-tk="3.5"><span>6 Alas de Pollo · Loca Luna</span><b>recoge</b></div></div>
+  <div class="carril c2" data-in="0.62"><h2>Las Hadas <span>cocina</span></h2>
+    <div class="tk t1" data-tk="1.5"><span>12 Alas de Pollo · Búfalo</span><b>recoge</b></div>
+    <div class="tk t2" data-tk="3"><span>Chicken Lovers</span><b>recoge</b></div></div>
+  <div class="carril c3" data-in="0.74"><h2>Choluteca <span>cocina</span></h2>
+    <div class="tk t1" data-tk="2.5"><span>12 Alas de Pollo · Barbacoa</span><b>recoge</b></div>
+    <div class="tk t2" data-tk="4"><span>6 Boneless · Sweet Chili</span><b>recoge</b></div></div>
+  <div class="pad nota" data-in="1.5">Pedidos de ejemplo, con productos y salsas de su menú.</div>
+</section>
+
+<section class="scene noche" id="s6">
+  <div class="tab" id="tab6"><img src="src/panel-cocina.jpg" alt=""></div>
+  <div class="banda-t"><div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>Cada cocina ve</span></span><span class="ln"><span>solo lo suyo.</span></span></div></div>
+  <div class="pie"><div class="pad nota" data-in="1">Pantalla de cocina real de Casa Digital, vista de Las Hadas. Pedidos de ejemplo.</div></div>
+</section>
+
+<section class="scene claro" id="s7">
+  <div class="tab" id="tab7"><img src="src/panel-hoy.jpg" alt=""></div>
+  <div class="banda-t"><div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>Y usted ve las tres</span></span><span class="ln"><span>en un solo panel.</span></span></div></div>
+  <div class="pie"><div class="pad nota" data-in="1">Panel real de Casa Digital. Las cifras son de ejemplo, no ventas de Loca Luna.</div></div>
+</section>
+
+<section class="scene claro" id="s8">
+  <div class="tab" id="tab8"><img src="src/panel-pedidos.jpg" alt=""></div>
+  <div class="banda-t"><div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>Cada pedido, de</span></span><span class="ln"><span>nuevo a entregado.</span></span></div></div>
+  <div class="pie"><div class="pad nota" data-in="1">Panel real de Casa Digital. Pedidos y clientes de ejemplo.</div></div>
+</section>
+
+<section class="scene blanco" id="s9">
+  <svg class="bandera" viewBox="0 0 912 456" data-fade="0" aria-hidden="true">
+    <rect width="912" height="456" fill="#00BCE4"/><rect y="152" width="912" height="152" fill="#fff"/>
+    <g fill="#00BCE4" id="estrellas"></g>
+  </svg>
+  <div class="pad h h1" data-fit="912" data-lines="0.5"><span class="ln"><span>De hondureños,</span></span><span class="ln"><span>para hondureños.</span></span></div>
+  <div class="pad b p1" data-in="1.5">Somos Rodrigo Herrera y Dylan Jiménez, hondureños y fundadores de Clientia Tech.</div>
+  <ul>
+    <li data-in="2.5">Su menú, sus precios en lempiras y su forma de atender.</li>
+    <li data-in="3.5">Atención en español, en horario de Honduras.</li>
+  </ul>
+</section>
+
+<section class="scene sol" id="s10">
+  <div class="pad h h1" data-fit="912" data-lines="0"><span class="ln"><span>¿Lo vemos con</span></span><span class="ln"><span>su menú?</span></span></div>
+  <div class="pad b cta" data-in="1">Se lo armamos con sus productos, sus precios y sus tres sucursales para que lo pruebe antes de decidir nada.</div>
+  <div class="pad b quien" data-in="2">Rodrigo Herrera, por WhatsApp<b>+1 (765) 543-4251</b></div>
+  <div class="by" data-in="3"><img src="src/clientia.svg" alt=""><span><b>Casa Digital</b> by Clientia Tech</span></div>
+</section>
+
+<script>
+// "Better Times are Coming" (Mixkit), 120 BPM exactos: un compás cada 2 s, primer golpe en 0.14 s.
+const P0 = 0.14, BAR = 2, K = k => P0 + BAR * k;
+const SCENES = [["s1",0,3],["s2",3,6],["s3",6,9],["s4",9,14],["s5",14,17],["s6",17,20.5],["s7",20.5,26.5],["s8",26.5,29.5],["s9",29.5,33],["s10",33,37]];
+const TOTAL = K(37);
+const OUT = "cubic-bezier(0.23,1,0.32,1)", INOUT = "cubic-bezier(0.77,0,0.175,1)";
+const anims = [];
+function A(el, at, kf, dur = 700, easing = OUT) {
+  const a = el.animate(kf, { delay: at * 1000, duration: dur, fill: "both", easing });
+  a.pause(); anims.push(a); return a;
+}
+// estrellas de la bandera: cinco, en X, en la franja blanca
+{ const g = document.getElementById("estrellas"), star = (cx, cy, r) => { let d = ""; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.382 : r; d += (i ? "L" : "M") + (cx + q * Math.cos(a)).toFixed(1) + " " + (cy + q * Math.sin(a)).toFixed(1); } return `<path d="${d}Z"/>`; };
+  g.innerHTML = [[456, 228], [330, 184], [582, 184], [330, 272], [582, 272]].map(([x, y]) => star(x, y, 30)).join(""); }
+// cámara sobre la captura (1180 x 820 px del panel): encuadra una zona de ancho w centrada en (cx, cy)
+const F = 960 / 1180, VX = 540, VY = 480 + (1920 - 480 - 150) / 2;
+// Se calcula cuadro por cuadro (sin animación del navegador) para que la imagen se dibuje nítida en cada acercamiento.
+const TODO = [590, 410, 1180];
+const suave = p => p < .5 ? 8 * p ** 4 : 1 - 8 * (1 - p) ** 4;
+const rutas = [];
+function ruta(id, pasos) {   // pasos: [segundo dentro de la escena, [cx, cy, ancho], duración del movimiento]
+  const el = document.getElementById(id), t0 = +el.closest(".scene").dataset.a;
+  rutas.push({ el, t0, pasos });
+  A(el, t0, [{ opacity: 0 }, { opacity: 1 }], 700);
+}
+function encuadrar(t) {
+  for (const { el, t0, pasos } of rutas) {
+    let c = pasos[0][1];
+    for (let i = 1; i < pasos.length; i++) {
+      const p = Math.min(1, Math.max(0, (t - t0 - pasos[i][0]) / pasos[i][2])), e = suave(p), a = pasos[i - 1][1], b = pasos[i][1];
+      if (p > 0) c = [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] * Math.pow(b[2] / a[2], e)];
+    }
+    const k = 960 / (c[2] * F);
+    el.style.setProperty("--k", k.toFixed(5)); el.style.left = (VX - k * (20 + c[0] * F)).toFixed(2) + "px"; el.style.top = (VY - k * (20 + c[1] * F)).toFixed(2) + "px";
+  }
+}
+function build() {
+  document.querySelectorAll("[data-fit]").forEach(el => {
+    el.style.fontSize = "100px";
+    const w = Math.max(...[...el.querySelectorAll(".ln>span")].map(s => s.getBoundingClientRect().width));
+    el.style.fontSize = Math.floor(100 * parseFloat(el.dataset.fit) / w) + "px";
+  });
+  for (const [id, a, b] of SCENES) {
+    const sc = document.getElementById(id), t0 = K(a);
+    sc.dataset.a = t0; sc.dataset.b = K(b);
+    sc.querySelectorAll("[data-lines]").forEach(el => el.querySelectorAll(".ln>span").forEach((s, i) =>
+      A(s, t0 + parseFloat(el.dataset.lines) + i * 0.1, [{ transform: "translateY(108%)" }, { transform: "none" }], 900)));
+    sc.querySelectorAll("[data-in]").forEach(el => A(el, t0 + parseFloat(el.dataset.in), [{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }], 800));
+    sc.querySelectorAll("[data-fade]").forEach(el => A(el, t0 + parseFloat(el.dataset.fade), [{ opacity: 0, transform: "scale(1.03)" }, { opacity: 1, transform: "none" }], 1000));
+    sc.querySelectorAll("[data-side]").forEach(el => A(el, t0 + parseFloat(el.dataset.side), [{ opacity: 0, transform: "translateX(-60px)" }, { opacity: 1, transform: "none" }], 700));
+    sc.querySelectorAll("[data-pop]").forEach(el => A(el, t0 + parseFloat(el.dataset.pop), [{ opacity: 0, transform: "scale(.9)" }, { opacity: 1, transform: "none" }], 420));
+    sc.querySelectorAll("[data-tk]").forEach(el => A(el, t0 + parseFloat(el.dataset.tk), [{ transform: "translateX(-1100px)" }, { transform: "none" }], 650));
+  }
+  const span = id => { const s = document.getElementById(id); return [+s.dataset.a, (+s.dataset.b - +s.dataset.a) * 1000]; };
+  { const [t, d] = span("s3"); A(document.querySelector("#s3 .hoja"), t, [{ transform: "translateY(-150px)" }, { transform: "translateY(-1010px)" }], d, "linear"); }
+  // cocina: pantalla completa, luego los dos pedidos de Las Hadas
+  ruta("tab6", [[0, TODO], [2, [554, 290, 640], 1.4]]);
+  // hoy: pantalla completa, los cuatro números, y la tabla "Por sucursal"
+  ruta("tab7", [[0, TODO], [2, [706, 300, 960], 1.3], [5, [967, 520, 410], 1.5]]);
+  // pedidos: pantalla completa, y un paneo por el tablero de izquierda a derecha
+  ruta("tab8", [[0, TODO], [1.8, [478, 330, 500], 1.3], [3.2, [934, 330, 500], 2.4]]);
+}
+window.TOTAL = TOTAL;
+window.seek = t => {
+  for (const [id] of SCENES) { const s = document.getElementById(id); s.style.visibility = (t >= +s.dataset.a && t < +s.dataset.b) ? "visible" : "hidden"; }
+  if (t < +document.getElementById("s1").dataset.b) document.getElementById("s1").style.visibility = "visible";
+  if (t >= +document.getElementById("s10").dataset.a) document.getElementById("s10").style.visibility = "visible";
+  for (const a of anims) a.currentTime = t * 1000;
+  encuadrar(t);
+};
+const q = new URLSearchParams(location.search).get("t");
+Promise.all([document.fonts.load('750 100px "Bricolage"'), document.fonts.load('480 40px "Bricolage"'), ...[...document.images].map(i => i.decode().catch(() => {}))])
+  .catch(e => console.error(e)).then(() => document.fonts.ready).then(() => { build(); window.READY = true; seek(q ? +q : 0); });
+</script>
+</body>
+</html>
