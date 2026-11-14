@@ -43,7 +43,7 @@ De 67 comentarios de primer nivel en 11 videos (TikTok dice 116 contando respues
 No encontré nombre público del dueño en ninguna fuente.
 
 ## ¿Es muy grande para nosotros? (honesto)
-No es una franquicia internacional, pero sí es **la cadena local más grande que hemos investigado**: 20 años, 3 a 5 puntos en dos ciudades, bar con música en vivo, 42K en Facebook, menú de unos 40 platos y diseño profesional (seguro tienen agencia de redes). Lo más probable es que ya tengan sistema de caja (POS) en cada sucursal y una persona o línea fija para delivery.
+No es una franquicia internacional, pero sí es **una cadena local ya establecida**: 20 años, 3 a 5 puntos en dos ciudades, bar con música en vivo, 42K en Facebook, menú de unos 40 platos y diseño profesional (seguro tienen agencia de redes). Lo más probable es que ya tengan sistema de caja (POS) en cada sucursal y una persona o línea fija para delivery.
 
 Consecuencias:
 - Llegar al dueño va a ser más difícil; quien lea el mensaje será el community manager.
