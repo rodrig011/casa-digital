@@ -67,3 +67,14 @@ Canal sugerido: DM de Instagram @localunahn (es donde más publican). Si tienen 
 > ¿Le puedo mandar un video corto de cómo funciona? Si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?
 
 Estado: nada enviado.
+
+## Mensaje al dueño (contacto directo, 14 nov 2026)
+Rodrigo consiguió el contacto directo del dueño. Llenar [Nombre] y [cómo lo conseguimos] antes de mandar.
+
+> Buenas, don [Nombre]. Le escribe Rodrigo Herrera, [cómo lo conseguimos: "me pasó su número X" / "nos conocimos en..."]. Soy hondureño, estudio ingeniería en Estados Unidos y con mi socio Dylan tenemos Clientia Tech: armamos sistemas de pedidos por WhatsApp para restaurantes en Honduras.
+>
+> Estuve viendo Loca Luna y se me ocurrió algo para sus sucursales de Los Castaños, Las Hadas y Choluteca: un solo WhatsApp que toma el pedido completo (alitas o boneless, salsas, acompañantes, delivery o pickup), lo manda directo a la cocina de la sucursal que corresponde, y un panel donde usted ve los pedidos y lo que vende cada sucursal en el día.
+>
+> Le preparé un video corto de cómo se vería con Loca Luna. ¿Se lo mando por aquí?
+
+Sin precio en el primer mensaje. Si pregunta precio, Rodrigo lo maneja (antes de cualquier prueba gratis tiene que saber el precio de después y qué incluye).
