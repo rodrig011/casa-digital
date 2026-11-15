@@ -20,6 +20,7 @@ repartidores con ubicación, panel del dueño con menú, equipo y configuración
 - La demo vive en el plan gratis de Render. **Para un cliente real no sirve**: el plan gratis se duerme y no guarda archivos, así que los pedidos y la configuración del panel se perderían al reiniciar.
 - Hace falta el plan Starter con un disco de 1 GB: unos **$7.25 al mes**. Sale de la mensualidad del cliente (L2,500).
 - El disco va en `DATA_DIR=/var/data`, con `DATA_KEY` puesta para que todo quede cifrado.
+- Ya está listo el archivo: en Render, New > Blueprint, este repositorio, Blueprint path `con-sabor-a-pueblo/render-produccion.yaml`. Crea el servicio `con-sabor-a-pueblo-bot` con disco y llaves generadas; las claves se pegan ahí mismo.
 - Respaldo: `node respaldo.js bajar https://<bot>.onrender.com` una vez por semana. Ya incluye menú, repartidores y configuración.
 
 ## 3. WhatsApp (Meta)
