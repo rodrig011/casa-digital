@@ -8,7 +8,7 @@ Archivo final: `../loca-luna-casa-digital-v4.mp4`. Son competencia de Tito Wings
 
 Se revisó la referencia a 10 cuadros por segundo. Lo que la hace verse profesional no es el aspecto sino esto, y es lo que se copió:
 
-- **Desenfoque de movimiento real.** Cada cuadro del video es la mezcla de 3 sub-cuadros sacados a 120 por segundo, como el obturador de una cámara. Todo lo que se mueve rápido deja estela.
+- **Desenfoque de movimiento real.** Cada cuadro del video es la mezcla de 6 sub-cuadros sacados a 240 por segundo, como el obturador de una cámara. Todo lo que se mueve rápido deja estela.
 - **La cámara nunca se detiene.** Entre escenas no hay fundidos: la cámara barre de lado o hacia arriba, atraviesa un botón o desenfoca. Dentro de cada escena siempre hay un acercamiento lento.
 - **La frase en grande.** La cámara se mete en "llegara solo", la recorre a pantalla completa y vuelve a salir.
 - **Inundación de color.** El amarillo llena la pantalla, un punto negro crece y se la traga, y de ahí sale la marca.
@@ -29,7 +29,7 @@ cp /mnt/project-files/musica/better-times-are-coming-mixkit.mp3 src/musica.mp3  
 node capturas.mjs              # solo si cambia el panel
 node render.mjs --hoja         # build/hoja.jpg, cuadros sueltos para revisar
 A=10 B=16 node render.mjs      # build/tramo.mp4, solo ese tramo
-node render.mjs                # build/loca-luna-casa-digital-v4.mp4 (unos minutos: son 6,400 capturas)
+node render.mjs                # build/loca-luna-casa-digital-v4.mp4 (unos 11 minutos: son 12,900 capturas)
 ```
 
 Todo el movimiento se calcula por cuadro en `index.html` a partir del tiempo (`window.seek(t)`), sin animaciones CSS, para que los sub-cuadros sean exactos.

@@ -98,11 +98,8 @@ body{font-family:"Outfit",sans-serif;color:var(--tinta);-webkit-font-smoothing:a
 #s9 .ok{flex:none;width:76px;height:76px;border-radius:50%;background:var(--sol);display:grid;place-items:center;}
 #s9 .fin{top:1500px;}
 /* 10 · de hondureños para hondureños */
-#s10 .ban{left:290px;top:440px;width:500px;height:250px;border-radius:28px;}
-#s10 .ban svg{display:block;width:500px;height:250px;}
-#s10 .t{top:780px;}
-#s10 em{background-image:linear-gradient(#00BCE4,#00BCE4);color:#fff;}
-#s10 .t.s{top:1070px;}
+#s10 .t{top:760px;font-size:104px;}
+#s10 .t.s{top:1060px;font-size:54px;}
 /* 11 · cierre */
 #s11 .t{top:440px;font-size:112px;}
 #s11 .t.s{top:760px;font-size:52px;color:#D8D6CD;}
@@ -207,9 +204,8 @@ body{font-family:"Outfit",sans-serif;color:var(--tinta);-webkit-font-smoothing:a
 </div></section>
 
 <section class="scene L" id="s10"><div class="cam" id="cam10">
-  <div class="carta ban" id="ban10"><svg viewBox="0 0 500 250" aria-hidden="true"><rect width="500" height="250" fill="#00BCE4"/><rect y="83.3" width="500" height="83.4" fill="#fff"/><g fill="#00BCE4" id="estrellas"></g></svg></div>
-  <div class="t" data-w="0.5">De hondureños, <em>para hondureños.</em></div>
-  <div class="t s" data-w="1.5">Somos Rodrigo Herrera y Dylan Jiménez, fundadores de Clientia Tech. Precios en lempiras y atención en español.</div>
+  <div class="t" data-w="0.35">De hondureños, <em>para hondureños.</em></div>
+  <div class="t s" data-w="1.4">Soy Rodrigo Herrera, de Clientia Tech. Precios en lempiras y atención en español.</div>
 </div></section>
 
 <section class="scene D" id="s11"><div class="cam" id="cam11">
@@ -249,8 +245,6 @@ const P3 = "perspective(1700px) ";
 
 const OK = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E0E0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 document.querySelectorAll(".ok").forEach(o => o.innerHTML = OK);
-{ const star = (cx, cy, r) => { let d = ""; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.382 : r; d += (i ? "L" : "M") + (cx + q * Math.cos(a)).toFixed(1) + " " + (cy + q * Math.sin(a)).toFixed(1); } return `<path d="${d}Z"/>`; };
-  $("estrellas").innerHTML = [[250, 125], [180, 101], [320, 101], [180, 149], [320, 149]].map(([x, y]) => star(x, y, 17)).join(""); }
 function palabras(el) {
   const o = [];
   const walk = n => { for (const c of [...n.childNodes]) {
@@ -301,7 +295,7 @@ const DRAW = {
   s3(lt) {
     // el amarillo inunda la pantalla; un punto negro crece y se la traga; queda la marca en oscuro
     const y = $("y3"), r = out(pr(lt, 0, .5)) * 1400;
-    y.style.clipPath = `circle(${r.toFixed(1)}px at 540px 960px)`; y.style.visibility = lt < 2.9 ? "inherit" : "hidden";
+    y.style.clipPath = `circle(${r.toFixed(1)}px at 540px 960px)`; y.style.visibility = lt < 2.55 ? "inherit" : "hidden";
     const ty = $("ty3"); ty.style.visibility = lt < 2.6 ? "inherit" : "hidden";
     if (lt < 2.6) { ty.style.transform = `scale(${(1 + .05 * lt / 2.5).toFixed(4)})`; }
     const kk = res(pr(lt, 1.35, .7)), ke = inn(pr(lt, 2.0, .55));
@@ -380,8 +374,6 @@ const DRAW = {
     cam(this.cam, 540, 960, 1 + .04 * lt / 5.5);
   },
   s10(lt) {
-    const k = res(pr(lt, .15, 1.0));
-    st($("ban10"), pr(lt, .15, .2), P3 + `translateY(${((1 - k) * -220).toFixed(1)}px) rotateY(${(mix(40, 0, k) + 9 * Math.sin(lt * 1.5)).toFixed(2)}deg) rotateX(${(mix(-20, 0, k) + 4 * Math.cos(lt * 1.2)).toFixed(2)}deg)`, (1 - out(pr(lt, .15, .4))) * 12);
     cam(this.cam, 540, 960, 1 + .045 * lt / 4.5);
   },
   s11(lt) {
@@ -396,17 +388,16 @@ const DRAW = {
 // transiciones entre escenas: la cámara no se detiene, barre, atraviesa o desenfoca
 const TD = .62, TA = .26;   // duración y cuánto empieza antes del corte
 function fondo(t) {
-  let osc = SC[0].d, cx = -900 * (1 - out(pr(t, 0, 1.4))), cy = 0, hn = 0, sw = 0;
+  let osc = SC[0].d, cx = -900 * (1 - out(pr(t, 0, 1.4))), cy = 0, sw = 0;
   for (let i = 1; i < SC.length; i++) {
     const s = SC[i], c = s.tin === "corte" ? (t >= s.a + .2 ? 1 : 0) : io(pr(t, s.a - TA, TD));
     osc = mix(osc, s.d, c);
     if (s.tin === "L") cx += c * 820; if (s.tin === "U") cy += c * 900; if (s.tin === "zoom" || s.tin === "foco") cy += c * 300;
     sw += Math.sin(c * Math.PI);
-    if (s.id === "s10") hn += c; if (s.id === "s11") hn -= c;
   }
   $("noche").style.opacity = osc.toFixed(3);
   const S = Math.sin, C = Math.cos, wrap = (v, lo, hi) => ((v - lo) % (hi - lo) + (hi - lo)) % (hi - lo) + lo;
-  const col = `rgb(${mix(255, 0, hn).toFixed(0)},${mix(201, 188, hn).toFixed(0)},${mix(40, 228, hn).toFixed(0)})`;
+  const col = "#FFC928";
   // [ancho, alto, x, y, paralaje, fase]
   [[1000, 700, -420, -380, 1, 0], [1050, 760, 520, 1500, 1.25, 2], [420, 640, 900, 300, .8, 4], [760, 560, 1700, 700, 1.1, 1]].forEach(([w, h, x, y, par, f], i) => {
     const m = $("m" + (i + 1));

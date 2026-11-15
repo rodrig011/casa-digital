@@ -1,5 +1,5 @@
 // Renderiza index.html a MP4 1080x1920 con desenfoque de movimiento real: por cada cuadro del video se sacan
-// SUB sub-cuadros (120 por segundo) y ffmpeg mezcla 3 de cada 4, como un obturador de cámara abierto 270°.
+// SUB sub-cuadros (240 por segundo) y ffmpeg mezcla 6 de cada 8, como un obturador de cámara abierto 270°.
 //   node render.mjs                 -> build/loca-luna-casa-digital-v4.mp4
 //   node render.mjs --hoja          -> build/hoja.jpg (cuadros sueltos para revisar; T="1,2.5,..." elige los tiempos)
 //   A=10 B=16 node render.mjs       -> solo ese tramo, sin música (build/tramo.mp4)
@@ -14,7 +14,7 @@ import path from "node:path";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(HERE, "build");
-const FPS = 30, SUB = 4;
+const FPS = 30, SUB = 8;
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
@@ -51,7 +51,7 @@ const partes = await Promise.all(Array.from({ length: N }, async (_, w) => {
   const page = w ? await abrir() : page0;
   const file = path.join(OUT, `parte${w}.mp4`);
   const ff = spawn("ffmpeg", ["-v", "error", "-y", "-f", "image2pipe", "-framerate", String(FPS * SUB), "-c:v", "mjpeg", "-i", "-",
-    "-vf", `tmix=frames=3:weights='1 1 1',select='eq(mod(n\\,${SUB})\\,${SUB - 1})',setpts=N/${FPS}/TB`, "-r", String(FPS),
+    "-vf", `tmix=frames=6:weights='1 1 1 1 1 1',select='eq(mod(n\\,${SUB})\\,${SUB - 1})',setpts=N/${FPS}/TB`, "-r", String(FPS),
     "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-pix_fmt", "yuv420p", file], { stdio: ["pipe", "inherit", "inherit"] });
   for (let f = a; f < b; f++) for (let s = 0; s < SUB; s++) {
     await page.evaluate(t => window.seek(t), (f + s / SUB) / FPS);
