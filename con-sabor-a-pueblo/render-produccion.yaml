@@ -1,0 +1,61 @@
+# Bot REAL de Con Sabor a Pueblo (número del negocio, datos reales). En Render: New > Blueprint, este repositorio,
+# Blueprint path: con-sabor-a-pueblo/render-produccion.yaml. Plan pagado con disco: el gratis se duerme y pierde los pedidos.
+# Ninguna clave va aquí ni en el chat: todas se pegan en Render (sync: false). Ver con-sabor-a-pueblo/PUESTA-EN-MARCHA.md.
+services:
+  - type: web
+    name: con-sabor-a-pueblo-bot
+    runtime: node
+    region: virginia
+    plan: 0.5c-512mb
+    rootDir: bot-restaurante
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    disk:
+      name: datos
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TZ
+        value: America/Tegucigalpa
+      - key: DATA_DIR
+        value: /var/data
+      - key: NEGOCIO
+        value: negocios/con-sabor-a-pueblo.json
+      - key: NEGOCIO_PRIVADO       # JSON con los WhatsApp de sucursales y repartidores y la cuenta del banco (archivo privado del proyecto)
+        sync: false
+      - key: META_TOKEN            # token permanente de un usuario del sistema del Meta Business del negocio
+        sync: false
+      - key: META_PHONE_ID
+        sync: false
+      - key: META_NUMERO
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_VERIFY_TOKEN
+        generateValue: true
+      - key: META_PLANTILLA        # aviso_pedido, cuando Meta la apruebe
+        sync: false
+      - key: META_PLANTILLA_CODIGO # codigo_panel, cuando Meta la apruebe
+        sync: false
+      - key: OWNER_WHATSAPP        # WhatsApp personal del dueño (no el del bot)
+        sync: false
+      - key: PUBLIC_URL            # https://con-sabor-a-pueblo-bot.onrender.com
+        sync: false
+      - key: LEADS_TOKEN
+        generateValue: true
+      - key: PANEL_SECRET
+        generateValue: true
+      - key: DATA_KEY              # GUARDE UNA COPIA en el gestor de contraseñas: sin ella no se abren los datos
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: BOT_IA
+        value: "on"
+      - key: LIMITE_IA_DIA         # respuestas con IA por número al día; después contesta el menú
+        value: "60"
