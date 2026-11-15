@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Loca Luna · video de propuesta v3</title>
+<style>
+@font-face{font-family:"Outfit";src:url(src/outfit.woff2) format("woff2-variations");font-weight:100 900;}
+:root{
+  --sol:#FFC928;            /* el amarillo exacto de su logo */
+  --tinta:#0E0E0D; --luz:#F5F5F2; --gris:#6B6A64; --gris-n:#9C9A92;
+  --hn:#00BCE4;             /* azul de la bandera de Honduras */
+  --naranja:#FF4C00;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--luz);}
+body{font-family:"Outfit",sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;}
+
+/* fondos: claro con manchas de su amarillo, y oscuro con un resplandor */
+.fondo{position:absolute;inset:0;overflow:hidden;}
+#luz{background:radial-gradient(ellipse 70% 55% at 50% 48%,#FFFFFF 0%,#F5F5F2 55%,#E4E4E0 100%);}
+.mancha{position:absolute;background:var(--sol);filter:blur(34px);}
+#m1{width:980px;height:620px;left:-470px;top:-330px;border-radius:38% 62% 70% 30%/45% 35% 65% 55%;}
+#m2{width:1000px;height:640px;left:560px;top:1560px;border-radius:65% 35% 30% 70%/40% 60% 40% 60%;}
+#m3{width:340px;height:560px;left:960px;top:260px;border-radius:70% 30% 45% 55%/35% 65% 35% 65%;}
+#noche{background:#0A0A09;opacity:0;}
+#noche .halo{position:absolute;width:1300px;height:1300px;left:-110px;top:900px;border-radius:50%;background:radial-gradient(circle,rgba(255,201,40,.62) 0%,rgba(255,201,40,.22) 38%,rgba(255,201,40,0) 68%);}
+#noche .halo.b{width:900px;height:900px;left:560px;top:-420px;opacity:.5;}
+
+.scene{position:absolute;inset:0;visibility:hidden;}
+.D{color:#fff;}
+.t{position:absolute;left:84px;right:84px;text-align:center;font-weight:600;font-size:90px;line-height:1.08;letter-spacing:-.028em;text-wrap:balance;}
+.t.s{font-size:54px;font-weight:500;letter-spacing:-.015em;line-height:1.2;}
+.w{display:inline-block;white-space:pre;}
+.L em{font-style:normal;background:var(--sol);border-radius:.16em;padding:0 .14em;margin:0 -.04em;display:inline-block;}
+.D em{font-style:normal;color:var(--sol);}
+.nota{position:absolute;left:84px;right:84px;top:1786px;text-align:center;font-size:31px;font-weight:450;line-height:1.3;color:var(--gris);}
+.D .nota{color:var(--gris-n);}
+.carta{position:absolute;background:#fff;border-radius:40px;box-shadow:0 50px 90px -40px rgba(20,18,10,.35),0 2px 0 rgba(255,255,255,.8) inset;overflow:hidden;}
+.D .carta{box-shadow:0 60px 120px -30px rgba(0,0,0,.8);}
+
+/* 1 */
+#s1 .logo{left:330px;top:580px;width:420px;height:420px;border-radius:64px;}
+#s1 .logo img{width:420px;height:420px;display:block;}
+#s1 .t{top:1090px;}
+/* 2 */
+#s2 .paso{position:absolute;left:0;top:760px;white-space:nowrap;font-weight:700;font-size:400px;letter-spacing:-.04em;line-height:1;}
+#s2 .t{top:820px;font-size:118px;}
+/* 3 */
+#s3 .sello{position:absolute;left:420px;top:560px;width:240px;height:240px;border-radius:50%;background:var(--sol);display:grid;place-items:center;}
+#s3 .sello img{width:112px;height:128px;filter:brightness(0);}
+#s3 .marca{top:860px;font-size:128px;font-weight:700;}
+#s3 .t.s{top:1050px;font-size:62px;}
+/* 4a · el cliente escribe */
+#s4 .t{top:420px;}
+#s4 .caja{left:84px;top:800px;width:912px;height:380px;background:#1F2C33;border-radius:44px;padding:44px 48px;color:#E9EDEF;font-size:50px;font-weight:450;line-height:1.25;}
+#s4 .quien{display:flex;align-items:center;gap:20px;font-size:34px;font-weight:500;color:#AEBAC1;margin-bottom:26px;}
+#s4 .quien img{width:64px;height:64px;border-radius:50%;}
+#s4 .raya{display:inline-block;width:4px;height:52px;background:var(--sol);vertical-align:-8px;margin-left:4px;}
+#s4 .enviar{position:absolute;right:36px;bottom:36px;width:104px;height:104px;border-radius:50%;background:#00A884;display:grid;place-items:center;}
+#s4 .cam{position:absolute;inset:0;transform-origin:908px 1092px;}
+/* 4b · el asistente contesta */
+#s5 .t{top:240px;}
+#s5 .hilo{position:absolute;left:84px;right:84px;top:640px;display:flex;flex-direction:column;gap:30px;}
+.m{max-width:86%;padding:28px 34px 30px;border-radius:30px;font-size:48px;line-height:1.24;font-weight:450;color:#E9EDEF;}
+.m.c{align-self:flex-end;background:#005C4B;border-top-right-radius:8px;transform-origin:100% 100%;}
+.m.r{align-self:flex-start;background:#202C33;border-top-left-radius:8px;transform-origin:0 100%;}
+.m b{font-weight:650;color:#fff;}
+/* 5 · su menú */
+#s6 .t{top:230px;}
+#s6 .menu{left:160px;top:640px;width:760px;height:1040px;border-radius:36px;}
+#s6 .menu img{width:1000px;display:block;margin-left:-235px;}   /* su PDF mide 1129 px de ancho */
+/* 6 · a su cocina */
+#s7 .t{top:220px;}
+#s7 .coc{left:84px;width:912px;height:250px;border-radius:40px;padding:38px 44px;}
+#s7 .c1{top:640px;} #s7 .c2{top:930px;} #s7 .c3{top:1220px;}
+#s7 .coc .enc{position:absolute;inset:0;background:var(--sol);opacity:0;}
+#s7 .coc h2{position:relative;font-size:62px;font-weight:600;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:baseline;}
+#s7 .coc h2 span{font-size:32px;font-weight:450;letter-spacing:0;color:var(--gris);}
+#s7 .tk{position:absolute;left:44px;right:44px;top:138px;height:76px;border-radius:20px;background:var(--tinta);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:35px;font-weight:500;}
+#s7 .tk b{font-weight:450;color:#B9B7AE;}
+/* 7 · listo y aviso */
+#s8 .t{top:230px;}
+#s8 .ped{left:140px;top:700px;width:800px;height:630px;border-radius:30px;}
+#s8 .ped img{width:800px;display:block;}
+#s8 .press{position:absolute;left:41px;top:497px;width:718px;height:82px;border-radius:22px;background:rgba(0,0,0,.22);opacity:0;}
+#s8 .aviso{left:84px;top:1400px;width:912px;border-radius:36px;padding:30px 34px;display:flex;gap:26px;align-items:flex-start;background:#fff;color:var(--tinta);}
+#s8 .aviso i{flex:none;width:84px;height:84px;border-radius:22px;background:#25D366;display:grid;place-items:center;}
+#s8 .aviso b{display:block;font-size:34px;font-weight:600;margin-bottom:6px;}
+#s8 .aviso span{font-size:36px;font-weight:450;line-height:1.25;}
+/* 8 · el panel */
+#s9 .t{top:210px;}
+.tab{left:40px;top:760px;width:1000px;padding:20px;background:#0B0B0B;border-radius:38px;position:absolute;box-shadow:0 60px 100px -40px rgba(20,18,10,.45);}
+.tab img{display:block;width:960px;height:667px;border-radius:16px;}
+#s9 .suc{left:90px;top:780px;width:900px;height:530px;border-radius:36px;}
+#s9 .suc img{width:900px;display:block;}
+/* 9 · lo que queda automático */
+#s10 .t{top:210px;}
+#s10 .lista{left:84px;top:520px;width:912px;border-radius:44px;padding:26px 44px;}
+#s10 .fila{display:flex;align-items:center;gap:30px;padding:30px 0;font-size:54px;font-weight:550;letter-spacing:-.02em;}
+#s10 .fila+.fila{box-shadow:0 -2px 0 #EEEDE8;}
+#s10 .ok{flex:none;width:76px;height:76px;border-radius:50%;background:var(--sol);display:grid;place-items:center;}
+#s10 .fin{top:1500px;}
+/* 10 · de hondureños para hondureños */
+#s11 .ban{left:290px;top:420px;width:500px;height:250px;border-radius:28px;}
+#s11 .ban svg{display:block;width:500px;height:250px;}
+#s11 .t{top:760px;}
+#s11 .L2 em,#s11 em{background:var(--hn);color:#fff;}
+#s11 .t.s{top:1050px;}
+#s11 .t.s.b2{top:1290px;}
+/* 11 · cierre */
+#s12 .t{top:440px;font-size:112px;}
+#s12 .t.s{top:760px;font-size:52px;color:#D8D6CD;}
+#s12 .q{top:1090px;font-size:44px;font-weight:450;letter-spacing:0;color:#D8D6CD;}
+#s12 .num{top:1160px;font-size:112px;font-weight:700;color:var(--sol);}
+#s12 .by{position:absolute;left:0;right:0;top:1560px;display:flex;justify-content:center;align-items:center;gap:24px;font-size:42px;font-weight:450;color:#D8D6CD;}
+#s12 .by img{width:64px;height:74px;}
+#s12 .by b{font-weight:650;color:#fff;}
+
+.cursor{position:absolute;left:0;top:0;width:70px;height:70px;z-index:9;}
+.onda{position:absolute;width:150px;height:150px;border-radius:50%;border:6px solid var(--sol);opacity:0;z-index:8;}
+</style>
+</head>
+<body>
+<div class="fondo" id="luz"><div class="mancha" id="m1"></div><div class="mancha" id="m2"></div><div class="mancha" id="m3"></div></div>
+<div class="fondo" id="noche"><div class="halo" id="h1"></div><div class="halo b" id="h2"></div></div>
+
+<section class="scene L" id="s1">
+  <div class="carta logo" data-tilt="0.1"><img src="src/logo.jpg" alt=""></div>
+  <div class="t" data-w="0.9">¿Y si cada pedido de sus <em>tres sucursales</em></div>
+</section>
+
+<section class="scene L" id="s2">
+  <div class="paso" id="paso">llegara solo</div>
+  <div class="t" data-w="2.1">llegara <em>solo</em> a su cocina?</div>
+</section>
+
+<section class="scene D" id="s3">
+  <div class="sello" data-pop="0.1"><img src="src/clientia.svg" alt=""></div>
+  <div class="t marca" data-w="0.5">Casa Digital</div>
+  <div class="t s" data-w="1.3">Automatizamos el proceso completo de sus pedidos.</div>
+</section>
+
+<section class="scene D" id="s4">
+  <div class="cam" id="cam4">
+    <div class="t" data-w="0.1">Su cliente escribe por <em>WhatsApp.</em></div>
+    <div class="carta caja" data-tilt="0.5">
+      <div class="quien"><img src="src/logo.jpg" alt="">Loca Luna</div>
+      <span id="tipeo"></span><span class="raya"></span>
+      <div class="enviar" id="enviar"><svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M3 20.5v-7l9-1.5-9-1.5v-7l19 8.500z"/></svg></div>
+    </div>
+    <svg class="cursor" id="cur4" viewBox="0 0 24 24"><path d="M5 2.5v17l4.6-4.3 3 6.6 2.9-1.3-3-6.500h6.300z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg>
+    <div class="onda" id="onda4"></div>
+  </div>
+  <div class="nota" data-in="1">Conversación de ejemplo.</div>
+</section>
+
+<section class="scene D" id="s5">
+  <div class="t" data-w="0.1">Y el asistente toma el pedido <em>completo.</em></div>
+  <div class="hilo">
+    <div class="m c" data-pop="0.5">Quiero 12 alitas búfalo para recoger en Las Hadas</div>
+    <div class="m r" data-pop="1.5">¡Con gusto! <b>12 Alas de Pollo en salsa Búfalo, L 320.</b> ¿A nombre de quién?</div>
+    <div class="m c" data-pop="3">Carlos</div>
+    <div class="m r" data-pop="3.75">Listo, Carlos. Su pedido ya está en <b>la cocina de Las Hadas.</b> Le aviso cuando esté listo.</div>
+  </div>
+  <div class="nota" data-in="1">Conversación de ejemplo. L 320 es el precio de su menú.</div>
+</section>
+
+<section class="scene L" id="s6">
+  <div class="t" data-w="0.1">Con su menú, sus precios y sus <em>11 salsas.</em></div>
+  <div class="carta menu" data-tilt="0.4"><img id="menuimg" src="src/menu-1.jpg" alt=""></div>
+  <div class="nota" data-in="1">Su menú, tal como lo publican.</div>
+</section>
+
+<section class="scene L" id="s7">
+  <div class="t" data-w="0.1">Y lo manda <em>solo</em> a la cocina que toca.</div>
+  <div class="carta coc c1" data-in="0.5"><div class="enc" data-enc="2.6"></div><h2>Los Castaños <span>cocina</span></h2><div class="tk" data-tk="2.5"><span>12 Boneless · Honey Mustard</span><b>domicilio</b></div></div>
+  <div class="carta coc c2" data-in="0.62"><div class="enc" data-enc="1.6"></div><h2>Las Hadas <span>cocina</span></h2><div class="tk" data-tk="1.5"><span>12 Alas de Pollo · Búfalo</span><b>recoge</b></div></div>
+  <div class="carta coc c3" data-in="0.74"><div class="enc" data-enc="3.6"></div><h2>Choluteca <span>cocina</span></h2><div class="tk" data-tk="3.5"><span>12 Alas de Pollo · Barbacoa</span><b>recoge</b></div></div>
+  <div class="nota" data-in="1.5">Pedidos de ejemplo, con productos y salsas de su menú.</div>
+</section>
+
+<section class="scene D" id="s8">
+  <div class="t" data-w="0.1" data-out="3.6">La cocina toca <em>Listo.</em></div>
+  <div class="t" data-w="3.9">Y al cliente le llega el <em>aviso.</em></div>
+  <div class="carta ped" data-tilt="0.4"><img src="src/pieza-pedido.png" alt=""><div class="press" id="press8"></div></div>
+  <svg class="cursor" id="cur8" viewBox="0 0 24 24"><path d="M5 2.5v17l4.6-4.3 3 6.6 2.9-1.3-3-6.500h6.300z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg>
+  <div class="onda" id="onda8"></div>
+  <div class="carta aviso" data-caer="3.7"><i><svg width="50" height="50" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.600 15.100L2 22l5-1.300A10 10 0 1 0 12 2zm5.500 14.100c-.2.600-1.300 1.200-1.800 1.200-.500.100-1.100.100-1.700-.100-1.600-.500-3.500-1.500-5.300-4.200-1.300-1.900-1.300-3.300-.400-4.300.300-.400.700-.500 1-.500h.700c.200 0 .500 0 .700.600l.900 2.200c.100.200.100.400 0 .600l-.800 1c.700 1.300 1.800 2.300 3.200 2.900l.900-1.100c.200-.300.400-.300.700-.200l2.100 1c.300.100.400.300.400.400 0 .200 0 .400-.100.500z"/></svg></i>
+    <div><b>Loca Luna</b><span>¡Carlos, su pedido PED-1012 ya está listo! Puede pasar a recogerlo a Las Hadas.</span></div></div>
+  <div class="nota" data-in="1">Pantalla de cocina y mensaje reales de Casa Digital. Pedido de ejemplo.</div>
+</section>
+
+<section class="scene L" id="s9">
+  <div class="t" data-w="0.1">Usted ve las tres sucursales en <em>un solo panel.</em></div>
+  <div data-out="3.4"><div class="tab" data-tilt="0.4"><img src="src/panel-hoy.jpg" alt=""></div></div>
+  <div class="carta suc" data-pop2="3.6"><img src="src/pieza-sucursal.png" alt=""></div>
+  <div class="nota" data-in="1">Panel real de Casa Digital. Las cifras son de ejemplo, no ventas de Loca Luna.</div>
+</section>
+
+<section class="scene L" id="s10">
+  <div class="t" data-w="0.1">Todo esto queda <em>automático:</em></div>
+  <div class="carta lista" data-in="0.5">
+    <div class="fila" data-in="1"><span class="ok" data-pop="1.15"></span>Tomar el pedido</div>
+    <div class="fila" data-in="1.5"><span class="ok" data-pop="1.65"></span>Mandarlo a su cocina</div>
+    <div class="fila" data-in="2"><span class="ok" data-pop="2.15"></span>Avisarle al cliente</div>
+    <div class="fila" data-in="2.5"><span class="ok" data-pop="2.65"></span>Asignar al repartidor</div>
+    <div class="fila" data-in="3"><span class="ok" data-pop="3.15"></span>Sumar la venta por sucursal</div>
+  </div>
+  <div class="t s fin" data-w="4.2">Sin que nadie copie pedidos a mano.</div>
+</section>
+
+<section class="scene L" id="s11">
+  <div class="carta ban" data-tilt="0.1"><svg viewBox="0 0 500 250" aria-hidden="true"><rect width="500" height="250" fill="#00BCE4"/><rect y="83.300" width="500" height="83.400" fill="#fff"/><g fill="#00BCE4" id="estrellas"></g></svg></div>
+  <div class="t" data-w="0.6">De hondureños, <em>para hondureños.</em></div>
+  <div class="t s" data-w="1.8">Somos Rodrigo Herrera y Dylan Jiménez, fundadores de Clientia Tech.</div>
+  <div class="t s b2" data-w="3.2">Precios en lempiras y atención en español, en horario de Honduras.</div>
+</section>
+
+<section class="scene D" id="s12">
+  <div class="t" data-w="0.1">¿Lo vemos con <em>su menú?</em></div>
+  <div class="t s" data-w="1.1">Se lo armamos con sus productos, sus precios y sus tres sucursales, para que lo pruebe antes de decidir nada.</div>
+  <div class="t q" data-w="2.6">Rodrigo Herrera, por WhatsApp</div>
+  <div class="t num" data-in="3">+1 (765) 543-4251</div>
+  <div class="by" data-in="3.8"><img src="src/clientia.svg" alt=""><span><b>Casa Digital</b> by Clientia Tech</span></div>
+</section>
+
+<script>
+// "Better Times are Coming" (Mixkit), 120 BPM: un compás cada 2 s, un golpe cada 0.5 s, primer golpe en 0.14 s.
+const P0 = 0.14;
+// [escena, inicio, fin] en segundos de música
+const SCENES = [["s1",0,4],["s2",4,8],["s3",8,12],["s4",12,17],["s5",17,24],["s6",24,28],["s7",28,34],["s8",34,42],["s9",42,49],["s10",49,56],["s11",56,62],["s12",62,69]];
+const TOTAL = P0 + 69;
+const OUT = "cubic-bezier(0.23,1,0.32,1)", INOUT = "cubic-bezier(0.77,0,0.175,1)";
+const anims = [];
+const $ = id => document.getElementById(id);
+function A(el, at, kf, dur = 700, easing = OUT) {
+  const a = el.animate(kf, { delay: at * 1000, duration: dur, fill: "both", easing });
+  a.pause(); anims.push(a); return a;
+}
+const OK = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E0E0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>';
+document.querySelectorAll(".ok").forEach(o => o.innerHTML = OK);
+{ const star = (cx, cy, r) => { let d = ""; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.382 : r; d += (i ? "L" : "M") + (cx + q * Math.cos(a)).toFixed(1) + " " + (cy + q * Math.sin(a)).toFixed(1); } return `<path d="${d}Z"/>`; };
+  $("estrellas").innerHTML = [[250, 125], [180, 101], [320, 101], [180, 149], [320, 149]].map(([x, y]) => star(x, y, 17)).join(""); }
+// parte un texto en palabras sin romper los <em>
+function palabras(el) {
+  const out = [];
+  const walk = n => { for (const c of [...n.childNodes]) {
+    if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach(p => { if (!p) return; if (/^\s+$/.test(p)) f.append(" "); else { const s = document.createElement("span"); s.className = "w"; s.textContent = p; f.append(s); out.push(s); } }); c.replaceWith(f); }
+    else if (c.tagName === "EM") { out.push(c); } else walk(c); } };
+  walk(el); return out;
+}
+const TEXTO = "Quiero 12 alitas búfalo para recoger en Las Hadas";
+const T = {};
+function build() {
+  for (const [id, a, b] of SCENES) {
+    const sc = $(id), t0 = P0 + a, t1 = P0 + b; T[id] = [t0, t1];
+    // cada escena entra enfocándose y sale desenfocándose, como en la referencia
+    if (a > 0) A(sc, t0, [{ opacity: 0, filter: "blur(18px)", transform: "scale(1.05)" }, { opacity: 1, filter: "blur(0px)", transform: "none" }], 450);
+    if (id !== "s12") A(sc, t1 - 0.28, [{ opacity: 1, filter: "blur(0px)" }, { opacity: 0, filter: "blur(14px)" }], 280, "ease-in");
+    // palabra por palabra: sube 18 px mientras se enfoca
+    sc.querySelectorAll("[data-w]").forEach(el => palabras(el).forEach((w, i) =>
+      A(w, t0 + parseFloat(el.dataset.w) + i * 0.1, [{ opacity: 0, filter: "blur(12px)", transform: "translateY(18px)" }, { opacity: 1, filter: "blur(0px)", transform: "none" }], 520)));
+    sc.querySelectorAll("[data-in]").forEach(el => A(el, t0 + parseFloat(el.dataset.in), [{ opacity: 0, transform: "translateY(26px)" }, { opacity: 1, transform: "none" }], 700));
+    sc.querySelectorAll("[data-out]").forEach(el => A(el, t0 + parseFloat(el.dataset.out), [{ opacity: 1, filter: "blur(0px)" }, { opacity: 0, filter: "blur(12px)" }], 300, "ease-in"));
+    // tarjetas: llegan giradas en 3D y se asientan de frente
+    sc.querySelectorAll("[data-tilt]").forEach(el => A(el, t0 + parseFloat(el.dataset.tilt), [{ opacity: 0, transform: "perspective(1800px) translate3d(260px,60px,0) rotateY(-34deg) rotateX(12deg) scale(.86)" }, { opacity: 1, transform: "perspective(1800px) translate3d(0,0,0) rotateY(0deg) rotateX(0deg) scale(1)" }], 1100));
+    sc.querySelectorAll("[data-pop]").forEach(el => A(el, t0 + parseFloat(el.dataset.pop), [{ opacity: 0, transform: "scale(.88)" }, { opacity: 1, transform: "none" }], 420));
+    sc.querySelectorAll("[data-pop2]").forEach(el => A(el, t0 + parseFloat(el.dataset.pop2), [{ opacity: 0, filter: "blur(14px)", transform: "scale(.92)" }, { opacity: 1, filter: "blur(0px)", transform: "none" }], 600));
+    sc.querySelectorAll("[data-tk]").forEach(el => A(el, t0 + parseFloat(el.dataset.tk), [{ opacity: 0, transform: "translateY(-150px) scale(.94)" }, { opacity: 1, transform: "none" }], 520));
+    sc.querySelectorAll("[data-enc]").forEach(el => A(el, t0 + parseFloat(el.dataset.enc), [{ opacity: 0 }, { opacity: 1 }], 500));
+    sc.querySelectorAll("[data-caer]").forEach(el => A(el, t0 + parseFloat(el.dataset.caer), [{ opacity: 0, transform: "translateY(90px) scale(.96)" }, { opacity: 1, transform: "none" }], 600));
+  }
+  // 2 · la frase cruza la pantalla en grande y luego se asienta en chico
+  { const [t] = T.s2; A($("paso"), t, [{ transform: "translateX(1080px)" }, { transform: "translateX(-2300px)" }], 1900, "cubic-bezier(.3,.1,.3,1)"); }
+  // 4 · el cursor va al botón de enviar, hace clic y la cámara entra al botón
+  { const [t, t1] = T.s4;
+    A($("cur4"), t + 2.4, [{ opacity: 0, transform: "translate(520px,1500px)" }, { opacity: 1, transform: "translate(888px,1090px)" }], 1000, INOUT);
+    A($("enviar"), t + 3.5, [{ transform: "scale(1)" }, { transform: "scale(.88)" }, { transform: "scale(1)" }], 260, "ease-out");
+    A($("onda4"), t + 3.5, [{ opacity: 0, transform: "translate(833px,1017px) scale(.4)" }, { opacity: .9, transform: "translate(833px,1017px) scale(.5)", offset: .08 }, { opacity: 0, transform: "translate(833px,1017px) scale(1.5)" }], 550);
+    A($("cam4"), t + 3.9, [{ transform: "scale(1)" }, { transform: "scale(3.2)" }], (t1 - t - 3.9) * 1000, "cubic-bezier(.6,0,.9,.4)"); }
+  // 5 · paneo lento sobre su menú
+  { const [t, t1] = T.s6; A($("menuimg"), t, [{ transform: "translateY(-190px)" }, { transform: "translateY(-370px)" }], (t1 - t) * 1000, "linear"); }
+  // 7 · el cursor toca "Listo"
+  { const [t] = T.s8;
+    A($("cur8"), t + 1.6, [{ opacity: 0, transform: "translate(820px,1640px)" }, { opacity: 1, transform: "translate(520px,1232px)" }], 1100, INOUT);
+    A($("press8"), t + 2.9, [{ opacity: 0 }, { opacity: 1 }, { opacity: 0 }], 320, "ease-out");
+    A($("onda8"), t + 2.9, [{ opacity: 0, transform: "translate(465px,1163px) scale(.4)" }, { opacity: .9, transform: "translate(465px,1163px) scale(.5)", offset: .08 }, { opacity: 0, transform: "translate(465px,1163px) scale(1.6)" }], 600);
+    A($("cur8"), t + 3.5, [{ opacity: 1 }, { opacity: 0 }], 300, "ease-in"); }
+}
+// fondos: las manchas derivan despacio todo el video; el fondo oscuro entra y sale con cada escena oscura
+const OSC = SCENES.filter(s => $(s[0]).classList.contains("D")).map(s => [P0 + s[1], P0 + s[2]]).reduce((r, x) => { const u = r[r.length - 1]; if (u && Math.abs(u[1] - x[0]) < 0.01) u[1] = x[1]; else r.push([...x]); return r; }, []);   // escenas oscuras seguidas cuentan como una
+function fondo(t) {
+  let o = 0; for (const [a, b] of OSC) o = Math.max(o, Math.min(1, (t - a + 0.1) / 0.2, (b - t + 0.1) / 0.2));
+  $("noche").style.opacity = Math.max(0, o).toFixed(3);
+  const s = Math.sin, c = Math.cos;
+  $("m1").style.transform = `translate(${(90 * s(t * .31)).toFixed(1)}px,${(120 * c(t * .23)).toFixed(1)}px) rotate(${(8 * s(t * .2)).toFixed(1)}deg)`;
+  $("m2").style.transform = `translate(${(-140 * s(t * .27 + 1)).toFixed(1)}px,${(-110 * c(t * .19)).toFixed(1)}px) rotate(${(-10 * s(t * .17)).toFixed(1)}deg)`;
+  $("m3").style.transform = `translate(${(70 * c(t * .37)).toFixed(1)}px,${(160 * s(t * .21 + 2)).toFixed(1)}px) rotate(${(12 * c(t * .22)).toFixed(1)}deg)`;
+  $("h1").style.transform = `translate(${(120 * s(t * .4)).toFixed(1)}px,${(-90 * c(t * .3)).toFixed(1)}px)`;
+  $("h2").style.transform = `translate(${(-80 * c(t * .33)).toFixed(1)}px,${(70 * s(t * .26)).toFixed(1)}px)`;
+  // en la escena de Honduras las manchas toman el azul de la bandera
+  const [a, b] = T.s11, hn = t >= a - 0.1 && t < b;
+  for (const m of ["m1", "m2", "m3"]) $(m).style.background = hn ? "var(--hn)" : "var(--sol)";
+}
+window.TOTAL = TOTAL;
+window.seek = t => {
+  for (const [id] of SCENES) $(id).style.visibility = (t >= T[id][0] && t < T[id][1]) ? "visible" : "hidden";
+  if (t < T.s1[1]) $("s1").style.visibility = "visible";
+  if (t >= T.s12[0]) $("s12").style.visibility = "visible";
+  for (const a of anims) a.currentTime = t * 1000;
+  fondo(t);
+  // el mensaje se escribe letra por letra
+  const p = Math.min(1, Math.max(0, (t - T.s4[0] - 0.9) / 1.9));
+  $("tipeo").textContent = TEXTO.slice(0, Math.round(TEXTO.length * p));
+};
+const q = new URLSearchParams(location.search).get("t");
+Promise.all([document.fonts.load('600 90px "Outfit"'), document.fonts.load('450 40px "Outfit"'), ...[...document.images].map(i => i.decode().catch(() => {}))])
+  .catch(e => console.error(e)).then(() => document.fonts.ready).then(() => { build(); window.READY = true; seek(q ? +q : 0); });
+</script>
+</body>
+</html>
