@@ -103,10 +103,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <body>
 <header class="top">
   <img data-logo alt="">
-  <div><h1>Loca Luna</h1><p>Demo del sistema: WhatsApp con IA, pedidos por sucursal, repartidores y panel</p></div>
+  <div><h1>Loca Luna</h1><p>Demo del sistema: WhatsApp con IA, pedidos por sucursal y panel</p></div>
   <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="loca-luna-panel.html" target="panel-loca-luna">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
-<div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El menú y los precios son los de su menú publicado, con sus 5 sucursales: Los Castaños, Las Hadas, Choluteca y dos más que aparecen como «por confirmar» hasta que usted nos diga cuáles son. El cliente, los repartidores, las direcciones y el precio del envío son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
+<div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> El menú y los precios son los de su menú publicado, con sus 5 sucursales: Los Castaños, Las Hadas, Choluteca y dos más que aparecen como «por confirmar» hasta que usted nos diga cuáles son. El cliente y las direcciones son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
 <nav class="tabs" role="tablist" id="tabs"></nav>
 <main class="escena" id="escena"></main>
@@ -139,16 +139,12 @@ const REPS = new Proxy({}, { get: (_, d) => negocio.repartidores.find(r => r.tel
 let repTel = TEL.kevin;
 const CHATS = [
   { k: "cliente", nombre: "Loca Luna", sub: "Así lo ve el cliente", tab: "Cliente", av: "logo" },
-  { k: "kevin", nombre: "Loca Luna · Entregas", sub: "Así lo ve el repartidor de la sucursal", tab: "Repartidor", av: "R" },
   { k: "dueno", nombre: "Avisos de pedidos", sub: "WhatsApp del dueño y de cada sucursal", tab: "Dueño", av: "D" },
 ];
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo a domicilio, de Las Hadas». O toque «Pedir a domicilio»."],
-  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación»: al repartidor de esa sucursal le llega el punto exacto en el mapa."],
-  ["Repartidor", "Al repartidor de la sucursal le llega el envío con la dirección y el mapa. Escriba el precio del envío, solo el número: «60»."],
-  ["Cliente", "Al cliente le llega el costo del envío. Toque «SÍ»: el pedido entra a la cocina de su sucursal y le llega aviso a la sucursal y al dueño."],
-  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»."],
-  ["En camino", "El repartidor toca «SALGO». Al cliente le llega el link para verlo en el mapa, en vivo. Luego «ENTREGADO»."],
+  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación». En «Dueño» vea el aviso que le llega a usted y a la sucursal."],
+  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
 ];
 
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
@@ -460,11 +456,11 @@ function refrescarPanel() {
 function avanzar() {
   const ps = store.pedidos.filter(p => p.tipo === "pedido");
   const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
-  const hechos = [!!dom, !!(dom && dom.ubicacion), !!(dom && dom.envio != null), !!(dom && !["por_envio"].includes(dom.estado)), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado)), !!(dom && dom.estado === "entregado")];
+  const hechos = [!!dom, !!(dom && dom.ubicacion), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;
-  if (paso === 4 && antes !== 4 && !panelVivo()) { SIN_LEER.panel++; marcas(); toast("El pedido ya está en el panel del dueño. Toque para verlo.", "panel"); }
+  if (paso === 2 && antes !== 2 && !panelVivo()) { SIN_LEER.panel++; marcas(); toast("El pedido ya está en el panel del dueño. Toque para verlo.", "panel"); }
   guia();
 }
 function guia() {
