@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Ayuda para el Droplet de Con Sabor a Pueblo. Se corre como root: con-sabor <orden>
+set -euo pipefail
+SERVICIO=con-sabor-a-pueblo; APP=/opt/casa-digital; ENVF=/etc/$SERVICIO.env
+[ "$(id -u)" = 0 ] || { echo "Córralo como root."; exit 1; }
+como_bot() { set -a; . "$ENVF"; set +a; cd "$APP/bot-restaurante"; sudo -E -u bot "$@"; }
+orden=${1:-ayuda}; shift || true
+case "$orden" in
+  estado)     systemctl --no-pager status $SERVICIO | head -12 ;;
+  logs)       journalctl -u $SERVICIO -n 100 --no-pager ;;
+  en-vivo)    journalctl -u $SERVICIO -f ;;
+  reiniciar)  systemctl restart $SERVICIO && echo "Reiniciado." ;;
+  editar)     nano "$ENVF" && systemctl restart $SERVICIO && echo "Guardado y reiniciado." ;;
+  usuario)    como_bot node usuarios.js "$@" ;;
+  revisar)    como_bot node revisar.js --en-linea "$@" ;;
+  llave)      sed -n 's/^DATA_KEY=//p' "$ENVF" ;;
+  actualizar)
+    git -C "$APP" fetch -q origin main && git -C "$APP" reset -q --hard origin/main
+    (cd "$APP/bot-restaurante" && npm ci --omit=dev --no-audit --no-fund --loglevel=error)
+    chown -R bot:bot "$APP"
+    install -m 755 "$APP/con-sabor-a-pueblo/droplet/con-sabor" /usr/local/bin/con-sabor
+    systemctl restart $SERVICIO
+    echo "Actualizado a $(git -C "$APP" log -1 --format='%h %s')." ;;
+  *) cat <<AYUDA
+con-sabor estado       ¿está corriendo?
+con-sabor logs         últimas 100 líneas del bot
+con-sabor en-vivo      ver lo que pasa en vivo (Ctrl+C para salir)
+con-sabor editar       cambiar la configuración (Meta, Claude, NEGOCIO_PRIVADO); reinicia solo
+con-sabor usuario ...  agregar | quitar | lista  (usuarios del panel)
+con-sabor revisar      revisa la configuración y pregunta a Meta y a Claude
+con-sabor actualizar   baja la última versión de GitHub y reinicia
+con-sabor reiniciar    reiniciar el bot
+con-sabor llave        muestra DATA_KEY para guardarla en su gestor de contraseñas
+AYUDA
+esac

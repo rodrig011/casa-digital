@@ -17,6 +17,8 @@ Lo que ya está hecho y probado (46 pruebas automáticas): el bot con IA, pedido
 pago con comprobante, repartidores con ubicación, panel del dueño con menú, equipo y configuración editables,
 respaldo cifrado y el chequeo `npm run revisar`.
 
+**¿Servidor en DigitalOcean con el crédito de estudiante en vez de Render?** Siga [`droplet/README.md`](droplet/README.md) en lugar de la Parte 2. El resto de esta guía es igual.
+
 ## Atajo: el panel real hoy, sin esperar a Meta (20 minutos)
 
 El panel de verdad (no la demo) corre en el mismo servidor y **no necesita WhatsApp para funcionar**. Si Meta todavía no
