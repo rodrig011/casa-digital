@@ -142,7 +142,7 @@ const CHATS = [
 ];
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo a domicilio, de Las Hadas». O toque «Pedir a domicilio»."],
-  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación». En «Dueño» vea el aviso que le llega a usted y a la sucursal."],
+  ["Dueño", "Toque «Dueño»: ahí le llega el pedido a usted y a la sucursal que le toca."],
   ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
 ];
 
@@ -345,7 +345,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hora = () => new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
 const ESTADO = { cliente: [], kevin: [], dueno: [] }, BOTONES = { cliente: [], kevin: [], dueno: [] }, SIN_LEER = { cliente: 0, kevin: 0, dueno: 0, panel: 0 };
-let activa = "cliente", paso = 0;
+let activa = "cliente", paso = 0, vioDueno = false;
 
 function formato(t) {
   return esc(t)
@@ -376,6 +376,7 @@ function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "pa
 function ver(k) {
   if (k === "panel") return abrirPanel();
   activa = k; SIN_LEER[k] = 0;
+  if (k === "dueno" && !vioDueno) { vioDueno = true; setTimeout(avanzar, 0); }
   document.querySelectorAll(".tel,.pan").forEach(s => s.classList.toggle("vis", s.dataset.k === k));
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
   marcas();
@@ -436,7 +437,7 @@ function chips(k) {
     if (porPagar(TEL.cliente) && !porPagar(TEL.cliente).comprobante) extra.push("📷 Mandar comprobante");
     const sc = (sesiones.get(TEL.cliente) || {}).state;
     const sinPin = store.pedidos.some(p => p.entrega === "domicilio" && !p.ubicacion && !["entregado", "cancelado"].includes(p.estado) && digits(p.tel) === digits(TEL.cliente));
-    if (sinPin || (sc && sc.step === "direccion")) extra.push("📍 Mandar ubicación");
+
   }
   if (k === "dueno") {
     const p = store.pedidos.findLast(x => x.estado === "por_pagar" && x.comprobante);
@@ -455,7 +456,7 @@ function refrescarPanel() {
 function avanzar() {
   const ps = store.pedidos.filter(p => p.tipo === "pedido");
   const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
-  const hechos = [!!dom, !!(dom && dom.ubicacion), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
+  const hechos = [!!dom, !!(dom && (vioDueno || !movil())), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;

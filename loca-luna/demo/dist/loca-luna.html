@@ -947,7 +947,7 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion || !(N.repartidores && N.repartidores.length) ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
@@ -1554,7 +1554,7 @@ Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
 - Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
-${N.domicilio.propio ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
+${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
@@ -2185,7 +2185,7 @@ const CHATS = [
 ];
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo a domicilio, de Las Hadas». O toque «Pedir a domicilio»."],
-  ["Ubicación", "El bot le pide al cliente su ubicación de WhatsApp. Toque «📍 Mandar ubicación». En «Dueño» vea el aviso que le llega a usted y a la sucursal."],
+  ["Dueño", "Toque «Dueño»: ahí le llega el pedido a usted y a la sucursal que le toca."],
   ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
 ];
 
@@ -2388,7 +2388,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hora = () => new Date().toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
 const ESTADO = { cliente: [], kevin: [], dueno: [] }, BOTONES = { cliente: [], kevin: [], dueno: [] }, SIN_LEER = { cliente: 0, kevin: 0, dueno: 0, panel: 0 };
-let activa = "cliente", paso = 0;
+let activa = "cliente", paso = 0, vioDueno = false;
 
 function formato(t) {
   return esc(t)
@@ -2419,6 +2419,7 @@ function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "pa
 function ver(k) {
   if (k === "panel") return abrirPanel();
   activa = k; SIN_LEER[k] = 0;
+  if (k === "dueno" && !vioDueno) { vioDueno = true; setTimeout(avanzar, 0); }
   document.querySelectorAll(".tel,.pan").forEach(s => s.classList.toggle("vis", s.dataset.k === k));
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
   marcas();
@@ -2479,7 +2480,7 @@ function chips(k) {
     if (porPagar(TEL.cliente) && !porPagar(TEL.cliente).comprobante) extra.push("📷 Mandar comprobante");
     const sc = (sesiones.get(TEL.cliente) || {}).state;
     const sinPin = store.pedidos.some(p => p.entrega === "domicilio" && !p.ubicacion && !["entregado", "cancelado"].includes(p.estado) && digits(p.tel) === digits(TEL.cliente));
-    if (sinPin || (sc && sc.step === "direccion")) extra.push("📍 Mandar ubicación");
+
   }
   if (k === "dueno") {
     const p = store.pedidos.findLast(x => x.estado === "por_pagar" && x.comprobante);
@@ -2498,7 +2499,7 @@ function refrescarPanel() {
 function avanzar() {
   const ps = store.pedidos.filter(p => p.tipo === "pedido");
   const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
-  const hechos = [!!dom, !!(dom && dom.ubicacion), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
+  const hechos = [!!dom, !!(dom && (vioDueno || !movil())), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
   paso = nuevo < 0 ? PASOS.length : nuevo;
