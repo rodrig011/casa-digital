@@ -93,7 +93,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   const motor = createEngine(negocio);
   const cifra = createCifra(cfg.dataKey);
   if (cfg.dataDir && !cifra && cfg.exigirCifrado) throw new Error("Falta DATA_KEY: en el servidor los datos de los clientes se guardan cifrados (ver README, Seguridad).");
-  const store = deps.store || createStore(cfg.dataDir, { ttlHours: cfg.ttlHours, cifra });
+  const store = deps.store || createStore(cfg.dataDir, { ttlHours: cfg.ttlHours, cifra, ...(deps.now ? { now: deps.now } : {}) });
   const bitacora = createBitacora({ dir: cfg.dataDir, cifra, now: deps.now || (() => new Date()), log });
   const now = deps.now || (() => new Date());
   const mc = cfg.meta || {};
