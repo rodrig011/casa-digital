@@ -196,7 +196,7 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 .credito{padding:24px var(--m) 0;font-size:var(--s-small);color:var(--soft)}
 @media (max-width:760px){
   .fotos .cab{display:block}.fotos .cab p{margin-top:20px}
-  .grande{margin-left:var(--m)}
+  .grande{margin:40px var(--m) 0;border-radius:14px;max-width:420px}
   .tira{grid-template-columns:1fr 1fr;gap:16px}
   .tira figure:nth-child(n){grid-column:auto;margin:0}
   .tira figure:nth-child(2){margin-top:64px}
@@ -372,7 +372,7 @@ footer .nombre{font-weight:800;font-size:18.3vw;letter-spacing:-.06em;line-heigh
     <h2 id="t-fotos" class="rv">El panel del dueño, en su celular.</h2>
     <p class="rv" style="--i:1">Usted y las personas que autorice entran con correo y contraseña. Cada restaurante tiene su propio servidor: sus ventas no se mezclan con las de nadie.</p>
   </div>
-  <figure class="grande rv" style="margin-bottom:0"><img src="{{IMG:d-hoy}}" width="1600" height="1000" alt="Panel del dueño, vista Hoy: pedidos por WhatsApp, total vendido, lo más pedido y ventas por sucursal" loading="lazy"></figure>
+  <figure class="grande rv" style="margin-bottom:0"><picture><source media="(max-width:760px)" srcset="{{IMG:m-hoy-arriba}}" width="780" height="1270"><img src="{{IMG:d-hoy}}" width="1600" height="1000" alt="Panel del dueño, vista Hoy: pedidos por WhatsApp, total vendido, lo más pedido y ventas por sucursal" loading="lazy"></picture></figure>
   <div class="tira">
     <figure class="rv"><img src="{{IMG:m-pedidos}}" width="780" height="1688" alt="Panel en el celular: pedidos nuevos y en cocina" loading="lazy"><figcaption>Pedidos: nuevos, en cocina y listos.</figcaption></figure>
     <figure class="rv" style="--i:1"><img src="{{IMG:m-cocina}}" width="780" height="1688" alt="Pantalla de cocina en el celular" loading="lazy"><figcaption>Cocina: un toque y el cliente recibe su aviso.</figcaption></figure>
