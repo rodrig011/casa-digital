@@ -1537,7 +1537,7 @@ module.exports = { createStore };
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu, norm } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -1736,6 +1736,12 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
     const ctx = { numero, faltas, ocupados, duplicado, ubic, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
+    // "¿me pasa el menú?": the menu photos and link answer it; Claude is not asked (it would retype the menu)
+    const mf = menuFotos(negocio);
+    if (mf && pideMenu(text) && !/\d/.test(String(text)) && norm(text).split(" ").length <= 12) {
+      const reply = `¿Qué se le antoja? Dígame qué quiere${negocio.variasSucursales ? " y en qué sucursal lo recoge" : ""}.`;
+      return { reply, fotos: mf, history: recortar(base.concat(nuevo, [{ role: "assistant", content: [{ type: "text", text: `[Se le mandaron las fotos del menú y el link.] ${reply}` }] }])), pedido: null, persona: null, reservacion: null };
+    }
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), timeoutMs);
     try {

@@ -498,6 +498,13 @@ function aplicarAjustes(N, a) {
   if (a.tiempoPreparacion != null) N.tiempoPreparacion = crudo.tiempoPreparacion = texto(a.tiempoPreparacion, 120);
   return ajustesDe(N);
 }
+// Fotos del menú (opcional, "menuImagenes": ["https://..."]): se mandan cuando el cliente pide el menú
+const menuImagenesDe = N => (Array.isArray(N.menuImagenes) ? N.menuImagenes : []).filter(u => /^https:\/\//.test(String(u))).slice(0, 4);
+// el mensaje con las fotos del menú y el link del menú en línea ("menuLink"), o null si el negocio no tiene
+const menuFotos = N => { const imagenes = menuImagenesDe(N), link = /^https:\/\//.test(String(N.menuLink || "")) ? N.menuLink : "";
+  return imagenes.length || link ? { imagenes, text: `📖 Este es el menú de *${N.nombre}*.${link ? `\nTambién lo puede ver aquí: ${link}` : ""}` } : null; };
+const pideMenu = text => /\b(menu|carta)\b|que tienen|que venden|que hay/.test(norm(text || ""));
+
 // lo que contesta el bot mientras el dueño tiene los pedidos en pausa (null = abierto)
 // derivar: temas que el dueño contesta en persona (por ejemplo, otra ciudad). El bot no contesta nada del tema:
 // avisa al dueño con el mensaje del cliente y le dice al cliente que el dueño le escribe.
@@ -513,7 +520,7 @@ function derivarPor(N, text) {
 }
 const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
 
-module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+module.exports = { menuImagenesDe, menuFotos, pideMenu, derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
 
 },"./engine":function(module,exports,require){// Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
@@ -530,7 +537,7 @@ module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPaus
 // solo ofrece tandas con cupo (ctx.ocupados(fecha, tanda) = cupos ya apartados, server.js los cuenta) y, si está lleno,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe, menuFotos } = require("./negocio");
 const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
@@ -778,7 +785,7 @@ function createEngine(negocio) {
         if (!o && PROPIO && quiereDomicilio(t)) { const l = leerPedido(text); if (l.encontrados.length || quierePedir(t)) { empezarPedido(l.encontrados, true); break; } }
         if (o === OP.domicilio || (!o && quiereDomicilio(t))) { reset(); go("post"); say({ text: domicilioTexto(), buttons: [PROPIO ? OP.domicilio : OP.pedido, OP.menu] }); break; }
         if (o === OP.sucursales || (!o && quiereSucursal(t))) { reset(); go("post"); say(sucursalesTexto()); say({ text: "¿Algo más?", buttons: [OP.pedido, OP.menu] }); break; }
-        if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); say({ text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
+        if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); const mf = menuFotos(N); say(mf ? { ...mf, buttons: [OP.pedido, "Volver al inicio"] } : { text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
         const leido = o ? { encontrados: [] } : leerPedido(text);
         if (o === OP.pedido || quierePedir(t) || leido.encontrados.length) { empezarPedido(leido.encontrados); break; }
         menuInicio("Disculpe, no le entendí bien. Puede tocar una opción o escribirme con sus palabras, por ejemplo «quiero 2 combos de 3 piezas».");
@@ -1530,7 +1537,7 @@ module.exports = { createStore };
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu, norm } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -1553,7 +1560,7 @@ Lo que sabe del restaurante (no afirme nada más):
 ${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
 Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
-- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
+${menuFotos(N) ? "- Cuando el cliente pide el menú o la carta, el sistema ya le manda las fotos del menú y el link: no escriba el menú completo; pregúntele qué se le antoja y en qué sucursal lo recoge.\n" : ""}- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
 ${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
@@ -1729,6 +1736,12 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
     const ctx = { numero, faltas, ocupados, duplicado, ubic, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
+    // "¿me pasa el menú?": the menu photos and link answer it; Claude is not asked (it would retype the menu)
+    const mf = menuFotos(negocio);
+    if (mf && pideMenu(text) && !/\d/.test(String(text)) && norm(text).split(" ").length <= 12) {
+      const reply = `¿Qué se le antoja? Dígame qué quiere${negocio.variasSucursales ? " y en qué sucursal lo recoge" : ""}.`;
+      return { reply, fotos: mf, history: recortar(base.concat(nuevo, [{ role: "assistant", content: [{ type: "text", text: `[Se le mandaron las fotos del menú y el link.] ${reply}` }] }])), pedido: null, persona: null, reservacion: null };
+    }
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), timeoutMs);
     try {
@@ -1756,7 +1769,7 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
         if (r.stop_reason === "pause_turn") continue;
         const reply = r.content.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
         if (!reply) throw new Error(`respuesta vacía (stop_reason ${r.stop_reason})`);
-        return { reply, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, reservacion: ctx.reservacion, usage: r.usage };
+        return { reply, fotos: pideMenu(text) ? menuFotos(negocio) : null, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, reservacion: ctx.reservacion, usage: r.usage };
       }
       throw new Error(`más de ${MAX_VUELTAS} llamadas a la API en un mensaje`);
     } catch (e) {
