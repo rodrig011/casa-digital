@@ -17,7 +17,7 @@ Lo que ya está hecho y probado (46 pruebas automáticas): el bot con IA, pedido
 pago con comprobante, repartidores con ubicación, panel del dueño con menú, equipo y configuración editables,
 respaldo cifrado y el chequeo `npm run revisar`.
 
-**¿Servidor en DigitalOcean con el crédito de estudiante en vez de Render?** Siga [`droplet/README.md`](droplet/README.md) en lugar de la Parte 2. El resto de esta guía es igual.
+**¿Servidor gratis con el crédito de estudiante en vez de Render?** Siga [`droplet/AZURE.md`](droplet/AZURE.md) (Azure, con el GitHub Student Developer Pack) o [`droplet/README.md`](droplet/README.md) (DigitalOcean pagado) en lugar de la Parte 2. El resto de esta guía es igual.
 
 ## Atajo: el panel real hoy, sin esperar a Meta (20 minutos)
 
