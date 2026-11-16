@@ -1,0 +1,503 @@
+{
+ "nuevos": {
+  "alondra": {
+   "id": "alondra",
+   "nombre": "Alondra Catering",
+   "tipo": "navidad",
+   "orden": -30,
+   "hecho": "que llevan más de 30 años en banquetes y que las cotizaciones son por teléfono",
+   "arma_texto": "Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas del 24 y el 31: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que llevan más de 30 años en banquetes y que las cotizaciones son por teléfono. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas del 24 y el 31: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa para diciembre, le cuento por aquí mismo cómo funcionaría en Alondra Catering. Los primeros encargos los puede recibir desde el 1 de diciembre.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Alondra Catering, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que llevan más de 30 años en banquetes y que las cotizaciones son por teléfono. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas del 24 y el 31: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día. Lo armamos con sus productos, no es una plantilla, y es solo por diciembre: en enero, si quiere, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "flors": {
+   "id": "flors",
+   "nombre": "Flor's Catering",
+   "tipo": "navidad",
+   "orden": -29,
+   "hecho": "que hacen eventos de empresa, bodas y quince años",
+   "arma_texto": "Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas y eventos de fin de año: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que hacen eventos de empresa, bodas y quince años. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas y eventos de fin de año: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa para diciembre, le cuento por aquí mismo cómo funcionaría en Flor's Catering. Los primeros encargos los puede recibir desde el 1 de diciembre.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Flor's Catering, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que hacen eventos de empresa, bodas y quince años. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos de cenas y eventos de fin de año: anota fecha, hora, personas y menú, pide el anticipo con la foto del comprobante y le pasa la lista ordenada por día. Lo armamos con sus productos, no es una plantilla, y es solo por diciembre: en enero, si quiere, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "moderna": {
+   "id": "moderna",
+   "nombre": "Panadería Moderna",
+   "tipo": "navidad",
+   "orden": -28,
+   "hecho": "que tienen cuatro sucursales en San Pedro y que los pedidos y encargos van por este WhatsApp",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro sucursales en San Pedro y que los pedidos y encargos van por este WhatsApp. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos del 24 y el 31: anota qué quiere cada cliente y para qué hora, pide el anticipo con la foto del comprobante, lleva la cuenta de cuántos le quedan y le pasa la lista ordenada por día y hora. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa para diciembre, le cuento por aquí mismo cómo funcionaría en Panadería Moderna. Los primeros encargos los puede recibir desde el 1 de diciembre.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Panadería Moderna, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro sucursales en San Pedro y que los pedidos y encargos van por este WhatsApp. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos del 24 y el 31: anota qué quiere cada cliente y para qué hora, pide el anticipo con la foto del comprobante, lleva la cuenta de cuántos le quedan y le pasa la lista ordenada por día y hora. Lo armamos con sus productos, no es una plantilla, y es solo por diciembre: en enero, si quiere, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "carnitas": {
+   "id": "carnitas",
+   "nombre": "Carnitas Típicas al Carbón",
+   "tipo": "domicilio",
+   "orden": -12,
+   "hecho": "que ponen este número en sus publicaciones para los pedidos",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ponen este número en sus publicaciones para los pedidos. Armamos que cada pedido a domicilio quede tomado completo, con la dirección y el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Carnitas Típicas al Carbón. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Carnitas Típicas al Carbón, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ponen este número en sus publicaciones para los pedidos. Armamos que cada pedido a domicilio quede tomado completo, con la dirección y el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "xpressarte": {
+   "id": "xpressarte",
+   "nombre": "XpressArte Gourmet",
+   "tipo": "reservas",
+   "orden": 20,
+   "hecho": "que sus videos pasan seguido de las 100 mil vistas y que la gente pregunta el precio en los comentarios",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que sus videos pasan seguido de las 100 mil vistas y que la gente pregunta el precio en los comentarios. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en XpressArte Gourmet. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para XpressArte Gourmet, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que sus videos pasan seguido de las 100 mil vistas y que la gente pregunta el precio en los comentarios. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "lobby": {
+   "id": "lobby",
+   "nombre": "Restaurante El Lobby",
+   "tipo": "pedidos",
+   "orden": 21,
+   "hecho": "sus videos del pollo chuco y la yuca, y que la gente pregunta la dirección para llegar",
+   "arma_texto": "Armamos que cada pedido para recoger quede tomado completo, con la hora y el total, y entre solo a una pantalla en la cocina, y que al que pregunta la dirección le llegue la ubicación al instante. Y usted ve en el celular lo que vende cada día.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi sus videos del pollo chuco y la yuca, y que la gente pregunta la dirección para llegar. Armamos que cada pedido para recoger quede tomado completo, con la hora y el total, y entre solo a una pantalla en la cocina, y que al que pregunta la dirección le llegue la ubicación al instante. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Restaurante El Lobby. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Restaurante El Lobby, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi sus videos del pollo chuco y la yuca, y que la gente pregunta la dirección para llegar. Armamos que cada pedido para recoger quede tomado completo, con la hora y el total, y entre solo a una pantalla en la cocina, y que al que pregunta la dirección le llegue la ubicación al instante. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "chinchilete": {
+   "id": "chinchilete",
+   "nombre": "Chinchilete",
+   "tipo": "sucursales",
+   "orden": 22,
+   "hecho": "su video de más de 400 mil vistas y que cada sucursal tiene su propio número",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de más de 400 mil vistas y que cada sucursal tiene su propio número. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Chinchilete. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Chinchilete, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de más de 400 mil vistas y que cada sucursal tiene su propio número. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "aurora": {
+   "id": "aurora",
+   "nombre": "Aurora Café + Cocina",
+   "tipo": "pedidos",
+   "orden": 23,
+   "hecho": "que suben videos casi todos los días y que la gente pregunta si tienen postres para cumpleaños",
+   "arma_texto": "Armamos que cada encargo de postre o pedido quede tomado completo, con día, hora y total, y entre solo a una pantalla en la cocina, para que nada se pierda en el chat. Y usted ve en el celular lo que vende cada día.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que suben videos casi todos los días y que la gente pregunta si tienen postres para cumpleaños. Armamos que cada encargo de postre o pedido quede tomado completo, con día, hora y total, y entre solo a una pantalla en la cocina, para que nada se pierda en el chat. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Aurora Café + Cocina. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Aurora Café + Cocina, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que suben videos casi todos los días y que la gente pregunta si tienen postres para cumpleaños. Armamos que cada encargo de postre o pedido quede tomado completo, con día, hora y total, y entre solo a una pantalla en la cocina, para que nada se pierda en el chat. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "mas-alitas": {
+   "id": "mas-alitas",
+   "nombre": "MÁS Alitas",
+   "tipo": "pedidos",
+   "orden": 24,
+   "hecho": "sus videos y que la gente pregunta la dirección y el horario",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi sus videos y que la gente pregunta la dirección y el horario. Armamos que cada pedido de este WhatsApp quede tomado completo, con el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en MÁS Alitas. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para MÁS Alitas, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi sus videos y que la gente pregunta la dirección y el horario. Armamos que cada pedido de este WhatsApp quede tomado completo, con el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "melt-plaza-san-rafael": {
+   "id": "melt-plaza-san-rafael",
+   "nombre": "Melt Plaza San Rafael",
+   "tipo": "pedidos",
+   "orden": 25,
+   "hecho": "que tienen 4.5 estrellas con más de 800 reseñas en Google, y eso no se logra fácil",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen 4.5 estrellas con más de 800 reseñas en Google, y eso no se logra fácil. Armamos que cada pedido de este WhatsApp quede tomado completo, con el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Melt Plaza San Rafael. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Melt Plaza San Rafael, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen 4.5 estrellas con más de 800 reseñas en Google, y eso no se logra fácil. Armamos que cada pedido de este WhatsApp quede tomado completo, con el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "furia": {
+   "id": "furia",
+   "nombre": "Pollos Furia",
+   "tipo": "pedidos",
+   "orden": 26,
+   "hecho": "que tienen varios videos de más de un millón de vistas y que ustedes mismos contestan muchísimos comentarios",
+   "arma_texto": "Armamos que los pedidos que entran por este WhatsApp queden tomados completos, con el total, y entren solos a una pantalla en la cocina, igual que los de su página. Y usted ve en el celular lo que vende cada día y lo más pedido.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen varios videos de más de un millón de vistas y que ustedes mismos contestan muchísimos comentarios. Armamos que los pedidos que entran por este WhatsApp queden tomados completos, con el total, y entren solos a una pantalla en la cocina, igual que los de su página. Y usted ve en el celular lo que vende cada día y lo más pedido. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Pollos Furia. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Pollos Furia, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen varios videos de más de un millón de vistas y que ustedes mismos contestan muchísimos comentarios. Armamos que los pedidos que entran por este WhatsApp queden tomados completos, con el total, y entren solos a una pantalla en la cocina, igual que los de su página. Y usted ve en el celular lo que vende cada día y lo más pedido. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "la-vela": {
+   "id": "la-vela",
+   "nombre": "Restaurante La Vela",
+   "tipo": "reservas",
+   "orden": 27,
+   "hecho": "su video de casi 50 mil vistas y que la gente pide el menú en los comentarios",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de casi 50 mil vistas y que la gente pide el menú en los comentarios. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Restaurante La Vela. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Restaurante La Vela, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de casi 50 mil vistas y que la gente pide el menú en los comentarios. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "el-fierro": {
+   "id": "el-fierro",
+   "nombre": "El Fierro",
+   "tipo": "reservas",
+   "orden": 30,
+   "hecho": "que las reservaciones van por este número",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que las reservaciones van por este número. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en El Fierro. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para El Fierro, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que las reservaciones van por este número. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "fogao": {
+   "id": "fogao",
+   "nombre": "Fogão",
+   "tipo": "reservas",
+   "orden": 31,
+   "hecho": "que ponen este número en cada video para reservar",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ponen este número en cada video para reservar. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Fogão. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Fogão, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ponen este número en cada video para reservar. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "solana": {
+   "id": "solana",
+   "nombre": "Solana Bistro",
+   "tipo": "reservas",
+   "orden": 32,
+   "hecho": "que el número de su bio es el de reservaciones",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que el número de su bio es el de reservaciones. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Solana Bistro. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Solana Bistro, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que el número de su bio es el de reservaciones. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "xunan": {
+   "id": "xunan",
+   "nombre": "Xunán",
+   "tipo": "reservas",
+   "orden": 33,
+   "hecho": "que sacan menús nuevos seguido, como el de chiles en nogada",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que sacan menús nuevos seguido, como el de chiles en nogada. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Xunán. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Xunán, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que sacan menús nuevos seguido, como el de chiles en nogada. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "palco": {
+   "id": "palco",
+   "nombre": "PALCO",
+   "tipo": "reservas",
+   "orden": 34,
+   "hecho": "su video de más de 60 mil vistas y que preguntan dónde están en San Pedro",
+   "arma_texto": "Armamos que cada reservación para los partidos quede anotada completa, con día, hora y personas, en la sucursal que le toca, y a usted solo le toque confirmarla desde el celular.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de más de 60 mil vistas y que preguntan dónde están en San Pedro. Armamos que cada reservación para los partidos quede anotada completa, con día, hora y personas, en la sucursal que le toca, y a usted solo le toque confirmarla desde el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en PALCO. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para PALCO, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de más de 60 mil vistas y que preguntan dónde están en San Pedro. Armamos que cada reservación para los partidos quede anotada completa, con día, hora y personas, en la sucursal que le toca, y a usted solo le toque confirmarla desde el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "placita-susy": {
+   "id": "placita-susy",
+   "nombre": "La Placita de Susy",
+   "tipo": "reservas",
+   "orden": 35,
+   "busco": "doña Susy",
+   "busco_corto": "doña Susy",
+   "hecho": "que la gente les escribe para reservar las cenas y los días especiales",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a doña Susy. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que la gente les escribe para reservar las cenas y los días especiales. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es doña Susy, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si doña Susy pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en La Placita de Susy. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para La Placita de Susy, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que la gente les escribe para reservar las cenas y los días especiales. Armamos que cada reservación quede anotada completa, con día, hora y personas, y a usted solo le toque confirmarla desde el celular. También puede tomar pedidos para recoger. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "tamago": {
+   "id": "tamago",
+   "nombre": "Tamago",
+   "tipo": "sucursales",
+   "orden": 40,
+   "hecho": "que ya tienen cinco sucursales y que en TikTok la gente pregunta si un producto está en una sucursal o solo en otra",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ya tienen cinco sucursales y que en TikTok la gente pregunta si un producto está en una sucursal o solo en otra. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Tamago. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Tamago, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ya tienen cinco sucursales y que en TikTok la gente pregunta si un producto está en una sucursal o solo en otra. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "criollos": {
+   "id": "criollos",
+   "nombre": "Criollos",
+   "tipo": "sucursales",
+   "orden": 41,
+   "hecho": "que tienen sucursales en Ciudad Nueva y en el Centro Histórico y que publican todos los días",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen sucursales en Ciudad Nueva y en el Centro Histórico y que publican todos los días. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Criollos. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Criollos, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen sucursales en Ciudad Nueva y en el Centro Histórico y que publican todos los días. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "cafetano": {
+   "id": "cafetano",
+   "nombre": "Cafetano",
+   "tipo": "sucursales",
+   "orden": 42,
+   "busco": "don Mirko Cuculiza",
+   "busco_corto": "don Mirko",
+   "hecho": "que ya tienen cinco cafeterías y además venden café empacado",
+   "arma_texto": "Armamos que los pedidos para recoger y los de café empacado queden tomados completos, con el total, y entren solos a la cafetería que le toca. Y usted ve cada cafetería en el celular.",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a don Mirko Cuculiza. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ya tienen cinco cafeterías y además venden café empacado. Armamos que los pedidos para recoger y los de café empacado queden tomados completos, con el total, y entren solos a la cafetería que le toca. Y usted ve cada cafetería en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es don Mirko, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si don Mirko pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Cafetano. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Cafetano, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que ya tienen cinco cafeterías y además venden café empacado. Armamos que los pedidos para recoger y los de café empacado queden tomados completos, con el total, y entren solos a la cafetería que le toca. Y usted ve cada cafetería en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "tio-dolmo": {
+   "id": "tio-dolmo",
+   "nombre": "Tío Dolmo",
+   "tipo": "sucursales",
+   "orden": 43,
+   "busco": "don Steven Flores",
+   "busco_corto": "don Steven",
+   "hecho": "que tienen sucursales en toda la zona norte y que en TikTok preguntan mucho dónde quedan y el menú",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a don Steven Flores. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen sucursales en toda la zona norte y que en TikTok preguntan mucho dónde quedan y el menú. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es don Steven, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si don Steven pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Tío Dolmo. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Tío Dolmo, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen sucursales en toda la zona norte y que en TikTok preguntan mucho dónde quedan y el menú. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  }
+ },
+ "agregar": {
+  "carnitas-mary": {
+   "id": "carnitas-mary",
+   "nombre": "Carnitas Mary",
+   "numero": "50498469394",
+   "ciudad": "Tegucigalpa y Comayagüela",
+   "tipo": "domicilio",
+   "orden": -15,
+   "prioridad": 1,
+   "contacto": "Carlos",
+   "busco": "Carlos",
+   "busco_corto": "Carlos",
+   "hecho": "que tienen dos puntos, en el mercado de Comayagüela y en la Loarque, y que en TikTok mucha gente pregunta dónde quedan y a qué número pedir",
+   "arma_texto": "Armamos que cada pedido de este número, a domicilio o para recoger, quede tomado completo con el total y entre solo al punto que le toca. Y ustedes ven los dos puntos en el celular.",
+   "nota": "Investigado 10 nov. 9846-9394 es el número de domicilio y menú; no está confirmado que tenga WhatsApp (si no abre, mandar DM en TikTok @carnitas_mary). Carlos es la cara del TikTok; que Mary sea la mamá no está confirmado. No mencionar comentarios políticos de la campaña de desayunos.",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a Carlos. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen dos puntos, en el mercado de Comayagüela y en la Loarque, y que en TikTok mucha gente pregunta dónde quedan y a qué número pedir. Armamos que cada pedido de este número, a domicilio o para recoger, quede tomado completo con el total y entre solo al punto que le toca. Y ustedes ven los dos puntos en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es Carlos, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si Carlos pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Carnitas Mary. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Carnitas Mary, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen dos puntos, en el mercado de Comayagüela y en la Loarque, y que en TikTok mucha gente pregunta dónde quedan y a qué número pedir. Armamos que cada pedido de este número, a domicilio o para recoger, quede tomado completo con el total y entre solo al punto que le toca. Y ustedes ven los dos puntos en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "super-burras": {
+   "id": "super-burras",
+   "nombre": "Súper Burras",
+   "numero": "50494690000",
+   "ciudad": "San Pedro Sula",
+   "tipo": "domicilio",
+   "orden": -14,
+   "prioridad": 1,
+   "contacto": "don Adonay Chirinos",
+   "busco": "don Adonay",
+   "busco_corto": "don Adonay",
+   "hecho": "que tienen varios puntos en San Pedro, que están contratando para crecer y que el Burra Delivery va todo por este número",
+   "arma_texto": "Armamos que cada pedido del delivery quede tomado completo, con la dirección y el total, y entre solo a la cocina, y que la gente pueda dejar su pedido listo para recoger en el punto que le queda cerca. Y usted ve en el celular lo que vende cada punto.",
+   "nota": "Investigado 10 nov. 9469-0000 es el Burra Delivery; no está confirmado que tenga WhatsApp (si no abre, DM en TikTok @super.burras). Venden de 6 a 10 am: escribir después de las 10:30. No mencionar comentarios de 'caro' ni la queja del queso.",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a don Adonay. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen varios puntos en San Pedro, que están contratando para crecer y que el Burra Delivery va todo por este número. Armamos que cada pedido del delivery quede tomado completo, con la dirección y el total, y entre solo a la cocina, y que la gente pueda dejar su pedido listo para recoger en el punto que le queda cerca. Y usted ve en el celular lo que vende cada punto. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es don Adonay, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si don Adonay pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Súper Burras. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Súper Burras, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen varios puntos en San Pedro, que están contratando para crecer y que el Burra Delivery va todo por este número. Armamos que cada pedido del delivery quede tomado completo, con la dirección y el total, y entre solo a la cocina, y que la gente pueda dejar su pedido listo para recoger en el punto que le queda cerca. Y usted ve en el celular lo que vende cada punto. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "toretos": {
+   "id": "toretos",
+   "nombre": "Toreto's Grill",
+   "numero": "50496123466",
+   "ciudad": "San Pedro Sula",
+   "tipo": "repartos",
+   "orden": -13,
+   "prioridad": 1,
+   "contacto": "",
+   "hecho": "los videos del Colocho y que todo va por este WhatsApp, también el domicilio con sus propios repartidores",
+   "nota": "Investigado 15-19 oct; nunca se le escribió. Farem Cartagena es muy probablemente el dueño (IG farem_cartagena), no confirmado: nunca decir que el Colocho es el dueño. Plan Negocio (repartidores propios).",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi los videos del Colocho y que todo va por este WhatsApp, también el domicilio con sus propios repartidores. Armamos que cada pedido quede tomado completo, con la dirección y el total, entre solo a la cocina y se le pase al repartidor que esté libre, y que al cliente le llegue el aviso de que va en camino. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Toreto's Grill. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Toreto's Grill, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi los videos del Colocho y que todo va por este WhatsApp, también el domicilio con sus propios repartidores. Armamos que cada pedido quede tomado completo, con la dirección y el total, entre solo a la cocina y se le pase al repartidor que esté libre, y que al cliente le llegue el aviso de que va en camino. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "el-pollo-loco": {
+   "id": "el-pollo-loco",
+   "nombre": "El Pollo Loco",
+   "numero": "50497730804",
+   "ciudad": "Tegucigalpa",
+   "tipo": "pedidos",
+   "orden": -11,
+   "prioridad": 1,
+   "contacto": "",
+   "hecho": "que abrieron el local nuevo frente a la Católica y que este número viene en su menú",
+   "arma_texto": "Armamos que los pedidos para recoger de este WhatsApp queden tomados completos, con la hora y el total, y entren solos a una pantalla en la cocina, aparte de los de PedidosYa. Y usted ve en el celular lo que vende cada día.",
+   "nota": "Investigado 17 oct; nunca se le escribió. Domicilio solo por PedidosYa: no hablar mal de PedidosYa ni hacer cuentas de comisión.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que abrieron el local nuevo frente a la Católica y que este número viene en su menú. Armamos que los pedidos para recoger de este WhatsApp queden tomados completos, con la hora y el total, y entren solos a una pantalla en la cocina, aparte de los de PedidosYa. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en El Pollo Loco. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para El Pollo Loco, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que abrieron el local nuevo frente a la Católica y que este número viene en su menú. Armamos que los pedidos para recoger de este WhatsApp queden tomados completos, con la hora y el total, y entren solos a una pantalla en la cocina, aparte de los de PedidosYa. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "fusion-food": {
+   "id": "fusion-food",
+   "nombre": "Fusion Food",
+   "numero": "50487570555",
+   "ciudad": "Gracias, Lempira",
+   "tipo": "domicilio",
+   "orden": 10,
+   "prioridad": 2,
+   "contacto": "",
+   "hecho": "que toman los pedidos a domicilio por este WhatsApp y que el plato del día cambia todos los días",
+   "nota": "Investigado oct; nunca se le escribió. Correo fusionfoodhn@gmail.com. Venden alitas: no mandarle material de otros negocios de alitas.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que toman los pedidos a domicilio por este WhatsApp y que el plato del día cambia todos los días. Armamos que cada pedido a domicilio quede tomado completo, con la dirección y el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Fusion Food. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Fusion Food, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que toman los pedidos a domicilio por este WhatsApp y que el plato del día cambia todos los días. Armamos que cada pedido a domicilio quede tomado completo, con la dirección y el total, y entre solo a una pantalla en la cocina. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "mag-pollo": {
+   "id": "mag-pollo",
+   "nombre": "Mag Pollo",
+   "numero": "50431548697",
+   "ciudad": "San Pedro Sula",
+   "tipo": "sucursales",
+   "orden": 11,
+   "prioridad": 2,
+   "contacto": "don Magdiel",
+   "busco": "don Magdiel",
+   "busco_corto": "don Magdiel",
+   "hecho": "que tienen cuatro sucursales en San Pedro y que los pedidos llegan a este número",
+   "nota": "Su WhatsApp ya tiene menú automático por palabras: no decir que no contestan. Nunca mencionar a Coco Chicken ni compartir nada de ellos.",
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Busco a don Magdiel. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro sucursales en San Pedro y que los pedidos llegan a este número. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es don Magdiel, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si don Magdiel pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Mag Pollo. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Mag Pollo, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro sucursales en San Pedro y que los pedidos llegan a este número. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  },
+  "alitas-aleman": {
+   "id": "alitas-aleman",
+   "nombre": "Alitas de la Alemán",
+   "numero": "50496036732",
+   "ciudad": "Tegucigalpa",
+   "tipo": "pedidos",
+   "orden": 12,
+   "prioridad": 2,
+   "contacto": "",
+   "hecho": "que tienen cuatro números para los pedidos y que en los comentarios mucha gente pregunta a cuál escribir",
+   "arma_texto": "Armamos que un solo WhatsApp tome los pedidos completos, con la salsa, la dirección y el total, y los pase solos a una pantalla en la cocina, para no depender de que alguien conteste el teléfono. Y usted ve en el celular lo que vende cada día.",
+   "nota": "Los 4 números son de llamada; no publican WhatsApp. Si este no abre en WhatsApp, mandar el mismo texto por DM de Instagram. Su video corto ya existe (alitas-aleman/alitas-aleman-corto.mp4): solo a ellos, nunca a Tito Wings ni Loca Luna.",
+   "busco_corto": null,
+   "msgs": {
+    "primero": "Buenas, ¿cómo está? Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro números para los pedidos y que en los comentarios mucha gente pregunta a cuál escribir. Armamos que un solo WhatsApp tome los pedidos completos, con la salsa, la dirección y el total, y los pase solos a una pantalla en la cocina, para no depender de que alguien conteste el teléfono. Y usted ve en el celular lo que vende cada día. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia, solo para preguntarle si pudo ver mi mensaje. Si le interesa, le cuento por aquí mismo cómo funcionaría en Alitas de la Alemán. Los primeros 30 días no pagan nada.",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Alitas de la Alemán, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech.",
+    "presentacion": "Mucho gusto. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que tienen cuatro números para los pedidos y que en los comentarios mucha gente pregunta a cuál escribir. Armamos que un solo WhatsApp tome los pedidos completos, con la salsa, la dirección y el total, y los pase solos a una pantalla en la cocina, para no depender de que alguien conteste el teléfono. Y usted ve en el celular lo que vende cada día. Lo armamos con su menú, no es una plantilla. Los primeros 30 días no paga nada y, si no le sirve, se apaga y su WhatsApp queda igual que antes. Si gusta, le mando una demostración para que vea cómo funciona. ¿Le parece?"
+   }
+  }
+ },
+ "seguimiento": {
+  "camino-valle": {
+   "nombre": "Pupusería Camino del Valle",
+   "tipo": "sucursales",
+   "hecho": "en su página que tienen 13 sucursales y que cada una tiene su propio WhatsApp",
+   "msgs": {
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia: le escribí hace unos días y no le conté para qué era. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi en su página que tienen 13 sucursales y que cada una tiene su propio WhatsApp. Armamos que cada pedido quede tomado completo, con el total, y entre solo a la cocina de la sucursal que le toca. Y usted ve cada sucursal en el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Pupusería Camino del Valle, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech."
+   }
+  },
+  "carniceros": {
+   "nombre": "Carniceros",
+   "tipo": "reservas",
+   "hecho": "los videos del tomahawk y del almuerzo catracho, y que las reservaciones son por este número",
+   "arma_texto": "Para diciembre armamos que cada reservación de grupo o cena de fin de año quede anotada completa, con día, hora y personas, y al gerente solo le toque confirmarla desde el celular.",
+   "msgs": {
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia: le escribí hace unos días y no le conté para qué era. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi los videos del tomahawk y del almuerzo catracho, y que las reservaciones son por este número. Para diciembre armamos que cada reservación de grupo o cena de fin de año quede anotada completa, con día, hora y personas, y al gerente solo le toque confirmarla desde el celular. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Carniceros, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech."
+   }
+  },
+  "cholucarnes": {
+   "nombre": "Cholucarnes & Más",
+   "tipo": "navidad",
+   "hecho": "que hacen envíos y que la gente les pregunta horarios, menú y si mandan a Tegus",
+   "msgs": {
+    "seguimiento": "Buenas tardes, ¿cómo está? Disculpe la insistencia: le escribí hace unos días y no le conté para qué era. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi que hacen envíos y que la gente les pregunta horarios, menú y si mandan a Tegus. Para diciembre le podemos dejar su WhatsApp tomando solo los encargos del 24 y el 31: anota qué quiere cada cliente y para qué hora, pide el anticipo con la foto del comprobante, lleva la cuenta de cuántos le quedan y le pasa la lista ordenada por día y hora. Si le interesa, con gusto le cuento por aquí mismo cómo funciona. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+    "ultimo": "Buenas, ¿cómo está? Le escribo una última vez para no quitarle más tiempo. Por si quiere verlo funcionando, aquí hay una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si en algún momento le sirve para Cholucarnes & Más, con gusto se lo armamos con su menú. Muchísimas gracias por leerme y que les vaya muy bien. Rodrigo, de Clientia Tech."
+   }
+  }
+ },
+ "argentino": [
+  "Buenas, ¿cómo está? Le pido disculpas por no haberle contestado antes: usted me dijo \"hable amigo\" y se me quedó pendiente. Le escribe Rodrigo Herrera. Somos estudiantes universitarios hondureños y tenemos una empresa, Clientia Tech. Vi su video de más de 4 millones de vistas y que los pedidos van a dos números distintos. Armamos que los pedidos de los dos números queden tomados completos, con el total, y entren solos a una pantalla en el food truck, y que el dueño vea en el celular lo que se vendió cada día. Para diciembre también puede tomar encargos con anticipo. Lo armamos con su menú y los primeros 30 días no paga nada. Si le interesa, con gusto le cuento por aquí mismo cómo funciona o le mando una demostración. Y si usted no es el dueño, ¿me haría el favor de pasarle este mensaje?",
+  "Buenas tardes, ¿cómo está? Solo para preguntarle si pudo ver mi mensaje sobre los pedidos de Carnes El Argentino. Por si le sirve verlo, aquí está una demostración que armamos con otro negocio: https://clientiatech.com/demos/con-sabor-a-pueblo.html"
+ ],
+ "fogos": [
+  "Buenas tardes, ¿cómo está? Le escribe Rodrigo Herrera, de Clientia Tech. Hablamos en octubre sobre Fogos y le pido disculpas por desaparecerme. Desde entonces terminamos el sistema: cada pedido de WhatsApp queda tomado completo con el total, entra solo a una pantalla en la cocina y al cliente le llega el aviso cuando está listo. Lo armamos con su menú y los primeros 30 días no pagan nada. Si le interesa, con gusto se lo cuento por aquí mismo o le mando una demostración. ¿Me haría el favor de comentárselo al dueño?",
+  "Buenas tardes, ¿cómo está? Solo para dejarle la demostración por si la quiere ver con calma: https://clientiatech.com/demos/con-sabor-a-pueblo.html . Si le sirve para Fogos, me avisa y se lo armamos con su menú."
+ ],
+ "demo": "https://clientiatech.com/demos/con-sabor-a-pueblo.html"
+}

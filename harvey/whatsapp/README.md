@@ -30,3 +30,12 @@ De 15 negocios que recibieron "no es para un pedido, ¿cómo me comunico con el 
 - A 8 que solo recibieron la pregunta por el dueño se les cambió el seguimiento por el mensaje completo: Hijo de Pupa, Con Sabor a Pueblo, David's Crab, El Inge del Taco, Legato Burgers, Pollos Mamavila, Asados Mary y La Cacerola.
 - Es una prueba: comparar cuántos contestan contra los 2 de 15 de antes. Si funciona mejor, pasar el resto al mismo formato.
 - `prospectos.json` de esta carpeta es la versión vieja; la que manda es la base de datos de la página.
+
+## Cambio del 16 nov 2026: todos los de Honduras con mensaje nuevo
+
+- Los 22 de Honduras que todavía tenían el mensaje viejo ("¿cómo me comunico con el dueño?") ya tienen el primer mensaje directo, un seguimiento corto y un último con la demostración. Los de carne, catering y panadería van con Encargos de Navidad.
+- Se agregaron 7 que estaban investigados pero nunca entraron a la página: Carnitas Mary, Súper Burras, Toreto's Grill, El Pollo Loco, Fusion Food, Mag Pollo y Alitas de la Alemán. Y Fogos Grill como conversación por recuperar.
+- Carnes El Argentino va primero, con un mensaje para retomar el "hable amigo" del 26 de octubre.
+- Basilio's y Granja D'Elia quedaron en "no" (cadena grande y hotel). Con Sabor a Pueblo quedó en "conversando": es cliente en cierre, no campaña.
+- Las reglas de la respuesta automática ahora contestan el precio con el plan que toca (oferta/PLAN-DE-OFERTA.md), mandan la demostración y no proponen llamadas.
+- Copia de todo, con botones de WhatsApp, en vender/MENSAJES-LISTOS.md. Qué contestar: vender/GUIA-DE-VENTA.md.
