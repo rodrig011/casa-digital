@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test test.js",
-    "usuario": "node usuarios.js"
+    "usuario": "node usuarios.js",
+    "revisar": "node revisar.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",

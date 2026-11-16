@@ -188,6 +188,13 @@ Igual que los demás avisos, fuera de la ventana de 24 h de WhatsApp el mensaje 
 
 En un pedido a domicilio el bot pide, además de la dirección escrita, la ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). Si el cliente manda el pin en vez de escribir la dirección, también sirve. El pin se guarda en el pedido y al repartidor le llega como ubicación de WhatsApp (con Meta) y como link exacto de Google Maps en el texto; en el panel la ficha del pedido tiene «Ver la ubicación exacta». Si el cliente manda el pin después, se lo reenvía al repartidor que ya tiene el envío.
 
+### Revisar que el servidor quedó bien
+
+En Render > Shell: `npm run revisar` dice con ✓, ! o ✗ qué está bien y qué falta (negocio, disco, DATA_KEY, panel,
+claves de Meta, WhatsApp del dueño, Claude), y qué hacer en cada caso, sin mostrar ninguna clave.
+`npm run revisar -- --en-linea` además le pregunta a Meta por el número y a Claude por la clave (solo lecturas: no
+manda mensajes ni gasta crédito).
+
 ### El dueño cambia la configuración desde el panel
 
 En **Configuración** el dueño cambia, sin llamar a nadie: pausar o abrir los pedidos por WhatsApp (con su mensaje),

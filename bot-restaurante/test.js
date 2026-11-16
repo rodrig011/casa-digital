@@ -1444,3 +1444,24 @@ test("panel: Configuración cambia el máximo de apartados (general y por ciudad
   const T = { porTanda: 40, porSucursal: true, topes: { sps: 25 } };
   assert.equal(topeDe(T, "sps"), 25); assert.equal(topeDe(T, "tegucigalpa"), 40); assert.equal(topeDe({ ...T, porSucursal: false }, "sps"), 40);
 });
+
+test("revisar.js: dice qué falta en Render sin mostrar claves, y en línea pregunta a Meta y a Claude sin mandar mensajes", async () => {
+  const { revisar } = require("./revisar");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const SECRETO = "EAA" + "x".repeat(80), CLAVE = "sk-ant-api03-" + "y".repeat(40), APP = "a".repeat(32);
+  let out = await revisar({ NEGOCIO: "negocios/con-sabor-a-pueblo.json", DATA_DIR: "" });
+  const txt = o => o.map(x => x.join(" ")).join("\n");
+  assert.match(txt(out), /✗ Sin DATA_DIR/); assert.match(txt(out), /✗ Faltan META_TOKEN/); assert.match(txt(out), /✗ Falta OWNER_WHATSAPP/);
+  const env = { NEGOCIO: "negocios/con-sabor-a-pueblo.json", NEGOCIO_PRIVADO: JSON.stringify({ sucursales: { sps: { whatsapp: "+504 9999-0001" }, tegucigalpa: { whatsapp: "+504 9999-0002" } }, cobro: { transferencia: "Banco de prueba (ejemplo)" } }),
+    DATA_DIR: dir, DATA_KEY: "k".repeat(40), PANEL_SECRET: "p".repeat(40), META_TOKEN: SECRETO, META_PHONE_ID: "123456789012345", META_APP_SECRET: APP, META_VERIFY_TOKEN: "v", META_NUMERO: "+504 9999-0003",
+    OWNER_WHATSAPP: "+504 9999-0004", ANTHROPIC_API_KEY: CLAVE, PUBLIC_URL: "https://bot.example" };
+  const pedidas = [];
+  const f = async (u, o) => { pedidas.push([u, o && o.method]); return { ok: true, status: 200, json: async () => ({ display_phone_number: "+504 9999-0003", verified_name: "Con Sabor a Pueblo", quality_rating: "GREEN" }) }; };
+  out = await revisar(env, { enLinea: true, fetch: f, anthropic: { models: { list: async () => ({ data: [] }) } } });
+  assert.ok(!out.some(x => x[0] === "✗"), txt(out));
+  assert.match(txt(out), /Meta contesta: número \+504 9999-0003/); assert.match(txt(out), /Claude acepta la clave/); assert.match(txt(out), /! El panel no tiene usuarios/);
+  assert.ok(!txt(out).includes(SECRETO) && !txt(out).includes(CLAVE) && !txt(out).includes(APP), "nunca muestra claves");
+  assert.ok(pedidas.every(([, m]) => !m || m === "GET"), "solo lecturas");
+  out = await revisar({ ...env, OWNER_WHATSAPP: env.META_NUMERO, META_APP_SECRET: "corto", NEGOCIO_PRIVADO: "{malo" });
+  assert.match(txt(out), /✗ OWNER_WHATSAPP es el mismo número del bot/); assert.match(txt(out), /✗ META_APP_SECRET/); assert.match(txt(out), /✗ NEGOCIO_PRIVADO no es JSON/);
+});
