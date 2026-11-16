@@ -431,7 +431,7 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion || !(N.repartidores && N.repartidores.length) ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;
