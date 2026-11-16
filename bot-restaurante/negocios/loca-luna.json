@@ -1,5 +1,5 @@
 {
-  "_nota": "DEMO (2026-11-16). Menú y precios REALES de su menú público (PDF en linktr.ee/localunahn, subido dic 2025); las 3 sucursales que publican (Los Castaños, Las Hadas, Choluteca); delivery de 10 a. m. a 10 p. m. (bio de Instagram). Don Miguel dice que son 5 sucursales: las 2 que no conocemos van como 'Sucursal 4/5 (por confirmar)', sin inventar nombre ni dirección; faltan sus nombres, más direcciones, teléfonos, horarios, cómo cobran y si tienen repartidores propios. Los repartidores y números de la demo son de ejemplo (demos.js).",
+  "_nota": "DEMO (2026-11-16). Menú y precios REALES de su menú público (PDF en linktr.ee/localunahn, subido dic 2025); las 3 sucursales que publican (Los Castaños, Las Hadas, Choluteca); delivery de 10 a. m. a 10 p. m. (bio de Instagram). Don Miguel dice que son 5 sucursales: las 2 que no conocemos van como 'Sucursal 4/5 (por confirmar)', sin inventar nombre ni dirección; faltan sus nombres, más direcciones, teléfonos, horarios, cómo cobran y si tienen repartidores propios. Los repartidores y números de la demo son de ejemplo (demos.js). Por ahora SOLO para recoger (rodrigo 2026-11-16): todo lo de delivery se le pasa a una persona hasta que el dueño confirme cómo reparten.",
   "nombre": "Loca Luna",
   "color": "#FFC928",
   "logo": "negocios/loca-luna-logo.svg",
@@ -382,8 +382,35 @@
     "tarjeta": ""
   },
   "domicilio": {
-    "propio": true,
+    "propio": false,
     "zona": "",
     "apps": []
-  }
+  },
+  "derivar": {
+    "palabras": [
+      "domicilio",
+      "a domicilio",
+      "delivery",
+      "envio",
+      "envío",
+      "envios",
+      "envíos",
+      "enviar",
+      "envian",
+      "envían",
+      "llevan",
+      "me lo llevan",
+      "a mi casa",
+      "pedidos ya",
+      "pedidosya",
+      "motorista"
+    ],
+    "motivo": "Pregunta por delivery",
+    "mensaje": "Para pedidos a domicilio le atiende una persona de Loca Luna en un momento. Por aquí puede hacer su pedido para recoger en la sucursal que le quede mejor."
+  },
+  "menuImagenes": [
+    "https://clientiatech.com/demos/loca-luna-menu-1.jpg",
+    "https://clientiatech.com/demos/loca-luna-menu-2.jpg"
+  ],
+  "menuLink": "https://heyzine.com/flip-book/8dacfc78c4.html"
 }
