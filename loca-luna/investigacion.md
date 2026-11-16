@@ -78,3 +78,6 @@ Rodrigo consiguió el contacto directo del dueño. Llenar [Nombre] y [cómo lo c
 > Le preparé un video corto de cómo se vería con Loca Luna. ¿Se lo mando por aquí?
 
 Sin precio en el primer mensaje. Si pregunta precio, Rodrigo lo maneja (antes de cualquier prueba gratis tiene que saber el precio de después y qué incluye).
+
+## Respuesta del dueño (16 nov 2026)
+Don Miguel vio el video y contestó por WhatsApp: "Excelente. Mándame propuesta. Son 5 sucursales. De ahí partimos a ver si acordamos algo". Propuesta formal con el plan Cadena (L15,000 de instalación en dos mitades + L5,500 al mes, 30 días gratis): `kit/0-carta-de-presentacion.md` y `kit/pdf/carta-de-presentacion.pdf`. Las otras dos sucursales quedan como pregunta para la videollamada.
