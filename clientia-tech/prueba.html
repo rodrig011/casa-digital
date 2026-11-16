@@ -1613,10 +1613,11 @@ const IA=(()=>{const url="https://clientia-demo-ia.onrender.com/demo/chat";let a
 try{id=sessionStorage.getItem("ct-demo")||""}catch(e){}
 if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^\w-]/g,"").slice(0,36);try{sessionStorage.setItem("ct-demo",id)}catch(e){}}
 if(url)fetch(url.replace(/\/demo\/chat$/,"/"),{mode:"no-cors"}).catch(()=>{});
-async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);
+let lista=false;
+async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),lista?30000:75000);
 try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sesion:id,texto}),signal:ac.signal});
-if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();return j&&j.reply?j:null}catch(e){return null}finally{clearTimeout(t)}}
-return{lista:()=>!apagada,preguntar}})();
+if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();if(j&&j.reply){lista=true;return j}return null}catch(e){return null}finally{clearTimeout(t)}}
+return{lista:()=>!apagada,despierta:()=>lista,preguntar}})();
 (() => {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const N = BOT.preparar(BOT.NEGOCIO);

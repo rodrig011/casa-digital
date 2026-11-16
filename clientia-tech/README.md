@@ -20,3 +20,15 @@ La foto de "Quién soy" es `src/img/rodrigo.webp` (recorte 4:5 de la foto que ma
 - `src/legal/`: términos, privacidad, cookies, reembolsos y aviso legal. `build.mjs` mete cada una en `src/legal/plantilla.html` y las publica junto a la portada (clientiatech.com/terminos.html, etc.).
 - `src/prueba.html` → clientiatech.com/prueba.html: prueba hecha desde cero con la skill oficial `frontend-design` de Anthropic (`.claude/skills/frontend-design/`). Idea: un día del restaurante hora por hora (11:47 p. m., 10:00 a. m., 12:40 p. m., 3:15 p. m., 9:00 p. m.), cada hora con la luz de ese momento; letras Big Shoulders (las horas) e Instrument Sans (el texto). La portada no cambia; si gana la prueba, se copia `src/prueba.html` sobre `src/index.html`. Tiene `noindex` mientras es prueba, y casi no se mueve a propósito.
 - `src/prueba-ibm.html` → clientiatech.com/prueba-ibm.html: segunda prueba, sobria tipo corporativa (IBM Plex Sans/Mono, licencia OFL en `src/fonts/LICENSE-ibm-plex.txt`): franja negra arriba, botones rectos, fondo blanco y gris claro, el mismo bot real y los pantallazos reales. Revisada con `.claude/skills/taste-skill/scripts/inspect.mjs`. `noindex` mientras es prueba.
+
+## Vista previa al compartir el enlace
+
+`og.png` (1200×630) es la imagen que sale cuando alguien pega clientiatech.com en WhatsApp o Facebook. Se arma desde `src/og/og.html` con Playwright (captura de 1200×630) y `build.mjs` la copia a la raíz; el flujo de Pages también la publica.
+
+## En el celular
+
+Pasando la portada aparece abajo un botón fijo "Escríbame por WhatsApp". Se esconde solo cuando ya hay otro botón de WhatsApp a la vista (portada, contacto, pie) o cuando la persona está escribiendo en la demostración del bot.
+
+## Demostración con IA
+
+Lo que el visitante escribe va al servidor de demostración (Render gratis, se duerme). La primera respuesta espera hasta 75 s y avisa a los 7 s que tarda un poco; las siguientes esperan 30 s. Si falla, contesta el bot de menú.
