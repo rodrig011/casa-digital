@@ -98,6 +98,12 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .moto{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;border:3px solid #0E6B45;display:grid;place-items:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:left 1s linear,top 1s linear}
 .seg-pie{font-size:11.5px;color:var(--suave);padding:8px 14px 12px}
 .seg-pie a{color:inherit}
+.capa-panel{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;background:#f3f3f3}
+.capa-panel.si{display:flex}
+.capa-panel .barra-capa{display:flex;align-items:center;gap:8px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:#111;color:#fff;font:600 14px/1.2 system-ui,sans-serif}
+.capa-panel .barra-capa button{appearance:none;border:0;border-radius:8px;background:#fff;color:#111;font:inherit;padding:8px 12px;cursor:pointer}
+.capa-panel .barra-capa span{opacity:.75;font-weight:500}
+.capa-panel iframe{flex:1;width:100%;border:0;background:#f3f3f3}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -112,6 +118,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <main class="escena" id="escena"></main>
 <p class="pie">Hecho por Clientia Tech</p>
 <div class="toast" id="toast" role="status"></div>
+<div class="capa-panel" id="capa-panel" role="dialog" aria-modal="true" aria-label="Panel del dueño"><div class="barra-capa"><button type="button" id="capa-x">← Volver a la demo</button><span>Panel del dueño</span></div></div>
 <div class="velo" id="velo" role="dialog" aria-modal="true" aria-label="Seguimiento del pedido"><div class="seg-card">
   <div class="cab"><span class="av"><img data-logo alt=""></span><div><b id="seg-t">Su pedido</b><small>Así lo ve el cliente al tocar el link</small></div><button type="button" id="seg-x" aria-label="Cerrar">×</button></div>
   <div class="seg-est" id="seg-e"><i></i><span></span></div>
@@ -2227,7 +2234,7 @@ const CHATS = [
 const PASOS = [
   ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo para recoger en Las Hadas». O toque «Hacer un pedido»."],
   ["Dueño", "Toque «Dueño»: ahí le llega el pedido a usted y a la sucursal que le toca."],
-  ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
+  ["Panel", "Toque «Panel»: se abre conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
 ];
 
 // ---- the bot (the same pieces as bot-restaurante/server.js, with the messages landing on these phones) ----
@@ -2456,7 +2463,16 @@ function armar() {
 }
 // the owner panel lives on its own link (loca-luna-panel.html?v=9bfe61b6) and talks to this page by BroadcastChannel
 const PANEL_URL = "loca-luna-panel.html?v=9bfe61b6";
-function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-loca-luna"); }
+// on a phone (and in WhatsApp or Instagram's own browser, which block new tabs) the panel opens on top of this page
+function abrirPanel() {
+  SIN_LEER.panel = 0; marcas();
+  const w = movil() ? null : window.open(PANEL_URL, "panel-loca-luna");
+  if (w) return;
+  const capa = $("#capa-panel");
+  if (!capa.querySelector("iframe")) { const fr = document.createElement("iframe"); fr.src = PANEL_URL; fr.title = "Panel del dueño"; capa.appendChild(fr); }
+  capa.classList.add("si"); document.body.style.overflow = "hidden";
+}
+function cerrarPanel() { $("#capa-panel").classList.remove("si"); document.body.style.overflow = ""; }
 function ver(k) {
   if (k === "panel") return abrirPanel();
   activa = k; SIN_LEER[k] = 0;
@@ -2614,6 +2630,7 @@ try {
   };
 } catch (e) {}
 $("#abrir-panel").onclick = e => { e.preventDefault(); abrirPanel(); };
+$("#capa-x").onclick = cerrarPanel;
 armar();
 </script>
 </body>
