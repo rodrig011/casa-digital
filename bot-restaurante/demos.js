@@ -17,6 +17,19 @@ const DEMOS = {
       ],
     },
   },
+  "loca-luna": {
+    archivo: "negocios/loca-luna.json",
+    privado: {
+      sucursales: { castanos: { whatsapp: "+504 0000-0021" }, hadas: { whatsapp: "+504 0000-0022" }, choluteca: { whatsapp: "+504 0000-0023" }, suc4: { whatsapp: "+504 0000-0024" }, suc5: { whatsapp: "+504 0000-0025" } },
+      repartidores: [
+        { id: "luis", nombre: "Luis", whatsapp: "+504 0000-0031", sucursal: "castanos" },
+        { id: "mario", nombre: "Mario", whatsapp: "+504 0000-0032", sucursal: "hadas" },
+        { id: "jose", nombre: "José", whatsapp: "+504 0000-0033", sucursal: "choluteca" },
+        { id: "carlos", nombre: "Carlos", whatsapp: "+504 0000-0034", sucursal: "suc4" },
+        { id: "pedro", nombre: "Pedro", whatsapp: "+504 0000-0035", sucursal: "suc5" },
+      ],
+    },
+  },
 };
 const negocioDemo = id => DEMOS[id] ? cargarNegocio(DEMOS[id].archivo, DEMOS[id].privado) : null;
 

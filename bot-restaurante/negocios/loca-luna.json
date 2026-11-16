@@ -1,0 +1,389 @@
+{
+  "_nota": "DEMO (2026-11-16). Menú y precios REALES de su menú público (PDF en linktr.ee/localunahn, subido dic 2025); las 3 sucursales que publican (Los Castaños, Las Hadas, Choluteca); delivery de 10 a. m. a 10 p. m. (bio de Instagram). Don Miguel dice que son 5 sucursales: las 2 que no conocemos van como 'Sucursal 4/5 (por confirmar)', sin inventar nombre ni dirección; faltan sus nombres, más direcciones, teléfonos, horarios, cómo cobran y si tienen repartidores propios. Los repartidores y números de la demo son de ejemplo (demos.js).",
+  "nombre": "Loca Luna",
+  "color": "#FFC928",
+  "logo": "negocios/loca-luna-logo.svg",
+  "sucursales": [
+    {
+      "id": "castanos",
+      "nombre": "Los Castaños",
+      "alias": [
+        "castaños",
+        "castanos",
+        "los castanos"
+      ],
+      "direccion": "",
+      "telefono": "",
+      "whatsapp": "",
+      "horario": "",
+      "mapa": ""
+    },
+    {
+      "id": "hadas",
+      "nombre": "Las Hadas",
+      "alias": [
+        "hadas",
+        "las hadas"
+      ],
+      "direccion": "",
+      "telefono": "",
+      "whatsapp": "",
+      "horario": "",
+      "mapa": ""
+    },
+    {
+      "id": "choluteca",
+      "nombre": "Choluteca",
+      "alias": [
+        "choluteca",
+        "chotuleca"
+      ],
+      "direccion": "",
+      "telefono": "",
+      "whatsapp": "",
+      "horario": "",
+      "mapa": ""
+    },
+    {
+      "id": "suc4",
+      "nombre": "Sucursal 4 (por confirmar)",
+      "alias": [
+        "sucursal 4"
+      ],
+      "direccion": "",
+      "telefono": "",
+      "whatsapp": "",
+      "horario": "",
+      "mapa": ""
+    },
+    {
+      "id": "suc5",
+      "nombre": "Sucursal 5 (por confirmar)",
+      "alias": [
+        "sucursal 5"
+      ],
+      "direccion": "",
+      "telefono": "",
+      "whatsapp": "",
+      "horario": "",
+      "mapa": ""
+    }
+  ],
+  "menu": [
+    {
+      "categoria": "Pollo",
+      "items": [
+        {
+          "id": "alas6",
+          "nombre": "Alas de Pollo 6 unid.",
+          "precio": 190,
+          "desc": "Bañadas en la salsa que escoja, con zanahoria y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "alas12",
+          "nombre": "Alas de Pollo 12 unid.",
+          "precio": 320,
+          "desc": "Bañadas en la salsa que escoja, con zanahoria y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "bon6",
+          "nombre": "Boneless 6 unid.",
+          "precio": 200,
+          "desc": "Piezas de pechuga bañadas en la salsa que escoja, con zanahoria y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "bon12",
+          "nombre": "Boneless 12 unid.",
+          "precio": 330,
+          "desc": "Piezas de pechuga bañadas en la salsa que escoja, con zanahoria y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "fing6",
+          "nombre": "Chicken Fingers 6 unid.",
+          "precio": 220,
+          "desc": "Con papas fritas y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "fing12",
+          "nombre": "Chicken Fingers 12 unid.",
+          "precio": 350,
+          "desc": "Con papas fritas y aderezo de la casa. Escoja una salsa: Loca Luna, Barbacoa, Sweet Chili, Honey Mustard, Jack Daniel's, Búfalo, Búfalo Parmesano, Sweet Búfalo, Picante de la casa, Piña Habanero o Mango Habanero."
+        },
+        {
+          "id": "chuco",
+          "nombre": "Pollo Chuco",
+          "precio": 250,
+          "desc": "Pieza de pollo frito (pierna o pechuga) sobre tajadas de verde, con aderezo rosado, salsa roja y escabeche."
+        }
+      ]
+    },
+    {
+      "categoria": "Entradas",
+      "items": [
+        {
+          "id": "patatas",
+          "nombre": "Patatas",
+          "precio": 250,
+          "desc": "Papas sazonadas con queso cheddar, tocino y escabeche picante."
+        },
+        {
+          "id": "papasprep",
+          "nombre": "Papas Preparadas",
+          "precio": 200,
+          "desc": "Papas fritas con queso cheddar y tocino."
+        },
+        {
+          "id": "chori",
+          "nombre": "Choripapas",
+          "precio": 200,
+          "desc": "Papas fritas con queso cheddar y chorizo casero."
+        },
+        {
+          "id": "papas",
+          "nombre": "Papas Fritas",
+          "precio": 140
+        },
+        {
+          "id": "aros",
+          "nombre": "Aros de Cebolla",
+          "precio": 130
+        },
+        {
+          "id": "pepinillos",
+          "nombre": "Pepinillos Fritos",
+          "precio": 250
+        },
+        {
+          "id": "mozza5",
+          "nombre": "Mozzarella Sticks 5 unid.",
+          "precio": 170
+        },
+        {
+          "id": "mozza10",
+          "nombre": "Mozzarella Sticks 10 unid.",
+          "precio": 250
+        },
+        {
+          "id": "dados",
+          "nombre": "Dados de Queso (8 unid.)",
+          "precio": 240
+        },
+        {
+          "id": "tajsen",
+          "nombre": "Tajadas Sencillas",
+          "precio": 120
+        },
+        {
+          "id": "tajprep",
+          "nombre": "Tajadas Preparadas",
+          "precio": 180,
+          "desc": "Con pollo o res, a escoger."
+        },
+        {
+          "id": "katrachas",
+          "nombre": "Katrachas",
+          "precio": 120
+        },
+        {
+          "id": "jalap",
+          "nombre": "Jalapeños Rellenos",
+          "precio": 200,
+          "desc": "Orden de 5."
+        }
+      ]
+    },
+    {
+      "categoria": "Ceviches",
+      "items": [
+        {
+          "id": "cevpes",
+          "nombre": "Ceviche de Pescado",
+          "precio": 220
+        },
+        {
+          "id": "cevmix",
+          "nombre": "Ceviche Mixto",
+          "precio": 280
+        },
+        {
+          "id": "cevcam",
+          "nombre": "Ceviche de Camarón",
+          "precio": 260
+        }
+      ]
+    },
+    {
+      "categoria": "Carnes",
+      "items": [
+        {
+          "id": "costilla",
+          "nombre": "Costilla de Cerdo",
+          "precio": 350,
+          "desc": "Bañadas en la salsa que escoja."
+        },
+        {
+          "id": "chuleta",
+          "nombre": "Chuleta Costeña",
+          "precio": 240
+        },
+        {
+          "id": "picadero",
+          "nombre": "Picadero",
+          "precio": 260
+        },
+        {
+          "id": "chorizo5",
+          "nombre": "Chorizo Criollo 5 unid.",
+          "precio": 180
+        },
+        {
+          "id": "chorizo10",
+          "nombre": "Chorizo Criollo 10 unid.",
+          "precio": 280
+        },
+        {
+          "id": "picada",
+          "nombre": "Picada de Chorizo",
+          "precio": 300
+        }
+      ]
+    },
+    {
+      "categoria": "Nachos",
+      "items": [
+        {
+          "id": "nachpollo",
+          "nombre": "Nachos de Pollo",
+          "precio": 230
+        },
+        {
+          "id": "nachres",
+          "nombre": "Nachos de Res",
+          "precio": 260
+        },
+        {
+          "id": "nachmix",
+          "nombre": "Nachos Mixto",
+          "precio": 280
+        }
+      ]
+    },
+    {
+      "categoria": "Hamburguesas",
+      "items": [
+        {
+          "id": "jd1",
+          "nombre": "Jack Daniel's Burger Sencilla",
+          "precio": 300,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "jd2",
+          "nombre": "Jack Daniel's Burger Doble",
+          "precio": 350,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "luna1",
+          "nombre": "Luna Burger Sencilla",
+          "precio": 220,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "luna2",
+          "nombre": "Luna Burger Doble",
+          "precio": 260,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "smoke1",
+          "nombre": "Smoke House Sencilla",
+          "precio": 280,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "smoke2",
+          "nombre": "Smoke House Doble",
+          "precio": 320,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "chburger",
+          "nombre": "Chicken Burger",
+          "precio": 260,
+          "desc": "Con papas fritas."
+        }
+      ]
+    },
+    {
+      "categoria": "Sándwiches y burritos",
+      "items": [
+        {
+          "id": "pepito",
+          "nombre": "Súper Pepito",
+          "precio": 290,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "club",
+          "nombre": "Club Sándwich",
+          "precio": 260,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "burpollo",
+          "nombre": "Burrito de Pollo",
+          "precio": 190,
+          "desc": "Con papas fritas."
+        },
+        {
+          "id": "burres",
+          "nombre": "Burrito de Res",
+          "precio": 190,
+          "desc": "Con papas fritas."
+        }
+      ]
+    },
+    {
+      "categoria": "Samplers",
+      "items": [
+        {
+          "id": "carnivoro",
+          "nombre": "Carnívoro",
+          "precio": 590
+        },
+        {
+          "id": "lovers",
+          "nombre": "Chicken Lovers",
+          "precio": 620,
+          "desc": "7 alas, 7 boneless y 7 chicken fingers con papas, 3 aderezos y 3 salsas a escoger."
+        },
+        {
+          "id": "tasty",
+          "nombre": "Tasty Sampler",
+          "precio": 620
+        },
+        {
+          "id": "platomixto",
+          "nombre": "Plato Mixto",
+          "precio": 480
+        }
+      ]
+    }
+  ],
+  "recoger": true,
+  "pago": "",
+  "tiempoPreparacion": "",
+  "cobro": {
+    "desde": "",
+    "faltas": 0,
+    "domicilio": false,
+    "transferencia": "",
+    "tarjeta": ""
+  },
+  "domicilio": {
+    "propio": true,
+    "zona": "",
+    "apps": []
+  }
+}
