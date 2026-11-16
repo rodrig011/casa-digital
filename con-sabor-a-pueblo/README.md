@@ -31,7 +31,8 @@ No mencionar: los comentarios de "cuando uno va nunca hay" o "no había nadie", 
 ## El bot de verdad: `bot-restaurante/negocios/con-sabor-a-pueblo.json`
 
 Con lo que el dueño mandó el 11-nov-2026 (por WhatsApp a Rodrigo):
-- San Pedro Sula: solo cerdito chuko, L195.
+- **16-nov-2026 (el dueño):** el bot es solo de Tegucigalpa. Cerdito chuko L220; chicharrón de panceta L320 la libra o L160 la media libra, con tortillas y limón gratis; guacamole L80 aparte. Lo de San Pedro Sula no lo contesta el bot: le avisa al dueño con el mensaje del cliente ("derivar" en el JSON) y él contesta en persona.
+- (Antes, 11-nov: San Pedro Sula con solo cerdito chuko a L195. Ya no aplica.)
 - Apartados: tope de 50 por sábado (puesto por ciudad), hasta la 1:00 p. m. del sábado, con depósito antes de confirmarse. El dueño o la sucursal lo aprueban contestando *OK 1001* al aviso del comprobante.
 - A domicilio: se le paga al repartidor al recibir (no paga antes). Costo del envío: por definir.
 - Pierna de cerdo deshuesada: L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre, apartado con el 50 %.

@@ -24,7 +24,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa, derivarPor } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -349,6 +349,16 @@ function createApp(cfg = loadConfig(), deps = {}) {
       return [{ text: "Recibimos muchos mensajes seguidos. En unos minutos le seguimos atendiendo por aquí." }];
     }
     if (esNegocio(from) && /^(pedidos|pendientes|agenda)$/i.test(text.trim())) return [{ text: pendientes().slice(0, 1590) }];
+    // topics the owner answers in person (Con Sabor a Pueblo: anything about San Pedro Sula): he gets the message, the bot says nothing about it
+    const der = !esNegocio(from) && derivarPor(negocio, text);
+    if (der) {
+      const sess = store.getSession(from) || { state: null, convo: [] };
+      sess.convo = (sess.convo || []).concat([[text, 1], [der.mensaje, 0]]).slice(-16);
+      // one notice per customer every 2 hours, so a few messages in a row don't make several
+      if (!sess.derivado || now() - new Date(sess.derivado) > 2 * 3600e3) { persona(der.motivo, der.sucursal, from, sess.convo); sess.derivado = now().toISOString(); }
+      store.setSession(from, sess);
+      return [{ text: der.mensaje }];
+    }
     // the owner paused WhatsApp orders from the panel: customers get his message, nothing is taken
     const pausa = !esNegocio(from) && textoPausa(negocio);
     if (pausa) return [{ text: pausa }];

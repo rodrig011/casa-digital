@@ -712,7 +712,8 @@ function mezclarPrivado(n, extra) {
   return {
     ...n,
     sucursales: (n.sucursales || []).map(s => ({ ...s, ...((x.sucursales || {})[s.id] || {}) })),
-    ...(x.repartidores ? { repartidores: x.repartidores } : {}),
+    // a driver of a branch that was removed (San Pedro Sula, 16-nov-2026) stays, for every branch, instead of stopping the bot
+    ...(x.repartidores ? { repartidores: x.repartidores.map(r => r && r.sucursal && !(n.sucursales || []).some(s => s.id === r.sucursal) ? { ...r, sucursal: "" } : r) } : {}),
     ...(x.cobro ? { cobro: { ...(n.cobro || {}), ...x.cobro } } : {}),
     ...(x.proveedores ? { proveedores: x.proveedores } : {}),
   };
@@ -833,9 +834,21 @@ function aplicarAjustes(N, a) {
   return ajustesDe(N);
 }
 // lo que contesta el bot mientras el dueño tiene los pedidos en pausa (null = abierto)
+// derivar: temas que el dueño contesta en persona (por ejemplo, otra ciudad). El bot no contesta nada del tema:
+// avisa al dueño con el mensaje del cliente y le dice al cliente que el dueño le escribe.
+//   { "palabras": ["san pedro", "sps"], "motivo": "Pregunta por San Pedro Sula", "mensaje": "..." }
+const MSG_DERIVAR = "Ya le pasamos su mensaje al dueño y él le escribe en persona en un momento.";
+function derivarPor(N, text) {
+  const d = N.derivar;
+  if (!d || !Array.isArray(d.palabras) || !d.palabras.length) return null;
+  const x = ` ${norm(text).replace(/[^\w\s]/g, " ").replace(/\s+/g, " ")} `;
+  if (!d.palabras.some(w => { const k = norm(w).replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim(); return k && x.includes(` ${k} `); })) return null;
+  const dicho = String(text).replace(/\s+/g, " ").trim().slice(0, 200);
+  return { motivo: `${d.motivo || "Tema que contesta el dueño"}: «${dicho}»`, mensaje: d.mensaje || MSG_DERIVAR, sucursal: N.sucursales[0].nombre };
+}
 const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
 
-module.exports = { aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
 
 },"./engine":function(module,exports,require){// Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
