@@ -1,4 +1,6 @@
-# Con Sabor a Pueblo en DigitalOcean (con el crédito de estudiante)
+# Con Sabor a Pueblo en DigitalOcean
+
+> **El crédito de estudiante ya no incluye DigitalOcean** (revisado el 16-nov-2026). Con el pack use **[AZURE.md](AZURE.md)**: es el mismo instalador. Esta guía sirve si paga DigitalOcean con tarjeta.
 
 Es la alternativa a Render. Con el crédito del GitHub Student Developer Pack, el servidor sale gratis mientras dure el crédito.
 Después cuesta unos $7.20 al mes ($6 del Droplet más $1.20 de respaldos). Se hace una sola vez, en unos 25 minutos, **mejor desde la laptop**.
