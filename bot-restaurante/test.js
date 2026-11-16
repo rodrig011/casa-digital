@@ -1495,3 +1495,19 @@ test("revisar.js: dice qué falta en Render sin mostrar claves, y en línea preg
   out = await revisar({ ...env, OWNER_WHATSAPP: env.META_NUMERO, META_APP_SECRET: "corto", NEGOCIO_PRIVADO: "{malo" });
   assert.match(txt(out), /✗ OWNER_WHATSAPP es el mismo número del bot/); assert.match(txt(out), /✗ META_APP_SECRET/); assert.match(txt(out), /✗ NEGOCIO_PRIVADO no es JSON/);
 });
+
+test("panel real sin WhatsApp todavía: arranca, se entra con la contraseña, avisa que falta conectar y guarda menú y configuración", async () => {
+  const { mezclarPrivado } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json", sid: "", token: "" }, { negocio: preparar(mezclarPrivado(base, {})), client: null, meta: null });
+  try {
+    const cookie = await entrar(ctx);
+    const neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
+    assert.equal(neg.whatsapp, "", "el panel sabe que falta conectar WhatsApp");
+    const html = await (await fetch(ctx.base + "/panel", { headers: { Cookie: cookie } })).text();
+    assert.match(html, /WhatsApp todavía no está conectado/);
+    const r = await fetch(ctx.base + "/api/ajustes", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie, Origin: ctx.base }, body: JSON.stringify({ ...neg.ajustes, cupos: { ...neg.ajustes.cupos, porTanda: 45 } }) });
+    assert.equal(r.status, 200); assert.equal((await r.json()).ajustes.cupos.porTanda, 45);
+  } finally { ctx.srv.close(); }
+});

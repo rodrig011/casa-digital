@@ -452,7 +452,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   });
   app.get("/api/negocio", (req, res) => {
     if (sinSesion(req, res)) return;
-    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
+    res.set("Cache-Control", "no-store").json({ nombre: negocio.nombre, color: negocio.color, logo: logoArchivo ? "/panel/logo" : "", whatsapp: meta ? "meta" : client ? "twilio" : "", moneda: negocio.moneda, cobro: negocio.cobro.activo, reservaciones: !!negocio.reservaciones,
       cupos: negocio.cupos ? { tandas: negocio.cupos.tandas, porTanda: negocio.cupos.porTanda, porSucursal: negocio.cupos.porSucursal, cierre: negocio.cupos.cierre, topes: negocio.cupos.topes, cerrados: negocio.cupos.cerrados, dias: fechasCupos(negocio, now(), true).map(f => ({ ...f, abierto: fechasCupos(negocio, now()).some(x => x.fecha === f.fecha) })) } : null,
       sucursales: negocio.sucursales.map(({ id, nombre }) => ({ id, nombre })), menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel(), repartidores: repartos.lista.map(({ id, nombre, sucursal, tel, activo }) => ({ id, nombre, sucursal, tel, activo: activo !== false })), ...(negocio.proveedores ? { proveedores: negocio.proveedores } : {}), domicilioPropio: !!(negocio.domicilio && negocio.domicilio.propio), modoIA: !!ia, ajustes: ajustesDe(negocio), usuario: panel.usuarioDe(req).nombre });
   });

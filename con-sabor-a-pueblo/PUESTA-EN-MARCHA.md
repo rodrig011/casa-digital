@@ -13,9 +13,33 @@ Tiempo total: unas 3 horas de usted, más una videollamada de 45 minutos con el 
 | 4. Videollamada con el dueño: su Meta y su número | Usted y el dueño | 45 min | Una línea nueva (~L50) si hace falta |
 | 5. Prender el bot | Usted | 30 min | Gratis |
 
-Lo que ya está hecho y probado (44 pruebas automáticas): el bot con IA, pedidos a cocina, apartados con tope,
+Lo que ya está hecho y probado (46 pruebas automáticas): el bot con IA, pedidos a cocina, apartados con tope,
 pago con comprobante, repartidores con ubicación, panel del dueño con menú, equipo y configuración editables,
 respaldo cifrado y el chequeo `npm run revisar`.
+
+## Atajo: el panel real hoy, sin esperar a Meta (20 minutos)
+
+El panel de verdad (no la demo) corre en el mismo servidor y **no necesita WhatsApp para funcionar**. Si Meta todavía no
+lo deja (por ejemplo, «You can't make this change at the moment» por usar un aparato nuevo), suba el servidor ya y que el
+dueño empiece a usar el panel: deja listo el menú con sus precios, los apartados, los pagos, los horarios y su equipo de
+reparto. Todo queda guardado en el disco y el bot lo usa desde el primer mensaje cuando se conecte WhatsApp.
+
+1. Haga el paso **1.2 (Render)**.
+2. Haga la **Parte 2** con estas diferencias:
+   - `META_TOKEN`, `META_PHONE_ID`, `META_NUMERO`, `META_APP_SECRET`, `META_PLANTILLA`, `META_PLANTILLA_CODIGO`: **vacíos**.
+   - `ANTHROPIC_API_KEY`: vacía por ahora (sin WhatsApp no se usa; así no gasta).
+   - `NEGOCIO_PRIVADO`: el JSON completo del archivo privado. Sin WhatsApp no sale ningún mensaje a nadie.
+   - `OWNER_WHATSAPP`: el del dueño, o vacío.
+   - `npm run revisar` va a marcar ✗ en lo de Meta (y en `OWNER_WHATSAPP` si lo dejó vacío): es lo esperado en este atajo. Lo demás debe salir ✓ o !.
+3. Agregue los usuarios como en **2.2**, con su WhatsApp. Mientras no haya WhatsApp conectado se entra solo con correo
+   y contraseña; cuando se conecte, el código de entrada empieza a llegar solo.
+4. Abra `https://con-sabor-a-pueblo-bot.onrender.com/panel`. Arriba, en **Hoy** y en **Configuración**, dice
+   «WhatsApp todavía no está conectado». Eso desaparece solo cuando se conecta.
+5. Con el dueño (puede ser por videollamada): que revise **Menú** (precios), **Configuración** (máximo de apartados,
+   hora de cierre, cuenta para depósitos, horario) y **Repartidores**.
+
+Cuando Meta ya lo deje: pegue los valores de Meta y la clave de Claude en Render > **Environment** (Render reinicia solo,
+los datos del disco se quedan) y siga desde **2.1**.
 
 ---
 
