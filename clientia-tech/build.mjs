@@ -2,7 +2,7 @@
 // mete la letra, los pantallazos y el logo como data: URI, y el motor real del bot
 // (bot-restaurante/engine.js + negocio.js + negocios/ejemplo.json) para la demostración.
 // Uso: node clientia-tech/build.mjs
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -30,10 +30,11 @@ const IA = `const IA=(()=>{const url=${JSON.stringify(DEMO_IA)};let apagada=!url
 try{id=sessionStorage.getItem("ct-demo")||""}catch(e){}
 if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^\\w-]/g,"").slice(0,36);try{sessionStorage.setItem("ct-demo",id)}catch(e){}}
 if(url)fetch(url.replace(/\\/demo\\/chat$/,"/"),{mode:"no-cors"}).catch(()=>{});
-async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);
+let lista=false;
+async function preguntar(texto){if(apagada)return null;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),lista?30000:75000);
 try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sesion:id,texto}),signal:ac.signal});
-if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();return j&&j.reply?j:null}catch(e){return null}finally{clearTimeout(t)}}
-return{lista:()=>!apagada,preguntar}})();`;
+if(r.status===429||r.status===403)apagada=true;if(!r.ok)return null;const j=await r.json();if(j&&j.reply){lista=true;return j}return null}catch(e){return null}finally{clearTimeout(t)}}
+return{lista:()=>!apagada,despierta:()=>lista,preguntar}})();`;
 
 const logo = leer(aqui, "src", "img", "simbolo.svg");
 // favicon: the white mark on the navy square
@@ -59,6 +60,8 @@ const publicar = (nombre, h) => {
   console.log(`clientia-tech/${nombre}: ${(h.length / 1024).toFixed(0)} KB`);
 };
 publicar("index.html", armar("index.html"));
+// link preview image for WhatsApp/Facebook (clientiatech.com/og.png); made from src/og/og.html, see README
+copyFileSync(join(aqui, "og.png"), join(aqui, "..", "og.png"));
 // test page made with the frontend-design skill (clientiatech.com/prueba.html); the home page stays as it is
 publicar("prueba.html", armar("prueba.html"));
 // second test page, sober corporate look in IBM Plex (clientiatech.com/prueba-ibm.html)
