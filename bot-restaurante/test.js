@@ -44,7 +44,8 @@ test("moneda: quetzales en Guatemala, dólares en El Salvador, lempiras si no di
 });
 
 test("sucursal dicha como la dice la gente: «en San Pedro» es San Pedro Sula y «tegus» es Tegucigalpa", () => {
-  const C = cargarNegocio("negocios/con-sabor-a-pueblo.json");
+  const c = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const C = preparar({ ...c, sucursales: [...c.sucursales, { id: "sps", nombre: "San Pedro Sula" }] });
   assert.equal(C.sucursalEn("quiero 2 cerditos a domicilio en San Pedro").id, "sps");
   assert.equal(C.sucursalEn("para Tegus porfa").id, "tegucigalpa");
   assert.equal(C.sucursalEn("en SPS").id, "sps");
@@ -1234,64 +1235,68 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
   } finally { ctx.srv.close(); }
 });
 
-test("Con Sabor a Pueblo: menú por ciudad, tope de apartados por sábado, depósito que el dueño aprueba con OK, pierna por encargo con 50%", async () => {
+test("Con Sabor a Pueblo: solo Tegucigalpa (cerdito L220, chicharrón por libra o media con guacamole aparte), tope de apartados por sábado, depósito que el dueño aprueba con OK, pierna por encargo con 50%", async () => {
   const { mezclarPrivado, montoCobro } = require("./negocio");
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
-  const privado = { sucursales: { sps: { whatsapp: "+504 8888-2222" } }, cobro: { transferencia: "Banco de prueba, cuenta 000" } };
+  const privado = { sucursales: { tegucigalpa: { whatsapp: "+504 8888-2222" }, sps: { whatsapp: "+504 8888-3333" } }, cobro: { transferencia: "Banco de prueba, cuenta 000" } };
   const N2 = preparar(mezclarPrivado(base, privado));
-  assert.equal(N2.sucursales[1].whatsapp, "+504 8888-2222");
-  assert.equal(base.sucursales[1].whatsapp, "", "el archivo público no lleva números");
+  assert.deepEqual(N2.sucursales.map(s => s.id), ["tegucigalpa"], "San Pedro Sula salió del bot");
+  assert.equal(N2.sucursales[0].whatsapp, "+504 8888-2222");
+  assert.equal(base.sucursales[0].whatsapp, "", "el archivo público no lleva números");
+  assert.doesNotMatch(JSON.stringify(base.sucursales) + JSON.stringify(base.menu), /San Pedro|Expocentro|sps/i);
   const E2 = createEngine(N2);
   let ocup = {};
   const ctx = { ocupados: (f, t, s) => ocup[s] || 0 };
   const correr = (xs, now = NOW) => { let st = null, ult = ""; for (const x of xs) { const r = E2.handle(st, x, now, ctx); st = r.state; ult = r.messages.map(toText).join("\n"); if (VERBOSE) console.log(">> " + x + "\n" + ult); } return { st, ult }; };
 
-  // San Pedro: cerdito chuko, Saturday (one batch: no batch question), deposit before confirming
-  let { st, ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]);
-  assert.equal(st.lead.total, 390); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "sps");
+  // the owner's prices (16-nov-2026)
+  let { st, ult } = correr(["hola", "Hacer un pedido"]);
+  assert.match(ult, /Cerdito chuko · L 220/); assert.match(ult, /Chicharrón de panceta \(libra\) · L 320/); assert.match(ult, /Chicharrón de panceta \(media libra\) · L 160/); assert.match(ult, /Guacamole para el chicharrón · L 80/);
+  assert.doesNotMatch(ult, /San Pedro/);
+  ({ st, ult } = correr(["hola", "Hacer un pedido", "1 libra de chicharron y media libra de chicharron con guacamole", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]));
+  assert.equal(st.lead.total, 560); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "tegucigalpa");
   assert.equal(st.lead.diaFecha, "2026-10-17"); assert.equal(st.lead.cupos, 1);
   assert.match(ult, /Para confirmar el apartado, se paga antes/); assert.match(ult, /Banco de prueba/); assert.doesNotMatch(ult, /tanda/);
-  // Tegucigalpa sells it too
-  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "2 cerdito chuko"]));
-  assert.match(ult, /Cerdito chuko · L 390/);
+  ({ st } = correr(["hola", "Hacer un pedido", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Ana"]));
+  assert.equal(st.lead.total, 440);
   // delivery also pays the food by transfer before the kitchen (the delivery fee goes to the driver)
-  ({ st } = correr(["hola", "Pedir a domicilio", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Col. Trejo, 5 calle, casa azul", "Sábado 17 de octubre", "Mario"]));
+  ({ st } = correr(["hola", "Pedir a domicilio", "1 cerdito chuko", "Confirmar pedido", "Col. Palmira, casa azul", "Sábado 17 de octubre", "Mario"]));
   assert.equal(st.lead.entrega, "domicilio"); assert.equal(st.lead.estado, "por_pagar");
-  // 50 apartados in San Pedro: full there, Tegucigalpa still open
-  ocup = { sps: 50 };
-  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Para recoger"]));
+  // 50 apartados: full that Saturday
+  ocup = { tegucigalpa: 50 };
+  ({ ult } = correr(["hola", "Hacer un pedido", "1 cerdito chuko", "Confirmar pedido", "Para recoger"]));
   assert.match(ult, /Ya se llenó: sábado 17 de octubre/);
   ocup = {};
   // after 1 p. m. on Saturday that Saturday is closed
-  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "1 cerdito chuko", "Confirmar pedido", "Para recoger"], new Date("2026-10-17T13:30:00-06:00")));
+  ({ ult } = correr(["hola", "Hacer un pedido", "1 cerdito chuko", "Confirmar pedido", "Para recoger"], new Date("2026-10-17T13:30:00-06:00")));
   assert.doesNotMatch(ult, /17 de octubre/); assert.match(ult, /24 de octubre/);
 
   // pierna: minimum 5 lb, its own date, 50% deposit
-  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "3 pierna de cerdo", "Confirmar pedido"]));
+  ({ ult } = correr(["hola", "Hacer un pedido", "3 pierna de cerdo", "Confirmar pedido"]));
   assert.match(ult, /mínimo de Pierna de cerdo deshuesada \(libra\) es de 5/);
-  ({ st, ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "6 pierna de cerdo", "Confirmar pedido", "Para recoger", "Rosa"]));
+  ({ st, ult } = correr(["hola", "Hacer un pedido", "6 pierna de cerdo", "Confirmar pedido", "Para recoger", "Rosa"]));
   assert.equal(st.lead.encargo, true); assert.equal(st.lead.diaFecha, "2026-12-24"); assert.equal(st.lead.total, 1920); assert.equal(st.lead.anticipo, 960);
   assert.match(ult, /Para el jueves 24 de diciembre/); assert.match(ult, /Anticipo: \*L 960\* de L 1,920/);
   assert.equal(montoCobro(N2, [{ id: "pierna", subtotal: 1600 }]), 800);
-  ({ ult } = correr(["hola", "Hacer un pedido", "Tegucigalpa", "5 pierna de cerdo", "Confirmar pedido"], new Date("2026-12-16T09:00:00-06:00")));
+  ({ ult } = correr(["hola", "Hacer un pedido", "5 pierna de cerdo", "Confirmar pedido"], new Date("2026-12-16T09:00:00-06:00")));
   assert.match(ult, /Ya se cerraron los pedidos de Pierna/);
-  ({ ult } = correr(["hola", "Hacer un pedido", "San Pedro Sula", "5 pierna de cerdo y 1 cerdito chuko", "Confirmar pedido"]));
+  ({ ult } = correr(["hola", "Hacer un pedido", "5 pierna de cerdo y 1 cerdito chuko", "Confirmar pedido"]));
   assert.match(ult, /se pide en un pedido aparte/);
 
-  // the bot: deposit receipt to the San Pedro number, which approves with "OK 1001"
+  // the bot: deposit receipt to the Tegucigalpa number, which approves with "OK 1001"
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const srv = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: preparar(mezclarPrivado(base, privado)) });
   try {
-    const cli = "whatsapp:+50495550000", SPS = "whatsapp:+50488881111";   // montar() le pone este WhatsApp a la segunda sucursal
-    for (const Body of ["hola", "Hacer un pedido", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]) await post(srv, "/whatsapp", { From: cli, Body });
+    const cli = "whatsapp:+50495550000", TGU = "whatsapp:+50488882222";
+    for (const Body of ["hola", "Hacer un pedido", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]) await post(srv, "/whatsapp", { From: cli, Body });
     await post(srv, "/whatsapp", { From: cli, Body: "", NumMedia: "1", MediaUrl0: "https://example.test/comprobante.jpg" });
     await srv.app.locals.idle();
-    const aviso = srv.sent.filter(m => m.to === SPS).at(-1).body;
+    const aviso = srv.sent.filter(m => m.to === TGU).at(-1).body;
     assert.match(aviso, /Comprobante de pago PED-1001/); assert.match(aviso, /OK 1001/);
-    const r = textoDe((await post(srv, "/whatsapp", { From: SPS, Body: "ok 1001" })).xml); await srv.app.locals.idle();
+    const r = textoDe((await post(srv, "/whatsapp", { From: TGU, Body: "ok 1001" })).xml); await srv.app.locals.idle();
     assert.match(r, /PED-1001 aprobado/);
     assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /Su apartado quedó confirmado para el \*sábado 17 de octubre\*/);
-    assert.match(textoDe((await post(srv, "/whatsapp", { From: SPS, Body: "ok 1001" })).xml), /no está esperando pago/);
+    assert.match(textoDe((await post(srv, "/whatsapp", { From: TGU, Body: "ok 1001" })).xml), /no está esperando pago/);
     assert.match(textoDe((await post(srv, "/whatsapp", { From: cli, Body: "ok 1001" })).xml), /Con Sabor a Pueblo|ayudo/i, "un cliente no puede aprobar");
     // their logo: on the login page and in the panel, served so that it can't run code
     const logo = await fetch(srv.base + "/panel/logo");
@@ -1302,32 +1307,57 @@ test("Con Sabor a Pueblo: menú por ciudad, tope de apartados por sábado, depó
   } finally { srv.srv.close(); }
 });
 
-test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mínimo; el cerdito no se vende en Tegucigalpa", () => {
+test("Con Sabor a Pueblo: lo de San Pedro Sula se lo pasa al dueño; el bot no contesta nada del tema y avisa una sola vez", async () => {
+  const { mezclarPrivado, derivarPor } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const N2 = preparar(mezclarPrivado(base, { sucursales: { tegucigalpa: { whatsapp: "+504 8888-2222" } } }));
+  for (const t of ["¿Están en San Pedro este sábado?", "precio en SPS", "y en sampedro?", "van al Expocentro?", "están en el bazar del sábado", "S.P.S."]) assert.ok(derivarPor(N2, t), t);
+  for (const t of ["hola", "quiero 2 cerditos", "¿dónde están en Tegus?", "pedro", "sps2"]) assert.equal(derivarPor(N2, t), null, t);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const srv = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: N2 });
+  try {
+    const cli = "whatsapp:+50495551234", cookie = await entrar(srv);
+    const di = async Body => { const r = textoDe((await post(srv, "/whatsapp", { From: cli, Body })).xml); await srv.app.locals.idle(); return r; };
+    const r = await di("Buenas, ¿cuánto cuesta el cerdito en San Pedro Sula?");
+    assert.match(r, /le pasamos su mensaje al dueño/); assert.doesNotMatch(r, /San Pedro|L \d|Tegucigalpa/, "no dice nada de SPS");
+    const leads = async () => (await (await fetch(srv.base + "/api/pedidos", { headers: { Cookie: cookie } })).json()).filter(p => p.tipo === "persona");
+    let ls = await leads();
+    assert.equal(ls.length, 1); assert.match(ls[0].motivo, /San Pedro Sula: «Buenas, ¿cuánto cuesta el cerdito en San Pedro Sula\?»/);
+    assert.ok(srv.sent.some(m => /pidió hablar con una persona/.test(m.body) && /San Pedro Sula/.test(m.body)), "le llega al dueño");
+    await di("¿y en sps a qué hora abren?");
+    assert.equal((await leads()).length, 1, "un aviso, no uno por mensaje");
+    // the bot keeps taking Tegucigalpa orders
+    assert.match(await di("hola"), /En qué le ayudo/);
+  } finally { srv.srv.close(); }
+});
+
+test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mínimo; el cerdito a L220", () => {
   const { mezclarPrivado } = require("./negocio");
   const N2 = preparar(mezclarPrivado(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")), { cobro: { transferencia: "Banco de prueba" } }));
   const { ejecutar } = require("./ia");
   if (!ejecutar) return;
   const c = { now: NOW, numero: () => "PED-2001", ocupados: () => 0 };
-  assert.ok(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "cerdito-sps", cantidad: 1 }], fecha: "2026-10-17" }, { ...c }).ok, "en Tegucigalpa también hay cerdito");
-  assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 2 }], fecha: "2026-12-24" }, { ...c }).error, /mínimo/);
+  assert.ok(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "cerdito", cantidad: 1 }], fecha: "2026-10-17" }, { ...c }).ok);
+  assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "pierna", cantidad: 2 }], fecha: "2026-12-24" }, { ...c }).error, /mínimo/);
   const k = { ...c };
-  const ok = ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "sps", productos: [{ id: "pierna", cantidad: 5 }], fecha: "2026-12-24" }, k);
+  const ok = ejecutar(N2, "crear_pedido", { nombre: "Ana", sucursal: "tegucigalpa", productos: [{ id: "pierna", cantidad: 5 }], fecha: "2026-12-24" }, k);
   assert.match(ok.cobro, /Anticipo: \*L 800\* de L 1,600/); assert.equal(k.pedido.encargo, true); assert.equal(k.pedido.anticipo, 800);
   const menu = ejecutar(N2, "ver_menu", {}, c).menu;
-  assert.equal(menu.find(i => i.id === "cerdito-sps").solo_en, undefined);
+  assert.equal(menu.find(i => i.id === "cerdito").precio, "L 220");
 });
 
 test("Con Sabor a Pueblo a domicilio: el repartidor dice solo «120», el cliente acepta, paga la comida por transferencia y con el OK pasa a cocina", async () => {
   const { mezclarPrivado } = require("./negocio");
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
-  const privado = { repartidores: [{ id: "kevin", nombre: "Kevin", whatsapp: "+504 7777-0001", sucursal: "sps" }], cobro: { transferencia: "Banco de prueba, cuenta 000" } };
+  // Kevin still says "sps" (the branch that was removed): he stays, for Tegucigalpa, and the bot starts
+  const privado = { sucursales: { tegucigalpa: { whatsapp: "+504 8888-1111" } }, repartidores: [{ id: "kevin", nombre: "Kevin", whatsapp: "+504 7777-0001", sucursal: "sps" }], cobro: { transferencia: "Banco de prueba, cuenta 000" } };
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const srv = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: preparar(mezclarPrivado(base, privado)) });
   try {
     const cli = "whatsapp:+50495550000", SPS = "whatsapp:+50488881111", KEVIN = "whatsapp:+50477770001";
     const di = async (From, Body) => { const r = textoDe((await post(srv, "/whatsapp", { From, Body })).xml); await srv.app.locals.idle(); return r; };
     let r;
-    for (const Body of ["hola", "Pedir a domicilio", "San Pedro Sula", "2 cerdito chuko", "Confirmar pedido", "Col. Trejo, 5 calle, casa azul", "Sábado 17 de octubre"]) r = await di(cli, Body);
+    for (const Body of ["hola", "Pedir a domicilio", "2 cerdito chuko", "Confirmar pedido", "Col. Palmira, 5 calle, casa azul", "Sábado 17 de octubre"]) r = await di(cli, Body);
     r = await di(cli, "Mario");
     assert.match(r, /el repartidor le dice por aquí cuánto es el envío/); assert.doesNotMatch(r, /Banco de prueba/, "los datos de pago van después del envío");
     const ped = () => srv.app.locals.store.getPedido("PED-1001");
@@ -1336,7 +1366,7 @@ test("Con Sabor a Pueblo a domicilio: el repartidor dice solo «120», el client
     assert.match(await di(KEVIN, "120"), /Le preguntamos al cliente/);
     assert.match(srv.sent.filter(m => m.to === cli).at(-1).body, /cuesta \*L 120\*/);
     r = await di(cli, "sí");
-    assert.match(r, /Envío de L 120 aceptado/); assert.match(r, /Banco de prueba/); assert.match(r, /Monto: \*L 390\*/);
+    assert.match(r, /Envío de L 120 aceptado/); assert.match(r, /Banco de prueba/); assert.match(r, /Monto: \*L 440\*/);
     assert.equal(ped().estado, "por_pagar");
     await post(srv, "/whatsapp", { From: cli, Body: "", NumMedia: "1", MediaUrl0: "https://example.test/comprobante.jpg" }); await srv.app.locals.idle();
     assert.match(srv.sent.filter(m => m.to === SPS).at(-1).body, /OK 1001/);
@@ -1412,16 +1442,16 @@ test("panel: Configuración cambia el máximo de apartados (general y por ciudad
     const a = neg.ajustes;
     assert.equal(a.cupos.porTanda, 50); assert.deepEqual(a.cupos.dias, ["sabado"]); assert.equal(a.cupos.cierre, "13:00"); assert.equal(a.pausa.activo, false);
     const primero = fechasCupos(ctx.app.locals.negocio || negocio(), NOW)[0];
-    let r = await guardar(cookie, { ...a, cupos: { ...a.cupos, porTanda: 40, topes: { sps: 25 }, cerrados: [primero ? primero.fecha : "2026-12-26"], cierre: "12:30" }, cobro: { ...a.cobro, anticipo: 50 },
-      sucursales: a.sucursales.map(s => s.id === "sps" ? { ...s, horario: "Sábados, 9:00 a. m. a 5:00 p. m." } : s) });
+    let r = await guardar(cookie, { ...a, cupos: { ...a.cupos, porTanda: 40, topes: { tegucigalpa: 25 }, cerrados: [primero ? primero.fecha : "2026-12-26"], cierre: "12:30" }, cobro: { ...a.cobro, anticipo: 50 },
+      sucursales: a.sucursales.map(s => s.id === "tegucigalpa" ? { ...s, horario: "Sábados, 9:00 a. m. a 5:00 p. m." } : s) });
     assert.equal(r.status, 200);
     const d = (await r.json()).ajustes;
-    assert.equal(d.cupos.porTanda, 40); assert.deepEqual(d.cupos.topes, { sps: 25 }); assert.equal(d.cupos.cierre, "12:30"); assert.equal(d.cobro.anticipo, 50);
+    assert.equal(d.cupos.porTanda, 40); assert.deepEqual(d.cupos.topes, { tegucigalpa: 25 }); assert.equal(d.cupos.cierre, "12:30"); assert.equal(d.cobro.anticipo, 50);
     assert.equal(d.cobro.transferencia, "Banco de prueba (ejemplo)", "la cuenta del banco se conserva");
     assert.equal((await guardar(cookie, { cupos: { ...d.cupos, cierre: "25:00" } })).status, 400);
-    // the bot uses it right away: Tegucigalpa 40, San Pedro 25, the closed Saturday is not offered
+    // the bot uses it right away: Tegucigalpa 25 (its own cap over the general 40), the closed Saturday is not offered
     neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
-    assert.deepEqual(neg.cupos.topes, { sps: 25 }); assert.equal(neg.cupos.porTanda, 40);
+    assert.deepEqual(neg.cupos.topes, { tegucigalpa: 25 }); assert.equal(neg.cupos.porTanda, 40);
     if (primero) assert.ok(!neg.cupos.dias.some(x => x.fecha === primero.fecha), "la fecha cerrada no sale");
     // pause: customers get the message, nothing is taken
     r = await guardar(cookie, { pausa: { activo: true, mensaje: "Hoy no abrimos por lluvia. ¡Nos vemos el otro sábado!" } });
@@ -1436,7 +1466,7 @@ test("panel: Configuración cambia el máximo de apartados (general y por ciudad
     cookie = await entrar(ctx);
     neg = await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json();
     assert.equal(neg.ajustes.cupos.porTanda, 40); assert.equal(neg.ajustes.pausa.activo, true);
-    assert.equal(neg.ajustes.sucursales.find(s => s.id === "sps").horario, "Sábados, 9:00 a. m. a 5:00 p. m.");
+    assert.equal(neg.ajustes.sucursales.find(s => s.id === "tegucigalpa").horario, "Sábados, 9:00 a. m. a 5:00 p. m.");
     await guardar(cookie, { pausa: { activo: false, mensaje: "" } });
     assert.doesNotMatch(textoDe((await post(ctx, "/whatsapp", { From: cli, Body: "hola" })).xml), /lluvia/);
     await ctx.app.locals.idle();
