@@ -40,7 +40,12 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
   const conPlantilla = (to, uno, dos) => mandar(to, { type: "template", template: { name: plantilla, language: { code: idioma }, components: [{ type: "body", parameters: [{ type: "text", text: param(uno) }, { type: "text", text: param(dos) }] }] } });
 
   // a bot reply (just after the customer wrote: always inside the 24 h)
-  const responder = (to, m) => mandar(to, formato(typeof m === "string" ? { text: m } : m));
+  // with m.imagenes (https links, e.g. the menu photos) the photos go first, then the text
+  async function responder(to, m) {
+    m = typeof m === "string" ? { text: m } : m;
+    for (const link of m.imagenes || []) await mandar(to, { type: "image", image: { link } }).catch(e => log(`[meta] la imagen no salió a ${to}: ${e.message}`));
+    return mandar(to, formato(m));
+  }
 
   // a notice (owner, branch, or a customer whose last message may be old). aviso = { titulo, lineas } for the template
   async function enviar(to, body, aviso, media) {

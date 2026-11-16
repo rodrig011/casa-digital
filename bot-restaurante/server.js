@@ -209,7 +209,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (r.persona) persona(r.persona.motivo, r.persona.sucursal, key, sess.convo);
     if (r.reservacion) guardar(r.reservacion, key, sess.convo);
     store.setSession(key, sess);
-    return reply;
+    return r.fotos ? Object.assign(new String(reply), { fotos: r.fotos }) : reply;
   }
 
   // ---- pago con tarjeta por pasarela ----
@@ -366,7 +366,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
     if (ubic) text = textoUbic(ubic);
-    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [{ text: reply.slice(0, 1590) }];
+    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [...(reply.fotos ? [reply.fotos] : []), { text: String(reply).slice(0, 1590) }];
     const out = conversar(from, text, ubic);
     return Promise.all(out.mensajes.map(async m => ({ ...m, text: (out.pedido ? await conLink(m.text, out.pedido, base) : m.text).split(LINK).join("") })));
   }

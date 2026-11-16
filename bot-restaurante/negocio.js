@@ -377,6 +377,13 @@ function aplicarAjustes(N, a) {
   if (a.tiempoPreparacion != null) N.tiempoPreparacion = crudo.tiempoPreparacion = texto(a.tiempoPreparacion, 120);
   return ajustesDe(N);
 }
+// Fotos del menú (opcional, "menuImagenes": ["https://..."]): se mandan cuando el cliente pide el menú
+const menuImagenesDe = N => (Array.isArray(N.menuImagenes) ? N.menuImagenes : []).filter(u => /^https:\/\//.test(String(u))).slice(0, 4);
+// el mensaje con las fotos del menú y el link del menú en línea ("menuLink"), o null si el negocio no tiene
+const menuFotos = N => { const imagenes = menuImagenesDe(N), link = /^https:\/\//.test(String(N.menuLink || "")) ? N.menuLink : "";
+  return imagenes.length || link ? { imagenes, text: `📖 Este es el menú de *${N.nombre}*.${link ? `\nTambién lo puede ver aquí: ${link}` : ""}` } : null; };
+const pideMenu = text => /\b(menu|carta)\b|que tienen|que venden|que hay/.test(norm(text || ""));
+
 // lo que contesta el bot mientras el dueño tiene los pedidos en pausa (null = abierto)
 // derivar: temas que el dueño contesta en persona (por ejemplo, otra ciudad). El bot no contesta nada del tema:
 // avisa al dueño con el mensaje del cliente y le dice al cliente que el dueño le escribe.
@@ -392,4 +399,4 @@ function derivarPor(N, text) {
 }
 const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
 
-module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+module.exports = { menuImagenesDe, menuFotos, pideMenu, derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };

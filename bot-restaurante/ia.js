@@ -5,7 +5,7 @@
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -28,7 +28,7 @@ Lo que sabe del restaurante (no afirme nada más):
 ${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
 Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
-- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
+${menuFotos(N) ? "- Cuando el cliente pide el menú o la carta, el sistema ya le manda las fotos del menú y el link: no escriba el menú completo; pregúntele qué se le antoja y en qué sucursal lo recoge.\n" : ""}- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
 ${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
@@ -231,7 +231,7 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
         if (r.stop_reason === "pause_turn") continue;
         const reply = r.content.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
         if (!reply) throw new Error(`respuesta vacía (stop_reason ${r.stop_reason})`);
-        return { reply, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, reservacion: ctx.reservacion, usage: r.usage };
+        return { reply, fotos: pideMenu(text) ? menuFotos(negocio) : null, history: recortar(base.concat(nuevo).map(sinPensar)), pedido: ctx.pedido, persona: ctx.persona, reservacion: ctx.reservacion, usage: r.usage };
       }
       throw new Error(`más de ${MAX_VUELTAS} llamadas a la API en un mensaje`);
     } catch (e) {

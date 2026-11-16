@@ -49,6 +49,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .vacio{margin:auto;text-align:center;color:var(--suave);font-size:13px;max-width:220px;line-height:1.4}
 .m{max-width:86%;padding:7px 9px 5px;border-radius:10px;font-size:14px;line-height:1.38;box-shadow:0 1px .5px rgba(0,0,0,.08);white-space:normal;overflow-wrap:anywhere;animation:entra .22s cubic-bezier(.2,.8,.2,1)}
 .m.bot{align-self:flex-start;background:#fff;border-top-left-radius:3px}
+.m.img{padding:3px 3px 5px;width:240px}.m.img img{display:block;width:100%;height:auto;border-radius:8px;aspect-ratio:1072/1519;background:#EFEAE2}.m.img .h{padding-right:5px}
 .m.yo{align-self:flex-end;background:var(--yo);border-top-right-radius:3px}
 .m .h{display:block;text-align:right;font-size:10.5px;color:#8A857C;margin-top:2px}
 .m a{color:#0B6BCB;text-decoration:none;font-weight:600}
@@ -103,7 +104,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <body>
 <header class="top">
   <img data-logo alt="">
-  <div><h1>Loca Luna</h1><p>Demo del sistema: WhatsApp con IA, pedidos por sucursal y panel</p></div>
+  <div><h1>Loca Luna</h1><p>Demo del sistema: WhatsApp con IA, pedidos para recoger por sucursal y panel</p></div>
   <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="loca-luna-panel.html" target="panel-loca-luna">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="guia" id="guia"></div>
@@ -141,7 +142,7 @@ const CHATS = [
   { k: "dueno", nombre: "Avisos de pedidos", sub: "WhatsApp del dueño y de cada sucursal", tab: "Dueño", av: "D" },
 ];
 const PASOS = [
-  ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo a domicilio, de Las Hadas». O toque «Pedir a domicilio»."],
+  ["Cliente", "Escriba como cliente, por ejemplo «12 alitas búfalo para recoger en Las Hadas». O toque «Hacer un pedido»."],
   ["Dueño", "Toque «Dueño»: ahí le llega el pedido a usted y a la sucursal que le toca."],
   ["Panel", "Toque «Abrir el panel del dueño»: se abre en otra pestaña, conectado a esta demo. Entre con el correo y la contraseña, que ya están puestos. Vea las ventas por sucursal y, en Cocina, toque «Listo»: al cliente le llega el aviso por WhatsApp."],
 ];
@@ -209,7 +210,7 @@ async function conversarIA(tel, text, ubic = null) {
     sess.ia = r.history; sess.fallo = false; sesiones.set(tel, sess); pintarIA("on");
     if (r.pedido) guardar(r.pedido, tel);
     if (r.persona) guardar({ tipo: "persona", nombre: null, sucursal: r.persona.sucursal, motivo: r.persona.motivo }, tel);
-    return [{ text: r.reply }];
+    return [...(r.fotos ? [r.fotos] : []), { text: r.reply }];
   } catch (e) {
     if (e.pedido) guardar(e.pedido, tel);
     if (e.status === 429 || e.status === 503) iaViva = false;
@@ -393,6 +394,13 @@ function burbuja(k, de, texto) {
   const d = document.createElement("div"); d.className = "m " + de; d.innerHTML = `${formato(texto)}<span class="h">${hora()}</span>`;
   box.insertBefore(d, $("#e-" + k)); box.scrollTop = box.scrollHeight;
 }
+// a photo the bot sends (the menu pages): tap to open it full size
+function fotoBot(k, url) {
+  const box = $("#m-" + k), v = box.querySelector(".vacio"); if (v) v.remove();
+  const d = document.createElement("div"); d.className = "m bot img";
+  d.innerHTML = `<a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="Menú" loading="lazy"></a><span class="h">${hora()}</span>`;
+  box.insertBefore(d, $("#e-" + k)); d.querySelector("img").onload = () => box.scrollTop = box.scrollHeight; box.scrollTop = box.scrollHeight;
+}
 // a message that the bot sends to a phone on its own (avisos)
 function recibir(k, texto) {
   setTimeout(() => {
@@ -413,7 +421,7 @@ async function mandar(k, texto, foto = false, ubic = null) {
   try { out = await turno(k === "kevin" ? repTel : TEL[k], foto ? "📷 foto" : texto, foto, ubic); } catch (e) { out = [{ text: "Disculpe, hubo un problema. Intente otra vez." }]; console.error(e); }
   await new Promise(r => setTimeout(r, 350));
   $("#e-" + k).classList.remove("si");
-  for (const m of out) { burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
+  for (const m of out) { for (const u of m.imagenes || []) fotoBot(k, u); burbuja(k, "bot", m.text); if (m.buttons) BOTONES[k] = m.buttons; }
   chips(k); avanzar(); refrescarPanel();
 }
 function quienRep() {
@@ -455,7 +463,7 @@ function refrescarPanel() {
 // the guide follows what has happened
 function avanzar() {
   const ps = store.pedidos.filter(p => p.tipo === "pedido");
-  const dom = ps.find(p => p.entrega === "domicilio" || p.repartidor);
+  const dom = ps[0];
   const hechos = [!!dom, !!(dom && (vioDueno || !movil())), !!(dom && ["listo", "en_camino", "entregado"].includes(dom.estado))];
   const nuevo = hechos.findIndex(x => !x);
   const antes = paso;
