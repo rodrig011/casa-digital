@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /prueba.html
+Disallow: /prueba-ibm.html
+Disallow: /firma/
+
+Sitemap: https://clientiatech.com/sitemap.xml
