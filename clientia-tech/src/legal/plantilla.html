@@ -1,10 +1,12 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-HN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{{TITULO}} · Clientia Tech</title>
+<title>{{TITULO_PAGINA}}</title>
 <meta name="description" content="{{DESCRIPCION}}">
+<link rel="canonical" href="{{CANONICAL}}">
+{{CABEZA}}
 <meta name="theme-color" content="#0A1230">
 <link rel="icon" href="{{LOGO_FAVICON}}">
 <style>
@@ -47,6 +49,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.035em;line-height:1.02;text-wrap:balan
 .cuerpo ul,.cuerpo ol{padding-left:1.25em}
 .cuerpo li+li{margin-top:8px}
 .cuerpo .link,.cuerpo p a,.cuerpo li a{font-weight:600;text-decoration:underline;text-underline-offset:.2em;text-decoration-thickness:2px}
+.cuerpo p.cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:24px}.cuerpo p a.btn{text-decoration:none;font-weight:700}
 .cuerpo .tabla{margin-top:18px;overflow-x:auto}
 .cuerpo table{border-collapse:collapse;width:100%;font-size:var(--s-small)}
 .cuerpo th,.cuerpo td{text-align:left;vertical-align:top;padding:12px 14px;background:var(--paper)}
@@ -67,14 +70,14 @@ footer a:hover{color:var(--accent)}
   <a class="btn" href="{{WA}}" target="_blank" rel="noopener">WhatsApp</a>
 </header>
 <main class="doc">
-  <nav class="indice" aria-label="Documentos legales">{{INDICE}}</nav>
+  <nav class="indice" aria-label="{{INDICE_NOMBRE}}">{{INDICE}}</nav>
   <article class="cuerpo">
 {{CONTENIDO}}
   </article>
 </main>
 <footer>
   <span>© 2026 Clientia Tech · Rodrigo Herrera</span>
-  <nav aria-label="Legal">{{INDICE_PIE}}</nav>
+  <nav aria-label="Legal"><a href="pedidos-por-whatsapp-restaurantes.html">Pedidos por WhatsApp</a>{{INDICE_PIE}}</nav>
 </footer>
 </body>
 </html>

@@ -298,6 +298,7 @@ function preparar(n) {
   }
   const sids = new Set();
   for (const s of n.sucursales || []) { if (!s.id || !s.nombre) errores.push("sucursal sin id o nombre"); if (sids.has(s.id)) errores.push(`sucursal repetida: ${s.id}`); sids.add(s.id); }
+  for (const s of n.sucursales || []) try { horasDe(s); } catch (e) { errores.push(e.message); }
   for (const it of items) for (const x of it.sucursales || []) if (!sids.has(x)) errores.push(`${it.id}: la sucursal "${x}" no existe`);
   let cupos = null;
   try { cupos = prepararCupos(n.cupos); } catch (e) { errores.push(e.message); }
@@ -502,7 +503,64 @@ function revisarPedido(negocio, lineas, sucursalId, now) {
   if (enc.length && new Set(enc.map(([, it]) => it.encargo.fecha)).size > 1) return "Esos encargos son para fechas distintas: se piden por separado.";
   const vencido = enc.find(([, it]) => hoyHN(now) > it.encargo.hasta);
   if (vencido) return `Ya se cerraron los pedidos de ${vencido[1].nombre}.`;
+  // fuera del horario de esa sucursal no se toman pedidos para ahora (los apartados por cupos y los encargos son para otro día)
+  if (b && !negocio.cupos && !enc.length && !abierta(b, now)) { const t = abre(b, now); return `*${b.nombre}* está cerrada en este momento.${t ? ` Abre ${t}.` : ""}`; }
   return null;
+}
+
+// Horario que el bot hace cumplir, por sucursal (hora de Honduras, UTC-6 todo el año). Es opcional: sin "horas" la sucursal
+// atiende a cualquier hora, como antes ("horario" sigue siendo solo el texto que se le muestra al cliente).
+//   "horas": { "todos": "10:00-22:00", "viernes": "10:00-02:00", "domingo": "cerrado" }
+// "todos" vale para los días que no se escriben; un día sin horas (y sin "todos") está cerrado; "10:00-02:00" cierra de madrugada.
+const DIAS_KEY = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+function horasDe(s) {
+  if (!s || !s.horas || typeof s.horas !== "object") return null;
+  const H = Array(7).fill(null), mal = k => new Error(`${s.nombre || s.id}: horas de "${k}" mal escritas (ejemplo: "10:00-22:00" o "cerrado")`);
+  const leer = (k, v) => {
+    if (v == null || /^\s*(cerrado)?\s*$/i.test(String(v))) return null;
+    const m = String(v).match(/^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$/);
+    if (!m || +m[1] > 24 || +m[3] > 24 || +m[2] > 59 || +m[4] > 59) throw mal(k);
+    return [+m[1] * 60 + +m[2], +m[3] * 60 + +m[4]];
+  };
+  const todos = Object.keys(s.horas).find(k => norm(k) === "todos");
+  if (todos) H.fill(leer(todos, s.horas[todos]));
+  for (const k of Object.keys(s.horas)) {
+    if (k === todos) continue;
+    const i = DIAS_KEY.indexOf(norm(k));
+    if (i < 0) throw mal(k);
+    H[i] = leer(k, s.horas[k]);
+  }
+  return H;
+}
+const relojHN = now => { const l = new Date(new Date(now || Date.now()).getTime() - 6 * 3600e3); return { dia: l.getUTCDay(), m: l.getUTCHours() * 60 + l.getUTCMinutes() }; };
+const horaTxt = m => { const h = Math.floor(m / 60) % 24; return `${h % 12 || 12}:${String(m % 60).padStart(2, "0")} ${h < 12 ? "a. m." : "p. m."}`; };
+// ¿está abierta ahora? (sin "horas": siempre)
+function abierta(s, now) {
+  const H = horasDe(s);
+  if (!H) return true;
+  const { dia, m } = relojHN(now), hoy = H[dia], ayer = H[(dia + 6) % 7];
+  return !!((hoy && (hoy[1] > hoy[0] ? m >= hoy[0] && m < hoy[1] : m >= hoy[0])) || (ayer && ayer[1] <= ayer[0] && m < ayer[1]));
+}
+// "hoy a las 10:00 a. m.", "mañana a las…", "el sábado a las…" (null si no abre ningún día)
+function abre(s, now) {
+  const H = horasDe(s);
+  if (!H) return null;
+  const { dia, m } = relojHN(now);
+  for (let k = 0; k <= 7; k++) {
+    const d = (dia + k) % 7, h = H[d];
+    if (h && (k > 0 || m < h[0])) return `${k === 0 ? "hoy" : k === 1 ? "mañana" : "el " + DIAS_TXT[d]} a las ${horaTxt(h[0])}`;
+  }
+  return null;
+}
+// lo que contesta el bot fuera de horario: solo si TODAS las sucursales tienen "horas" y están cerradas (null = hay alguna abierta)
+function textoCerrado(N, now) {
+  if (!N.sucursales.every(s => horasDe(s) && !abierta(s, now))) return null;
+  const a = N.sucursales.map(s => [s, abre(s, now)]);
+  const cola = "Escríbanos a esa hora y con gusto le tomamos su pedido.";
+  if (a.length === 1) return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados.${a[0][1] ? ` Abrimos ${a[0][1]}. ${cola}` : ""}`;
+  const iguales = a.every(x => x[1] === a[0][1]);
+  if (iguales) return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados.${a[0][1] ? ` Abrimos ${a[0][1]}. ${cola}` : ""}`;
+  return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados. Abrimos:\n${a.map(([s, t]) => `• ${s.nombre}: ${t || "por confirmar"}`).join("\n")}\n\n${cola}`;
 }
 
 // extra: datos que no van en el repositorio público (NEGOCIO_PRIVADO en Render, JSON):
@@ -638,6 +696,13 @@ function aplicarAjustes(N, a) {
   if (a.tiempoPreparacion != null) N.tiempoPreparacion = crudo.tiempoPreparacion = texto(a.tiempoPreparacion, 120);
   return ajustesDe(N);
 }
+// Fotos del menú (opcional, "menuImagenes": ["https://..."]): se mandan cuando el cliente pide el menú
+const menuImagenesDe = N => (Array.isArray(N.menuImagenes) ? N.menuImagenes : []).filter(u => /^https:\/\//.test(String(u))).slice(0, 4);
+// el mensaje con las fotos del menú y el link del menú en línea ("menuLink"), o null si el negocio no tiene
+const menuFotos = N => { const imagenes = menuImagenesDe(N), link = /^https:\/\//.test(String(N.menuLink || "")) ? N.menuLink : "";
+  return imagenes.length || link ? { imagenes, text: `📖 Este es el menú de *${N.nombre}*.${link ? `\nTambién lo puede ver aquí: ${link}` : ""}` } : null; };
+const pideMenu = text => /\b(menu|carta)\b|que tienen|que venden|que hay/.test(norm(text || ""));
+
 // lo que contesta el bot mientras el dueño tiene los pedidos en pausa (null = abierto)
 // derivar: temas que el dueño contesta en persona (por ejemplo, otra ciudad). El bot no contesta nada del tema:
 // avisa al dueño con el mensaje del cliente y le dice al cliente que el dueño le escribe.
@@ -653,10 +718,11 @@ function derivarPor(N, text) {
 }
 const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
 
-module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+module.exports = { horasDe, abierta, abre, textoCerrado, menuImagenesDe, menuFotos, pideMenu, derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
 
 },"./engine":function(module,exports,require){// Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
+//   ctx.nombre = nombre con el que este número ya pidió antes: lo saluda por su nombre y no se lo vuelve a preguntar
 //   ctx.faltas = veces que este número no vino a recoger (server.js lo cuenta); decide si paga antes
 //
 // La idea: que ningún cliente se quede sin respuesta. El bot muestra el menú con precios, toma el
@@ -670,7 +736,7 @@ module.exports = { derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPaus
 // solo ofrece tandas con cupo (ctx.ocupados(fecha, tanda) = cupos ya apartados, server.js los cuenta) y, si está lleno,
 // anota al cliente en la lista de espera (lead con estado "en_espera").
 // Todo lo que dice del negocio sale de negocios/<cliente>.json (ver negocio.js).
-const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe } = require("./negocio");
+const { cuenta, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, norm, fechasCupos, cuposDe, topeDe, menuFotos } = require("./negocio");
 const { PIDE_UBICACION } = require("./repartos");
 
 const SALUDO = /^(hola|holi|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|menu principal|inicio|0)[\s!.,]*$/;
@@ -786,7 +852,15 @@ function createEngine(negocio) {
     return options.find(o => norm(o) === norm(text)) || options.find(o => t.length > 2 && norm(o).startsWith(t)) || null;
   }
 
+  // a customer who already ordered from this number (ctx.nombre, server.js looks it up): the bot does not ask the name again
+  const PIDE_NOMBRE = /\s*(?:Con gusto\. )?¿A nombre de quién (?:lo|la) (?:dejo|anoto|aparto)\?/;
   function handle(state, input, now, ctx = {}) {
+    const r = turno(state, input, now, ctx);
+    if (!ctx.nombre || !["nombre", "res_nombre"].includes(r.state.step) || (state && state.step === r.state.step)) return r;
+    const r2 = turno(r.state, ctx.nombre, now, ctx);
+    return { state: r2.state, messages: [...r.messages.map(m => ({ ...m, text: (m.text || "").replace(PIDE_NOMBRE, "").trim() })).filter(m => m.text), ...r2.messages] };
+  }
+  function turno(state, input, now, ctx = {}) {
     const s = state ? JSON.parse(JSON.stringify(state)) : fresh();
     const text = (input || "").toString();
     const t = norm(text);
@@ -905,7 +979,7 @@ function createEngine(negocio) {
 
     if (!state || SALUDO.test(t)) {
       reset(); go("inicio");
-      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
+      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola${ctx.nombre ? `, ${String(ctx.nombre).split(" ")[0]}` : ""}! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
       if (!(quiereDomicilio(t) || quiereMenu(t) || quierePedir(t) || quiereSucursal(t))) { menuInicio(); return done(); }
     }
 
@@ -918,7 +992,7 @@ function createEngine(negocio) {
         if (!o && PROPIO && quiereDomicilio(t)) { const l = leerPedido(text); if (l.encontrados.length || quierePedir(t)) { empezarPedido(l.encontrados, true); break; } }
         if (o === OP.domicilio || (!o && quiereDomicilio(t))) { reset(); go("post"); say({ text: domicilioTexto(), buttons: [PROPIO ? OP.domicilio : OP.pedido, OP.menu] }); break; }
         if (o === OP.sucursales || (!o && quiereSucursal(t))) { reset(); go("post"); say(sucursalesTexto()); say({ text: "¿Algo más?", buttons: [OP.pedido, OP.menu] }); break; }
-        if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); say({ text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
+        if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); const mf = menuFotos(N); say(mf ? { ...mf, buttons: [OP.pedido, "Volver al inicio"] } : { text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
         const leido = o ? { encontrados: [] } : leerPedido(text);
         if (o === OP.pedido || quierePedir(t) || leido.encontrados.length) { empezarPedido(leido.encontrados); break; }
         menuInicio("Disculpe, no le entendí bien. Puede tocar una opción o escribirme con sus palabras, por ejemplo «quiero 2 combos de 3 piezas».");
@@ -1088,7 +1162,7 @@ function createEngine(negocio) {
           break;
         }
         const cuando = d.encargo ? `🗓️ Para el ${d.dia}\n` : !CUP ? "" : unaTanda || CUP.porPedido ? `📅 ${mayus(d.dia)}\n` : `📅 ${mayus(d.dia)}, tanda de ${d.tanda} · ${cupTxt(d.cupos)} apartados\n`;
-        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
+        const donde = d.domicilio ? `🛵 A domicilio: ${d.direccion}\n${N.repartidores && N.repartidores.length ? "En un momento el repartidor le dice por aquí cuánto es el envío. Cuando lo acepte, su pedido pasa a cocina." : "El costo del envío se lo confirmamos por aquí."}${d.ubicacion || !(N.repartidores && N.repartidores.length) ? "" : "\n\n" + PIDE_UBICACION}` : CUP || d.encargo ? `📍 Recoge en *${b.nombre}*.` : `Recoge en *${b.nombre}*: ${d.hora.toLowerCase()}.`;
         if (requiereCobro(N, c.total, ctx.faltas || 0, { domicilio: !!d.domicilio, lineas: c.lineas })) {
           const monto = montoCobro(N, c.lineas);
           s.lead.estado = "por_pagar"; s.pago = { n, total: c.total }; if (monto < c.total) s.lead.anticipo = monto;

@@ -76,16 +76,55 @@ const LEGAL = [
   ["legal.html", "Aviso legal", "Aviso legal", "Titular de la página, leyes revisadas, registro de aceptaciones y derechos de las imágenes."],
 ];
 const plantilla = leer(aqui, "src", "legal", "plantilla.html").toString();
-for (const [archivo, titulo, corto, descripcion] of LEGAL) {
-  const enlaces = LEGAL.map(([a, , c]) => `<a href="${a}"${a === archivo ? ' aria-current="page"' : ""}>${c}</a>`).join("");
-  publicar(archivo, plantilla
-    .replace("{{CONTENIDO}}", () => leer(aqui, "src", "legal", archivo).toString())
-    .replace("{{TITULO}}", titulo)
-    .replace("{{DESCRIPCION}}", descripcion)
-    .replace("{{INDICE}}", () => enlaces)
-    .replace("{{INDICE_PIE}}", () => LEGAL.map(([a, , c]) => `<a href="${a}">${c}</a>`).join(""))
-    .replace("{{FONT}}", dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
-    .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
-    .replace("{{LOGO_FAVICON}}", dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml"))
-    .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;")));
+const SITIO = "https://clientiatech.com/";
+const favicon = dataUri(Buffer.from(fav.replace('viewBox="13 20 374 426"', 'viewBox="-30 -10 460 486"')), "image/svg+xml");
+// one page inside the shared shell (src/legal/plantilla.html): legal pages and the search landing page
+const pagina = ({ archivo, tituloPagina, descripcion, contenido, indice, indiceNombre, cabeza = "" }) => publicar(archivo, plantilla
+  .replace("{{CONTENIDO}}", () => contenido)
+  .replace("{{TITULO_PAGINA}}", tituloPagina)
+  .replace("{{DESCRIPCION}}", descripcion)
+  .replace("{{CANONICAL}}", SITIO + archivo)
+  .replace("{{CABEZA}}", () => cabeza)
+  .replace("{{INDICE_NOMBRE}}", indiceNombre)
+  .replace("{{INDICE}}", () => indice)
+  .replace("{{INDICE_PIE}}", () => LEGAL.map(([a, , c]) => `<a href="${a}">${c}</a>`).join(""))
+  .replace("{{FONT}}", dataUri(leer(aqui, "src", "fonts", "hanken-grotesk-latin.woff2"), "font/woff2"))
+  .replaceAll("{{LOGO}}", dataUri(logo, "image/svg+xml"))
+  .replace("{{LOGO_FAVICON}}", favicon)
+  .replaceAll("{{WA}}", WA.replaceAll("&", "&amp;"))
+  .replace(/\{\{IMG:([\w-]+)\}\}/g, (_, n) => dataUri(leer(aqui, "src", "img", n + ".webp"), "image/webp")));
+for (const [archivo, titulo, , descripcion] of LEGAL) pagina({
+  archivo, tituloPagina: `${titulo} · Clientia Tech`, descripcion,
+  contenido: leer(aqui, "src", "legal", archivo).toString(),
+  indiceNombre: "Documentos legales",
+  indice: LEGAL.map(([a, , c]) => `<a href="${a}"${a === archivo ? ' aria-current="page"' : ""}>${c}</a>`).join(""),
+});
+
+// landing page for people searching Google (clientiatech.com/pedidos-por-whatsapp-restaurantes.html).
+// The questions in the structured data are read from the page itself, so both always say the same.
+{
+  const archivo = "pedidos-por-whatsapp-restaurantes.html";
+  const contenido = leer(aqui, "src", archivo).toString();
+  const titulo = "Pedidos por WhatsApp para restaurantes en Honduras | Clientia Tech";
+  const descripcion = "Bot de WhatsApp para restaurantes: contesta a cualquier hora, toma el pedido y lo manda a la cocina. Con panel para el dueño. Tegucigalpa, San Pedro Sula y todo Honduras.";
+  const texto = h => h.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const faq = [...contenido.slice(contenido.indexOf('id="preguntas"')).matchAll(/<h3>(.*?)<\/h3>\s*<p>(.*?)<\/p>/gs)]
+    .map(([, q, a]) => ({ "@type": "Question", name: texto(q), acceptedAnswer: { "@type": "Answer", text: texto(a) } }));
+  const ld = { "@context": "https://schema.org", "@graph": [
+    { "@type": "Service", name: "Pedidos por WhatsApp para restaurantes", serviceType: "Bot de WhatsApp para restaurantes, pantalla de cocina y panel del dueño", url: SITIO + archivo,
+      provider: { "@type": "Organization", "@id": SITIO + "#org", name: "Clientia Tech", url: SITIO },
+      areaServed: [{ "@type": "Country", name: "Honduras" }, { "@type": "City", name: "Tegucigalpa" }, { "@type": "City", name: "San Pedro Sula" }] },
+    { "@type": "FAQPage", mainEntity: faq },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Clientia Tech", item: SITIO }, { "@type": "ListItem", position: 2, name: "Pedidos por WhatsApp para restaurantes", item: SITIO + archivo }] },
+  ] };
+  const og = [["og:type", "website"], ["og:url", SITIO + archivo], ["og:site_name", "Clientia Tech"], ["og:locale", "es_HN"], ["og:title", titulo], ["og:description", descripcion], ["og:image", SITIO + "og.png"], ["og:image:width", "1200"], ["og:image:height", "630"]]
+    .map(([p, c]) => `<meta property="${p}" content="${c}">`).join("\n");
+  pagina({
+    archivo, tituloPagina: titulo, descripcion, contenido,
+    indiceNombre: "En esta página",
+    indice: [...contenido.matchAll(/<h2 id="([\w-]+)">(.*?)<\/h2>/g)].map(([, id, t]) => `<a href="#${id}">${t}</a>`).join(""),
+    cabeza: `${og}\n<meta name="twitter:card" content="summary_large_image">\n<script type="application/ld+json">${JSON.stringify(ld)}</script>`,
+  });
 }
+// for search engines: both go next to the pages
+for (const f of ["robots.txt", "sitemap.xml"]) copyFileSync(join(aqui, f), join(aqui, "..", f));
