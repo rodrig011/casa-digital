@@ -62,8 +62,6 @@ const publicar = (nombre, h) => {
 publicar("index.html", armar("index.html"));
 // link preview image for WhatsApp/Facebook (clientiatech.com/og.png); made from src/og/og.html, see README
 copyFileSync(join(aqui, "og.png"), join(aqui, "..", "og.png"));
-// three.js (MIT) for the 3D mark in the contact section; loaded only when that section is near
-copyFileSync(join(aqui, "three.module.min.js"), join(aqui, "..", "three.module.min.js"));
 // test page made with the frontend-design skill (clientiatech.com/prueba.html); the home page stays as it is
 publicar("prueba.html", armar("prueba.html"));
 // second test page, sober corporate look in IBM Plex (clientiatech.com/prueba-ibm.html)

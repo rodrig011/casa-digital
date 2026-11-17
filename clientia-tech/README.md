@@ -32,7 +32,3 @@ Pasando la portada aparece abajo un botón fijo "Escríbame por WhatsApp". Se es
 ## Demostración con IA
 
 Lo que el visitante escribe va al servidor de demostración (Render gratis, se duerme). La primera respuesta espera hasta 75 s y avisa a los 7 s que tarda un poco; las siguientes esperan 30 s. Si falla, contesta el bot de menú.
-
-## El símbolo en 3D
-
-Después de la portada hay una escena que avanza con el scroll (`#cine`): la cámara empieza metida dentro del símbolo y se aleja mientras pasan tres frases. En la sección de contacto, el mismo símbolo gira despacio. Está hecho con three.js (`three.module.min.js`, licencia MIT en `LICENSE-three.txt`), que se carga solo cuando esa sección está cerca. Con "reducir movimiento", ahorro de datos o un teléfono con muy poca memoria no se carga nada y queda el símbolo plano de siempre. Para quitarlo: revertir el PR que lo agregó.
