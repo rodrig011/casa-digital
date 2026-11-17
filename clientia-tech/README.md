@@ -35,4 +35,4 @@ Lo que el visitante escribe va al servidor de demostración (Render gratis, se d
 
 ## El símbolo en 3D
 
-Después de la portada hay una escena que avanza con el scroll (`#cine`): la cámara empieza metida dentro del símbolo y se aleja mientras pasan tres frases. En la sección de contacto, el mismo símbolo gira despacio. Está hecho con three.js (`three.module.min.js`, licencia MIT en `LICENSE-three.txt`), que se carga solo cuando esa sección está cerca. Con "reducir movimiento", ahorro de datos o un teléfono con muy poca memoria no se carga nada y queda el símbolo plano de siempre. Para quitarlo: revertir el PR que lo agregó.
+En la sección de contacto, el símbolo de la marca gira despacio como un objeto sólido. Está hecho con three.js (`three.module.min.js`, licencia MIT en `LICENSE-three.txt`), que se carga solo cuando esa sección está cerca. Con "reducir movimiento", ahorro de datos o un teléfono con muy poca memoria no se carga nada y queda el símbolo plano de siempre. Para quitarlo: revertir el PR que lo agregó.
