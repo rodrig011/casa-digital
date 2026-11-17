@@ -37,6 +37,7 @@ function preparar(n) {
   }
   const sids = new Set();
   for (const s of n.sucursales || []) { if (!s.id || !s.nombre) errores.push("sucursal sin id o nombre"); if (sids.has(s.id)) errores.push(`sucursal repetida: ${s.id}`); sids.add(s.id); }
+  for (const s of n.sucursales || []) try { horasDe(s); } catch (e) { errores.push(e.message); }
   for (const it of items) for (const x of it.sucursales || []) if (!sids.has(x)) errores.push(`${it.id}: la sucursal "${x}" no existe`);
   let cupos = null;
   try { cupos = prepararCupos(n.cupos); } catch (e) { errores.push(e.message); }
@@ -241,7 +242,64 @@ function revisarPedido(negocio, lineas, sucursalId, now) {
   if (enc.length && new Set(enc.map(([, it]) => it.encargo.fecha)).size > 1) return "Esos encargos son para fechas distintas: se piden por separado.";
   const vencido = enc.find(([, it]) => hoyHN(now) > it.encargo.hasta);
   if (vencido) return `Ya se cerraron los pedidos de ${vencido[1].nombre}.`;
+  // fuera del horario de esa sucursal no se toman pedidos para ahora (los apartados por cupos y los encargos son para otro día)
+  if (b && !negocio.cupos && !enc.length && !abierta(b, now)) { const t = abre(b, now); return `*${b.nombre}* está cerrada en este momento.${t ? ` Abre ${t}.` : ""}`; }
   return null;
+}
+
+// Horario que el bot hace cumplir, por sucursal (hora de Honduras, UTC-6 todo el año). Es opcional: sin "horas" la sucursal
+// atiende a cualquier hora, como antes ("horario" sigue siendo solo el texto que se le muestra al cliente).
+//   "horas": { "todos": "10:00-22:00", "viernes": "10:00-02:00", "domingo": "cerrado" }
+// "todos" vale para los días que no se escriben; un día sin horas (y sin "todos") está cerrado; "10:00-02:00" cierra de madrugada.
+const DIAS_KEY = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+function horasDe(s) {
+  if (!s || !s.horas || typeof s.horas !== "object") return null;
+  const H = Array(7).fill(null), mal = k => new Error(`${s.nombre || s.id}: horas de "${k}" mal escritas (ejemplo: "10:00-22:00" o "cerrado")`);
+  const leer = (k, v) => {
+    if (v == null || /^\s*(cerrado)?\s*$/i.test(String(v))) return null;
+    const m = String(v).match(/^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$/);
+    if (!m || +m[1] > 24 || +m[3] > 24 || +m[2] > 59 || +m[4] > 59) throw mal(k);
+    return [+m[1] * 60 + +m[2], +m[3] * 60 + +m[4]];
+  };
+  const todos = Object.keys(s.horas).find(k => norm(k) === "todos");
+  if (todos) H.fill(leer(todos, s.horas[todos]));
+  for (const k of Object.keys(s.horas)) {
+    if (k === todos) continue;
+    const i = DIAS_KEY.indexOf(norm(k));
+    if (i < 0) throw mal(k);
+    H[i] = leer(k, s.horas[k]);
+  }
+  return H;
+}
+const relojHN = now => { const l = new Date(new Date(now || Date.now()).getTime() - 6 * 3600e3); return { dia: l.getUTCDay(), m: l.getUTCHours() * 60 + l.getUTCMinutes() }; };
+const horaTxt = m => { const h = Math.floor(m / 60) % 24; return `${h % 12 || 12}:${String(m % 60).padStart(2, "0")} ${h < 12 ? "a. m." : "p. m."}`; };
+// ¿está abierta ahora? (sin "horas": siempre)
+function abierta(s, now) {
+  const H = horasDe(s);
+  if (!H) return true;
+  const { dia, m } = relojHN(now), hoy = H[dia], ayer = H[(dia + 6) % 7];
+  return !!((hoy && (hoy[1] > hoy[0] ? m >= hoy[0] && m < hoy[1] : m >= hoy[0])) || (ayer && ayer[1] <= ayer[0] && m < ayer[1]));
+}
+// "hoy a las 10:00 a. m.", "mañana a las…", "el sábado a las…" (null si no abre ningún día)
+function abre(s, now) {
+  const H = horasDe(s);
+  if (!H) return null;
+  const { dia, m } = relojHN(now);
+  for (let k = 0; k <= 7; k++) {
+    const d = (dia + k) % 7, h = H[d];
+    if (h && (k > 0 || m < h[0])) return `${k === 0 ? "hoy" : k === 1 ? "mañana" : "el " + DIAS_TXT[d]} a las ${horaTxt(h[0])}`;
+  }
+  return null;
+}
+// lo que contesta el bot fuera de horario: solo si TODAS las sucursales tienen "horas" y están cerradas (null = hay alguna abierta)
+function textoCerrado(N, now) {
+  if (!N.sucursales.every(s => horasDe(s) && !abierta(s, now))) return null;
+  const a = N.sucursales.map(s => [s, abre(s, now)]);
+  const cola = "Escríbanos a esa hora y con gusto le tomamos su pedido.";
+  if (a.length === 1) return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados.${a[0][1] ? ` Abrimos ${a[0][1]}. ${cola}` : ""}`;
+  const iguales = a.every(x => x[1] === a[0][1]);
+  if (iguales) return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados.${a[0][1] ? ` Abrimos ${a[0][1]}. ${cola}` : ""}`;
+  return `Gracias por escribirle a *${N.nombre}*. En este momento estamos cerrados. Abrimos:\n${a.map(([s, t]) => `• ${s.nombre}: ${t || "por confirmar"}`).join("\n")}\n\n${cola}`;
 }
 
 // extra: datos que no van en el repositorio público (NEGOCIO_PRIVADO en Render, JSON):
@@ -399,4 +457,4 @@ function derivarPor(N, text) {
 }
 const textoPausa = N => N.pausa && N.pausa.activo ? (N.pausa.mensaje || `En este momento ${N.nombre} no está tomando pedidos por WhatsApp. Por favor escríbanos más tarde.`) : null;
 
-module.exports = { menuImagenesDe, menuFotos, pideMenu, derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };
+module.exports = { horasDe, abierta, abre, textoCerrado, menuImagenesDe, menuFotos, pideMenu, derivarPor, aplicarMenu, ajustesDe, aplicarAjustes, textoPausa, topeDe, menuDesdePanel, cargarNegocio, preparar, cuenta, fechasCupos, cuposDe, lineaTexto, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, vendeEn, mezclarPrivado, LINK, norm, L, dinero, MONEDAS };

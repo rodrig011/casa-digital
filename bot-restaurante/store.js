@@ -20,7 +20,7 @@ function createStore(dir, { ttlHours = 24, archivoDias = 30, now = () => Date.no
   const pedidos = f ? read(f.pedidos, []) : [];
   const sessions = new Map(Object.entries(f ? read(f.sessions, {}) : {}));
   // next order number: global, so two customers never get the same PED number
-  const resumen = { seq: 0, faltas: {}, ...(f ? read(f.resumen, {}) : {}) };
+  const resumen = { seq: 0, faltas: {}, nombres: {}, ...(f ? read(f.resumen, {}) : {}) };
   let seq = pedidos.reduce((m, l) => Math.max(m, +String(l.n || "").replace(/\D/g, "") || 0), Math.max(1000, resumen.seq));
   let timer = null, archivadoEl = 0;
 
@@ -38,6 +38,7 @@ function createStore(dir, { ttlHours = 24, archivoDias = 30, now = () => Date.no
       const file = path.join(f.archivo, `pedidos-${mes}.json`);
       write(file, read(file, []).concat(ls));
     }
+    for (const p of viejos) if (p.nombre && p.tipo !== "persona") resumen.nombres[tel(p.tel)] = p.nombre;   // returning customers keep their name
     for (const p of viejos) if (p.estado === "no_vino") resumen.faltas[tel(p.tel)] = (resumen.faltas[tel(p.tel)] || 0) + 1;
     resumen.seq = seq;
     write(f.resumen, resumen);
@@ -73,6 +74,8 @@ function createStore(dir, { ttlHours = 24, archivoDias = 30, now = () => Date.no
     getPedido: n => pedidos.find(p => p.n === n) || null,
     // "No vino" of this number, counting the archived months too
     faltas: t => (resumen.faltas[tel(t)] || 0) + pedidos.filter(p => p.estado === "no_vino" && tel(p.tel) === tel(t)).length,
+    // the name this number last ordered with (archived months too); null = new customer
+    nombre: t => (pedidos.findLast(p => p.nombre && p.tipo !== "persona" && tel(p.tel) === tel(t)) || {}).nombre || resumen.nombres[tel(t)] || null,
     updatePedido(n, cambios) { const p = pedidos.find(x => x.n === n); if (!p) return null; Object.assign(p, cambios); flush(); return p; },
     flush,
   };

@@ -246,3 +246,20 @@ En `cupos`: `"porPedido": true` (cada pedido aparta 1 lugar: tope de apartados),
 - **Ubicación en vivo** (`ubicacion.js`, necesita `PUBLIC_URL`): con SALGO, el repartidor recibe un link `/r/<código>` para compartir su ubicación con la página abierta, y el cliente recibe `/seguir/<código>` con el mapa. Son códigos al azar, distintos para cada uno. La ubicación solo vive en la memoria y deja de funcionar al entregar.
 - **Proveedores** (en `NEGOCIO_PRIVADO`, porque llevan teléfonos): `"proveedores": [{ "id", "nombre", "producto", "whatsapp", "sucursal", "nota" }]`. El panel muestra lo que ya está pedido para los próximos días y arma el mensaje de WhatsApp para cada proveedor.
 - **Panel**: tiene vista de Repartidores (equipo, quién está libre, envíos de hoy) y Pedidos en tablero o en lista con buscador.
+
+## 12. Horario por sucursal y clientes que regresan
+
+**Horario.** Cada sucursal puede llevar `horas` en el archivo del cliente (hora de Honduras). Es opcional: sin `horas` la sucursal atiende a cualquier hora, como antes (`horario` sigue siendo solo el texto que ve el cliente).
+
+```json
+"horas": { "todos": "10:00-22:00", "viernes": "10:00-02:00", "domingo": "cerrado" }
+```
+
+- `todos` vale para los días que no se escriben. `10:00-02:00` cierra de madrugada.
+- Si **todas** las sucursales están cerradas, el bot contesta solo que están cerrados y cuándo abren, y no toma nada.
+- Si una está cerrada y otra abierta, el bot sigue atendiendo, pero no deja confirmar un pedido para la cerrada y dice cuándo abre.
+- Los apartados por cupos y los encargos (son para otro día) no se bloquean por horario.
+- La pausa del panel sigue funcionando igual y manda sobre el horario.
+- Por ahora las horas se cambian en el archivo del cliente, no desde el panel.
+
+**Clientes que regresan.** El bot reconoce el número de WhatsApp: si ese número ya hizo un pedido o una reservación, lo saluda por su nombre ("¡Hola, Ana!") y ya no le pregunta a nombre de quién va el pedido. El nombre sale de los pedidos guardados (también de los archivados); no hay que configurar nada.
