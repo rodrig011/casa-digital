@@ -290,6 +290,16 @@ figcaption{font-size:var(--s-small);color:var(--soft);margin-top:12px}
 .contacto .btn{justify-self:start}
 @media (max-width:760px){.contacto{min-height:auto;padding-top:72px;gap:28px}.numero{font-size:13.4vw;margin:40px 0 0}.contacto .btn{width:100%}.contacto .pie{flex-direction:column;gap:10px}}
 
+/* ---------- the mark in 3D (contact) ---------- */
+.contacto{position:relative}
+.tres{position:absolute;right:var(--m);top:clamp(40px,5vw,72px);height:min(44svh,30vw);aspect-ratio:374/426;pointer-events:none}
+.tres img,.tres canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tres img{opacity:.9;transition:opacity .6s ease}
+.tres canvas{opacity:0;transition:opacity .6s ease}
+.tres.viva canvas{opacity:1}
+.tres.viva img{opacity:0}
+@media (max-width:760px){.tres{position:relative;right:auto;top:auto;height:auto;width:46vw;max-width:220px}}
+
 /* ---------- footer ---------- */
 footer{background:var(--bg);overflow:hidden;padding:56px var(--m) 0;position:relative}
 footer .leg{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--s-small);color:var(--soft);position:relative;z-index:1}
@@ -441,6 +451,7 @@ footer .nombre{font-weight:800;font-size:18.3vw;letter-spacing:-.06em;line-heigh
 </section>
 
 <section class="contacto" aria-label="Contacto">
+  <div class="tres" id="tres" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjEzIDIwIDM3NCA0MjYiPjxwYXRoIGZpbGw9IiNmZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTExMi4wLDQ0MC4xIEwxMDguMCw0NDAuNCBMMTA0LjAsNDM5LjIgTDk4LjYsNDM0LjAgTDk3LjIsNDMwLjAgTDk3LjEsNDI2LjAgTDEwMC41LDQxOS4wIEwyMzkuMSwyNjEuMCBMMzI5LjAsMTYwLjIgTDMzMC43LDE2Mi4wIEwzMzEuMCwxNzEuMCBMMzMwLjUsMzU3LjAgTDMyOS4wLDM1Ny43IEwzMjYuMCwzNTUuNCBMMjczLjAsMzAxLjkgTDI3MS4yLDI5OS4wIEwyNzIuNiwyOTYuMCBMMjg3LjAsMjgxLjMgTDI5MC4wLDI4Mi42IEwzMDMuMCwyOTUuMyBMMzA1LjEsMjk1LjAgTDMwNS43LDI0MS4wIEwzMDUuMywyMjkuMCBMMzA0LjAsMjI3LjIgTDI5My4wLDIzOC4wIEwyNDAuMCwyOTguMyBMMjM4LjcsMzAxLjAgTDI0MC4wLDMwMy40IEwyNjEuMCwzMjQuNyBMMzEwLjgsMzc1LjAgTDMyMC4wLDM4My4zIEwzMjkuMCwzODYuNSBMMzM5LjAsMzg2LjMgTDM0Ni4wLDM4My4wIEwzNTIuMCwzNzUuOSBMMzU0LjcsMzcwLjAgTDM1NS42LDM2My4wIEwzNTUuNSwxMTIuMCBMMzU1LjMsOTcuMCBMMzU0LjAsOTQuMyBMMzUxLjAsOTYuMyBMMzM4LjAsMTExLjAgTDgxLjEsNDA0LjAgTDc4LjAsNDA2LjMgTDc0LjAsNDA3LjcgTDY3LjAsNDA3LjIgTDYxLjMsNDAzLjAgTDU5LjEsMzk2LjAgTDU5LjgsMzkxLjAgTDYyLjksMzg2LjAgTDM0Ny40LDYyLjAgTDM1MS42LDU2LjAgTDM1MC4wLDU1LjAgTDM0My4wLDU1LjkgTDYyLjAsOTkuNCBMNTUuMCwxMDEuNCBMNTAuMCwxMDUuMCBMNDUuNywxMTEuMCBMNDQuMCwxMTcuMCBMNDQuNywxMjUuMCBMNDcuOSwxMzEuMCBMNTQuMCwxMzcuMSBMMTAwLjAsMTc1LjYgTDEwNi43LDE4MS4wIEwxMDkuMCwxODEuNSBMMTExLjMsMTgwLjAgTDEyMi4wLDE2Ny44IEwxMjMuNCwxNjQuMCBMNzguNSwxMjYuMCBMNzcuMCwxMjQuMCBMNzguMCwxMjIuNCBMMjgzLjAsOTAuNSBMMjg3LjAsOTAuNSBMMjg3LjgsOTIuMCBMNDYuMCwzNjguMCBMNDEuMCwzNzIuNiBMMzUuMCwzNzQuMiBMMjkuMCwzNzMuMSBMMjMuNywzNjguMCBMMjEuOSwzNjEuMCBMMjIuOCwzNTcuMCBMMjQuOCwzNTQuMCBMMjE3LjAsMTM1LjAgTDIyMi4xLDEyOC4wIEwyMjAuMCwxMjYuNyBMMjExLjAsMTI3LjkgTDE1NC4wLDEzNi43IEwxMzguMywxNDAuMCBMMTM3LjksMTQxLjAgTDEzOS4yLDE0My4wIEwxNTguNywxNjAuMCBMMTU5LjUsMTYyLjAgTDE1OC43LDE2NC4wIEw0Mi4wLDI5Ny41IEwzNi4wLDMwMS41IEwyOS4wLDMwMi4yIEwyNC4wLDI5OS45IEwyMC4zLDI5NS4wIEwxOS4xLDI4OS4wIEwyMS4wLDI4My4wIEw4NC4xLDIxMS4wIEw4OS45LDIwNC4wIEw5MC41LDIwMi4wIEw4OC4yLDE5OS4wIEwzNC4yLDE1NC4wIEwyNS44LDE0NC4wIEwyMC42LDEzMy4wIEwxOC42LDEyMC4wIEwyMC45LDEwNS4wIEwyNS42LDk1LjAgTDMxLjAsODguMSBMMzkuMyw4MS4wIEw0Ny4wLDc2LjggTDU1LjAsNzQuNSBMMzYzLjAsMjYuNyBMMzY5LjAsMjYuNiBMMzc0LjAsMjguNSBMMzc4LjYsMzMuMCBMMzgwLjUsNDAuMCBMMzgwLjcsMzY0LjAgTDM3OC40LDM4MC4wIEwzNzIuNywzOTIuMCBMMzY4LjAsMzk4LjIgTDM2MS4yLDQwNC4wIEwzNTQuMCw0MDguNCBMMzQ3LjAsNDExLjIgTDMzOS4wLDQxMi40IEwzMjcuMCw0MTIuNSBMMzIwLjAsNDExLjIgTDMxMi4wLDQwOC4yIEwzMDYuMCw0MDQuOCBMMzAxLjAsNDAwLjYgTDIyNC4wLDMyMy4yIEwyMjEuMCwzMjEuNSBMMjEzLjksMzI4LjAgTDEyMC4yLDQzNS4wIEwxMTYuMCw0MzguNSBMMTEyLjAsNDQwLjFaIi8+PC9zdmc+" alt="" width="374" height="426" loading="lazy"></div>
   <p class="q rv">Escríbame el nombre de su negocio y le cuento cómo quedaría con su menú.</p>
   <a class="numero rv" href="https://wa.me/17655434251?text=Hola%20Rodrigo%2C%20vi%20la%20p%C3%A1gina%20de%20Clientia%20Tech.%20Mi%20negocio%20es%3A%20" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp al +1 765 543 4251">+1 765 543 4251</a>
   <a class="btn rv" href="https://wa.me/17655434251?text=Hola%20Rodrigo%2C%20vi%20la%20p%C3%A1gina%20de%20Clientia%20Tech.%20Mi%20negocio%20es%3A%20" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.2-.3Z"/></svg>Escribir por WhatsApp</a>
@@ -2025,6 +2036,60 @@ return{lista:()=>!apagada,despierta:()=>lista,preguntar}})();
   et.forEach((b, k) => b.addEventListener("click", () => paso(k)));
   paso(0);
 })();
+</script>
+<script type="module">
+// The brand mark as a solid object (three.js, MIT). Loads only when the contact section is near,
+// and never on reduced motion, data saver or very small phones: there the flat mark stays.
+const caja = document.getElementById("tres");
+const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pobre = (navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory < 2);
+if (caja && !quieto && !pobre && "IntersectionObserver" in window) {
+  const cerca = new IntersectionObserver(es => { if (es[0].isIntersecting) { cerca.disconnect(); armar(); } }, { rootMargin: "900px 0px" });
+  cerca.observe(caja);
+}
+async function armar() {
+  let T, r;
+  const lienzo = document.createElement("canvas");
+  try {
+    T = await import("./three.module.min.js");
+    r = new T.WebGLRenderer({ canvas: lienzo, alpha: true, antialias: true, powerPreference: "low-power" });
+  } catch (e) { return; }
+  const D = "M112.0,440.1 L108.0,440.4 L104.0,439.2 L98.6,434.0 L97.2,430.0 L97.1,426.0 L100.5,419.0 L239.1,261.0 L329.0,160.2 L330.7,162.0 L331.0,171.0 L330.5,357.0 L329.0,357.7 L326.0,355.4 L273.0,301.9 L271.2,299.0 L272.6,296.0 L287.0,281.3 L290.0,282.6 L303.0,295.3 L305.1,295.0 L305.7,241.0 L305.3,229.0 L304.0,227.2 L293.0,238.0 L240.0,298.3 L238.7,301.0 L240.0,303.4 L261.0,324.7 L310.8,375.0 L320.0,383.3 L329.0,386.5 L339.0,386.3 L346.0,383.0 L352.0,375.9 L354.7,370.0 L355.6,363.0 L355.5,112.0 L355.3,97.0 L354.0,94.3 L351.0,96.3 L338.0,111.0 L81.1,404.0 L78.0,406.3 L74.0,407.7 L67.0,407.2 L61.3,403.0 L59.1,396.0 L59.8,391.0 L62.9,386.0 L347.4,62.0 L351.6,56.0 L350.0,55.0 L343.0,55.9 L62.0,99.4 L55.0,101.4 L50.0,105.0 L45.7,111.0 L44.0,117.0 L44.7,125.0 L47.9,131.0 L54.0,137.1 L100.0,175.6 L106.7,181.0 L109.0,181.5 L111.3,180.0 L122.0,167.8 L123.4,164.0 L78.5,126.0 L77.0,124.0 L78.0,122.4 L283.0,90.5 L287.0,90.5 L287.8,92.0 L46.0,368.0 L41.0,372.6 L35.0,374.2 L29.0,373.1 L23.7,368.0 L21.9,361.0 L22.8,357.0 L24.8,354.0 L217.0,135.0 L222.1,128.0 L220.0,126.7 L211.0,127.9 L154.0,136.7 L138.3,140.0 L137.9,141.0 L139.2,143.0 L158.7,160.0 L159.5,162.0 L158.7,164.0 L42.0,297.5 L36.0,301.5 L29.0,302.2 L24.0,299.9 L20.3,295.0 L19.1,289.0 L21.0,283.0 L84.1,211.0 L89.9,204.0 L90.5,202.0 L88.2,199.0 L34.2,154.0 L25.8,144.0 L20.6,133.0 L18.6,120.0 L20.9,105.0 L25.6,95.0 L31.0,88.1 L39.3,81.0 L47.0,76.8 L55.0,74.5 L363.0,26.7 L369.0,26.6 L374.0,28.5 L378.6,33.0 L380.5,40.0 L380.7,364.0 L378.4,380.0 L372.7,392.0 L368.0,398.2 L361.2,404.0 L354.0,408.4 L347.0,411.2 L339.0,412.4 L327.0,412.5 L320.0,411.2 L312.0,408.2 L306.0,404.8 L301.0,400.6 L224.0,323.2 L221.0,321.5 L213.9,328.0 L120.2,435.0 L116.0,438.5 L112.0,440.1Z";
+  const sp = new T.ShapePath();
+  for (const m of D.matchAll(/([ML])\s*(-?[\d.]+),(-?[\d.]+)/g)) sp[m[1] === "M" ? "moveTo" : "lineTo"](+m[2] - 200, 233 - m[3]);
+  const geo = new T.ExtrudeGeometry(sp.toShapes(false), { depth: 46, bevelEnabled: true, bevelThickness: 5, bevelSize: 3.5, bevelSegments: 4, curveSegments: 1 });
+  geo.translate(0, 0, -23);
+  const malla = new T.Mesh(geo, new T.MeshStandardMaterial({ color: 0xF4F6FA, roughness: .38, metalness: .12 }));
+  const escena = new T.Scene();
+  escena.add(malla);
+  escena.add(new T.HemisphereLight(0xDCE5FF, 0x0A1230, 1.1));
+  const llave = new T.DirectionalLight(0xffffff, 2.6); llave.position.set(-260, 320, 520); escena.add(llave);
+  const borde = new T.DirectionalLight(0x1F5BFF, 3.2); borde.position.set(420, -160, -260); escena.add(borde);
+  const cam = new T.PerspectiveCamera(26, 374 / 426, 10, 4000);
+  cam.position.set(0, 0, 1080);
+  r.setPixelRatio(Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.5 : 2));
+  const medir = () => { const w = caja.clientWidth, h = caja.clientHeight; if (w && h) { r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } };
+  medir();
+  new ResizeObserver(medir).observe(caja);
+  caja.appendChild(lienzo);
+  let px = 0, py = 0, ax = 0, ay = 0, visible = false, raf = 0, t0 = performance.now();
+  if (matchMedia("(hover:hover) and (pointer:fine)").matches) addEventListener("pointermove", e => { px = e.clientX / innerWidth - .5; py = e.clientY / innerHeight - .5; }, { passive: true });
+  const cuadro = now => {
+    raf = 0;
+    if (!visible || document.hidden) return;
+    const t = (now - t0) / 1000;
+    ax += (px - ax) * .06; ay += (py - ay) * .06;
+    malla.rotation.y = Math.sin(t * .45) * .62 + ax * .5;
+    malla.rotation.x = Math.sin(t * .31) * .1 + ay * .35;
+    r.render(escena, cam);
+    caja.classList.add("viva");
+    raf = requestAnimationFrame(cuadro);
+  };
+  const seguir = () => { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(cuadro); };
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; seguir(); }).observe(caja);
+  document.addEventListener("visibilitychange", seguir);
+  lienzo.addEventListener("webglcontextlost", e => { e.preventDefault(); caja.classList.remove("viva"); visible = false; });
+}
 </script>
 </body>
 </html>
