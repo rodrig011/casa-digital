@@ -24,7 +24,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const twilio = require("twilio");
-const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa, derivarPor } = require("./negocio");
+const { cargarNegocio, LINK, fechasCupos, norm, aplicarMenu, menuDesdePanel, ajustesDe, aplicarAjustes, textoPausa, derivarPor, textoCerrado } = require("./negocio");
 const { createPasarela } = require("./pagos");
 const { createEngine, toText } = require("./engine");
 const { createStore } = require("./store");
@@ -169,7 +169,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function conversar(key, text, ubic = null) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     if (sess.state) sess.state.seq = store.seq;    // one numbering for all customers
-    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key), ubic });
+    const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key), ubic, nombre: store.nombre(key) });
     const out = r.messages.map(toText).filter(Boolean);
     out.mensajes = r.messages.filter(m => m.text);
     sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
@@ -186,7 +186,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), ubic });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), ubic, nombre: store.nombre(key) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-16);
@@ -365,6 +365,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (esNegocio(from) && (reply = aprobar(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
+    // outside every branch's hours (sucursales[].horas, Honduras time): the bot says when they open and takes nothing
+    const cerrado = !esNegocio(from) && textoCerrado(negocio, now());
+    if (cerrado) return [{ text: cerrado }];
     if (ubic) text = textoUbic(ubic);
     if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [...(reply.fotos ? [reply.fotos] : []), { text: String(reply).slice(0, 1590) }];
     const out = conversar(from, text, ubic);

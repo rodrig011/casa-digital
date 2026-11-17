@@ -1,5 +1,6 @@
 // Bot de WhatsApp para restaurantes (motor de conversación con menú de opciones).
 // createEngine(negocio).handle(state, text, now, ctx?) -> { state, messages: [{ text, buttons? }] }
+//   ctx.nombre = nombre con el que este número ya pidió antes: lo saluda por su nombre y no se lo vuelve a preguntar
 //   ctx.faltas = veces que este número no vino a recoger (server.js lo cuenta); decide si paga antes
 //
 // La idea: que ningún cliente se quede sin respuesta. El bot muestra el menú con precios, toma el
@@ -129,7 +130,15 @@ function createEngine(negocio) {
     return options.find(o => norm(o) === norm(text)) || options.find(o => t.length > 2 && norm(o).startsWith(t)) || null;
   }
 
+  // a customer who already ordered from this number (ctx.nombre, server.js looks it up): the bot does not ask the name again
+  const PIDE_NOMBRE = /\s*(?:Con gusto\. )?¿A nombre de quién (?:lo|la) (?:dejo|anoto|aparto)\?/;
   function handle(state, input, now, ctx = {}) {
+    const r = turno(state, input, now, ctx);
+    if (!ctx.nombre || !["nombre", "res_nombre"].includes(r.state.step) || (state && state.step === r.state.step)) return r;
+    const r2 = turno(r.state, ctx.nombre, now, ctx);
+    return { state: r2.state, messages: [...r.messages.map(m => ({ ...m, text: (m.text || "").replace(PIDE_NOMBRE, "").trim() })).filter(m => m.text), ...r2.messages] };
+  }
+  function turno(state, input, now, ctx = {}) {
     const s = state ? JSON.parse(JSON.stringify(state)) : fresh();
     const text = (input || "").toString();
     const t = norm(text);
@@ -248,7 +257,7 @@ function createEngine(negocio) {
 
     if (!state || SALUDO.test(t)) {
       reset(); go("inicio");
-      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
+      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola${ctx.nombre ? `, ${String(ctx.nombre).split(" ")[0]}` : ""}! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
       if (!(quiereDomicilio(t) || quiereMenu(t) || quierePedir(t) || quiereSucursal(t))) { menuInicio(); return done(); }
     }
 

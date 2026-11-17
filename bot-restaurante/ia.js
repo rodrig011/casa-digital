@@ -5,7 +5,7 @@
 //   const ia = createIA({ negocio, apiKey, model });          // o { client } para pruebas sin internet
 //   const r = await ia.turn(history, texto, now, { numero: () => "PED-1001", faltas: 0, ocupados: (fecha, tanda) => 0 });
 //   r = { reply, history, pedido?, persona?, reservacion? }
-const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu, norm } = require("./negocio");
+const { cuenta, requiereCobro, textoCobro, montoCobro, revisarPedido, encargoDe, fechasCupos, cuposDe, topeDe, menuFotos, pideMenu, norm, horasDe, abierta, abre } = require("./negocio");
 
 const MODELO = "claude-haiku-5-5";
 const MAX_TURNOS = 20;          // mensajes del cliente que se guardan en la sesión
@@ -113,7 +113,7 @@ function ejecutar(N, name, input, ctx) {
       const dias = fechasCupos(N, ctx.now).map(f => ({ fecha: f.fecha, dia: f.etiqueta, tandas: N.cupos.tandas.map(t => ({ tanda: t, libres: Math.max(0, libre(N, ctx, f.fecha, t, input.sucursal)) })) }));
       return { dias, ...(dias.length ? {} : { nota: "No hay días abiertos para pedir: ofrezca la lista de espera." }) };
     }
-    case "sucursales": return { sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", telefono: s.telefono || "", horario: s.horario || "Por confirmar: una persona de la sucursal lo confirma.", ...(s.mapa ? { mapa: s.mapa } : {}) })) };
+    case "sucursales": return { sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", telefono: s.telefono || "", horario: s.horario || "Por confirmar: una persona de la sucursal lo confirma.", ...(horasDe(s) ? { abierta_ahora: abierta(s, ctx.now), ...(abierta(s, ctx.now) ? {} : { abre: abre(s, ctx.now) || "por confirmar", nota: "Cerrada ahora: no se le toman pedidos para esta sucursal hasta que abra." }) } : {}), ...(s.mapa ? { mapa: s.mapa } : {}) })) };
     case "crear_pedido": {
       if (ctx.pedido) return { error: "Ya se creó el pedido en este mensaje.", numero: ctx.pedido.n };
       const malos = (input.productos || []).filter(p => !N.items.some(i => i.id === p.id)).map(p => p.id);
@@ -127,7 +127,7 @@ function ejecutar(N, name, input, ctx) {
       // a repeated "sí, confirmo": the same order from this number a few minutes ago is not created twice
       const dup = ctx.duplicado && ctx.duplicado({ resumen: c.lineas.map(l => `${l.cantidad} × ${l.nombre}`).join(" · "), total: c.total, sucursal: s.nombre });
       if (dup) return { ok: true, ya_existia: true, numero: dup.n, total: N.L(dup.total), nota: "Este pedido ya estaba creado con ese número: no se creó otro. No le cobre ni le confirme dos veces." };
-      const nombre = String(input.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
+      const nombre = String(input.nombre || ctx.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
       let cup = null;
       if (enc) cup = { encargo: true, dia: enc.etiqueta, diaFecha: enc.fecha };
@@ -199,11 +199,11 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   }
   model = model || MODELO;
 
-  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, ubic = null } = {}) {
+  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, ubic = null, nombre = null } = {}) {
     const SYSTEM = system(negocio), TOOLS = tools(negocio);   // cada vez: el dueño puede cambiar el menú desde el panel
-    const ctx = { numero, faltas, ocupados, duplicado, ubic, now, pedido: null, persona: null, reservacion: null };
+    const ctx = { numero, faltas, ocupados, duplicado, ubic, nombre, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
-    const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]` }] }];
+    const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]${nombre ? `\n[Cliente que ya pidió antes desde este número: ${String(nombre).slice(0, 60)}. Salúdelo por su nombre, no se lo vuelva a preguntar y use ese nombre en el pedido.]` : ""}` }] }];
     // "¿me pasa el menú?": the menu photos and link answer it; Claude is not asked (it would retype the menu)
     const mf = menuFotos(negocio);
     if (mf && pideMenu(text) && !/\d/.test(String(text)) && norm(text).split(" ").length <= 12) {

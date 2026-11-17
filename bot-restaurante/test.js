@@ -405,7 +405,7 @@ test("webhook: pedido por pagar, comprobante al dueño, pago recibido a cocina, 
     assert.equal(st.pedidos[0].estado, "no_vino");
 
     // the same number orders something small: now it pays first, and the owner is warned
-    for (const Body of ["hola", "2", "Centro", "1", "Confirmar pedido", "Lo antes posible", "Ana"]) r = await post(ctx, "/whatsapp", { From: cliente, Body, NumMedia: "0" });
+    for (const Body of ["hola", "2", "Centro", "1", "Confirmar pedido", "Lo antes posible"]) r = await post(ctx, "/whatsapp", { From: cliente, Body, NumMedia: "0" });
     await ctx.app.locals.idle();
     assert.equal(st.pedidos[1].estado, "por_pagar"); assert.equal(st.pedidos[1].faltas, 1);
     assert.match(ctx.sent.at(-1).body, /no vino a recoger 1 vez/);
@@ -1509,5 +1509,96 @@ test("panel real sin WhatsApp todavía: arranca, se entra con la contraseña, av
     assert.match(html, /WhatsApp todavía no está conectado/);
     const r = await fetch(ctx.base + "/api/ajustes", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie, Origin: ctx.base }, body: JSON.stringify({ ...neg.ajustes, cupos: { ...neg.ajustes.cupos, porTanda: 45 } }) });
     assert.equal(r.status, 200); assert.equal((await r.json()).ajustes.cupos.porTanda, 45);
+  } finally { ctx.srv.close(); }
+});
+
+// ---------- cliente que regresa: el bot lo saluda por su nombre y no se lo vuelve a pedir ----------
+test("cliente que regresa: lo saluda por su nombre y no le vuelve a preguntar el nombre", () => {
+  const ctx = { nombre: "Ana López" };
+  let r = E.handle(null, "hola", NOW, ctx);
+  assert.match(r.messages.map(toText).join("\n"), /¡Hola, Ana! 👋/);
+  for (const m of ["2", "Centro", "1 x2", "Confirmar pedido"]) r = E.handle(r.state, m, NOW, ctx);
+  r = E.handle(r.state, "Lo antes posible", NOW, ctx);
+  const fin = r.messages.map(toText).join("\n");
+  assert.doesNotMatch(fin, /A nombre de quién/);
+  assert.match(fin, /Listo, Ana\./);
+  assert.equal(r.state.lead.nombre, "Ana López");
+  // un cliente nuevo sigue igual: saludo sin nombre y se le pregunta
+  let n = E.handle(null, "hola", NOW);
+  assert.match(n.messages.map(toText).join("\n"), /¡Hola! 👋/);
+  for (const m of ["2", "Centro", "1 x2", "Confirmar pedido", "Lo antes posible"]) n = E.handle(n.state, m, NOW);
+  assert.match(n.messages.map(toText).join("\n"), /A nombre de quién/);
+  assert.equal(n.state.lead, undefined);
+});
+
+test("cliente que regresa: el servidor recuerda el nombre por el número (también de pedidos archivados)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nombres-"));
+  let reloj = new Date("2026-10-01T12:00:00-06:00").getTime();
+  const st = createStore(dir, { now: () => reloj });
+  assert.equal(st.nombre("whatsapp:+50499990001"), null);
+  st.addPedido({ tipo: "pedido", n: "PED-1", nombre: "Carlos Mejía", tel: "+50499990001", fecha: new Date(reloj).toISOString(), estado: "entregado" });
+  st.addPedido({ tipo: "persona", n: "AS-2", nombre: null, tel: "+50499990001", fecha: new Date(reloj).toISOString(), estado: "nuevo" });
+  assert.equal(st.nombre("whatsapp:+50499990001"), "Carlos Mejía");
+  assert.equal(st.nombre("whatsapp:+50499990002"), null);
+});
+
+// ---------- horario por sucursal (hora de Honduras) ----------
+test("horario: fuera de horas el bot dice que está cerrado y cuándo abre; sin «horas» todo sigue igual", () => {
+  const { abierta, abre, textoCerrado, revisarPedido } = require("./negocio");
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8"));
+  const con = horas => preparar({ ...base, sucursales: base.sucursales.map((s, i) => ({ ...s, horas: horas[i] })) });
+  const H = con([{ todos: "10:00-22:00", domingo: "cerrado" }, { todos: "10:00-22:00", viernes: "17:00-02:00", "sábado": "17:00-02:00" }]);
+  const [centro, norte] = H.sucursales;
+  const a = (d, h) => new Date(`2026-10-${d}T${h}:00-06:00`);   // 17 oct 2026 = sábado
+  assert.equal(abierta(centro, a(17, "12:00")), true);
+  assert.equal(abierta(centro, a(17, "09:59")), false);
+  assert.equal(abierta(centro, a(17, "22:00")), false);
+  assert.equal(abierta(centro, a(18, "12:00")), false, "domingo cerrado");
+  assert.equal(abierta(norte, a(18, "01:30")), true, "el sábado cierra a las 2 de la madrugada del domingo");
+  assert.equal(abierta(norte, a(18, "02:00")), false);
+  assert.equal(abre(centro, a(17, "08:00")), "hoy a las 10:00 a. m.");
+  assert.equal(abre(centro, a(17, "23:00")), "el lunes a las 10:00 a. m.");
+  assert.equal(abre(centro, a(16, "23:00")), "mañana a las 10:00 a. m.");
+  // hora de Honduras aunque el servidor esté en UTC: 03:00Z del sábado = viernes 9 p. m.
+  assert.equal(abierta(centro, new Date("2026-10-17T03:00:00Z")), true);
+  // todas cerradas: un solo mensaje, sin tomar nada
+  assert.equal(textoCerrado(H, a(17, "12:00")), null);
+  assert.equal(textoCerrado(H, a(17, "23:00")), null, "Zona Norte sigue abierta");
+  assert.match(textoCerrado(H, a(19, "08:00")), /estamos cerrados\. Abrimos hoy a las 10:00 a\. m\./);
+  assert.match(textoCerrado(H, a(18, "03:00")), /Centro: mañana a las 10:00 a\. m\.\n• Zona Norte: hoy a las 10:00 a\. m\./);
+  // una sucursal cerrada y otra abierta: el pedido para la cerrada no pasa
+  assert.match(revisarPedido(H, [{ id: "c3", cantidad: 1 }], "centro", a(17, "23:00")), /\*Centro\* está cerrada en este momento\. Abre el lunes a las 10:00 a\. m\./);
+  assert.equal(revisarPedido(H, [{ id: "c3", cantidad: 1 }], "norte", a(17, "23:00")), null);
+  // sin «horas»: nada cambia (ejemplo y Con Sabor a Pueblo)
+  assert.equal(textoCerrado(N, a(18, "03:00")), null);
+  const C = cargarNegocio("negocios/con-sabor-a-pueblo.json");
+  assert.equal(textoCerrado(C, a(18, "03:00")), null);
+  assert.ok(C.sucursales.every(s => abierta(s, a(18, "03:00"))));
+  assert.throws(() => con([{ lunes: "10-22" }, {}]), /horas de "lunes" mal escritas/);
+});
+
+test("horario: por WhatsApp contesta cerrado y no toma el pedido; la pausa del panel sigue mandando", async () => {
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8"));
+  const neg = preparar({ ...base, sucursales: base.sucursales.map(s => ({ ...s, horas: { todos: "10:00-22:00" } })) });
+  let ahora = new Date("2026-10-17T23:30:00-06:00");
+  const ctx = await montar(null, {}, { negocio: neg, now: () => ahora });
+  try {
+    const de = { From: "whatsapp:+50499990009" };
+    const cerrado = textoDe((await post(ctx, "/whatsapp", { ...de, Body: "quiero 2 combos de 3 piezas" })).xml);
+    assert.match(cerrado, /estamos cerrados\. Abrimos mañana a las 10:00 a\. m\./);
+    assert.equal(ctx.app.locals.store.pedidos.length, 0);
+    ahora = new Date("2026-10-18T12:00:00-06:00");
+    assert.match(textoDe((await post(ctx, "/whatsapp", { ...de, Body: "hola" })).xml), /¿En qué le ayudo\?/);
+    // el servidor recuerda al cliente: pide una vez con su nombre y la segunda ya no se lo pregunta
+    let x;
+    for (const Body of ["2", "Centro", "1 x2", "Confirmar pedido", "Lo antes posible", "Marta Reyes"]) x = textoDe((await post(ctx, "/whatsapp", { ...de, Body })).xml);
+    assert.match(x, /Listo, Marta\./);
+    assert.match(textoDe((await post(ctx, "/whatsapp", { ...de, Body: "hola" })).xml), /¡Hola, Marta! 👋/);
+    for (const Body of ["2", "Centro", "1 x2", "Confirmar pedido", "Lo antes posible"]) x = textoDe((await post(ctx, "/whatsapp", { ...de, Body })).xml);
+    assert.match(x, /Listo, Marta\./);
+    assert.equal(ctx.app.locals.store.pedidos.filter(p => p.tipo === "pedido" && p.nombre === "Marta Reyes").length, 2);
+    // la pausa del panel sigue mandando sobre el horario
+    neg.pausa = { activo: true, mensaje: "Hoy no atendemos." };
+    assert.match(textoDe((await post(ctx, "/whatsapp", { ...de, Body: "hola" })).xml), /Hoy no atendemos\./);
   } finally { ctx.srv.close(); }
 });
