@@ -94,6 +94,47 @@ Si el dueño dice que no sigue, preguntarle por qué y apuntarlo tal cual. Esa r
 
 **Listo cuando:** hay más de un cliente pagando, la empresa está registrada y hay una decisión escrita sobre expandirse.
 
+## Cómo generar confianza
+
+Un dueño que le va a pagar a dos estudiantes que viven fuera revisa estas cosas, más o menos en este orden. Para cada una: qué hay hoy y qué falta.
+
+**1. "¿Quiénes son ustedes?"** Quiere ver una cara y un nombre, no una marca.
+- Ya hay: la página [Quiénes somos](https://clientiatech.com/#quien) con Rodrigo y Dylan, el correo con dominio propio y la página de LinkedIn de la empresa.
+- Hacer esta semana: perfil de WhatsApp Business completo (nombre Clientia Tech, logo, sitio, horario de atención y descripción de una línea), foto real de Rodrigo en su WhatsApp, y el LinkedIn personal de cada uno enlazado desde Quiénes somos.
+- En la primera llamada, cámara encendida. Eso solo quita la mitad de la duda.
+
+**2. "¿Esto sirve o es puro cuento?"** No cree en videos, cree en lo que prueba.
+- Ya hay: el bot de demostración que puede probar desde su propio celular, y los 30 días gratis.
+- Regla: que lo pruebe él antes de hablar de precio. Con Sabor a Pueblo avanzó cuando el dueño lo probó.
+- Falta, y es lo que más pesa: un cliente hondureño con nombre que ya lo usa. Sale en las semanas 7 a 9.
+
+**3. "¿Y si me dejan botado?"** Es el miedo más grande y casi nunca lo dicen.
+- Ya hay: el [acuerdo de servicio](kit-cliente/3-acuerdo-de-servicio.md), que deja cancelar cuando quiera, el horario de soporte y los respaldos del bot.
+- Decirlo antes de que pregunte: el número de WhatsApp es suyo y siempre lo va a ser, sus pedidos y clientes son suyos y se los entregamos si se va, y no paga nada el primer mes.
+- Falta: el acuerdo revisado por abogado (semana 2) y cumplir el horario de soporte sin fallar. Un mensaje del dueño sin contestar en un sábado de venta borra todo lo demás.
+
+**4. "¿Esta empresa existe?"**
+- Ya hay: el sitio con términos, privacidad y reembolsos, y Stripe a nombre de Clientia Tech.
+- Falta: la empresa registrada y poder dar factura (semanas 5 a 13). Mientras tanto se da recibo y se dice así, "recibo". No decir "factura" ni "empresa registrada" hasta que sea cierto.
+
+**5. "¿Con quién hablo aquí en Honduras?"**
+- Hoy el número es de Estados Unidos. No se esconde: "estudiamos en Estados Unidos, somos hondureños y atendemos en horario de Honduras".
+- Falta: un número +504 para atender clientes. Se saca la próxima vez que uno de los dos esté en Honduras. Dylan, que es de allá, puede ser el contacto para cobros.
+
+**6. "¿Qué pasa con los datos de mis clientes?"**
+- Ya hay: [SEGURIDAD.md](SEGURIDAD.md) y la página de privacidad.
+- Si pregunta, contestar en dos líneas sencillas: los datos van cifrados, solo él y su personal entran al panel con su usuario, y no se le venden ni se le pasan a nadie.
+
+**7. Lo pequeño que se nota**
+- Contestar el mismo día, siempre. Es lo que más distingue a una empresa seria de un muchacho con una idea.
+- El mismo nombre, logo y firma en WhatsApp, correo, PDF y sitio. La firma del correo ya está hecha en `clientia-tech/firma/`: usarla siempre.
+- Todo lo que se acuerde por llamada se manda después por escrito en un mensaje corto.
+- Cumplir las fechas que uno mismo dio. Si no se va a llegar, avisar antes, no después.
+
+**Qué decir cuando pregunten cuántos clientes tenemos.** La verdad, que además vende: "Estamos empezando y usted sería de los primeros. Por eso el primer mes es gratis y por eso lo atiendo yo personalmente." Un dueño perdona que seamos nuevos. No perdona que le mintamos.
+
+**Lo que nunca se hace:** testimonios inventados, logos de negocios que no son clientes, "más de tantos clientes", certificaciones que no tenemos, ni fotos de oficina que no existe. En Honduras los dueños se conocen entre ellos y una mentira se sabe rápido.
+
 ## Los números de cada viernes
 
 Rodrigo y Dylan los ven juntos. Si no están anotados, esa semana no cuenta.
