@@ -85,7 +85,7 @@ Lo que pidió ya está puesto: el bot atiende solo Tegucigalpa, cerdito chuko a 
 
 Ninguno de los dos lleva precio. El precio se habla cuando el dueño ya lo probó o lo pregunta.
 
-- [ ] Abrir la [página de WhatsApp](https://claude.ai/artifact/SUV15bH8BrWtgiokUBPc59): todavía hay negocios de Honduras sin escribirles, y ya tienen puesto el primer mensaje nuevo (el directo, sin preguntar por el dueño). Máximo 10 nuevos por día.
+- [ ] Abrir la [página de WhatsApp](https://claude.ai/artifact/SUV15bH8BrWtgiokUBPc59): todavía hay negocios de Honduras sin escribirles. Empiece por los que ya tienen el primer mensaje nuevo (el directo, que no pregunta por el dueño y no lleva precio). Si alguno todavía trae el mensaje viejo, cámbielo por el nuevo antes de mandarlo. Máximo 10 nuevos por día.
 - [ ] Mandar los seguimientos que la página marque como pendientes.
 - [ ] Contestarle a Carnes El Argentino, que escribió "hable amigo" y nunca se le respondió.
 - [ ] Anotar todo en `campana/registro-campana.csv`.
