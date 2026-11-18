@@ -32,3 +32,7 @@ Pasando la portada aparece abajo un botón fijo "Escríbame por WhatsApp". Se es
 ## Demostración con IA
 
 Lo que el visitante escribe va al servidor de demostración (Render gratis, se duerme). La primera respuesta espera hasta 75 s y avisa a los 7 s que tarda un poco; las siguientes esperan 30 s. Si falla, contesta el bot de menú.
+
+## Estilo (desde el 2026-11-17)
+
+La portada usa el estilo "Superr" que pidió Rodrigo: papel crema, tinta oscura, un solo naranja de marcador, botones con borde (nunca rellenos), titulares en Young Serif (licencia OFL en `src/fonts/LICENSE-young-serif.txt`) y texto en Hanken Grotesk. La guía completa y cómo la adaptamos están en `.claude/skills/superr-style/`. El aspecto anterior (azul marino) está en git antes de este cambio, por si hay que volver.
