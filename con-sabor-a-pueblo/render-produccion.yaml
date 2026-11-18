@@ -37,6 +37,12 @@ services:
         sync: false
       - key: META_VERIFY_TOKEN
         generateValue: true
+      - key: META_API_URL          # con Dualhook: https://api.dualhook.com/v25.0 (vacío = Meta directo)
+        sync: false
+      - key: META_WEBHOOK_CLAVE    # con Dualhook: texto largo al azar; el webhook queda /meta?k=<esta clave>
+        sync: false
+      - key: PAUSA_DUENO_MIN       # minutos que el bot se calla en un chat después de que el dueño contesta desde su app
+        value: "60"
       - key: META_PLANTILLA        # aviso_pedido, cuando Meta la apruebe
         sync: false
       - key: META_PLANTILLA_CODIGO # codigo_panel, cuando Meta la apruebe
