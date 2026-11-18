@@ -264,6 +264,7 @@ const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const H = (t, k, r = "") => `<h2><span class="ct">${svg(k)}</span>${t}${r}</h2>`;
 const ESTADO_TXT = { por_pagar: "Esperando pago", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", en_camino: "En camino", por_envio: "Esperando envío", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
 let editRep = null, repError = "", repGuardando = false;
+let AT = [];   // chats the owner is answering himself (the bot is quiet there)
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false, modoPedidos = "tablero", busca = "";
 try { modoPedidos = localStorage.getItem("modoPedidos") || "tablero"; } catch {}
 // tema claro u oscuro: el que eligió, o el del celular
@@ -446,7 +447,8 @@ function pintar() {
       ${resto.length ? `<div class="card">${H("Ya respondidas", "reservas")}${resto.map(fila).join("")}</div>` : ""}`;
   } else if (vista === "personas") {
     const x = filtrados().filter(p => p.tipo === "persona").slice(0, 100);
-    v.innerHTML = `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
+    const at = AT.length ? `<div class="card" style="margin-bottom:12px">${H("Chats que usted está atendiendo", "personas")}<p class="nota-ed">Usted le escribió a estos clientes desde su app, así que el bot no les contesta por un rato. Toque <b>Devolver al bot</b> para que el bot los atienda de nuevo.</p>${AT.map(a => `<div class="fila"><div><a class="wa" href="${wa(a.tel)}" target="_blank" rel="noopener">${esc(a.nombre ? a.nombre + " · " + a.tel : a.tel)}</a><small>El bot vuelve solo a las ${esc(new Date(a.hasta).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" }))}</small></div><button class="btn" data-al-bot="${esc(a.tel)}">Devolver al bot</button></div>`).join("")}</div>` : "";
+    v.innerHTML = at + `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
       <div class="card">${x.map(p => `<div class="fila"><div><a class="wa" href="${wa(p.tel)}" target="_blank" rel="noopener">${esc(p.tel)}</a><small>${esc(p.motivo || "Pidió hablar con una persona")} · ${esc(p.sucursal)} · ${hace(p.fecha)}</small></div>${p.estado === "nuevo" ? `<button class="btn" data-n="${esc(p.n)}" data-e="atendido">Atendido</button>` : `<span class="tag t-atendido">Atendido</span>`}</div>`).join("") || `<div class="vacio">Nadie está esperando.</div>`}</div>`;
   } else if (vista === "seguridad") {
     pintarSeguridad(v);
@@ -456,6 +458,11 @@ function pintar() {
     pintarMenu(v);
   }
   botones(v);
+  v.querySelectorAll("[data-al-bot]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    const r = await fetch("/api/atendiendo/bot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tel: b.dataset.alBot }) }).catch(() => null);
+    if (r && r.ok) { AT = AT.filter(a => a.tel !== b.dataset.alBot); pintar(); } else b.disabled = false;
+  });
   v.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => { vista = b.dataset.ir; try { localStorage.setItem("vista", vista); } catch {} pintar(); scrollTo({ top: 0 }); });
   if (abierta) ficha(abierta);
 }
@@ -647,6 +654,7 @@ function pintarAjustes(v) {
     ${A.bot === "apagado" ? `<div class="pausa-on" role="status"><span>El bot está apagado: no le contesta a nadie. Usted atiende desde su WhatsApp.</span><button class="btn sm" data-prender>Prender el bot</button></div>` : ""}
     ${sec("Pedidos por WhatsApp", "Pause los pedidos si un día no abre o ya se le acabó la comida. Los clientes reciben su mensaje.",
       campo("Cómo contesta el bot", "Si algo no le gusta, cámbielo aquí. Se aplica al instante.", `<select id="aj-bot" data-k="bot"><option value="ia"${A.bot === "ia" ? " selected" : ""}>Conversa con IA${N.modoIA ? "" : " (falta activarla)"}</option><option value="menu"${A.bot === "menu" ? " selected" : ""}>Solo menú de opciones, sin IA</option><option value="apagado"${A.bot === "apagado" ? " selected" : ""}>Apagado: no contesta, yo atiendo</option></select>`, "aj-bot")
+      + campo("Cuando usted contesta un chat", "Minutos que el bot se queda callado en ese chat después de que usted le escribe al cliente desde su app. 0 = no se calla.", `<div class="con-u"><input type="number" inputmode="numeric" id="aj-duenoMin" data-k="duenoMin" value="${esc(A.duenoMin)}" min="0" max="1440" placeholder="60"><span>minutos</span></div>`, "aj-duenoMin")
       + campo("Recibir pedidos", "Apagado: el bot no toma pedidos.", sw("pausa.activo", !A.pausa.activo, "Abierto", "En pausa").replace('data-k="pausa.activo"', 'data-k="pausa.activo" data-inv'))
       + campo("Mensaje de bienvenida", "Le llega a cada cliente antes de la primera respuesta del bot (una vez cada 12 horas). Vacío: no se manda nada.", `<textarea id="aj-bienvenida" data-k="bienvenida" maxlength="1500" rows="8" placeholder="¡Hola! Este sábado estamos en...">${esc(A.bienvenida || "")}</textarea>`, "aj-bienvenida", true)
       + campo("Mensaje cuando está en pausa", "Si lo deja vacío: «En este momento no estamos tomando pedidos por WhatsApp. Por favor escríbanos más tarde.»", `<textarea id="aj-pausa" data-k="pausa.mensaje" maxlength="300" placeholder="Hoy no abrimos. ¡Nos vemos el próximo sábado!">${esc(A.pausa.mensaje)}</textarea>`, "aj-pausa", true))}
@@ -796,6 +804,7 @@ async function cargar() {
     const r = await fetch("/api/pedidos", { cache: "no-store" });
     if (r.status === 401) return location.href = "/panel/entrar";
     P = await r.json();
+    AT = await fetch("/api/atendiendo", { cache: "no-store" }).then(x => x.ok ? x.json() : []).catch(() => []);
     const nuevos = new Set(P.filter(p => p.tipo === "pedido" && p.estado === "nuevo").map(p => p.n));
     if (vistos && sonido && [...nuevos].some(n => !vistos.has(n))) beep();
     vistos = nuevos;
