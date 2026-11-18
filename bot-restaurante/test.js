@@ -800,6 +800,8 @@ test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y li
     assert.equal(out[1].interactive.action.sections[0].rows[1].id, "2");
     await postMeta(ctx, [m1]);
     assert.equal(M.enviados().length, 2, "el mismo mensaje dos veces se contesta una vez");
+    await postMeta(ctx, [{ id: "wamid.reac", from: "50495550000", type: "reaction", reaction: { message_id: "wamid.x", emoji: "👍" } }]);
+    assert.equal(M.enviados().length, 2, "una reacción no se contesta");
 
     // a full order with taps and words; 3 short options go as real buttons
     for (const m of [boton("2"), texto("un duo de mar")]) await postMeta(ctx, [m]);

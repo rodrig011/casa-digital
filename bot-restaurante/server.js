@@ -419,6 +419,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
           if (hasta && hasta > Date.now()) { log(`[meta] ${m.from} escribió; lo atiende el dueño, el bot no contesta`); continue; }
           if (hasta) callados.delete(digits(m.from));
           const foto = !!m.foto;
+          if (["reaction", "unsupported", "system", "ephemeral"].includes(m.tipo)) continue;   // a 👍 on a message is not a question
           if (!foto && !m.text && !m.ubic) { await meta.responder(m.from, "Por ahora solo leo texto y fotos. ¿Me lo puede escribir?").catch(e => log(`[meta] ${e.message}`)); continue; }
           let id = null;
           const media = foto ? () => (id = id || meta.reenviable(m.foto).catch(e => { log(`[meta] foto: ${e.message}`); return null; })) : null;
