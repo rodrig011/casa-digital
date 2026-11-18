@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Conectar WhatsApp · Clientia Tech</title>
+<style>
+  body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:560px;margin:40px auto;padding:0 20px;color:#111}
+  h1{font-size:24px;margin:0 0 8px}
+  p{color:#444}
+  button{font:inherit;font-weight:600;background:#111;color:#fff;border:0;border-radius:999px;padding:14px 26px;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  pre{background:#f4f4f4;border-radius:10px;padding:14px;white-space:pre-wrap;word-break:break-all;font-size:14px}
+  .nota{font-size:14px;color:#666}
+</style>
+</head>
+<body>
+<h1>Conectar el WhatsApp del negocio</h1>
+<p>El dueño sigue usando su número en la app WhatsApp Business y el bot contesta en el mismo número. Tenga a mano el celular del negocio: al final hay que escanear un código QR desde WhatsApp Business.</p>
+<p><button id="b" disabled>Conectar con Facebook</button></p>
+<pre id="out">Cargando…</pre>
+<p class="nota">Necesita en la dirección <code>?app=ID_DE_LA_APP&amp;config=ID_DE_CONFIGURACION</code>. Copie los números que salgan abajo y péguelos en Render.</p>
+<script>
+  const q = new URLSearchParams(location.search), APP = q.get("app"), CONFIG = q.get("config");
+  const out = document.getElementById("out"), b = document.getElementById("b");
+  const log = t => { out.textContent += "\n" + t; };
+  out.textContent = APP && CONFIG ? "Listo para conectar." : "Falta ?app=...&config=... en la dirección.";
+  window.addEventListener("message", e => {
+    if (!/(^|\.)facebook\.com$/.test(new URL(e.origin).hostname)) return;
+    let d; try { d = JSON.parse(e.data); } catch { return; }
+    if (d.type !== "WA_EMBEDDED_SIGNUP") return;
+    const x = d.data || {};
+    if (String(d.event).startsWith("FINISH")) log(`✓ Conectado (${d.event})\nWhatsApp Business Account ID: ${x.waba_id || "?"}\nPhone Number ID (META_PHONE_ID): ${x.phone_number_id || "?"}`);
+    else if (d.event === "CANCEL") log(`Se canceló en el paso: ${x.current_step || "?"}${x.error_message ? "\nError: " + x.error_message : ""}`);
+    else log(`${d.event}: ${JSON.stringify(x)}`);
+  });
+  window.fbAsyncInit = () => {
+    FB.init({ appId: APP, autoLogAppEvents: true, xfbml: true, version: "v27.0" });
+    if (APP && CONFIG) b.disabled = false;
+  };
+  b.onclick = () => FB.login(r => { log(r.authResponse ? "Facebook aceptó. Esperando los datos de WhatsApp…" : "No se completó el inicio de sesión."); }, {
+    config_id: CONFIG, response_type: "code", override_default_response_type: true,
+    extras: { setup: {}, featureType: "whatsapp_business_app_onboarding", sessionInfoVersion: "3" }
+  });
+</script>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js"></script>
+</body>
+</html>
