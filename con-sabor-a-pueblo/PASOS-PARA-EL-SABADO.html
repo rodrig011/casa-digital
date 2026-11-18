@@ -65,12 +65,15 @@ small{color:#666}
 <li><span class="c"></span>En el panel, entrá a Configuración y revisá: el bot en <b>Conversa con IA</b>, los precios del menú (Cerdito chuko L220, chicharrón L320 la libra y L160 la media, guacamole L80), y los apartados (máximo 50, hasta la 1 pm).</li>
 <li><span class="c"></span>Entrá al panel con el dueño. Que cambie su contraseña y que vea dónde está el botón <b>Apagado</b> por si algún día quiere atender él solo.</li>
 <li><span class="c"></span>En console.anthropic.com revisá que la clave de IA tenga saldo y un límite de gasto puesto.</li>
-<li><span class="c"></span>Explicale al dueño cómo le llegan los avisos de pedidos. Para que le lleguen siempre, que le escriba "hola" al bot una vez cada mañana; si no, Meta solo deja avisar durante 24 horas después de su último mensaje. Más adelante se arregla creando la plantilla <code>aviso_pedido</code>.</li>
+<li><span class="c"></span><b>Plantillas de aviso (vos solo, el dueño no hace nada):</b> en business.facebook.com > portafolio Con Sabor a Pueblo HN > WhatsApp Manager > Plantillas, creá:
+ <br>• <code>aviso_pedido</code>, categoría Utilidad, Español, cuerpo: <code>Aviso de su negocio: {{1}}. Detalle: {{2}}</code>
+ <br>• <code>codigo_panel</code>, categoría Autenticación, Español, botón Copiar código.
+ <br>Cuando Meta las apruebe (minutos u horas) poné en Render <code>META_PLANTILLA=aviso_pedido</code> y <code>META_PLANTILLA_CODIGO=codigo_panel</code>. Con eso los avisos de pedidos le llegan al dueño siempre, sin que él tenga que escribirle nada al bot.</li>
 </ol>
 
 <h2>5. Sábado</h2>
 <ol start="19">
-<li><span class="c"></span>A las 9:30 am abrí el panel y los Logs de Render, y escribile "hola" al bot para despertarlo.</li>
+<li><span class="c"></span>El bot está prendido las 24 horas (el plan pagado de Render no se duerme). A las 9:30 am solo abrí el panel y los Logs de Render para estar pendiente.</li>
 <li><span class="c"></span>Si algo falla, el dueño pone el bot en <b>Apagado</b> desde Configuración y atiende él mismo desde su app, como siempre.</li>
 </ol>
 
