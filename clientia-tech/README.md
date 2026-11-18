@@ -33,6 +33,6 @@ Pasando la portada aparece abajo un botón fijo "Escríbame por WhatsApp". Se es
 
 Lo que el visitante escribe va al servidor de demostración (Render gratis, se duerme). La primera respuesta espera hasta 75 s y avisa a los 7 s que tarda un poco; las siguientes esperan 30 s. Si falla, contesta el bot de menú.
 
-## Estilo (desde el 2026-11-17)
+## Estilo (desde el 2026-11-18)
 
-La portada usa el estilo "Superr" que pidió Rodrigo: papel crema, tinta oscura, un solo naranja de marcador, botones con borde (nunca rellenos), titulares en Young Serif (licencia OFL en `src/fonts/LICENSE-young-serif.txt`) y texto en Hanken Grotesk. La guía completa y cómo la adaptamos están en `.claude/skills/superr-style/`. El aspecto anterior (azul marino) está en git antes de este cambio, por si hay que volver.
+La portada se hizo desde cero con la guía "Slush" que mandó Rodrigo: franjas pastel, letra gigante (Bowlby One, licencia OFL en `src/fonts/LICENSE-bowlby-one.txt`), una cinta azul inflada detrás del titular, stickers de colores con borde negro, botones píldora negros o con borde, sin sombras ni degradados. La guía y cómo la adaptamos están en `.claude/skills/slush-style/`. Las versiones anteriores (azul marino, y la crema "Superr" del 2026-11-17) están en git.
