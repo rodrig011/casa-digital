@@ -1646,3 +1646,27 @@ test("panel: Entrar con Google solo deja pasar a los correos que ya son usuarios
     assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: ses } })).status, 200);
   } finally { ctx.srv.close(); }
 });
+
+test("panel: cada persona cambia su contraseña; la nueva gana a PANEL_USUARIOS y la vieja ya no sirve", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  let ctx = await montar(dir);
+  const cambiar = (cookie, cuerpo) => fetch(ctx.base + "/panel/clave", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify(cuerpo) });
+  const login = clave => fetch(ctx.base + "/panel/entrar", { method: "POST", redirect: "manual", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ correo: "dueno@restaurante.hn", clave }) });
+  try {
+    assert.equal((await cambiar("", { actual: CLAVE, nueva: "OtraClave2026" })).status, 401, "sin sesión");
+    const cookie = await entrar(ctx);
+    assert.equal((await cambiar(cookie, { actual: "mala-clave-x", nueva: "OtraClave2026" })).status, 401);
+    assert.equal((await cambiar(cookie, { actual: CLAVE, nueva: "corta" })).status, 400);
+    const r = await cambiar(cookie, { actual: CLAVE, nueva: "OtraClave2026" });
+    assert.equal(r.status, 200);
+    const nueva = r.headers.get("set-cookie").split(";")[0];
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: nueva } })).status, 200, "sigue adentro");
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: cookie } })).status, 401, "la sesión vieja ya no vale");
+    assert.equal((await login(CLAVE)).status, 401, "la vieja ya no sirve");
+    assert.equal((await login("OtraClave2026")).status, 303);
+    // after a restart, the change still wins over PANEL_USUARIOS
+    await new Promise(ok => ctx.srv.close(ok));
+    ctx = await montar(dir);
+    assert.equal((await login("OtraClave2026")).status, 303);
+  } finally { ctx.srv.close(); }
+});
