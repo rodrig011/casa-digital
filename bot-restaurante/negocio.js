@@ -386,7 +386,8 @@ function ajustesDe(N) {
   const C = N.cupos, B = N.cobro;
   return {
     pausa: { activo: !!(N.pausa && N.pausa.activo), mensaje: (N.pausa && N.pausa.mensaje) || "" },
-    bot: MODOS_BOT.includes(N.modoBot) ? N.modoBot : "ia",   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
+    bot: MODOS_BOT.includes(N.modoBot) ? N.modoBot : "ia",
+    bienvenida: N.bienvenida || "",   // the owner's notice sent before the first answer to each customer (every 12 h)   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
     cupos: C ? { porTanda: C.porTanda, porSucursal: C.porSucursal, topes: { ...C.topes }, dias: C.dias.map(d => DIAS[d]), cierre: C.cierre, anticipacion: C.anticipacion, verDias: C.verDias, cerrados: [...C.cerrados], nota: C.nota, tandas: C.tandas.length } : null,
     cobro: { anticipo: B.anticipo, desde: B.desde === Infinity ? "" : B.desde, domicilio: B.domicilio, faltas: B.faltas, transferencia: B.transferencia },
     sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", horario: s.horario || "" })),
@@ -429,6 +430,7 @@ function aplicarAjustes(N, a) {
   const p = preparar({ ...crudo, ...(cambios.cupos ? { cupos: cambios.cupos } : {}), ...(cambios.cobro ? { cobro: cambios.cobro } : {}) });
   if (cambios.pausa) { N.pausa = cambios.pausa; crudo.pausa = cambios.pausa; }
   if (a.bot != null) N.modoBot = crudo.modoBot = a.bot;
+  if (a.bienvenida != null) N.bienvenida = crudo.bienvenida = texto(a.bienvenida, 1500);
   if (cambios.cupos) { for (const k of Object.keys(N.cupos)) delete N.cupos[k]; Object.assign(N.cupos, p.cupos); crudo.cupos = cambios.cupos; }
   if (cambios.cobro) { const pasarela = N.cobro.pasarela; Object.assign(N.cobro, p.cobro, { pasarela }); if (pasarela) N.cobro.activo = true; crudo.cobro = cambios.cobro; }
   if (Array.isArray(a.sucursales)) for (const x of a.sucursales) {

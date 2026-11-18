@@ -820,6 +820,24 @@ test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y li
   } finally { ctx.srv.close(); }
 });
 
+test("bienvenida: el aviso del dueño sale antes de la primera respuesta, una vez cada 12 horas, y se cambia desde Configuración", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M = metaFalsa();
+  const N = preparar({ ...JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/ejemplo.json"), "utf8")), bienvenida: "HOY no vendemos hasta el SÁBADO" });
+  const ctx = await montar(dir, { meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "v" } }, { metaFetch: M.fetch, negocio: N });
+  try {
+    await postMeta(ctx, [texto("hola")]);
+    let out = M.enviados();
+    assert.equal(out[0].text.body, "HOY no vendemos hasta el SÁBADO");
+    assert.ok(out.length > 1, "después contesta normal");
+    const n = out.length;
+    await postMeta(ctx, [texto("hola")]);
+    assert.ok(M.enviados().slice(n).every(b => !(b.text && /HOY no vendemos/.test(b.text.body))), "no se repite en el mismo día");
+    const { aplicarAjustes } = require("./negocio");
+    assert.equal(aplicarAjustes(N, { bienvenida: "  Este sábado sí  " }).bienvenida, "Este sábado sí");
+  } finally { ctx.srv.close(); }
+});
+
 test("meta con Dualhook: clave en la dirección, API del proveedor, y el bot se calla cuando el dueño contesta desde su app", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const M = metaFalsa();
@@ -1258,9 +1276,12 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
   } finally { ctx.srv.close(); }
 });
 
+// these tests check the mechanics with fixed dates: the owner's weekly welcome notice is tested on its own,
+// and apartados close the same Saturday at 1 p. m. here (the real file closes them on Thursdays since 18-nov)
+const sinBienvenida = c => { delete c.bienvenida; c.cupos = { ...c.cupos, anticipacion: 0, cierre: "13:00", nota: "" }; return c; };
 test("Con Sabor a Pueblo: solo Tegucigalpa (cerdito L220, chicharrón por libra o media con guacamole aparte), tope de apartados por sábado, depósito que el dueño aprueba con OK, pierna por encargo con 50%", async () => {
   const { mezclarPrivado, montoCobro } = require("./negocio");
-  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const base = sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
   const privado = { sucursales: { tegucigalpa: { whatsapp: "+504 8888-2222" }, sps: { whatsapp: "+504 8888-3333" } }, cobro: { transferencia: "Banco de prueba, cuenta 000" } };
   const N2 = preparar(mezclarPrivado(base, privado));
   assert.deepEqual(N2.sucursales.map(s => s.id), ["tegucigalpa"], "San Pedro Sula salió del bot");
@@ -1274,10 +1295,10 @@ test("Con Sabor a Pueblo: solo Tegucigalpa (cerdito L220, chicharrón por libra 
 
   // the owner's prices (16-nov-2026)
   let { st, ult } = correr(["hola", "Hacer un pedido"]);
-  assert.match(ult, /Cerdito chuko · L 220/); assert.match(ult, /Chicharrón de panceta \(libra\) · L 320/); assert.match(ult, /Chicharrón de panceta \(media libra\) · L 160/); assert.match(ult, /Guacamole para el chicharrón · L 80/);
+  assert.match(ult, /Cerdito chuko · L 220/); assert.match(ult, /Chicharrón de panceta \(libra\) · L 320/); assert.match(ult, /Chicharrón de panceta \(media libra\) · L 160/); assert.match(ult, /Guacamole \(extra\) · L 90/);
   assert.doesNotMatch(ult, /San Pedro/);
   ({ st, ult } = correr(["hola", "Hacer un pedido", "1 libra de chicharron y media libra de chicharron con guacamole", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Lucía Paz"]));
-  assert.equal(st.lead.total, 560); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "tegucigalpa");
+  assert.equal(st.lead.total, 570); assert.equal(st.lead.estado, "por_pagar"); assert.equal(st.lead.sucursalId, "tegucigalpa");
   assert.equal(st.lead.diaFecha, "2026-10-17"); assert.equal(st.lead.cupos, 1);
   assert.match(ult, /Para confirmar el apartado, se paga antes/); assert.match(ult, /Banco de prueba/); assert.doesNotMatch(ult, /tanda/);
   ({ st } = correr(["hola", "Hacer un pedido", "2 cerdito chuko", "Confirmar pedido", "Para recoger", "Sábado 17 de octubre", "Ana"]));
@@ -1332,7 +1353,7 @@ test("Con Sabor a Pueblo: solo Tegucigalpa (cerdito L220, chicharrón por libra 
 
 test("Con Sabor a Pueblo: lo de San Pedro Sula se lo pasa al dueño; el bot no contesta nada del tema y avisa una sola vez", async () => {
   const { mezclarPrivado, derivarPor } = require("./negocio");
-  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const base = sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
   const N2 = preparar(mezclarPrivado(base, { sucursales: { tegucigalpa: { whatsapp: "+504 8888-2222" } } }));
   for (const t of ["¿Están en San Pedro este sábado?", "precio en SPS", "y en sampedro?", "van al Expocentro?", "están en el bazar del sábado", "S.P.S."]) assert.ok(derivarPor(N2, t), t);
   for (const t of ["hola", "quiero 2 cerditos", "¿dónde están en Tegus?", "pedro", "sps2"]) assert.equal(derivarPor(N2, t), null, t);
@@ -1356,7 +1377,7 @@ test("Con Sabor a Pueblo: lo de San Pedro Sula se lo pasa al dueño; el bot no c
 
 test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mínimo; el cerdito a L220", () => {
   const { mezclarPrivado } = require("./negocio");
-  const N2 = preparar(mezclarPrivado(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")), { cobro: { transferencia: "Banco de prueba" } }));
+  const N2 = preparar(mezclarPrivado(sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"))), { cobro: { transferencia: "Banco de prueba" } }));
   const { ejecutar } = require("./ia");
   if (!ejecutar) return;
   const c = { now: NOW, numero: () => "PED-2001", ocupados: () => 0 };
@@ -1371,7 +1392,7 @@ test("ia (Con Sabor a Pueblo): la pierna pide anticipo del 50% y respeta el mín
 
 test("Con Sabor a Pueblo a domicilio: el repartidor dice solo «120», el cliente acepta, paga la comida por transferencia y con el OK pasa a cocina", async () => {
   const { mezclarPrivado } = require("./negocio");
-  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const base = sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
   // Kevin still says "sps" (the branch that was removed): he stays, for Tegucigalpa, and the bot starts
   const privado = { sucursales: { tegucigalpa: { whatsapp: "+504 8888-1111" } }, repartidores: [{ id: "kevin", nombre: "Kevin", whatsapp: "+504 7777-0001", sucursal: "sps" }], cobro: { transferencia: "Banco de prueba, cuenta 000" } };
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
@@ -1446,7 +1467,7 @@ test("demo de un cliente: /demo/claude arma el sistema y las herramientas del ne
 
 test("panel: Configuración cambia el máximo de apartados (general y por ciudad), los días, las fechas cerradas, los pagos y pausa los pedidos; queda guardado", async () => {
   const { mezclarPrivado, fechasCupos, topeDe, aplicarAjustes } = require("./negocio");
-  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const base = sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
   const negocio = () => preparar(mezclarPrivado(base, { cobro: { transferencia: "Banco de prueba (ejemplo)" } }));
   // reglas, sin servidor
   const N = negocio();
@@ -1533,7 +1554,7 @@ test("revisar.js: dice qué falta en Render sin mostrar claves, y en línea preg
 
 test("panel real sin WhatsApp todavía: arranca, se entra con la contraseña, avisa que falta conectar y guarda menú y configuración", async () => {
   const { mezclarPrivado } = require("./negocio");
-  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8"));
+  const base = sinBienvenida(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const ctx = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json", sid: "", token: "" }, { negocio: preparar(mezclarPrivado(base, {})), client: null, meta: null });
   try {

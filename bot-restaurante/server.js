@@ -328,11 +328,20 @@ function createApp(cfg = loadConfig(), deps = {}) {
   function turno(from, text, op) {
     const k = digits(from) || from;
     const antes = colas.get(k) || Promise.resolve();
-    const este = antes.then(() => turnoUno(from, text, op));
+    const este = antes.then(() => turnoUno(from, text, op)).then(out => conBienvenida(from, out));
     const cola = este.catch(() => {});
     colas.set(k, cola);
     cola.then(() => { if (colas.get(k) === cola) colas.delete(k); });
     return este;
+  }
+  // the owner's welcome notice (negocio.bienvenida, editable in the panel) goes first, once per customer every 12 hours
+  function conBienvenida(from, out) {
+    const msg = String(negocio.bienvenida || "").trim();
+    if (!msg || !Array.isArray(out) || !out.length || esNegocio(from) || repartos.deTel(from) || textoPausa(negocio)) return out;
+    const sess = store.getSession(from) || { state: null, convo: [] };
+    if (sess.bienvenida && now() - new Date(sess.bienvenida) < 12 * 3600e3) return out;
+    sess.bienvenida = now().toISOString(); store.setSession(from, sess);
+    return [{ text: msg }, ...out];
   }
   // the customer's WhatsApp pin: on his open delivery order (and to the driver); otherwise it answers the address question
   const textoUbic = u => `[ubicación de WhatsApp: ${[u.nombre, u.direccion].filter(Boolean).join(", ") || `${u.lat}, ${u.lng}`}]`;
