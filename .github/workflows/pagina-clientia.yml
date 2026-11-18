@@ -24,7 +24,7 @@ jobs:
       - name: Armar el sitio (la página y las demos publicadas, nada más del repositorio)
         run: |
           mkdir -p _sitio
-          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html clientia-tech/prueba.html clientia-tech/prueba-ibm.html clientia-tech/og.png clientia-tech/pedidos-por-whatsapp-restaurantes.html clientia-tech/robots.txt clientia-tech/sitemap.xml _sitio/
+          cp clientia-tech/index.html clientia-tech/terminos.html clientia-tech/privacidad.html clientia-tech/cookies.html clientia-tech/reembolsos.html clientia-tech/legal.html clientia-tech/prueba.html clientia-tech/prueba-ibm.html clientia-tech/og.png clientia-tech/pedidos-por-whatsapp-restaurantes.html clientia-tech/robots.txt clientia-tech/sitemap.xml clientia-tech/conectar-whatsapp.html _sitio/
           mkdir -p _sitio/demos
           cp steelworks/dist/steelworks-panel.html _sitio/demos/steelworks-panel.html
           cp con-sabor-a-pueblo/demo/dist/con-sabor-a-pueblo.html _sitio/demos/con-sabor-a-pueblo.html
