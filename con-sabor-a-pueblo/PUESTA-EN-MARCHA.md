@@ -103,6 +103,10 @@ los datos del disco se quedan) y siga desde **2.1**.
 3. **Token de verificación**: el valor de `META_VERIFY_TOKEN` (Render > Environment > ojo).
 4. **Verificar y guardar**. Si sale error, revise que el servicio esté **Live** y que copió el token sin espacios.
 5. En **Campos del webhook**, active **messages** (Suscribirse).
+6. **Publique la app** (ícono ⬆️ Publish a la izquierda; pide URL de privacidad `https://clientiatech.com/privacidad.html`). Sin publicar, Meta no manda mensajes reales.
+7. Si el bot no contesta pero el botón **Test** de `messages` sí deja `[meta] no se pudo contestar` en Logs, falta suscribir la cuenta: en **developers.facebook.com/tools/explorer**, app del bot, **POST** `<WhatsApp Business Account ID>/subscribed_apps` > Submit (`success: true`).
+
+**Ojo en Render:** las variables que deja vacías en el Blueprint no se guardan. Si después las necesita (por ejemplo `META_APP_SECRET`), agréguelas con **+ Add** en Environment. El log avisa «falta META_APP_SECRET» si quedó sin poner.
 
 ### 2.2 Usuarios del panel
 En Render > Shell, por cada persona:
