@@ -1,5 +1,5 @@
 {
-  "_nota": "Con Sabor a Pueblo (Tegucigalpa, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp: cerdito chuko a L220 (corregido por el dueño el 16-nov-2026); chicharrones de panceta en Tegucigalpa a L320 la libra o L160 la media libra, siempre con tortillas y limón gratis, y se les puede agregar guacamole por L80 (16-nov); San Pedro Sula salió del bot el 16-nov: el dueño pidió que todo lo de SPS se lo pasen a él y lo contesta en persona (\"derivar\": el bot no dice nada de SPS, le avisa al dueño con el mensaje del cliente); la comida se paga por transferencia con comprobante antes de cocina, también a domicilio (el envío se le paga al repartidor); pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.. POR CONFIRMAR antes de prender el bot: la cuenta para depósitos, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render.",
+  "_nota": "Con Sabor a Pueblo (Tegucigalpa, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp: cerdito chuko a L220 (corregido por el dueño el 16-nov-2026); chicharrones de panceta en Tegucigalpa a L320 la libra o L160 la media libra, siempre con tortillas y limón gratis, y se les puede agregar guacamole por L80 (16-nov); San Pedro Sula salió del bot el 16-nov: el dueño pidió que todo lo de SPS se lo pasen a él y lo contesta en persona (\"derivar\": el bot no dice nada de SPS, le avisa al dueño con el mensaje del cliente); la comida se paga por transferencia con comprobante antes de cocina, también a domicilio (el envío se le paga al repartidor); pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.. POR CONFIRMAR antes de prender el bot: la cuenta para depósitos, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render. 18-nov-2026: mensaje del dueño (bienvenida): guacamole L90, tortillas L12 como extra (ya no gratis), apartados se cierran los jueves, ubicación en Google Maps.",
   "nombre": "Con Sabor a Pueblo",
   "color": "#FEBE29",
   "logo": "negocios/con-sabor-a-pueblo-logo.svg",
@@ -15,7 +15,7 @@
       "telefono": "+504 3169-9031",
       "whatsapp": "",
       "horario": "Sábados, 10:00 a. m. a 4:00 p. m.",
-      "mapa": ""
+      "mapa": "https://maps.app.goo.gl/7h8cde5k3zhsHGdj8"
     }
   ],
   "menu": [
@@ -25,25 +25,32 @@
         {
           "id": "cerdito",
           "nombre": "Cerdito chuko",
-          "precio": 220
+          "precio": 220,
+          "desc": "Como el pollo con tajadas pero con cerdito: repollo encurtido, aderezos y el cerdito horneado desmechado encima."
         },
         {
           "id": "chicharron-libra",
           "nombre": "Chicharrón de panceta (libra)",
           "precio": 320,
-          "desc": "Con tortillas y limón gratis. Se le puede agregar guacamole."
+          "desc": "Se le pueden agregar tortillas y guacamole."
         },
         {
           "id": "chicharron-media",
           "nombre": "Chicharrón de panceta (media libra)",
           "precio": 160,
-          "desc": "Con tortillas y limón gratis. Se le puede agregar guacamole."
+          "desc": "Se le pueden agregar tortillas y guacamole."
         },
         {
           "id": "guacamole",
-          "nombre": "Guacamole para el chicharrón",
-          "precio": 80,
-          "desc": "Extra para agregarle al chicharrón."
+          "nombre": "Guacamole (extra)",
+          "precio": 90,
+          "desc": "Extra."
+        },
+        {
+          "id": "tortillas",
+          "nombre": "Tortillas (extra)",
+          "precio": 12,
+          "desc": "Extra."
         }
       ]
     },
@@ -90,10 +97,10 @@
     "porTanda": 50,
     "porPedido": true,
     "porSucursal": true,
-    "anticipacion": 0,
-    "cierre": "13:00",
+    "anticipacion": 2,
+    "cierre": "23:59",
     "verDias": 7,
-    "nota": "Los apartados se reciben hasta la 1:00 p. m. del sábado."
+    "nota": "Los apartados se cierran los jueves. El sábado también puede llegar a comprar."
   },
   "derivar": {
     "palabras": [
@@ -108,5 +115,6 @@
     ],
     "motivo": "Pregunta por San Pedro Sula",
     "mensaje": "Ya le pasamos su mensaje al dueño y él le escribe en persona en un momento."
-  }
+  },
+  "bienvenida": "HOY no vendemos hasta el SABADO 21 de noviembre en Tegucigalpa y SPS\nTGU COL PALMIRA📍🇭🇳\nSPS EXPOCENTRO 📍🇭🇳\nTe estaremos esperando!🫶🏻\n\npuedes visitarnos 🥳10am-11PM\nLos apartados los cerramos los jueves\nPERO PUEDES LLEGAR A COMPRARNOS\n\n❎❎❎MENU❎❎❎\n\nCHICHARRONES DE PANCETA 🐽🥑\nLibra de panceta \nL320 🐷🔥\n\nCerdito chuco 🐷🔥\nComo el pollo con tajadas Péro con cerdito \nLleva repollo encurtido aderezos y el cerdito horneado desmechado encima\nL220\n\nTambien tenemos como extra\nTortillas 12LPS\nGuacamole 90LPS\n\nEstaremos desde las 10 de la mañana hasta las 4 de la tarde o hasta agotar existencia \n\nLe comparto la ubicación 📍🇭🇳\n\nhttps://maps.app.goo.gl/7h8cde5k3zhsHGdj8?g_st=ic\n\n✅ya tenemos envios✅\n\n✅Aceptamos todo tipo de metodo de pago✅\n\nTE ESPERAMOS!🫡"
 }
