@@ -1468,6 +1468,18 @@ test("panel: Configuración cambia el máximo de apartados (general y por ciudad
     assert.equal(neg.ajustes.cupos.porTanda, 40); assert.equal(neg.ajustes.pausa.activo, true);
     assert.equal(neg.ajustes.sucursales.find(s => s.id === "tegucigalpa").horario, "Sábados, 9:00 a. m. a 5:00 p. m.");
     await guardar(cookie, { pausa: { activo: false, mensaje: "" } });
+    // the owner turns the bot off (he answers by hand): customers get nothing; "menu" keeps answering without AI
+    assert.equal((await guardar(cookie, { bot: "otro" })).status, 400);
+    r = await guardar(cookie, { bot: "apagado" });
+    assert.equal((await r.json()).ajustes.bot, "apagado");
+    assert.equal(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50495550002", Body: "hola" })).xml).trim(), "", "apagado: no contesta");
+    await new Promise(ok => ctx.srv.close(ok));
+    ctx = await montar(dir, { negocio: "negocios/con-sabor-a-pueblo.json" }, { negocio: negocio() });
+    cookie = await entrar(ctx);
+    assert.equal((await (await fetch(ctx.base + "/api/negocio", { headers: { Cookie: cookie } })).json()).ajustes.bot, "apagado", "sigue apagado después de reiniciar");
+    await guardar(cookie, { bot: "menu" });
+    assert.notEqual(textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50495550002", Body: "hola" })).xml).trim(), "", "solo menú: sí contesta");
+    await guardar(cookie, { bot: "ia" });
     assert.doesNotMatch(textoDe((await post(ctx, "/whatsapp", { From: cli, Body: "hola" })).xml), /lluvia/);
     await ctx.app.locals.idle();
   } finally { await new Promise(ok => ctx.srv.close(ok)); }

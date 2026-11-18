@@ -359,6 +359,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
       store.setSession(from, sess);
       return [{ text: der.mensaje }];
     }
+    // the owner turned the bot off from the panel: he answers by hand from his own WhatsApp, the bot stays quiet
+    if (!esNegocio(from) && negocio.modoBot === "apagado") return [];
     // the owner paused WhatsApp orders from the panel: customers get his message, nothing is taken
     const pausa = !esNegocio(from) && textoPausa(negocio);
     if (pausa) return [{ text: pausa }];
@@ -369,7 +371,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const cerrado = !esNegocio(from) && textoCerrado(negocio, now());
     if (cerrado) return [{ text: cerrado }];
     if (ubic) text = textoUbic(ubic);
-    if (ia && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [...(reply.fotos ? [reply.fotos] : []), { text: String(reply).slice(0, 1590) }];
+    if (ia && negocio.modoBot !== "menu" && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [...(reply.fotos ? [reply.fotos] : []), { text: String(reply).slice(0, 1590) }];
     const out = conversar(from, text, ubic);
     return Promise.all(out.mensajes.map(async m => ({ ...m, text: (out.pedido ? await conLink(m.text, out.pedido, base) : m.text).split(LINK).join("") })));
   }
@@ -532,7 +534,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (archivoAjustes) escribirJSON(archivoAjustes, ajustes, cifra, 1);
     const correo = panel.usuarioDe(req).correo;
     bitacora.anotar("ajustes", { correo, como: ajustes.pausa.activo ? "pedidos en pausa" : "pedidos abiertos", ip: req.ip });
-    log(`[panel] configuración: ${ajustes.pausa.activo ? "PAUSA" : "abierto"}${ajustes.cupos ? `, máximo ${ajustes.cupos.porTanda} por tanda` : ""} (${correo})`);
+    log(`[panel] configuración: bot ${ajustes.bot}, ${ajustes.pausa.activo ? "PAUSA" : "abierto"}${ajustes.cupos ? `, máximo ${ajustes.cupos.porTanda} por tanda` : ""} (${correo})`);
     res.json({ ajustes });
   });
 
