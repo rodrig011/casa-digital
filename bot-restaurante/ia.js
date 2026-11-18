@@ -107,7 +107,7 @@ function ejecutar(N, name, input, ctx) {
   switch (name) {
     case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: N.L(i.precio), ...(N.cupos && !N.cupos.porPedido ? { cupos: i.cupos } : {}),
       ...(i.sucursales ? { solo_en: i.sucursales.map(x => b(x).nombre) } : {}), ...(i.minimo > 1 ? { minimo: i.minimo } : {}),
-      ...(i.encargo ? { encargo: { para: i.encargo.etiqueta, fecha: i.encargo.fecha, pedidos_hasta: i.encargo.hasta } } : {}), ...(i.anticipo != null && N.cobro.activo ? { anticipo: i.anticipo + "%" } : {}) })) };
+      ...(i.encargo ? { encargo: { para: i.encargo.etiqueta, fecha: i.encargo.fecha, pedidos_hasta: i.encargo.hasta, ...(i.encargo.soloRecoger ? { solo_para_recoger: "ese día no hay envíos" } : {}) } } : {}), ...(i.anticipo != null && N.cobro.activo ? { anticipo: i.anticipo + "%" } : {}) })) };
     case "ver_cupos": {
       if (!N.cupos) return { error: "Este restaurante no vende por cupos." };
       const dias = fechasCupos(N, ctx.now).map(f => ({ fecha: f.fecha, dia: f.etiqueta, tandas: N.cupos.tandas.map(t => ({ tanda: t, libres: Math.max(0, libre(N, ctx, f.fecha, t, input.sucursal)) })) }));
@@ -129,6 +129,7 @@ function ejecutar(N, name, input, ctx) {
       if (dup) return { ok: true, ya_existia: true, numero: dup.n, total: N.L(dup.total), nota: "Este pedido ya estaba creado con ese número: no se creó otro. No le cobre ni le confirme dos veces." };
       const nombre = String(input.nombre || ctx.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
+      if (enc && enc.soloRecoger && direccion) return { error: `El ${enc.etiqueta} no hay envíos: este encargo es solo para recoger. Dígaselo al cliente y cree el pedido sin dirección.` };
       let cup = null;
       if (enc) cup = { encargo: true, dia: enc.etiqueta, diaFecha: enc.fecha };
       else if (N.cupos) {

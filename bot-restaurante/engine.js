@@ -317,6 +317,8 @@ function createEngine(negocio) {
             const i = d.carrito.findIndex(l => !l.nota && (N.items.find(x => x.id === l.id) || {}).cupos);
             if (i >= 0) { d.salsaDe = i; go("salsa"); say({ text: `🌶️ ¿Qué salsa para ${d.carrito[i].cantidad > 1 ? `los ${d.carrito[i].cantidad} ` : "el "}*${N.items.find(x => x.id === d.carrito[i].id).nombre}*?${CUP.nota ? ` ${CUP.nota}` : ""}`, buttons: CUP.salsas }); break; }
           }
+          const encSolo = encargoDe(N, d.carrito);
+          if (encSolo && encSolo.soloRecoger && d.domicilio !== false) { d.domicilio = false; say(`🏠 El *${encSolo.etiqueta}* no hay envíos: este encargo es para recoger.`); }
           if (PROPIO && d.domicilio === null) { go("entrega"); say({ text: "¿Lo recoge o se lo llevamos?", buttons: ENTREGA }); break; }
           if (d.domicilio) { go("direccion"); say("🛵 ¿A qué dirección se lo llevamos? Colonia, calle o pasaje y una seña para encontrar la casa."); break; }
           despuesDeEntrega(); break;
