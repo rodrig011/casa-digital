@@ -818,6 +818,27 @@ test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y li
   } finally { ctx.srv.close(); }
 });
 
+test("meta con Dualhook: clave en la dirección, API del proveedor, y el bot se calla cuando el dueño contesta desde su app", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M = metaFalsa();
+  const CLAVE = "clave-larga-del-webhook-123";
+  const ctx = await montar(dir, { meta: { token: "dh_live_x", phoneId: "1234", appSecret: SECRETO, verifyToken: "v", apiUrl: "https://api.dualhook.com/v25.0/", claveWebhook: CLAVE, pausaDuenoMin: 60 } }, { metaFetch: M.fetch, negocio: GB });
+  const post = async (value, q = "") => { const r = await fetch(ctx.base + "/meta" + q, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "x", value }] }] }) }); await ctx.app.locals.idle(); return r.status; };
+  try {
+    assert.equal(await post({ messages: [texto("hola")] }), 403, "sin firma ni clave no entra");
+    assert.equal(await post({ messages: [texto("hola")] }, "?k=otra-clave-que-no-es-la-buena"), 403);
+    assert.equal(await post({ messages: [texto("hola")] }, "?k=" + CLAVE), 200);
+    assert.ok(M.calls.length > 0 && M.calls.every(c => c.url.startsWith("https://api.dualhook.com/v25.0/1234/")), "manda por la API del proveedor");
+    const antes = M.enviados().length;
+    // the owner answers Rosa from his WhatsApp Business app
+    assert.equal(await post({ message_echoes: [{ from: "50431699031", to: "50495550000", id: "wamid.eco", type: "text", text: { body: "Hola Rosa, ya le atiendo" } }] }, "?k=" + CLAVE), 200);
+    await post({ messages: [texto("gracias")] }, "?k=" + CLAVE);
+    assert.equal(M.enviados().length, antes, "el bot no se mete en un chat que el dueño está atendiendo");
+    await post({ messages: [texto("hola", "50493334444")] }, "?k=" + CLAVE);
+    assert.ok(M.enviados().length > antes, "a otros clientes les sigue contestando");
+  } finally { ctx.srv.close(); }
+});
+
 test("meta: el comprobante se reenvía al dueño como foto, y un aviso viejo de más de 24 h sale con plantilla", async () => {
   const { createMeta } = require("./meta");
   const M = metaFalsa({ fallaTexto: true });

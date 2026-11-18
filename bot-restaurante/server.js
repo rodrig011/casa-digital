@@ -37,7 +37,7 @@ const { createIA, MODELO } = require("./ia");
 const { cabeceras, soloHttps, createLimite } = require("./seguridad");
 const { montarDemo } = require("./demo");
 const { createUbicacion } = require("./ubicacion");
-const { createMeta, mensajes: mensajesMeta } = require("./meta");
+const { createMeta, mensajes: mensajesMeta, ecos: ecosMeta } = require("./meta");
 const { crearRespaldo } = require("./respaldo");
 
 const on = v => /^(1|true|on|si|sí|yes)$/i.test(String(v || "").trim());
@@ -54,7 +54,7 @@ function loadConfig(env = process.env) {
     sandbox,
     from: waAddr(env.TWILIO_WHATSAPP_FROM || env.META_NUMERO || (sandbox ? "+14155238886" : "")),
     // WhatsApp directo con Meta (Cloud API): con token e id del número, el bot habla por Meta y no usa Twilio
-    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", plantilla: env.META_PLANTILLA || "", plantillaCodigo: env.META_PLANTILLA_CODIGO || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
+    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", apiUrl: env.META_API_URL || "", claveWebhook: env.META_WEBHOOK_CLAVE || "", pausaDuenoMin: Math.max(0, Number(env.PAUSA_DUENO_MIN || 60)) || 0, plantilla: env.META_PLANTILLA || "", plantillaCodigo: env.META_PLANTILLA_CODIGO || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
     contentSid: env.TWILIO_ALERT_CONTENT_SID || "",
     owner: env.OWNER_WHATSAPP || "",
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
@@ -393,19 +393,31 @@ function createApp(cfg = loadConfig(), deps = {}) {
   // Meta Cloud API: answers 200 at once (Meta retries otherwise) and replies with its own calls
   if (meta) {
     const vistos = new Set();
+    const callados = new Map();                           // customer number -> until when the bot stays quiet
+    // with a provider (Dualhook) Meta may sign with the provider's app: then the webhook address carries ?k=META_WEBHOOK_CLAVE
+    const claveOk = k => { if (!mc.claveWebhook || mc.claveWebhook.length < 16) return false; const a = Buffer.from(String(k || "")), b = Buffer.from(mc.claveWebhook); return a.length === b.length && crypto.timingSafeEqual(a, b); };
     app.get("/meta", (req, res) => {
       const q = req.query;
       if (q["hub.mode"] === "subscribe" && mc.verifyToken && q["hub.verify_token"] === mc.verifyToken) return res.type("text/plain").send(String(q["hub.challenge"] || ""));
       res.sendStatus(403);
     });
     app.post("/meta", express.json({ limit: "200kb", verify: (req, res, buf) => { req.crudo = buf; } }), (req, res) => {
-      if (!meta.firmaOk(req.crudo, req.get("X-Hub-Signature-256"))) { log("[meta] firma inválida"); return res.sendStatus(403); }
+      if (!meta.firmaOk(req.crudo, req.get("X-Hub-Signature-256")) && !claveOk(req.query.k)) { log("[meta] firma inválida"); return res.sendStatus(403); }
       res.sendStatus(200);
       const base = baseDe(req);
+      // the owner answered this chat from his WhatsApp Business app: the bot stays quiet there for a while
+      for (const n of ecosMeta(req.body)) if (mc.pausaDuenoMin && !esNegocio(n)) {
+        if (!callados.has(n)) log(`[meta] el dueño contestó a ${n} desde su app: el bot se calla ${mc.pausaDuenoMin} min en ese chat`);
+        callados.set(n, Date.now() + mc.pausaDuenoMin * 60000);
+        if (callados.size > 2000) callados.delete(callados.keys().next().value);
+      }
       track((async () => {
         for (const m of mensajesMeta(req.body)) {
           if (vistos.has(m.id)) continue;                 // Meta can deliver the same message twice
           vistos.add(m.id); if (vistos.size > 2000) vistos.delete(vistos.values().next().value);
+          const hasta = callados.get(digits(m.from));
+          if (hasta && hasta > Date.now()) { log(`[meta] ${m.from} escribió; lo atiende el dueño, el bot no contesta`); continue; }
+          if (hasta) callados.delete(digits(m.from));
           const foto = !!m.foto;
           if (!foto && !m.text && !m.ubic) { await meta.responder(m.from, "Por ahora solo leo texto y fotos. ¿Me lo puede escribir?").catch(e => log(`[meta] ${e.message}`)); continue; }
           let id = null;

@@ -223,3 +223,19 @@ WhatsApp Manager > **Plantillas de mensajes > Crear plantilla**:
 | Claude (Haiku, con tope diario) | ~$10 a $15 |
 | WhatsApp (Meta) | casi $0: contestar a quien escribió primero es gratis; las plantillas cuestan centavos |
 | **Total** | **~$20 a $25 al mes**, frente a L2,500 que paga el cliente |
+
+## Número propio del dueño con Dualhook (Coexistence)
+
+El dueño sigue usando su número en la app WhatsApp Business y el bot contesta en el mismo número.
+
+1. En Render (servicio con-sabor-a-pueblo-bot > Environment) agregue:
+   - `META_API_URL` = `https://api.dualhook.com/v25.0`
+   - `META_WEBHOOK_CLAVE` = un texto largo al azar (30 letras y números o más). Guárdelo en la nota bloqueada del teléfono.
+2. En Dualhook > nueva conexión:
+   - Webhook URL: `https://con-sabor-a-pueblo-bot.onrender.com/meta?k=<META_WEBHOOK_CLAVE>`
+   - Verify Token: el mismo valor de `META_VERIFY_TOKEN` en Render.
+3. Haga el registro de Meta solo cuando el dueño esté disponible: él escribe en su app el código que le llega o escanea el QR.
+4. Cuando termine, en Render cambie `META_TOKEN` por la clave `dh_live_...` de la conexión y `META_PHONE_ID` por el identificador del número nuevo. `META_NUMERO` = 50431699031. No llame a /register.
+5. Manual Deploy. Escriba "hola" al número del negocio desde otro celular.
+
+Cuando el dueño contesta un chat desde su app, el bot se calla en ese chat por `PAUSA_DUENO_MIN` minutos (60 por defecto).

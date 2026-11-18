@@ -2,6 +2,11 @@
 //
 //   GET  /meta    Meta comprueba el webhook (hub.verify_token = META_VERIFY_TOKEN)
 //   POST /meta    mensajes que llegan; la firma X-Hub-Signature-256 se revisa con META_APP_SECRET
+//                 (o, con un proveedor como Dualhook, la clave META_WEBHOOK_CLAVE en la dirección: /meta?k=...)
+//
+// Con un proveedor (Dualhook) el número sigue en la app WhatsApp Business del dueño (Coexistence):
+// META_API_URL = https://api.dualhook.com/v25.0 y META_TOKEN = la clave dh_live_ de la conexión.
+// Cuando el dueño contesta un chat desde su app, Meta manda un "eco" y el bot se calla en ese chat un rato.
 //
 // Los menús salen como botones de WhatsApp (hasta 3) o como lista (hasta 10); el id de cada opción es su número,
 // así el motor lo entiende igual que si el cliente escribiera "2".
@@ -18,8 +23,8 @@ const digits = n => String(n || "").replace(/\D/g, "");
 const param = s => String(s || "").replace(/[\n\t]+/g, " · ").replace(/ {4,}/g, "   ").trim().slice(0, 900) || "-";
 const corta = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
-function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaCodigo = "", idioma = "es", version = VERSION, fetch: f = globalThis.fetch, log = console.log } = {}) {
-  const api = `https://graph.facebook.com/${version}`;
+function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaCodigo = "", idioma = "es", version = VERSION, apiUrl = "", fetch: f = globalThis.fetch, log = console.log } = {}) {
+  const api = String(apiUrl || `https://graph.facebook.com/${version}`).replace(/\/+$/, "");
   async function llamar(ruta, cuerpo) {
     const r = await f(`${api}/${ruta}`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
     const j = await r.json().catch(() => ({}));
@@ -126,4 +131,14 @@ function mensajes(body) {
   return out;
 }
 
-module.exports = { createMeta, mensajes, VERSION };
+// chats the owner answered from his own WhatsApp Business app (Coexistence "smb_message_echoes"): [customer number]
+function ecos(body) {
+  const out = [];
+  for (const e of (body && body.entry) || []) for (const c of e.changes || []) {
+    const v = c.value || {};
+    for (const m of v.message_echoes || []) if (m && m.to) out.push(digits(m.to));
+  }
+  return out;
+}
+
+module.exports = { createMeta, mensajes, ecos, VERSION };
