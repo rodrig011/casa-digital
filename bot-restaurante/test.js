@@ -1614,3 +1614,35 @@ test("horario: por WhatsApp contesta cerrado y no toma el pedido; la pausa del p
     assert.match(textoDe((await post(ctx, "/whatsapp", { ...de, Body: "hola" })).xml), /Hoy no atendemos\./);
   } finally { ctx.srv.close(); }
 });
+
+test("panel: Entrar con Google solo deja pasar a los correos que ya son usuarios", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const tok = email => "x." + Buffer.from(JSON.stringify({ aud: "gid", iss: "https://accounts.google.com", email, email_verified: true, exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".y";
+  let correo = "dueno@restaurante.hn";
+  const googleFetch = async (url, op) => { assert.match(url, /oauth2\.googleapis\.com\/token/); assert.equal(new URLSearchParams(op.body).get("client_secret"), "gsec"); return { ok: true, json: async () => ({ id_token: tok(correo) }) }; };
+  const ctx = await montar(dir, { google: { id: "gid", secreto: "gsec" } }, { googleFetch });
+  try {
+    assert.match(await (await fetch(ctx.base + "/panel/entrar")).text(), /Entrar con Google/);
+    const ida = async () => {
+      const r = await fetch(ctx.base + "/panel/google", { redirect: "manual" });
+      assert.equal(r.status, 303);
+      const u = new URL(r.headers.get("location"));
+      assert.equal(u.host, "accounts.google.com"); assert.equal(u.searchParams.get("redirect_uri"), PUBLIC + "/panel/google/vuelta");
+      const ck = r.headers.get("set-cookie"); assert.match(ck, /SameSite=Lax/);
+      return { state: u.searchParams.get("state"), cookie: ck.split(";")[0] };
+    };
+    // wrong state is refused
+    let { state, cookie } = await ida();
+    assert.equal((await fetch(ctx.base + `/panel/google/vuelta?code=c&state=otro`, { headers: { Cookie: cookie } })).status, 401);
+    // a Google account that is not a panel user is refused
+    ({ state, cookie } = await ida()); correo = "extrano@gmail.com";
+    let r = await fetch(ctx.base + `/panel/google/vuelta?code=c&state=${state}`, { headers: { Cookie: cookie } });
+    assert.equal(r.status, 401); assert.match(await r.text(), /no tiene acceso/);
+    // the owner's Google account opens the panel
+    ({ state, cookie } = await ida()); correo = "Dueno@Restaurante.hn";
+    r = await fetch(ctx.base + `/panel/google/vuelta?code=c&state=${state}`, { headers: { Cookie: cookie } });
+    assert.equal(r.status, 200); assert.match(await r.text(), /url=\/panel/);
+    const ses = r.headers.get("set-cookie").split(/,(?=\s*cd_)/).find(c => c.trim().startsWith("cd_panel=")).split(";")[0].trim();
+    assert.equal((await fetch(ctx.base + "/panel/yo", { headers: { Cookie: ses } })).status, 200);
+  } finally { ctx.srv.close(); }
+});

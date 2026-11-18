@@ -58,6 +58,7 @@ function loadConfig(env = process.env) {
     contentSid: env.TWILIO_ALERT_CONTENT_SID || "",
     owner: env.OWNER_WHATSAPP || "",
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
+    google: { id: env.GOOGLE_CLIENT_ID || "", secreto: env.GOOGLE_CLIENT_SECRET || "" },   // "Entrar con Google" en el panel
     skipSignature: on(env.SKIP_TWILIO_SIGNATURE),
     leadsToken: env.LEADS_TOKEN || "",
     panelSecret: env.PANEL_SECRET || "",
@@ -426,7 +427,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (meta) return meta.codigo(wa, c, texto);
     return !!(await avisos.enviar(waAddr(wa), texto, { titulo: `Código para entrar al panel: ${c}`, lineas: ["Vence en 5 minutos. No se lo dé a nadie."] }));
   } : null;
-  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, logo: negocio.logo ? "/panel/logo" : "", log, enviarCodigo: deps.enviarCodigo || enviarCodigo, bitacora: bitacora.anotar });
+  const panel = montarPanel(app, { secret: cfg.panelSecret, usuarios, archivoPanel: path.join(__dirname, "panel", "panel.html"), archivoSesiones: cfg.dataDir ? path.join(cfg.dataDir, "sesiones-cerradas.json") : null, marca: negocio.nombre, color: negocio.color, logo: negocio.logo ? "/panel/logo" : "", log, enviarCodigo: deps.enviarCodigo || enviarCodigo, bitacora: bitacora.anotar,
+    google: { ...(cfg.google || {}), base: cfg.publicUrl }, ...(deps.googleFetch ? { fetch: deps.googleFetch } : {}) });
   const sinSesion = (req, res) => { if (panel.usuarioDe(req)) return false; res.status(401).json({ error: "sin sesión" }); return true; };
 
   app.get("/api/pedidos", (req, res) => {
