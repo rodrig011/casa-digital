@@ -1,6 +1,6 @@
 ---
 name: superr-style
-description: Warm cream-paper look (dark ink, one orange marker, outlined pill buttons, no gradients) that rodrigo chose for clientiatech.com. Use for any visual work on the Clientia Tech site or when he asks for "el estilo Superr".
+description: SUPERSEDED 2026-11-18 by slush-style. Cream-paper look rodrigo tried for clientiatech.com on 2026-11-17; use only if he asks for "el estilo Superr" again.
 ---
 
 # Estilo Superr, adaptado a Clientia Tech
