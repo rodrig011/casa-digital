@@ -334,6 +334,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     cola.then(() => { if (colas.get(k) === cola) colas.delete(k); });
     return este;
   }
+  // chats the owner is answering from his own app (Coexistence echoes): customer number -> until when the bot stays quiet
+  const callados = new Map();
+  const minutosDueno = () => negocio.duenoMin != null ? negocio.duenoMin : ((cfg.meta || {}).pausaDuenoMin || 0);
   // the owner's welcome notice (negocio.bienvenida, editable in the panel) goes first, once per customer every 12 hours
   function conBienvenida(from, out) {
     const msg = String(negocio.bienvenida || "").trim();
@@ -402,7 +405,6 @@ function createApp(cfg = loadConfig(), deps = {}) {
   // Meta Cloud API: answers 200 at once (Meta retries otherwise) and replies with its own calls
   if (meta) {
     const vistos = new Set();
-    const callados = new Map();                           // customer number -> until when the bot stays quiet
     // with a provider (Dualhook) Meta may sign with the provider's app: then the webhook address carries ?k=META_WEBHOOK_CLAVE
     const claveOk = k => { if (!mc.claveWebhook || mc.claveWebhook.length < 16) return false; const a = Buffer.from(String(k || "")), b = Buffer.from(mc.claveWebhook); return a.length === b.length && crypto.timingSafeEqual(a, b); };
     app.get("/meta", (req, res) => {
@@ -415,9 +417,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
       res.sendStatus(200);
       const base = baseDe(req);
       // the owner answered this chat from his WhatsApp Business app: the bot stays quiet there for a while
-      for (const n of ecosMeta(req.body)) if (mc.pausaDuenoMin && !esNegocio(n)) {
-        if (!callados.has(n)) log(`[meta] el dueño contestó a ${n} desde su app: el bot se calla ${mc.pausaDuenoMin} min en ese chat`);
-        callados.set(n, Date.now() + mc.pausaDuenoMin * 60000);
+      for (const n of ecosMeta(req.body)) if (minutosDueno() && !esNegocio(n)) {
+        if (!callados.has(n)) log(`[meta] el dueño contestó a ${n} desde su app: el bot se calla ${minutosDueno()} min en ese chat`);
+        callados.set(n, Date.now() + minutosDueno() * 60000);
         if (callados.size > 2000) callados.delete(callados.keys().next().value);
       }
       track((async () => {
@@ -545,6 +547,23 @@ function createApp(cfg = loadConfig(), deps = {}) {
     bitacora.anotar("menu", { correo, como: `${negocio.items.length} ${negocio.items.length === 1 ? "producto disponible" : "productos disponibles"}`, ip: req.ip });
     log(`[panel] menú: ${negocio.items.map(i => `${i.nombre} ${negocio.L(i.precio)}`).join(", ")} (${correo})`);
     res.json({ menu: negocio.items.map(({ id, nombre, categoria, precio }) => ({ id, nombre, categoria, precio })), carta: cartaPanel() });
+  });
+
+  // chats the owner is answering himself; "Devolver al bot" lets the bot answer that customer again right away
+  app.get("/api/atendiendo", (req, res) => {
+    if (sinSesion(req, res)) return;
+    res.set("Cache-Control", "no-store");
+    const ahora = Date.now();
+    res.json([...callados].filter(([, h]) => h > ahora).map(([tel, hasta]) => ({ tel: "+" + tel, nombre: store.nombre ? store.nombre(tel) || "" : "", hasta: new Date(hasta).toISOString() })));
+  });
+  app.post("/api/atendiendo/bot", express.json({ limit: "2kb" }), (req, res) => {
+    if (sinSesion(req, res)) return;
+    const origen = req.get("Origin");
+    if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
+    const tel = digits((req.body || {}).tel);
+    callados.delete(tel);
+    log(`[panel] el bot vuelve a atender a ${tel} (${panel.usuarioDe(req).correo})`);
+    res.json({ ok: true });
   });
 
   // the owner changes the business settings from the panel (Configuración) and taps "Guardar"

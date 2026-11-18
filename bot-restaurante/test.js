@@ -856,6 +856,22 @@ test("meta con Dualhook: clave en la dirección, API del proveedor, y el bot se 
     assert.equal(M.enviados().length, antes, "el bot no se mete en un chat que el dueño está atendiendo");
     await post({ messages: [texto("hola", "50493334444")] }, "?k=" + CLAVE);
     assert.ok(M.enviados().length > antes, "a otros clientes les sigue contestando");
+    // the panel shows the chat the owner is answering, and "Devolver al bot" gives it back right away
+    const cookie = await entrar(ctx);
+    let at = await (await fetch(ctx.base + "/api/atendiendo", { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(at.map(a => a.tel), ["+50495550000"]);
+    assert.equal((await fetch(ctx.base + "/api/atendiendo", {})).status, 401);
+    assert.equal((await fetch(ctx.base + "/api/atendiendo/bot", { method: "POST", headers: { Cookie: cookie, "Content-Type": "application/json" }, body: JSON.stringify({ tel: "+50495550000" }) })).status, 200);
+    at = await (await fetch(ctx.base + "/api/atendiendo", { headers: { Cookie: cookie } })).json();
+    assert.equal(at.length, 0);
+    const n2 = M.enviados().length;
+    await post({ messages: [texto("quiero un pedido")] }, "?k=" + CLAVE);
+    assert.ok(M.enviados().length > n2, "el bot vuelve a contestarle");
+    // 0 minutes in Configuración: the bot never steps aside
+    const { aplicarAjustes } = require("./negocio");
+    assert.equal(aplicarAjustes(ctx.app.locals.negocio || GB, { duenoMin: 0 }).duenoMin, 0);
+    assert.throws(() => aplicarAjustes(GB, { duenoMin: 5000 }), /0 a 1440/);
+    aplicarAjustes(GB, { duenoMin: "" });
   } finally { ctx.srv.close(); }
 });
 
