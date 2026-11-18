@@ -330,6 +330,7 @@ function pintar() {
   if (editRep && vista === "repartidores" && $("#rep-edit") && $("#rep-edit").contains(document.activeElement) && !repGuardando && !pintar.forzar) { nav(); return; }
   if (editMenu && vista === "menu" && $("#menu-edit") && $("#menu-edit").contains(document.activeElement) && !menuGuardando && !pintar.forzar) { nav(); return; }
   if (vista === "ajustes" && $("#aj") && !pintar.forzar) { nav(); return; }
+  if (vista === "seguridad" && $("#clave") && [...$("#clave").elements].some(x => x.value) && !pintar.forzar) { nav(); return; }   // no borrar lo que está escribiendo
   nav();
   $("#titulo").textContent = todas().find(v => v[0] === vista)[1];
   const v = $("#vista");
@@ -710,7 +711,7 @@ async function refrescarNegocio() { try { const r = await fetch("/api/negocio", 
 // ---- Seguridad: cómo está protegido el panel, quién tiene acceso y quién hizo qué ----
 let S = null, sCargando = false;
 const mapaDe = p => `https://maps.google.com/?q=${+p.ubicacion.lat},${+p.ubicacion.lng}`;
-const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto", menu: "Cambió el menú", ajustes: "Cambió la configuración" };
+const EVENTO = { entro: "Entró al panel", fallo: "Contraseña equivocada", bloqueado: "Bloqueado 15 min por intentos", codigo_enviado: "Código enviado por WhatsApp", codigo_malo: "Código equivocado", codigo_no_salio: "El código no salió", salio: "Salió del panel", estado: "Cambió un pedido", repartidor: "Cambió el repartidor", repartidores: "Cambió el equipo de reparto", menu: "Cambió el menú", ajustes: "Cambió la configuración", clave: "Cambió su contraseña" };
 const MALOS = ["fallo", "bloqueado", "codigo_malo"];
 const fechaHora = iso => new Date(iso).toLocaleString("es-HN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" });
 const equipoCorto = ua => /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : ua ? "Otro" : "";
@@ -737,12 +738,34 @@ function pintarSeguridad(v) {
       <div class="card kpi" style="${malos ? "border-top-color:var(--red)" : ""}"><b>${malos}</b><span>Intentos fallidos en 7 días</span></div></div>
     <div class="grid-seg">
       <div class="card">${H("Quién tiene acceso", "llave")}<table><tr><th>Persona</th><th>Código a</th></tr>${S.usuarios.map(u => `<tr><td>${esc(u.nombre)}<small style="display:block;color:var(--tx3)">${esc(u.correo)}</small></td><td>${u.whatsapp ? esc(u.whatsapp) : `<span class="tag t-por_pagar">Solo contraseña</span>`}</td></tr>`).join("")}</table>
-        <p class="vacio" style="padding:12px 16px;text-align:left;font-size:12px">Para dar o quitar acceso, avísele a Casa Digital. Quitar a alguien cierra su sesión al instante.</p></div>
+        <p class="vacio" style="padding:12px 16px;text-align:left;font-size:12px">Para dar o quitar acceso, avísele a Casa Digital. Quitar a alguien cierra su sesión al instante.</p>
+        <form id="clave" style="border-top:1px solid var(--line);padding:16px;display:grid;gap:10px">
+          <b>Cambiar mi contraseña</b>
+          <input type="password" name="actual" autocomplete="current-password" placeholder="Contraseña actual" aria-label="Contraseña actual" required>
+          <input type="password" name="nueva" autocomplete="new-password" placeholder="Nueva (mínimo 10 letras o números)" aria-label="Contraseña nueva" minlength="10" required>
+          <input type="password" name="otra" autocomplete="new-password" placeholder="Repita la nueva" aria-label="Repita la contraseña nueva" minlength="10" required>
+          <p class="ayuda" id="clave-msg" role="status" style="margin:0"></p>
+          <button class="btn pri" type="submit">Cambiar contraseña</button>
+        </form></div>
       <div class="card">${H("Actividad reciente", "actividad")}${S.eventos.length ? `<div class="solo-pc" style="overflow-x:auto"><table><tr><th>Cuándo</th><th>Quién</th><th>Qué pasó</th><th>Desde</th></tr>${S.eventos.slice(0, 80).map(e => `<tr><td style="white-space:nowrap">${fechaHora(e.en)}</td><td>${esc(e.correo || "—")}</td><td>${que(e)}</td><td style="white-space:nowrap;color:var(--tx3)">${desde(e)}</td></tr>`).join("")}</table></div>
         <div class="solo-cel">${S.eventos.slice(0, 50).map(e => `<div class="fila"><div>${que(e)}<small>${esc(e.correo || "—")} · ${fechaHora(e.en)}${desde(e) ? ` · ${desde(e)}` : ""}</small></div></div>`).join("")}</div>` : `<div class="vacio">Todavía no hay actividad.</div>`}</div>
     </div>`;
 }
 
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "clave") return;
+  e.preventDefault();
+  const f = e.target, msg = $("#clave-msg"), b = f.querySelector("button");
+  if (f.nueva.value !== f.otra.value) { msg.className = "ayuda error"; msg.textContent = "Las dos contraseñas nuevas no son iguales."; return; }
+  b.disabled = true; msg.className = "ayuda"; msg.textContent = "Guardando…";
+  try {
+    const r = await fetch("/panel/clave", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actual: f.actual.value, nueva: f.nueva.value }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) { f.reset(); msg.className = "ayuda ok"; msg.textContent = "✓ Listo. Use la contraseña nueva la próxima vez que entre."; }
+    else { msg.className = "ayuda error"; msg.textContent = d.error || "No se pudo cambiar. Vuelva a intentar."; }
+  } catch { msg.className = "ayuda error"; msg.textContent = "Sin conexión. Vuelva a intentar."; }
+  b.disabled = false;
+});
 async function cambiar(n, estado, b) {
   b.disabled = true;
   try {

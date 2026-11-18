@@ -11,6 +11,7 @@
 // de 6 números que vence en 5 minutos. Con "Recordar este teléfono" no se lo vuelve a pedir en ese
 // teléfono por 30 días (cambiar la contraseña también borra eso).
 const crypto = require("crypto");
+const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { leerJSON, escribirJSON } = require("./cifrado");
@@ -59,7 +60,7 @@ function createUsuarios({ env = "", file = null, cifra = null } = {}) {
   const todos = () => {
     const m = new Map();
     for (const u of leerArchivo()) m.set(normCorreo(u.correo), { ...u, correo: normCorreo(u.correo), origen: "archivo" });
-    for (const u of parseEnv(env)) m.set(u.correo, { ...u, origen: "entorno" });   // la variable manda
+    for (const u of parseEnv(env)) if (!(m.get(u.correo) || {}).cambiada) m.set(u.correo, { ...u, origen: "entorno" });   // la variable manda, salvo que la persona ya cambió su contraseña en el panel
     return m;
   };
   return {
@@ -73,6 +74,19 @@ function createUsuarios({ env = "", file = null, cifra = null } = {}) {
       const hash = await hashClave(clave);
       const us = leerArchivo().filter(u => normCorreo(u.correo) !== correo);
       const u = { correo, nombre: nombre || correo, hash, whatsapp: normWa(whatsapp), creado: new Date().toISOString() };
+      us.push(u);
+      guardar(us);
+      return u;
+    },
+    // the person changes their own password from the panel; it is kept in usuarios.json and wins over PANEL_USUARIOS
+    async cambiarClave(correo, clave) {
+      correo = normCorreo(correo);
+      const antes = todos().get(correo);
+      if (!antes) throw new Error("Usuario desconocido.");
+      if (String(clave || "").length < MIN_CLAVE) throw new Error(`La contraseña nueva necesita al menos ${MIN_CLAVE} caracteres.`);
+      if (!file) throw new Error("Falta DATA_DIR para guardar la contraseña.");
+      const us = leerArchivo().filter(u => normCorreo(u.correo) !== correo);
+      const u = { correo, nombre: antes.nombre, hash: await hashClave(clave), whatsapp: antes.whatsapp || "", creado: antes.creado || new Date().toISOString(), cambiada: new Date().toISOString() };
       us.push(u);
       guardar(us);
       return u;
@@ -333,6 +347,25 @@ function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = nu
     const u = valido ? usuarios.get(correo) : null;
     if (!u) { freno.fallo("i:" + req.ip); log(`[panel] Google sin acceso ${correo} ${req.ip}`); bitacora("fallo", { correo, como: "Google", ...quien(req) }); return mal(`El correo ${correo || "de Google"} no tiene acceso a este panel. Pídale al dueño que lo agregue.`, correo); }
     abrirSesion(req, res, u, "Google");
+  });
+  // change my own password (asks the current one); the session is renewed so the person stays in
+  app.post("/panel/clave", express.json({ limit: "2kb" }), async (req, res) => {
+    if (sinConfig(req, res)) return;
+    seguro(res);
+    if (!mismoSitio(req)) return res.status(403).json({ error: "Origen no permitido" });
+    const u = usuarioDe(req);
+    if (!u) return res.status(401).json({ error: "sin sesión" });
+    const { actual = "", nueva = "" } = req.body || {};
+    const ki = "i:" + req.ip, kc = "c:" + u.correo;
+    if (freno.bloqueado(kc, ki)) return res.status(429).json({ error: "Demasiados intentos. Espere 15 minutos." });
+    if (!(await verificarClave(String(actual), u.hash))) { freno.fallo(kc, ki); bitacora("fallo", { correo: u.correo, como: "cambio de contraseña", ...quien(req) }); return res.status(401).json({ error: "La contraseña actual no es esa." }); }
+    if (String(nueva) === String(actual)) return res.status(400).json({ error: "La contraseña nueva tiene que ser distinta." });
+    let n;
+    try { n = await usuarios.cambiarClave(u.correo, String(nueva)); } catch (e) { return res.status(400).json({ error: e.message }); }
+    ponerCookie(req, res, ses.crear(n), HORAS * 3600);
+    log(`[panel] ${u.correo} cambió su contraseña`);
+    bitacora("clave", { correo: u.correo, ...quien(req) });
+    res.json({ ok: true });
   });
   app.all("/panel/salir", (req, res) => {
     const u = usuarioDe(req);
