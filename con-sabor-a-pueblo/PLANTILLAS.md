@@ -14,7 +14,7 @@ Antes, en WhatsApp Manager > **Configuración de pago**, agregue la tarjeta de C
 | Nombre | `aviso_pedido` |
 | Idioma | **Español** |
 | Encabezado | Ninguno |
-| Cuerpo | `Aviso de Con Sabor a Pueblo: {{1}}. Detalle: {{2}}. Gracias.` |
+| Cuerpo | `Actualización de un pedido en Con Sabor a Pueblo: {{1}}. Detalle: {{2}}. Responda a este mensaje si tiene alguna consulta.` |
 | Ejemplo de {{1}} | `Nuevo pedido PED-1003` |
 | Ejemplo de {{2}} | `1 Cerdito chuko · A domicilio · Total L 220` |
 | Pie de página | `Conteste este mensaje si tiene dudas.` |
