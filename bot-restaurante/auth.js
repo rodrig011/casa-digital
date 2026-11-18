@@ -19,7 +19,7 @@ const N = 16384, R = 8, P = 1, LEN = 64;     // scrypt: ~50 ms por intento, 16 M
 const HORAS = 12;
 const COOKIE = "cd_panel";
 const MIN_CLAVE = 10;
-const PASO = "cd_paso", EQUIPO = "cd_equipo";
+const PASO = "cd_paso", EQUIPO = "cd_equipo", GOOGLE = "cd_google";
 const MIN_CODIGO = 5, DIAS_EQUIPO = 30, INTENTOS_CODIGO = 5;
 
 const b64 = b => Buffer.from(b).toString("base64url");
@@ -162,7 +162,7 @@ function cookies(req) {
 }
 
 // ---- the login page (same look as the panel) ----
-function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaurante", color = "#C8102E", logo = "", paso = null } = {}) {
+function paginaEntrar({ error = "", correo = "", aviso = "", marca = "el restaurante", color = "#C8102E", logo = "", paso = null, google = false } = {}) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>Entrar · Panel ${esc(marca)}</title><meta name="theme-color" content="#F3F3F3">
@@ -183,6 +183,8 @@ button{height:40px;border:1px solid var(--brand);border-radius:4px;background:va
 small.pie{display:block;text-align:center;color:var(--tx3);margin-top:14px;font-size:12px}small.pie a{color:var(--brand)}
 input.codigo{font-size:24px;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums}
 label.si{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2)}label.si input{flex:none;width:18px;height:18px;margin:0;accent-color:var(--brand)}
+.o{display:flex;align-items:center;gap:10px;color:var(--tx3);font-size:12px}.o::before,.o::after{content:"";flex:1;height:1px;background:var(--line)}
+a.g{height:40px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line2);border-radius:4px;color:var(--tx);text-decoration:none;font-weight:600;background:var(--card)}a.g:hover{background:var(--bg)}
 .candado{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--tx3);font-size:12px;margin-top:10px}
 </style></head><body><main>
 <div class="brand">${logo ? `<img src="${esc(logo)}" alt="">` : `<i>${esc(String(marca).trim()[0] || "?").toUpperCase()}</i>`}<div>${esc(marca)}<small>Panel del dueño · Casa Digital</small></div></div>
@@ -199,6 +201,7 @@ ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<d
 <label>Correo<input name="correo" type="email" autocomplete="username" required autofocus value="${esc(correo)}"></label>
 <label>Contraseña<input name="clave" type="password" autocomplete="current-password" required minlength="1"></label>
 <button type="submit">Entrar</button>
+${google ? `<div class="o"><span>o</span></div><a class="g" href="/panel/google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar con Google</a>` : ""}
 </form>
 <small class="pie">¿Olvidó su contraseña? Pídale al dueño que se la cambie.</small>`}
 <div class="candado"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Conexión cifrada · Casa Digital</div>
@@ -209,14 +212,17 @@ ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}${aviso ? `<d
 // (the brand color can be dark red; it is only used for the button and the focus ring)
 // enviarCodigo(whatsapp, codigo) -> true if it went out; without it nobody gets the second step.
 // bitacora(evento, datos) writes down every login, failed try and logout.
-function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = null, marca, color, logo = "", log = console.log, freno = createFreno(), enviarCodigo = null, bitacora = () => {} }) {
-  const pagina = o => paginaEntrar({ marca, color, logo, ...o });
+function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = null, marca, color, logo = "", log = console.log, freno = createFreno(), enviarCodigo = null, bitacora = () => {}, google = null, fetch: f = globalThis.fetch }) {
+  const conGoogle = !!(google && google.id && google.secreto);
+  const pagina = o => paginaEntrar({ marca, color, logo, google: conGoogle, ...o });
   const ses = secret ? createSesiones(secret, HORAS, { file: archivoSesiones }) : null;
+  const sGoogle = secret ? createSello(secret, "google") : null;
   const sPaso = secret ? createSello(secret, "paso") : null, sEquipo = secret ? createSello(secret, "equipo") : null;
   const codigos = new Map();          // pending second steps: id -> { hash of the code, wrong tries }
   const seguro = res => res.set({ "Cache-Control": "no-store", "X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin" });
   const usuarioDe = req => ses ? ses.leer(cookies(req)[COOKIE], usuarios) : null;
-  const galleta = (req, res, nombre, v, maxAge) => res.append("Set-Cookie", `${nombre}=${v}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${req.secure ? "; Secure" : ""}`);
+  // the Google return is a cross-site navigation: its one-use state cookie must be Lax so the browser sends it back
+  const galleta = (req, res, nombre, v, maxAge) => res.append("Set-Cookie", `${nombre}=${v}; Path=/; HttpOnly; SameSite=${nombre === GOOGLE ? "Lax" : "Strict"}; Max-Age=${maxAge}${req.secure ? "; Secure" : ""}`);
   const ponerCookie = (req, res, v, maxAge) => galleta(req, res, COOKIE, v, maxAge);
   const sinConfig = (req, res) => { if (ses) return false; seguro(res).status(503).type("text/plain").send("El panel está cerrado: falta PANEL_SECRET en la configuración."); return true; };
   const mismoSitio = req => { const o = req.get("Origin"); return !o || o === `${req.protocol}://${req.get("host")}`; };
@@ -232,6 +238,8 @@ function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = nu
     ponerCookie(req, res, ses.crear(u), HORAS * 3600);
     log(`[panel] entró ${u.correo}`);
     bitacora("entro", { correo: u.correo, como, ...quien(req) });
+    // after Google, a redirect would still count as cross-site and the Strict cookie would not go: this page moves on from our own site
+    if (como === "Google") return res.type("html").send(`<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/panel"><title>Entrando…</title><p style="font:14px system-ui;text-align:center;margin-top:40vh">Entrando al panel…</p>`);
     res.redirect(303, "/panel");
   }
 
@@ -289,6 +297,42 @@ function montarPanel(app, { secret, usuarios, archivoPanel, archivoSesiones = nu
     galleta(req, res, PASO, "", 0);
     if ((req.body || {}).recordar) galleta(req, res, EQUIPO, sEquipo.crear({ e: u.correo, h: huella(u.hash), x: Date.now() + DIAS_EQUIPO * 864e5 }), DIAS_EQUIPO * 86400);
     abrirSesion(req, res, u, "código de WhatsApp");
+  });
+  // Entrar con Google: solo los correos que ya son usuarios del panel. Google ya pide su propia verificación,
+  // así que no se manda el código de WhatsApp. Necesita GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET.
+  const vuelta = req => `${google && google.base || `${req.protocol}://${req.get("host")}`}/panel/google/vuelta`;
+  app.get("/panel/google", (req, res) => {
+    if (sinConfig(req, res)) return;
+    seguro(res);
+    if (!conGoogle) return res.redirect(303, "/panel/entrar");
+    const n = b64(crypto.randomBytes(16));
+    galleta(req, res, GOOGLE, sGoogle.crear({ n, x: Date.now() + 10 * 6e4 }), 600);
+    const q = new URLSearchParams({ client_id: google.id, redirect_uri: vuelta(req), response_type: "code", scope: "openid email", state: n, prompt: "select_account" });
+    res.redirect(303, "https://accounts.google.com/o/oauth2/v2/auth?" + q);
+  });
+  app.get("/panel/google/vuelta", async (req, res) => {
+    if (sinConfig(req, res)) return;
+    seguro(res);
+    const mal = (error, correo = "") => res.status(401).type("html").send(pagina({ error, correo }));
+    if (!conGoogle) return res.redirect(303, "/panel/entrar");
+    const d = sGoogle.abrir(cookies(req)[GOOGLE]);
+    galleta(req, res, GOOGLE, "", 0);
+    if (!d || !req.query.state || req.query.state !== d.n || !req.query.code) return mal("No se pudo entrar con Google. Vuelva a intentar.");
+    if (freno.bloqueado("i:" + req.ip)) return res.status(429).type("html").send(pagina({ error: "Demasiados intentos. Espere 15 minutos y vuelva a probar." }));
+    let datos;
+    try {
+      const r = await f("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ code: String(req.query.code), client_id: google.id, client_secret: google.secreto, redirect_uri: vuelta(req), grant_type: "authorization_code" }) });
+      const j = await r.json();
+      if (!r.ok || !j.id_token) throw new Error(j.error_description || j.error || `Google ${r.status}`);
+      // the token comes straight from Google over HTTPS, so its content can be read without checking the signature
+      datos = JSON.parse(Buffer.from(String(j.id_token).split(".")[1], "base64url").toString("utf8"));
+    } catch (e) { log(`[panel] Google: ${e.message}`); return mal("Google no respondió. Vuelva a intentar."); }
+    const correo = normCorreo(datos.email);
+    const valido = datos.aud === google.id && ["https://accounts.google.com", "accounts.google.com"].includes(datos.iss) && datos.email_verified === true && +datos.exp * 1000 > Date.now();
+    const u = valido ? usuarios.get(correo) : null;
+    if (!u) { freno.fallo("i:" + req.ip); log(`[panel] Google sin acceso ${correo} ${req.ip}`); bitacora("fallo", { correo, como: "Google", ...quien(req) }); return mal(`El correo ${correo || "de Google"} no tiene acceso a este panel. Pídale al dueño que lo agregue.`, correo); }
+    abrirSesion(req, res, u, "Google");
   });
   app.all("/panel/salir", (req, res) => {
     const u = usuarioDe(req);
