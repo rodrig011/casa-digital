@@ -1334,10 +1334,14 @@ test("Con Sabor a Pueblo: solo Tegucigalpa (cerdito L220, chicharrón por libra 
   // pierna: minimum 5 lb, its own date, 50% deposit
   ({ ult } = correr(["hola", "Hacer un pedido", "3 pierna de cerdo", "Confirmar pedido"]));
   assert.match(ult, /mínimo de Pierna de cerdo deshuesada \(libra\) es de 5/);
-  ({ st, ult } = correr(["hola", "Hacer un pedido", "6 pierna de cerdo", "Confirmar pedido", "Para recoger", "Rosa"]));
-  assert.equal(st.lead.encargo, true); assert.equal(st.lead.diaFecha, "2026-12-24"); assert.equal(st.lead.total, 1920); assert.equal(st.lead.anticipo, 960);
+  // no deliveries on Dec 24: the bot does not ask "¿Lo recoge o se lo llevamos?"
+  ({ st, ult } = correr(["hola", "Hacer un pedido", "6 pierna de cerdo", "Confirmar pedido"]));
+  assert.match(ult, /no hay envíos: este encargo es para recoger/); assert.doesNotMatch(ult, /se lo llevamos/);
+  ({ st, ult } = correr(["hola", "Hacer un pedido", "6 pierna de cerdo", "Confirmar pedido", "Rosa"]));
+  assert.equal(st.lead.encargo, true); assert.ok(!st.lead.direccion); assert.equal(st.lead.diaFecha, "2026-12-24"); assert.equal(st.lead.total, 1920); assert.equal(st.lead.anticipo, 960);
   assert.match(ult, /Para el jueves 24 de diciembre/); assert.match(ult, /Anticipo: \*L 960\* de L 1,920/);
   assert.equal(montoCobro(N2, [{ id: "pierna", subtotal: 1600 }]), 800);
+  { const { ejecutar } = require("./ia"); assert.match(ejecutar(N2, "crear_pedido", { nombre: "Ana", productos: [{ id: "pierna", cantidad: 5 }], fecha: "2026-12-24", direccion: "Col. Palmira" }, { now: NOW }).error, /solo para recoger/); }
   ({ ult } = correr(["hola", "Hacer un pedido", "5 pierna de cerdo", "Confirmar pedido"], new Date("2026-12-16T09:00:00-06:00")));
   assert.match(ult, /Ya se cerraron los pedidos de Pierna/);
   ({ ult } = correr(["hola", "Hacer un pedido", "5 pierna de cerdo y 1 cerdito chuko", "Confirmar pedido"]));

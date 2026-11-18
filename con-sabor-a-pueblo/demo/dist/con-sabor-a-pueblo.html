@@ -104,7 +104,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <header class="top">
   <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=19e63ac5" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=dba10dfb" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> Los precios del cerdito chuko, el chicharrón y el guacamole son los suyos; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -334,13 +334,14 @@ function textoCobro(negocio, n, total, monto = total) {
 
 // Encargos (opcional, por producto): se piden con tiempo para una fecha fija, por ejemplo la pierna del 24 de diciembre.
 //   "encargo": { "fecha": "2026-12-24", "hasta": "2026-12-15" }  -> se entrega ese día; se reciben pedidos hasta "hasta" (inclusive)
+//   "soloRecoger": true -> ese día no hay envíos: el bot no ofrece domicilio para el encargo
 // No usan los cupos de los días normales y van en un pedido aparte.
 function prepararEncargo(e, id, errores) {
   if (!e) return null;
   const f = /^\d{4}-\d{2}-\d{2}$/;
   if (!f.test(String(e.fecha || "")) || (e.hasta && !f.test(String(e.hasta)))) { errores.push(`${id}: encargo necesita "fecha" (y "hasta") como AAAA-MM-DD`); return null; }
   const d = new Date(e.fecha + "T12:00:00Z");
-  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}` };
+  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`, ...(e.soloRecoger ? { soloRecoger: true } : {}) };
 }
 const hoyHN = now => new Date(new Date(now || Date.now()).getTime() - 6 * 3600e3).toISOString().slice(0, 10);
 const vendeEn = (it, sucursalId) => !it.sucursales || !sucursalId || it.sucursales.includes(sucursalId);
@@ -508,7 +509,8 @@ function ajustesDe(N) {
   return {
     pausa: { activo: !!(N.pausa && N.pausa.activo), mensaje: (N.pausa && N.pausa.mensaje) || "" },
     bot: MODOS_BOT.includes(N.modoBot) ? N.modoBot : "ia",
-    bienvenida: N.bienvenida || "",   // the owner's notice sent before the first answer to each customer (every 12 h)   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
+    bienvenida: N.bienvenida || "",
+    duenoMin: N.duenoMin != null ? N.duenoMin : "",   // minutes the bot stays quiet in a chat after the owner writes there from his app ("" = the server default)   // the owner's notice sent before the first answer to each customer (every 12 h)   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
     cupos: C ? { porTanda: C.porTanda, porSucursal: C.porSucursal, topes: { ...C.topes }, dias: C.dias.map(d => DIAS[d]), cierre: C.cierre, anticipacion: C.anticipacion, verDias: C.verDias, cerrados: [...C.cerrados], nota: C.nota, tandas: C.tandas.length } : null,
     cobro: { anticipo: B.anticipo, desde: B.desde === Infinity ? "" : B.desde, domicilio: B.domicilio, faltas: B.faltas, transferencia: B.transferencia },
     sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", horario: s.horario || "" })),
@@ -552,6 +554,10 @@ function aplicarAjustes(N, a) {
   if (cambios.pausa) { N.pausa = cambios.pausa; crudo.pausa = cambios.pausa; }
   if (a.bot != null) N.modoBot = crudo.modoBot = a.bot;
   if (a.bienvenida != null) N.bienvenida = crudo.bienvenida = texto(a.bienvenida, 1500);
+  if (a.duenoMin != null) {
+    if (a.duenoMin === "") { delete N.duenoMin; delete crudo.duenoMin; }
+    else { const m = Math.round(+a.duenoMin); if (!(m >= 0 && m <= 1440)) throw new Error("Revise los minutos que el bot se calla (0 a 1440)."); N.duenoMin = crudo.duenoMin = m; }
+  }
   if (cambios.cupos) { for (const k of Object.keys(N.cupos)) delete N.cupos[k]; Object.assign(N.cupos, p.cupos); crudo.cupos = cambios.cupos; }
   if (cambios.cobro) { const pasarela = N.cobro.pasarela; Object.assign(N.cobro, p.cobro, { pasarela }); if (pasarela) N.cobro.activo = true; crudo.cobro = cambios.cobro; }
   if (Array.isArray(a.sucursales)) for (const x of a.sucursales) {
@@ -905,6 +911,8 @@ function createEngine(negocio) {
             const i = d.carrito.findIndex(l => !l.nota && (N.items.find(x => x.id === l.id) || {}).cupos);
             if (i >= 0) { d.salsaDe = i; go("salsa"); say({ text: `🌶️ ¿Qué salsa para ${d.carrito[i].cantidad > 1 ? `los ${d.carrito[i].cantidad} ` : "el "}*${N.items.find(x => x.id === d.carrito[i].id).nombre}*?${CUP.nota ? ` ${CUP.nota}` : ""}`, buttons: CUP.salsas }); break; }
           }
+          const encSolo = encargoDe(N, d.carrito);
+          if (encSolo && encSolo.soloRecoger && d.domicilio !== false) { d.domicilio = false; say(`🏠 El *${encSolo.etiqueta}* no hay envíos: este encargo es para recoger.`); }
           if (PROPIO && d.domicilio === null) { go("entrega"); say({ text: "¿Lo recoge o se lo llevamos?", buttons: ENTREGA }); break; }
           if (d.domicilio) { go("direccion"); say("🛵 ¿A qué dirección se lo llevamos? Colonia, calle o pasaje y una seña para encontrar la casa."); break; }
           despuesDeEntrega(); break;
@@ -1715,7 +1723,7 @@ function ejecutar(N, name, input, ctx) {
   switch (name) {
     case "ver_menu": return { menu: N.items.map(i => ({ id: i.id, nombre: i.nombre, categoria: i.categoria, ...(i.desc ? { descripcion: i.desc } : {}), precio: N.L(i.precio), ...(N.cupos && !N.cupos.porPedido ? { cupos: i.cupos } : {}),
       ...(i.sucursales ? { solo_en: i.sucursales.map(x => b(x).nombre) } : {}), ...(i.minimo > 1 ? { minimo: i.minimo } : {}),
-      ...(i.encargo ? { encargo: { para: i.encargo.etiqueta, fecha: i.encargo.fecha, pedidos_hasta: i.encargo.hasta } } : {}), ...(i.anticipo != null && N.cobro.activo ? { anticipo: i.anticipo + "%" } : {}) })) };
+      ...(i.encargo ? { encargo: { para: i.encargo.etiqueta, fecha: i.encargo.fecha, pedidos_hasta: i.encargo.hasta, ...(i.encargo.soloRecoger ? { solo_para_recoger: "ese día no hay envíos" } : {}) } } : {}), ...(i.anticipo != null && N.cobro.activo ? { anticipo: i.anticipo + "%" } : {}) })) };
     case "ver_cupos": {
       if (!N.cupos) return { error: "Este restaurante no vende por cupos." };
       const dias = fechasCupos(N, ctx.now).map(f => ({ fecha: f.fecha, dia: f.etiqueta, tandas: N.cupos.tandas.map(t => ({ tanda: t, libres: Math.max(0, libre(N, ctx, f.fecha, t, input.sucursal)) })) }));
@@ -1737,6 +1745,7 @@ function ejecutar(N, name, input, ctx) {
       if (dup) return { ok: true, ya_existia: true, numero: dup.n, total: N.L(dup.total), nota: "Este pedido ya estaba creado con ese número: no se creó otro. No le cobre ni le confirme dos veces." };
       const nombre = String(input.nombre || ctx.nombre || "").trim().slice(0, 60).replace(/^\p{L}/u, x => x.toUpperCase()) || null;
       const direccion = N.domicilio.propio ? String(input.direccion || "").trim().slice(0, 200) : "";
+      if (enc && enc.soloRecoger && direccion) return { error: `El ${enc.etiqueta} no hay envíos: este encargo es solo para recoger. Dígaselo al cliente y cree el pedido sin dirección.` };
       let cup = null;
       if (enc) cup = { encargo: true, dia: enc.etiqueta, diaFecha: enc.fecha };
       else if (N.cupos) {
@@ -1864,7 +1873,7 @@ module.exports = { createIA, MODELO, ejecutar, system, tools };
 function req(n){if(!defs[n])return{};if(cache[n])return cache[n].exports;const m={exports:{}};cache[n]=m;defs[n](m,m.exports,req);return m.exports}
 const r={};for(const m of ["negocio","engine","avisos","repartos","store","ia"])r[m]=req("./"+m);return r})();
 const NEGOCIO_JSON={
-  "_nota": "Con Sabor a Pueblo (Tegucigalpa, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp: cerdito chuko a L220 (corregido por el dueño el 16-nov-2026); chicharrones de panceta en Tegucigalpa a L320 la libra o L160 la media libra, siempre con tortillas y limón gratis, y se les puede agregar guacamole por L80 (16-nov); San Pedro Sula salió del bot el 16-nov: el dueño pidió que todo lo de SPS se lo pasen a él y lo contesta en persona (\"derivar\": el bot no dice nada de SPS, le avisa al dueño con el mensaje del cliente); la comida se paga por transferencia con comprobante antes de cocina, también a domicilio (el envío se le paga al repartidor); pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.. POR CONFIRMAR antes de prender el bot: la cuenta para depósitos, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render. 18-nov-2026: mensaje del dueño (bienvenida): guacamole L90, tortillas L12 como extra (ya no gratis), apartados se cierran los jueves, ubicación en Google Maps.",
+  "_nota": "Con Sabor a Pueblo (Tegucigalpa, solo sábados). REAL, de su TikTok @consaborapueblohn y de lo que el dueño le escribió a Rodrigo por WhatsApp: cerdito chuko a L220 (corregido por el dueño el 16-nov-2026); chicharrones de panceta en Tegucigalpa a L320 la libra o L160 la media libra, siempre con tortillas y limón gratis, y se les puede agregar guacamole por L80 (16-nov); San Pedro Sula salió del bot el 16-nov: el dueño pidió que todo lo de SPS se lo pasen a él y lo contesta en persona (\"derivar\": el bot no dice nada de SPS, le avisa al dueño con el mensaje del cliente); la comida se paga por transferencia con comprobante antes de cocina, también a domicilio (el envío se le paga al repartidor); pierna de cerdo deshuesada a L320 la libra, mínimo 5 libras, para el 24 de diciembre, pedidos hasta el 15 de diciembre o hasta agotar, apartado con el 50%; tope de 50 apartados; apartado con depósito que el dueño aprueba; hasta la 1:00 p. m.. POR CONFIRMAR antes de prender el bot: la cuenta para depósitos, cuántas libras de pierna caben y dónde se entrega el 24, zonas y costo del envío. Los WhatsApp, los repartidores y la cuenta del banco NO van aquí (el repositorio es público): van en NEGOCIO_PRIVADO en Render. 18-nov-2026: mensaje del dueño (bienvenida): guacamole L90, tortillas L12 como extra (ya no gratis), apartados se cierran los jueves, ubicación en Google Maps. El 24 de diciembre no hay envíos: la pierna es solo para recoger (rodrigo, 18-nov).",
   "nombre": "Con Sabor a Pueblo",
   "color": "#FEBE29",
   "logo": "negocios/con-sabor-a-pueblo-logo.svg",
@@ -1930,9 +1939,10 @@ const NEGOCIO_JSON={
           "anticipo": 50,
           "encargo": {
             "fecha": "2026-12-24",
-            "hasta": "2026-12-15"
+            "hasta": "2026-12-15",
+            "soloRecoger": true
           },
-          "desc": "Solo la carne. Pedido mínimo 5 libras. Para el 24 de diciembre; se aparta con el 50%."
+          "desc": "Solo la carne. Pedido mínimo 5 libras. Para el 24 de diciembre, solo para recoger (ese día no hay envíos); se aparta con el 50%."
         }
       ]
     }
@@ -2240,8 +2250,8 @@ function armar() {
   ver(activa);
   guia();
 }
-// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=19e63ac5) and talks to this page by BroadcastChannel
-const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=19e63ac5";
+// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=dba10dfb) and talks to this page by BroadcastChannel
+const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=dba10dfb";
 function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-con-sabor"); }
 function ver(k) {
   if (k === "panel") return abrirPanel();

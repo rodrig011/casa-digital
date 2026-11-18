@@ -213,13 +213,14 @@ function textoCobro(negocio, n, total, monto = total) {
 
 // Encargos (opcional, por producto): se piden con tiempo para una fecha fija, por ejemplo la pierna del 24 de diciembre.
 //   "encargo": { "fecha": "2026-12-24", "hasta": "2026-12-15" }  -> se entrega ese día; se reciben pedidos hasta "hasta" (inclusive)
+//   "soloRecoger": true -> ese día no hay envíos: el bot no ofrece domicilio para el encargo
 // No usan los cupos de los días normales y van en un pedido aparte.
 function prepararEncargo(e, id, errores) {
   if (!e) return null;
   const f = /^\d{4}-\d{2}-\d{2}$/;
   if (!f.test(String(e.fecha || "")) || (e.hasta && !f.test(String(e.hasta)))) { errores.push(`${id}: encargo necesita "fecha" (y "hasta") como AAAA-MM-DD`); return null; }
   const d = new Date(e.fecha + "T12:00:00Z");
-  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}` };
+  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`, ...(e.soloRecoger ? { soloRecoger: true } : {}) };
 }
 const hoyHN = now => new Date(new Date(now || Date.now()).getTime() - 6 * 3600e3).toISOString().slice(0, 10);
 const vendeEn = (it, sucursalId) => !it.sucursales || !sucursalId || it.sucursales.includes(sucursalId);

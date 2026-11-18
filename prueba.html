@@ -474,13 +474,14 @@ function textoCobro(negocio, n, total, monto = total) {
 
 // Encargos (opcional, por producto): se piden con tiempo para una fecha fija, por ejemplo la pierna del 24 de diciembre.
 //   "encargo": { "fecha": "2026-12-24", "hasta": "2026-12-15" }  -> se entrega ese día; se reciben pedidos hasta "hasta" (inclusive)
+//   "soloRecoger": true -> ese día no hay envíos: el bot no ofrece domicilio para el encargo
 // No usan los cupos de los días normales y van en un pedido aparte.
 function prepararEncargo(e, id, errores) {
   if (!e) return null;
   const f = /^\d{4}-\d{2}-\d{2}$/;
   if (!f.test(String(e.fecha || "")) || (e.hasta && !f.test(String(e.hasta)))) { errores.push(`${id}: encargo necesita "fecha" (y "hasta") como AAAA-MM-DD`); return null; }
   const d = new Date(e.fecha + "T12:00:00Z");
-  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}` };
+  return { fecha: e.fecha, hasta: e.hasta || e.fecha, etiqueta: `${DIAS_TXT[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`, ...(e.soloRecoger ? { soloRecoger: true } : {}) };
 }
 const hoyHN = now => new Date(new Date(now || Date.now()).getTime() - 6 * 3600e3).toISOString().slice(0, 10);
 const vendeEn = (it, sucursalId) => !it.sucursales || !sucursalId || it.sucursales.includes(sucursalId);
@@ -648,7 +649,8 @@ function ajustesDe(N) {
   return {
     pausa: { activo: !!(N.pausa && N.pausa.activo), mensaje: (N.pausa && N.pausa.mensaje) || "" },
     bot: MODOS_BOT.includes(N.modoBot) ? N.modoBot : "ia",
-    bienvenida: N.bienvenida || "",   // the owner's notice sent before the first answer to each customer (every 12 h)   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
+    bienvenida: N.bienvenida || "",
+    duenoMin: N.duenoMin != null ? N.duenoMin : "",   // minutes the bot stays quiet in a chat after the owner writes there from his app ("" = the server default)   // the owner's notice sent before the first answer to each customer (every 12 h)   // ia = conversa con IA · menu = solo el menú de opciones · apagado = no contesta
     cupos: C ? { porTanda: C.porTanda, porSucursal: C.porSucursal, topes: { ...C.topes }, dias: C.dias.map(d => DIAS[d]), cierre: C.cierre, anticipacion: C.anticipacion, verDias: C.verDias, cerrados: [...C.cerrados], nota: C.nota, tandas: C.tandas.length } : null,
     cobro: { anticipo: B.anticipo, desde: B.desde === Infinity ? "" : B.desde, domicilio: B.domicilio, faltas: B.faltas, transferencia: B.transferencia },
     sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", horario: s.horario || "" })),
@@ -692,6 +694,10 @@ function aplicarAjustes(N, a) {
   if (cambios.pausa) { N.pausa = cambios.pausa; crudo.pausa = cambios.pausa; }
   if (a.bot != null) N.modoBot = crudo.modoBot = a.bot;
   if (a.bienvenida != null) N.bienvenida = crudo.bienvenida = texto(a.bienvenida, 1500);
+  if (a.duenoMin != null) {
+    if (a.duenoMin === "") { delete N.duenoMin; delete crudo.duenoMin; }
+    else { const m = Math.round(+a.duenoMin); if (!(m >= 0 && m <= 1440)) throw new Error("Revise los minutos que el bot se calla (0 a 1440)."); N.duenoMin = crudo.duenoMin = m; }
+  }
   if (cambios.cupos) { for (const k of Object.keys(N.cupos)) delete N.cupos[k]; Object.assign(N.cupos, p.cupos); crudo.cupos = cambios.cupos; }
   if (cambios.cobro) { const pasarela = N.cobro.pasarela; Object.assign(N.cobro, p.cobro, { pasarela }); if (pasarela) N.cobro.activo = true; crudo.cobro = cambios.cobro; }
   if (Array.isArray(a.sucursales)) for (const x of a.sucursales) {
@@ -1045,6 +1051,8 @@ function createEngine(negocio) {
             const i = d.carrito.findIndex(l => !l.nota && (N.items.find(x => x.id === l.id) || {}).cupos);
             if (i >= 0) { d.salsaDe = i; go("salsa"); say({ text: `🌶️ ¿Qué salsa para ${d.carrito[i].cantidad > 1 ? `los ${d.carrito[i].cantidad} ` : "el "}*${N.items.find(x => x.id === d.carrito[i].id).nombre}*?${CUP.nota ? ` ${CUP.nota}` : ""}`, buttons: CUP.salsas }); break; }
           }
+          const encSolo = encargoDe(N, d.carrito);
+          if (encSolo && encSolo.soloRecoger && d.domicilio !== false) { d.domicilio = false; say(`🏠 El *${encSolo.etiqueta}* no hay envíos: este encargo es para recoger.`); }
           if (PROPIO && d.domicilio === null) { go("entrega"); say({ text: "¿Lo recoge o se lo llevamos?", buttons: ENTREGA }); break; }
           if (d.domicilio) { go("direccion"); say("🛵 ¿A qué dirección se lo llevamos? Colonia, calle o pasaje y una seña para encontrar la casa."); break; }
           despuesDeEntrega(); break;
