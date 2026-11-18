@@ -643,8 +643,10 @@ function pintarAjustes(v) {
     ${N.whatsapp === "" ? `<div class="sin-wa" role="status"><b>WhatsApp todavía no está conectado.</b> Todo lo que deje listo aquí (menú, apartados, pagos, horarios, equipo) ya queda guardado y el bot lo usa desde el primer mensaje.</div>` : ""}
     ${A.pausa.activo ? `<div class="pausa-on" role="status"><span>Los pedidos por WhatsApp están en pausa. El bot contesta su mensaje y no toma pedidos.</span><button class="btn sm" data-reabrir>Volver a abrir</button></div>` : ""}
     ${ajAviso ? `<p class="ayuda ok" role="status">✓ ${esc(ajAviso)}</p>` : ""}${ajError ? `<p class="ayuda error" role="alert">${esc(ajError)}</p>` : ""}
+    ${A.bot === "apagado" ? `<div class="pausa-on" role="status"><span>El bot está apagado: no le contesta a nadie. Usted atiende desde su WhatsApp.</span><button class="btn sm" data-prender>Prender el bot</button></div>` : ""}
     ${sec("Pedidos por WhatsApp", "Pause los pedidos si un día no abre o ya se le acabó la comida. Los clientes reciben su mensaje.",
-      campo("Recibir pedidos", "Apagado: el bot no toma pedidos.", sw("pausa.activo", !A.pausa.activo, "Abierto", "En pausa").replace('data-k="pausa.activo"', 'data-k="pausa.activo" data-inv'))
+      campo("Cómo contesta el bot", "Si algo no le gusta, cámbielo aquí. Se aplica al instante.", `<select id="aj-bot" data-k="bot"><option value="ia"${A.bot === "ia" ? " selected" : ""}>Conversa con IA${N.modoIA ? "" : " (falta activarla)"}</option><option value="menu"${A.bot === "menu" ? " selected" : ""}>Solo menú de opciones, sin IA</option><option value="apagado"${A.bot === "apagado" ? " selected" : ""}>Apagado: no contesta, yo atiendo</option></select>`, "aj-bot")
+      + campo("Recibir pedidos", "Apagado: el bot no toma pedidos.", sw("pausa.activo", !A.pausa.activo, "Abierto", "En pausa").replace('data-k="pausa.activo"', 'data-k="pausa.activo" data-inv'))
       + campo("Mensaje cuando está en pausa", "Si lo deja vacío: «En este momento no estamos tomando pedidos por WhatsApp. Por favor escríbanos más tarde.»", `<textarea id="aj-pausa" data-k="pausa.mensaje" maxlength="300" placeholder="Hoy no abrimos. ¡Nos vemos el próximo sábado!">${esc(A.pausa.mensaje)}</textarea>`, "aj-pausa", true))}
     ${C ? sec("Apartados", "Cuántos apartados acepta el bot, qué días y hasta qué hora. Cuando se llena, ofrece otro día o la lista de espera.",
       campo(`Máximo de apartados${C.tandas > 1 ? " por tanda" : " por día"}`, C.porSucursal ? "Para cada ciudad, salvo que abajo le ponga otro." : "", num("cupos.porTanda", C.porTanda, "apartados", 1), "aj-cupos-porTanda")
@@ -681,6 +683,7 @@ function pintarAjustes(v) {
   caja.querySelectorAll("[data-dia]").forEach(b => b.onclick = () => { const d = b.dataset.dia, L2 = aj.cupos.dias; const i = L2.indexOf(d); if (i >= 0) L2.splice(i, 1); else L2.push(d); b.setAttribute("aria-pressed", i < 0); marcar(); });
   caja.querySelectorAll("[data-quitar-f]").forEach(b => b.onclick = () => { aj.cupos.cerrados = aj.cupos.cerrados.filter(f => f !== b.dataset.quitarF); repintar(); });
   const fm = $("#aj-fecha-mas"); if (fm) fm.onclick = () => { const f = $("#aj-fecha").value; if (f && !aj.cupos.cerrados.includes(f)) { aj.cupos.cerrados.push(f); aj.cupos.cerrados.sort(); } repintar(); };
+  const pr = caja.querySelector("[data-prender]"); if (pr) pr.onclick = () => { aj.bot = "ia"; guardarAjustes(); };
   const re = caja.querySelector("[data-reabrir]"); if (re) re.onclick = () => { aj.pausa.activo = false; guardarAjustes(); };
   $("#aj-descartar").onclick = () => { aj = copia(N.ajustes); ajError = ""; repintar(); };
   $("#aj-guardar").onclick = guardarAjustes;
@@ -695,7 +698,7 @@ async function guardarAjustes() {
     else {
       N.ajustes = d.ajustes; aj = copia(d.ajustes);
       if (N.cupos && d.ajustes.cupos) Object.assign(N.cupos, { porTanda: d.ajustes.cupos.porTanda, topes: d.ajustes.cupos.topes, cerrados: d.ajustes.cupos.cerrados });
-      ajAviso = d.ajustes.pausa.activo ? "Guardado. Los pedidos por WhatsApp quedaron en pausa." : "Guardado y aplicado. El bot ya usa esta configuración.";
+      ajAviso = d.ajustes.bot === "apagado" ? "Guardado. El bot quedó apagado: no le contesta a nadie." : d.ajustes.pausa.activo ? "Guardado. Los pedidos por WhatsApp quedaron en pausa." : "Guardado y aplicado. El bot ya usa esta configuración.";
       refrescarNegocio();
     }
   } catch { ajError = "Sin conexión. Vuelva a intentar."; }
