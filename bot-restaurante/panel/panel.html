@@ -222,6 +222,9 @@ table tfoot td{font-weight:600;border-bottom:0}
   .guardar-aj{margin:8px -12px 0;bottom:calc(60px + env(safe-area-inset-bottom));padding:10px 12px}
   .cup-fila{grid-template-columns:1fr auto}.cup-fila .barra{grid-column:1/-1;order:3}
 }
+.chat{margin-top:6px}.chat summary{cursor:pointer;color:var(--brand-tx);font-size:13px;font-weight:600}
+.burbuja{white-space:pre-wrap;font-size:13px;line-height:1.4;padding:8px 10px;border-radius:10px;margin:6px 0;max-width:92%;background:rgba(127,127,127,.12)}
+.burbuja.cli{margin-left:auto;background:rgba(255,76,0,.12)}.burbuja span{display:block;font-size:11px;opacity:.65;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -264,6 +267,8 @@ const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const H = (t, k, r = "") => `<h2><span class="ct">${svg(k)}</span>${t}${r}</h2>`;
 const ESTADO_TXT = { por_pagar: "Esperando pago", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", en_camino: "En camino", por_envio: "Esperando envío", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
 let editRep = null, repError = "", repGuardando = false;
+// the last messages of the chat, saved with the order or the request (customer on the right, bot on the left)
+const chat = p => Array.isArray(p.convo) && p.convo.length ? `<details class="chat"><summary>Ver conversación (${p.convo.length} mensajes)</summary>${p.convo.map(([t, c]) => `<div class="burbuja ${c ? "cli" : "bot"}"><span>${c ? "Cliente" : "Bot"}</span>${esc(typeof t === "string" ? t : (t && t.text) || "")}</div>`).join("")}</details>` : "";
 let AT = [];   // chats the owner is answering himself (the bot is quiet there)
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false, modoPedidos = "tablero", busca = "";
 try { modoPedidos = localStorage.getItem("modoPedidos") || "tablero"; } catch {}
@@ -449,7 +454,7 @@ function pintar() {
     const x = filtrados().filter(p => p.tipo === "persona").slice(0, 100);
     const at = AT.length ? `<div class="card" style="margin-bottom:12px">${H("Chats que usted está atendiendo", "personas")}<p class="nota-ed">Usted le escribió a estos clientes desde su app, así que el bot no les contesta por un rato. Toque <b>Devolver al bot</b> para que el bot los atienda de nuevo.</p>${AT.map(a => `<div class="fila"><div><a class="wa" href="${wa(a.tel)}" target="_blank" rel="noopener">${esc(a.nombre ? a.nombre + " · " + a.tel : a.tel)}</a><small>El bot vuelve solo a las ${esc(new Date(a.hasta).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit", timeZone: "America/Tegucigalpa" }))}</small></div><button class="btn" data-al-bot="${esc(a.tel)}">Devolver al bot</button></div>`).join("")}</div>` : "";
     v.innerHTML = at + `<p class="ayuda">Clientes que pidieron hablar con una persona. Escríbales desde el WhatsApp del negocio y márquelos como atendidos.</p>
-      <div class="card">${x.map(p => `<div class="fila"><div><a class="wa" href="${wa(p.tel)}" target="_blank" rel="noopener">${esc(p.tel)}</a><small>${esc(p.motivo || "Pidió hablar con una persona")} · ${esc(p.sucursal)} · ${hace(p.fecha)}</small></div>${p.estado === "nuevo" ? `<button class="btn" data-n="${esc(p.n)}" data-e="atendido">Atendido</button>` : `<span class="tag t-atendido">Atendido</span>`}</div>`).join("") || `<div class="vacio">Nadie está esperando.</div>`}</div>`;
+      <div class="card">${x.map(p => `<div class="fila"><div><a class="wa" href="${wa(p.tel)}" target="_blank" rel="noopener">${esc(p.tel)}</a><small>${esc(p.motivo || "Pidió hablar con una persona")} · ${esc(p.sucursal)} · ${hace(p.fecha)}</small>${chat(p)}</div>${p.estado === "nuevo" ? `<button class="btn" data-n="${esc(p.n)}" data-e="atendido">Atendido</button>` : `<span class="tag t-atendido">Atendido</span>`}</div>`).join("") || `<div class="vacio">Nadie está esperando.</div>`}</div>`;
   } else if (vista === "seguridad") {
     pintarSeguridad(v);
   } else if (vista === "ajustes") {
