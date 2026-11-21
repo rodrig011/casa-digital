@@ -7,12 +7,13 @@ rodrigo pidió un póster en vez del video, con "Con Sabor a Pueblo × Clientia 
 - Datos: los mismos del video (ver `../README.md`). Sin precios. Solo Tegucigalpa.
 - Regenerar: `node foto.mjs` (Playwright).
 
-## Tipografía (segunda versión, 21 nov)
+## Versión actual (tercera, 21 nov)
 
-rodrigo pidió otra tipografía. Se buscaron skills de diseño en GitHub (`ca-who-codes/ultimate.UIUX.design.skills`, guía de pósters: un solo mensaje, se lee en 5 segundos, una sola acción; `jiji262/claude-design-skill`, estilos "hecho a mano" para marcas cálidas) y se probaron tres titulares, todos con licencia libre (fontsource):
+rodrigo dijo que la segunda (Fraunces) se veía horrible y pidió inspirarse en otras marcas. Esta sigue cómo arman sus anuncios de comida Burger King y McDonald's:
 
-- **Fraunces** (elegida): serif gruesa y suave, se siente casera y cálida, combina con la letra cursiva de su logo y el número se lee bien.
-- **Alfa Slab One** (`?v=rotulo`): estilo rótulo pintado con sombra roja.
-- **Shrikhand** (`?v=letrero`): letrero retro de brocha.
+- La foto manda: de borde a borde arriba, a su tamaño real (1080 px, sin agrandar), con la orilla de abajo en curva.
+- Un solo titular en una letra gruesa y redonda (**Bagel Fat One**, licencia libre), en café oscuro en vez de negro.
+- El número va dentro de un botón café con el ícono de WhatsApp: es la única acción.
+- Dos líneas de datos en Figtree y, abajo y pequeño, "Con Sabor a Pueblo × Clientia Tech".
 
-Comparación lado a lado: `opciones-tipografia.jpg`. El texto pequeño pasó de Outfit a **Figtree**. Para cambiar la elegida: `ELEGIDA` en `foto.mjs`.
+Las versiones anteriores (Fraunces, rótulo pintado, letrero retro) siguen en el historial de git.
