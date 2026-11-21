@@ -3,30 +3,48 @@
 <head>
 <meta charset="utf-8">
 <title>Con Sabor a Pueblo · póster pedidos por WhatsApp</title>
+<!-- Tres tipografías para el titular: ?v=rotulo (Alfa Slab One), ?v=letrero (Shrikhand), ?v=fraunces (Fraunces). Texto en Figtree. -->
 <style>
-@font-face{font-family:"Bricolage";src:url(../src/bricolage.woff2) format("woff2-variations");font-weight:200 800;}
-@font-face{font-family:"Outfit";src:url(../src/outfit.woff2) format("woff2-variations");font-weight:100 900;}
-:root{--sol:#FEBE29;--tinta:#201E1E;--crema:#FFF7E4;--wa:#25D366;}
+@font-face{font-family:"Shrikhand";src:url(fuentes/shrikhand.woff2) format("woff2");}
+@font-face{font-family:"Alfa Slab One";src:url(fuentes/alfa-slab-one.woff2) format("woff2");}
+@font-face{font-family:"Fraunces";src:url(fuentes/fraunces.woff2) format("woff2-variations");font-weight:100 900;}
+@font-face{font-family:"Fraunces";src:url(fuentes/fraunces-italic.woff2) format("woff2-variations");font-weight:100 900;font-style:italic;}
+@font-face{font-family:"Figtree";src:url(fuentes/figtree.woff2) format("woff2-variations");font-weight:300 900;}
+:root{--sol:#FEBE29;--tinta:#201E1E;--crema:#FFF7E4;--rojo:#D93A2B;--wa:#25D366;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:1080px;height:1920px;overflow:hidden;}
-body{background:var(--sol);font-family:"Outfit",sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased;position:relative;}
-/* la tela de cuadros de sus videos, como franja arriba */
+body{background:var(--sol);font-family:"Figtree",sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased;position:relative;}
+/* textura de papel muy suave, para que no se vea plano de computadora */
+body::before{content:"";position:absolute;inset:0;opacity:.18;mix-blend-mode:multiply;pointer-events:none;z-index:5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .4 0 0 0 0 .1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");}
 .tela{position:absolute;left:0;right:0;top:0;height:28px;background:repeating-linear-gradient(90deg,#E63B2E 0 72px,#1D7BD8 72px 144px,#2BA84A 144px 216px,#F06EAA 216px 288px,#201E1E 288px 360px);}
-h1{position:absolute;left:70px;right:70px;top:120px;font-family:"Bricolage";font-weight:800;font-size:178px;line-height:.9;letter-spacing:-.045em;font-variation-settings:"wdth" 88;}
+h1{position:absolute;left:60px;right:60px;top:110px;text-align:center;}
 h1 span{display:block;}
-h1 .wa{display:inline-block;background:var(--tinta);color:var(--sol);padding:6px 30px 22px;border-radius:30px;margin-top:22px;transform:rotate(-2deg);}
-.foto{position:absolute;left:90px;top:720px;width:900px;height:790px;border-radius:52px;overflow:hidden;transform:rotate(1.6deg);box-shadow:0 40px 80px -30px rgba(70,40,0,.55);outline:10px solid var(--crema);}
-.foto img{width:900px;height:790px;object-fit:cover;display:block;}
-.sello{position:absolute;left:46px;top:640px;width:210px;height:210px;transform:rotate(-10deg);filter:drop-shadow(0 16px 20px rgba(60,40,0,.35));}
+.foto{position:absolute;left:90px;top:740px;width:900px;height:770px;border-radius:40px;overflow:hidden;transform:rotate(1.4deg);box-shadow:0 40px 80px -30px rgba(70,40,0,.55);outline:12px solid var(--crema);}
+.foto img{width:900px;height:770px;object-fit:cover;display:block;}
+.sello{position:absolute;left:44px;top:662px;width:210px;height:210px;transform:rotate(-10deg);filter:drop-shadow(0 16px 20px rgba(60,40,0,.35));z-index:2;}
 .sello img{width:100%;height:100%;display:block;}
-.plato{position:absolute;right:120px;top:1432px;background:var(--crema);border-radius:999px;padding:14px 30px;font-size:34px;font-weight:600;transform:rotate(1.6deg);}
-.num{position:absolute;left:0;right:0;top:1572px;display:flex;justify-content:center;align-items:center;gap:26px;}
-.num i{flex:none;width:118px;height:118px;border-radius:50%;background:var(--wa);display:grid;place-items:center;}
-.num b{font-family:"Bricolage";font-size:150px;font-weight:800;letter-spacing:-.04em;line-height:1;font-variation-settings:"wdth" 85;}
-.info{position:absolute;left:60px;right:60px;top:1714px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;}
-.pie{position:absolute;left:0;right:0;bottom:34px;display:flex;justify-content:center;align-items:center;gap:14px;font-size:30px;font-weight:550;color:rgba(32,30,30,.8);}
+.plato{position:absolute;right:118px;top:1428px;background:var(--crema);border-radius:999px;padding:14px 30px;font-size:34px;font-weight:700;transform:rotate(1.4deg);}
+.num{position:absolute;left:0;right:0;top:1574px;display:flex;justify-content:center;align-items:center;gap:26px;}
+.num i{flex:none;width:112px;height:112px;border-radius:50%;background:var(--wa);display:grid;place-items:center;}
+.num b{font-size:136px;line-height:1;}
+.info{position:absolute;left:60px;right:60px;top:1716px;text-align:center;font-size:36px;font-weight:600;line-height:1.3;}
+.pie{position:absolute;left:0;right:0;bottom:34px;display:flex;justify-content:center;align-items:center;gap:14px;font-size:29px;font-weight:600;color:rgba(32,30,30,.78);}
 .pie .c{width:38px;height:38px;border-radius:50%;background:var(--tinta);display:grid;place-items:center;}
 .pie .c img{width:17px;height:20px;}
+
+/* A · rótulo pintado: slab gruesa con sombra dura, como los rótulos de las pulperías */
+.rotulo h1{font-family:"Alfa Slab One";font-size:150px;line-height:.98;letter-spacing:-.01em;color:var(--tinta);text-shadow:7px 7px 0 var(--rojo);}
+.rotulo h1 .wa{display:inline-block;margin-top:26px;background:var(--tinta);color:var(--sol);text-shadow:none;padding:6px 36px 20px;border-radius:24px;transform:rotate(-2deg);box-shadow:10px 10px 0 var(--rojo);}
+.rotulo .num b{font-family:"Alfa Slab One";font-weight:400;font-size:128px;letter-spacing:-.01em;}
+/* B · letrero retro con brocha */
+.letrero h1{font-family:"Shrikhand";font-size:146px;line-height:1.02;color:var(--tinta);}
+.letrero h1 .wa{display:inline-block;margin-top:24px;color:var(--crema);-webkit-text-stroke:0;text-shadow:6px 6px 0 var(--tinta),12px 12px 0 var(--rojo);transform:rotate(-3deg);}
+.letrero .num b{font-family:"Shrikhand";font-weight:400;font-size:124px;}
+/* C · Fraunces, serif suave y cálida */
+.fraunces h1{font-family:"Fraunces";font-weight:900;font-size:170px;line-height:.9;letter-spacing:-.03em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144;}
+.fraunces h1 .wa{font-style:italic;display:inline-block;margin-top:20px;background:var(--tinta);color:var(--sol);padding:4px 36px 26px;border-radius:999px;transform:rotate(-2deg);}
+.fraunces .num b{font-family:"Fraunces";font-weight:900;font-variation-settings:"SOFT" 100,"opsz" 144;letter-spacing:-.03em;}
 </style>
 </head>
 <body>
@@ -35,8 +53,9 @@ h1 .wa{display:inline-block;background:var(--tinta);color:var(--sol);padding:6px
 <div class="foto"><img src="foto-chicharron.jpg" alt=""></div>
 <div class="sello"><img src="../src/logo.svg" alt=""></div>
 <div class="plato">Chicharrones de panceta</div>
-<div class="num"><i><svg width="66" height="66" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.1-1.7-.1-1.6-.5-3.5-1.5-5.3-4.2-1.3-1.9-1.300-3.3-.4-4.3.3-.4.7-.5 1-.5h.7c.2 0 .5 0 .7.6l.9 2.2c.1.2.1.4 0 .6l-.8 1c.7 1.3 1.8 2.3 3.2 2.9l.9-1.1c.2-.3.4-.3.7-.2l2.1 1c.3.1.4.3.4.4 0 .2 0 .4-.1.5z"/></svg></i><b>3169-9031</b></div>
+<div class="num"><i><svg width="62" height="62" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.1-1.7-.1-1.6-.5-3.5-1.5-5.3-4.2-1.3-1.9-1.3-3.3-.4-4.3.3-.4.7-.5 1-.5h.7c.2 0 .5 0 .7.6l.9 2.2c.1.2.1.4 0 .6l-.8 1c.7 1.3 1.8 2.3 3.2 2.9l.9-1.1c.2-.3.4-.3.7-.2l2.1 1c.3.1.4.3.4.4 0 .2 0 .4-.1.5z"/></svg></i><b>3169-9031</b></div>
 <div class="info">Sábados en Col. Palmira, Tegucigalpa<br>A domicilio o para recoger</div>
 <div class="pie"><span>Con Sabor a Pueblo</span><span>×</span><span class="c"><img src="../src/clientia.svg" alt=""></span><span>Clientia Tech</span></div>
+<script>document.body.className = new URLSearchParams(location.search).get("v") || "fraunces";</script>
 </body>
 </html>
