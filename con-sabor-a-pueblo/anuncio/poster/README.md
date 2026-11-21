@@ -12,7 +12,7 @@ rodrigo pidió un póster en vez del video, con "Con Sabor a Pueblo × Clientia 
 rodrigo dijo que la segunda (Fraunces) se veía horrible y pidió inspirarse en otras marcas. Esta sigue cómo arman sus anuncios de comida Burger King y McDonald's:
 
 - La foto manda: de borde a borde arriba, a su tamaño real (1080 px, sin agrandar), con la orilla de abajo en curva.
-- Un solo titular en una letra gruesa y redonda (**Bagel Fat One**, licencia libre), en café oscuro en vez de negro.
+- Un solo titular en café oscuro en vez de negro. La letra redonda (Bagel Fat One) no le gustó; se investigó qué usan las cadenas: McDonald's usa Speedee (sans limpia, hecha por Dalton Maag en 2018), Burger King y Dunkin' tienen letras propias de Colophon, Popeyes una grotesca ancha. Se probaron tres gratuitas parecidas: **Plus Jakarta Sans** 800 (elegida, la más cercana a Speedee), **Barlow Condensed** 800 en mayúsculas (`?v=barlow`) y **Archivo** ancha 900 (`?v=archivo`). Comparación: `opciones-tipografia.jpg`.
 - El número va dentro de un botón café con el ícono de WhatsApp: es la única acción.
 - Dos líneas de datos en Figtree y, abajo y pequeño, "Con Sabor a Pueblo × Clientia Tech".
 

@@ -7,7 +7,9 @@
      La foto manda, de borde a borde y a su tamaño real; un solo titular; el número; nada más.
      Las versiones anteriores (Fraunces, rótulo, letrero) están en el historial de git. -->
 <style>
-@font-face{font-family:"Bagel Fat One";src:url(fuentes/bagel-fat-one.woff2) format("woff2");}
+@font-face{font-family:"Archivo";src:url(fuentes/archivo.woff2) format("woff2-variations");font-weight:100 900;font-stretch:62% 125%;}
+@font-face{font-family:"Barlow Condensed";src:url(fuentes/barlow-condensed-800.woff2) format("woff2");font-weight:800;}
+@font-face{font-family:"Jakarta";src:url(fuentes/jakarta.woff2) format("woff2-variations");font-weight:200 800;}
 @font-face{font-family:"Figtree";src:url(fuentes/figtree.woff2) format("woff2-variations");font-weight:300 900;}
 :root{--sol:#FEBE29;--cafe:#3A1D0E;--crema:#FFF3DC;--wa:#25D366;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -28,7 +30,17 @@ h1 span{display:block;}
 .pie{position:absolute;left:78px;right:60px;bottom:52px;display:flex;align-items:center;gap:12px;font-size:26px;font-weight:600;color:rgba(58,29,14,.7);}
 .pie .c{width:34px;height:34px;border-radius:50%;background:var(--cafe);display:grid;place-items:center;}
 .pie .c img{width:15px;height:18px;}
-.bagel h1,.bagel .num b{font-family:"Bagel Fat One";font-weight:400;letter-spacing:-.01em;}
+/* A · sans limpia y gruesa, como Speedee de McDonald's */
+.jakarta h1,.jakarta .num b{font-family:"Jakarta";font-weight:800;letter-spacing:-.045em;}
+.jakarta h1{font-size:136px;line-height:.95;}
+/* B · condensada en mayúsculas, como los carteles de comida callejera */
+.barlow h1,.barlow .num b{font-family:"Barlow Condensed";font-weight:800;text-transform:uppercase;letter-spacing:-.01em;}
+.barlow h1{font-size:164px;line-height:.86;}
+.barlow .num b{font-size:130px;}
+.barlow .num{top:1400px;}
+/* C · grotesca ancha y pesada, como Chicken Sans de Popeyes */
+.archivo h1,.archivo .num b{font-family:"Archivo";font-weight:900;font-stretch:112%;letter-spacing:-.04em;}
+.archivo h1{font-size:118px;line-height:.95;}
 </style>
 </head>
 <body>
@@ -38,6 +50,6 @@ h1 span{display:block;}
 <div class="num"><i><svg width="60" height="60" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.1-1.7-.1-1.6-.5-3.5-1.5-5.3-4.2-1.3-1.9-1.3-3.3-.4-4.3.3-.4.7-.5 1-.5h.7c.2 0 .5 0 .7.6l.9 2.2c.1.2.1.4 0 .6l-.8 1c.7 1.3 1.8 2.3 3.2 2.9l.9-1.1c.2-.3.4-.3.7-.2l2.1 1c.3.1.4.3.4.4 0 .2 0 .4-.1.5z"/></svg></i><b>3169-9031</b></div>
 <div class="info">Sábados en Col. Palmira, Tegucigalpa.<br>A domicilio o para recoger.</div>
 <div class="pie"><span>Con Sabor a Pueblo</span><span>×</span><span class="c"><img src="../src/clientia.svg" alt=""></span><span>Clientia Tech</span></div>
-<script>document.body.className = new URLSearchParams(location.search).get("v") || "bagel";</script>
+<script>document.body.className = new URLSearchParams(location.search).get("v") || "jakarta";</script>
 </body>
 </html>
