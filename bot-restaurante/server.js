@@ -173,7 +173,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const r = motor.handle(sess.state, text, now(), { faltas: faltasDe(key), ocupados, ultimo: ultimoDe(key), ubic, nombre: store.nombre(key) });
     const out = r.messages.map(toText).filter(Boolean);
     out.mensajes = r.messages.filter(m => m.text);
-    sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-16);
+    sess.convo = sess.convo.concat([[text, 1]], out.map(m => [m, 0])).slice(-40);
     if (r.state.lead) { store.seq = r.state.seq; out.pedido = guardar(r.state.lead, key, sess.convo); delete r.state.lead; }
     if (r.state.handoff) { persona(r.state.handoffMotivo || "", r.state.handoff, key, sess.convo); delete r.state.handoff; delete r.state.handoffMotivo; }
     if (r.state.cancelar) { cancelarPorCliente(r.state.cancelar, key); delete r.state.cancelar; }
@@ -190,14 +190,14 @@ function createApp(cfg = loadConfig(), deps = {}) {
       r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), ubic, nombre: store.nombre(key) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
-      const convo = sess.convo.concat([[text, 1]]).slice(-16);
+      const convo = sess.convo.concat([[text, 1]]).slice(-40);
       if (e.pedido) guardar(e.pedido, key, convo);
       if (e.persona) persona(e.persona.motivo, e.persona.sucursal, key, convo);
       if (e.reservacion) guardar(e.reservacion, key, convo);
       return null;
     }
     sess.ia = r.history;
-    sess.convo = sess.convo.concat([[text, 1], [r.reply, 0]]).slice(-16);
+    sess.convo = sess.convo.concat([[text, 1], [r.reply, 0]]).slice(-40);
     let reply = r.reply;
     if (r.pedido) {
       const p = guardar(r.pedido, key, sess.convo);
@@ -366,7 +366,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const der = !esNegocio(from) && derivarPor(negocio, text);
     if (der) {
       const sess = store.getSession(from) || { state: null, convo: [] };
-      sess.convo = (sess.convo || []).concat([[text, 1], [der.mensaje, 0]]).slice(-16);
+      sess.convo = (sess.convo || []).concat([[text, 1], [der.mensaje, 0]]).slice(-40);
       // one notice per customer every 2 hours, so a few messages in a row don't make several
       if (!sess.derivado || now() - new Date(sess.derivado) > 2 * 3600e3) { persona(der.motivo, der.sucursal, from, sess.convo); sess.derivado = now().toISOString(); }
       store.setSession(from, sess);

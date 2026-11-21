@@ -1233,7 +1233,7 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
     let p = await pedido("PED-1001");
     assert.equal(p.estado, "por_envio"); assert.equal(p.repartidor.nombre, "Carlos");
     const ficha = a(CARLOS).at(-1);
-    assert.match(ficha, /Carlos, nuevo envío: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.match(ficha, /google.com\/maps/); assert.match(ficha, /Conteste solo el precio, por ejemplo \*60\*/);
+    assert.match(ficha, /Carlos, nuevo envío: PED-1001/); assert.match(ficha, /Col. Trejo/); assert.doesNotMatch(ficha, /maps\/search/, "sin ubicación no se adivina el mapa"); assert.match(ficha, /todavía no mandó su ubicación/); assert.match(ficha, /Conteste solo el precio, por ejemplo \*60\*/);
     assert.ok(!a(DUENO).some(b => /Nuevo pedido PED-1001/.test(b)), "la cocina todavía no lo tiene");
     assert.ok(a(DUENO).some(b => /PED-1001: Carlos cotiza el envío/.test(b)));
     await pedir(PEDRO, "Res. Los Álamos, casa 4", "Pedro");
@@ -1473,7 +1473,7 @@ test("demo de un cliente: /demo/claude arma el sistema y las herramientas del ne
     assert.equal(r.status, 200);
     assert.match((await r.json()).content[0].text, /Con Sabor a Pueblo/);
     const enviado = claude.llamadas.at(-1).body;
-    assert.match(enviado.system[0].text, /Con Sabor a Pueblo/); assert.match(enviado.system[0].text, /repartidor le dice el precio del envío/);
+    assert.match(enviado.system[0].text, /Con Sabor a Pueblo/); assert.match(enviado.system[0].text, /El precio del envío lo pone el repartidor/);
     assert.ok(enviado.tools.some(t => t.name === "crear_pedido"));
     assert.equal(enviado.max_tokens, 1024);
     // the page counts the prospect's visits: only from the site, by day, nothing personal

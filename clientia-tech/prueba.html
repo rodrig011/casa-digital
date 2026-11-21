@@ -1290,11 +1290,11 @@ function idsRepartidores(rs) {
   });
 }
 
-// the exact pin the customer sent, or a search by the written address
+// the exact pin the customer sent; without it, no map (the search by address sent drivers to the wrong place)
 const mapa = (p, negocio) => {
   if (p.ubicacion) return `https://maps.google.com/?q=${p.ubicacion.lat},${p.ubicacion.lng}`;
-  const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.direccion}, ${b ? b.nombre : ""}, ${negocio.pais}`)}`;
+  // a Google search by the written address lands anywhere: better no map than a wrong one
+  return `todavía no mandó su ubicación; si no le llega, pídasela al cliente por WhatsApp`;
 };
 // what the bot asks the customer right after a delivery order, so the driver gets the exact spot
 const PIDE_UBICACION = "📍 Para que el repartidor llegue sin preguntar, mándenos su ubicación: toque el clip 📎, elija *Ubicación* y *Enviar su ubicación actual*.";
