@@ -27,9 +27,10 @@ h1 span{display:block;}
 .num i{flex:none;width:104px;height:104px;border-radius:50%;background:var(--wa);display:grid;place-items:center;}
 .num b{font-size:112px;line-height:1;color:var(--sol);}
 .info{position:absolute;left:78px;right:60px;top:1600px;font-size:38px;font-weight:600;line-height:1.32;}
-.pie{position:absolute;left:78px;right:60px;bottom:52px;display:flex;align-items:center;gap:12px;font-size:26px;font-weight:600;color:rgba(58,29,14,.7);}
-.pie .c{width:34px;height:34px;border-radius:50%;background:var(--cafe);display:grid;place-items:center;}
-.pie .c img{width:15px;height:18px;}
+.pie{position:absolute;left:78px;right:60px;bottom:64px;display:flex;align-items:center;gap:16px;font-size:36px;font-weight:700;color:var(--cafe);}
+.pie .c{width:52px;height:52px;border-radius:50%;background:var(--cafe);display:grid;place-items:center;}
+.pie .c img{width:23px;height:27px;}
+.pie .x{font-weight:500;opacity:.6;}
 /* A · sans limpia y gruesa, como Speedee de McDonald's */
 .jakarta h1,.jakarta .num b{font-family:"Jakarta";font-weight:800;letter-spacing:-.045em;}
 .jakarta h1{font-size:136px;line-height:.95;}
@@ -49,7 +50,7 @@ h1 span{display:block;}
 <h1><span>Haz tu pedido</span><span>por WhatsApp</span></h1>
 <div class="num"><i><svg width="60" height="60" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.1-1.7-.1-1.6-.5-3.5-1.5-5.3-4.2-1.3-1.9-1.3-3.3-.4-4.3.3-.4.7-.5 1-.5h.7c.2 0 .5 0 .7.6l.9 2.2c.1.2.1.4 0 .6l-.8 1c.7 1.3 1.8 2.3 3.2 2.9l.9-1.1c.2-.3.4-.3.7-.2l2.1 1c.3.1.4.3.4.4 0 .2 0 .4-.1.5z"/></svg></i><b>3169-9031</b></div>
 <div class="info">Sábados en Col. Palmira, Tegucigalpa.<br>A domicilio o para recoger.</div>
-<div class="pie"><span>Con Sabor a Pueblo</span><span>×</span><span class="c"><img src="../src/clientia.svg" alt=""></span><span>Clientia Tech</span></div>
+<div class="pie"><span>Con Sabor a Pueblo</span><span class="x">×</span><span class="c"><img src="../src/clientia.svg" alt=""></span><span>Clientia Tech</span></div>
 <script>document.body.className = new URLSearchParams(location.search).get("v") || "jakarta";</script>
 </body>
 </html>
