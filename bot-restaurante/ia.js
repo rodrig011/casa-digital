@@ -30,7 +30,7 @@ Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
 ${menuFotos(N) ? "- Cuando el cliente pide el menú o la carta, el sistema ya le manda las fotos del menú y el link: no escriba el menú completo; pregúntele qué se le antoja y en qué sucursal lo recoge.\n" : ""}- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
-${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio y el cliente solo dio la colonia o el barrio, en ese mismo mensaje pídale lo que falta, claro y en lista: colonia, calle o bloque, número de casa y una seña (por ejemplo \"portón negro, frente a la pulpería\"), y que si puede mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). No cree el pedido solo con la colonia. Si después de crear el pedido todavía no mandó la ubicación, pídasela otra vez para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
+${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si el cliente ya hizo su pedido a domicilio y ahora dice que pasa él (o manda a alguien) a recogerlo, use cambiar_a_recoger: no lo pase a una persona ni le diga que no se puede.\n- Si es a domicilio y el cliente solo dio la colonia o el barrio, en ese mismo mensaje pídale lo que falta, claro y en lista: colonia, calle o bloque, número de casa y una seña (por ejemplo \"portón negro, frente a la pulpería\"), y que si puede mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). No cree el pedido solo con la colonia. Si después de crear el pedido todavía no mandó la ubicación, pídasela otra vez para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
@@ -96,6 +96,7 @@ function tools(N) {
         additionalProperties: false,
       },
     }] : []),
+    ...(N.domicilio.propio && N.repartidores && N.repartidores.length ? [{ name: "cambiar_a_recoger", description: "El cliente ya hizo un pedido a domicilio y ahora prefiere pasar a recogerlo: lo cambia a recoger, le avisa al repartidor y devuelve lo que sigue (datos de pago si falta pagar).", input_schema: { type: "object", properties: {}, additionalProperties: false } }] : []),
     { name: "pasar_a_persona", description: "Avisa a una persona del restaurante para que le escriba al cliente por este chat.", input_schema: { type: "object", properties: { motivo: { type: "string", description: "Por qué, en pocas palabras" }, ...(N.variasSucursales ? { sucursal: suc } : {}) }, required: ["motivo"], additionalProperties: false } },
   ];
 }
@@ -172,6 +173,7 @@ function ejecutar(N, name, input, ctx) {
         resumen: `${r.dia} · ${r.hora} · ${personas} ${personas === 1 ? "persona" : "personas"}${r.ocasion ? " · " + r.ocasion : ""}` };
       return { ok: true, numero: ctx.reservacion.n, sucursal: s.nombre, nota: (grupo ? "Grupo grande: una persona le escribe para afinar detalles. " : "") + "Todavía no está confirmada: el restaurante la confirma por este chat." + (N.reservaciones.nota ? " " + N.reservaciones.nota : "") };
     }
+    case "cambiar_a_recoger": return ctx.aRecoger ? ctx.aRecoger() : { error: "No se pudo cambiar: ofrezca pasar a una persona." };
     case "pasar_a_persona": {
       const s = b(input.sucursal);
       ctx.persona = { motivo: String(input.motivo || "").slice(0, 200), sucursal: s.nombre };
@@ -200,9 +202,9 @@ function createIA({ negocio, apiKey, model, client, timeoutMs = 11000, maxTokens
   }
   model = model || MODELO;
 
-  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, ubic = null, nombre = null } = {}) {
+  async function turn(history, text, now, { numero, faltas = 0, ocupados, duplicado, aRecoger = null, ubic = null, nombre = null } = {}) {
     const SYSTEM = system(negocio), TOOLS = tools(negocio);   // cada vez: el dueño puede cambiar el menú desde el panel
-    const ctx = { numero, faltas, ocupados, duplicado, ubic, nombre, now, pedido: null, persona: null, reservacion: null };
+    const ctx = { numero, faltas, ocupados, duplicado, aRecoger, ubic, nombre, now, pedido: null, persona: null, reservacion: null };
     const base = recortar((history || []).map(sinPensar));
     const nuevo = [{ role: "user", content: [{ type: "text", text: String(text || "").slice(0, 2000) || "(mensaje vacío)" }, { type: "text", text: `[Fecha y hora en ${negocio.pais}: ${fecha(now)}]${nombre ? `\n[Cliente que ya pidió antes desde este número: ${String(nombre).slice(0, 60)}. Salúdelo por su nombre, no se lo vuelva a preguntar y use ese nombre en el pedido.]` : ""}` }] }];
     // "¿me pasa el menú?": the menu photos and link answer it; Claude is not asked (it would retype the menu)

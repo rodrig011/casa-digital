@@ -1289,6 +1289,15 @@ test("repartidores (Libby's Cajun): el repartidor cotiza el envío, el cliente l
     assert.match(a(CARLOS).at(-1), /se le pasó a José/);
     assert.match(await di(DUENO, "envío 70 1004"), /envío de PED-1004 es L 70/);
     assert.match(a("whatsapp:+50491115555").at(-1), /cuesta \*L 70\*/);
+
+    // the customer changes his mind after the price: pickup, the driver hears he no longer takes it, the kitchen gets it
+    const cambio = ctx.app.locals.repartos.aRecoger("+50491115555"); await ctx.app.locals.idle();
+    assert.equal(cambio.ok, true); assert.equal(cambio.numero, "PED-1004");
+    const p4 = await pedido("PED-1004");
+    assert.equal(p4.entrega, "recoger"); assert.equal(p4.estado, "nuevo"); assert.equal(p4.repartidor, null); assert.equal(p4.envio, null);
+    assert.match(a(JOSE).at(-1), /PED-1004\* mejor pasa a recogerlo/);
+    assert.ok(a(DUENO).some(b => /Nuevo pedido PED-1004/.test(b)), "la cocina ya lo tiene");
+    assert.match(ctx.app.locals.repartos.aRecoger("+50491115555").error, /no tiene un pedido a domicilio/);
   } finally { ctx.srv.close(); }
 });
 

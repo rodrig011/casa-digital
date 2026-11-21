@@ -1647,6 +1647,29 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return `¿Confirmamos su pedido *${p.n}* con envío de ${negocio.L(p.envio)} (total ${negocio.L(p.total + p.envio)})? Conteste *SÍ*, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`;
   }
 
+  // the customer changed his mind after ordering: he picks it up himself. The driver hears he no longer takes it.
+  // Returns { ok, ... } for the AI, or { error } when there is no open delivery order or it already left.
+  function aRecoger(from) {
+    const p = store.pedidos.findLast(x => x.tipo === "pedido" && x.entrega === "domicilio" && digits(x.tel) === digits(from) && !["cancelado", "entregado", "no_vino"].includes(x.estado));
+    if (!p) return { error: "Este cliente no tiene un pedido a domicilio abierto." };
+    if (p.estado === "en_camino") return { error: `El pedido ${p.n} ya va en camino con el repartidor: ya no se puede cambiar a recoger. Ofrezca pasar a una persona.` };
+    const r = deRep(p), b = negocio.sucursales.find(s => s.nombre === p.sucursal), antes = p.estado;   // updatePedido changes p in place
+    const cambios = { entrega: "recoger", envio: null, repartidor: null, cambioARecoger: now().toISOString(), hora: p.diaFecha ? p.hora : "Lo antes posible" };
+    let estado = p.estado;
+    if (antes === "por_envio") estado = p.pagaAntes ? "por_pagar" : "nuevo";
+    const q = store.updatePedido(p.n, { ...cambios, estado, ...(estado === "nuevo" && antes !== "nuevo" ? { t_nuevo: now().toISOString() } : {}) });
+    if (r) aRep(r, `ℹ️ ${r.nombre}, el cliente de *${q.n}* mejor pasa a recogerlo. Ya no tiene que llevarlo.`);
+    if (antes === "por_envio") track(avisos.ficha(q));
+    else track(aDueno(q, `${q.n} cambió a recoger`, [`👤 ${q.nombre || "Cliente"} · ${q.tel}`, `Lo recoge en ${q.sucursal}.${r ? ` Se le avisó a ${r.nombre}.` : ""}`]));
+    log(`[${q.n}] el cliente cambió a recoger`);
+    const donde = `${q.sucursal}${b && b.direccion ? ` (${b.direccion})` : ""}`;
+    if (estado === "por_pagar") {
+      const monto = q.anticipo || q.total;
+      return { ok: true, numero: q.n, recoge_en: donde, total: negocio.L(q.total), nota: `Listo, ya es para recoger y el repartidor ya sabe. Todavía no va a cocina: la comida se paga antes. Mándele estos datos tal cual: ${textoCobro(negocio, q.n, q.total, monto)}` };
+    }
+    return { ok: true, numero: q.n, recoge_en: donde, total: negocio.L(q.total), nota: `Listo, ya es para recoger y el repartidor ya sabe. ${estado === "nuevo" ? "Va a cocina. " : ""}Le avisamos por este chat cuando esté listo.` };
+  }
+
   // the kitchen marked it ready: the driver who quoted it goes for it (or one is picked now)
   function listo(p) {
     const r = deRep(p);
@@ -1757,7 +1780,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     return lista;
   }
 
-  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, listo, mensaje, respuestaCliente, ubicacionCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
+  return { get activo() { return lista.length > 0; }, lista, reemplazar, asignar, aRecoger, listo, mensaje, respuestaCliente, ubicacionCliente, envioNegocio, enCamino, entregado, deTel, enCalle };
 }
 
 const ESTADO = { por_envio: "esperando su precio de envío", por_pagar: "esperando el pago del cliente", nuevo: "en cocina", cocina: "en cocina", listo: "lista para recoger", en_camino: "en camino" };
