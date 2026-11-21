@@ -187,7 +187,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const sess = store.getSession(key) || { state: null, convo: [] };
     let r;
     try {
-      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), ubic, nombre: store.nombre(key) });
+      r = await ia.turn(sess.ia || [], text, now(), { numero: (pre = "PED") => numero(pre), faltas: faltasDe(key), ocupados, duplicado: c => duplicadoDe(key, c), aRecoger: () => repartos.aRecoger(key), ubic, nombre: store.nombre(key) });
     } catch (e) {
       log(`[ia] error, contesta el menú: ${e.constructor && e.constructor.name}${e.status ? " " + e.status : ""} ${e.message}`);
       const convo = sess.convo.concat([[text, 1]]).slice(-40);
@@ -642,6 +642,7 @@ ${wa ? `<a href="${wa}" style="display:inline-block;background:${esc(negocio.col
 
   app.locals.store = store;
   app.locals.negocio = negocio;
+  app.locals.repartos = repartos;
   app.locals.idle = async () => { while (pending.size) await Promise.all([...pending]); };
   app.locals.revisarPendientes = revisarPendientes;
   app.locals.pasarela = pasarela;
