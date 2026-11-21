@@ -104,7 +104,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <header class="top">
   <img data-logo alt="">
   <div><h1>Con Sabor a Pueblo</h1><p>Demo del sistema: WhatsApp con IA, repartidores y panel</p></div>
-  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=583bf470" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
+  <div class="der"><span class="ia" id="ia"><i></i><span>IA</span></span><a class="btn pri" id="abrir-panel" href="con-sabor-a-pueblo-panel.html?v=dd313995" target="panel-con-sabor">Abrir el panel del dueño ↗<span class="n" id="nv-panel"></span></a><button class="btn" id="reiniciar">Empezar de nuevo</button></div>
 </header>
 <div class="aviso"><b>Es el bot de verdad corriendo aquí.</b> Los precios del cerdito chuko, el chicharrón y el guacamole son los suyos; el cliente, las direcciones y la cuenta del banco son de ejemplo. Ningún mensaje sale a WhatsApp.</div>
 <div class="guia" id="guia"></div>
@@ -1261,11 +1261,11 @@ function idsRepartidores(rs) {
   });
 }
 
-// the exact pin the customer sent, or a search by the written address
+// the exact pin the customer sent; without it, no map (the search by address sent drivers to the wrong place)
 const mapa = (p, negocio) => {
   if (p.ubicacion) return `https://maps.google.com/?q=${p.ubicacion.lat},${p.ubicacion.lng}`;
-  const b = negocio.sucursales.find(s => s.nombre === p.sucursal);
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.direccion}, ${b ? b.nombre : ""}, ${negocio.pais}`)}`;
+  // a Google search by the written address lands anywhere: better no map than a wrong one
+  return `todavía no mandó su ubicación; si no le llega, pídasela al cliente por WhatsApp`;
 };
 // what the bot asks the customer right after a delivery order, so the driver gets the exact spot
 const PIDE_UBICACION = "📍 Para que el repartidor llegue sin preguntar, mándenos su ubicación: toque el clip 📎, elija *Ubicación* y *Enviar su ubicación actual*.";
@@ -1639,14 +1639,14 @@ Cómo escribe:
 
 Lo que sabe del restaurante (no afirme nada más):
 - Menú, precios, sucursales, direcciones, teléfonos y horarios: solo lo que devuelven las herramientas ver_menu y sucursales. Si un horario viene vacío, diga que una persona de la sucursal se lo confirma.
-- ${N.domicilio.propio ? (N.repartidores && N.repartidores.length ? "Hace envíos a domicilio: el costo depende de la distancia. Después de crear el pedido, el repartidor le dice el precio del envío por este chat y el cliente lo acepta antes de que vaya a cocina. No dé un precio de envío." : "Hace envíos a domicilio: una persona le confirma el costo y el tiempo.") : `No tiene envío propio.${apps ? ` A domicilio se pide por ${apps}.` : ""} Aquí se toman pedidos para recoger.`}
+- ${N.domicilio.propio ? (N.repartidores && N.repartidores.length ? "Hace envíos a domicilio. El precio del envío lo pone el repartidor según la distancia: después de crear el pedido se lo dice por este chat y el cliente lo acepta antes de que vaya a cocina. No dé un precio de envío. Explíquelo en una frase corta y clara, por ejemplo: \"El envío depende de la distancia: apenas hagamos el pedido, el repartidor le dice por aquí cuánto es y usted decide.\"" : "Hace envíos a domicilio: una persona le confirma el costo y el tiempo.") : `No tiene envío propio.${apps ? ` A domicilio se pide por ${apps}.` : ""} Aquí se toman pedidos para recoger.`}
 - ${N.pago ? "Pago: " + N.pago : "La forma de pago la confirma una persona de la sucursal."}
 ${N.bienvenida ? `- Aviso del dueño que el cliente ya recibió (no lo repita completo; úselo para contestar y no lo contradiga): «${String(N.bienvenida).replace(/\s+/g, " ").slice(0, 1500)}»\n` : ""}${N.tiempoPreparacion ? `- Tiempo aproximado de preparación: ${N.tiempoPreparacion}.\n` : ""}
 Cómo toma un pedido:
 - Use ver_menu antes de nombrar productos o precios. Use los nombres exactos del menú.
 ${menuFotos(N) ? "- Cuando el cliente pide el menú o la carta, el sistema ya le manda las fotos del menú y el link: no escriba el menú completo; pregúntele qué se le antoja y en qué sucursal lo recoge.\n" : ""}- Necesita: los productos y cantidades, ${N.variasSucursales ? "la sucursal, " : ""}${N.cupos ? `${N.cupos.salsas.length ? "la salsa de cada combo, " : ""}el día y la tanda (de ver_cupos), si lo recoge o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)` : N.domicilio.propio ? "si lo recoge (y a qué hora pasa) o se lo llevan (y la dirección completa con una seña; el costo del envío lo confirma una persona)" : "la hora en que pasa"} y el nombre.
 - Antes de crear el pedido, repita el detalle con el total y pida que lo confirme.
-${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio, después de crear el pedido pídale que mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual) para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
+${N.domicilio.propio && N.repartidores && N.repartidores.length ? "- Si es a domicilio y el cliente solo dio la colonia o el barrio, en ese mismo mensaje pídale lo que falta, claro y en lista: colonia, calle o bloque, número de casa y una seña (por ejemplo \"portón negro, frente a la pulpería\"), y que si puede mande su ubicación de WhatsApp (clip 📎 > Ubicación > Enviar su ubicación actual). No cree el pedido solo con la colonia. Si después de crear el pedido todavía no mandó la ubicación, pídasela otra vez para que el repartidor llegue sin preguntar. Si el cliente manda su ubicación (le llega como [ubicación ...]), agradezca; si todavía no ha creado el pedido, úsela como la dirección.\n" : ""}
 - Cuando confirme, llame a crear_pedido una sola vez y dé el número de pedido que le devuelve. Diga que le avisan por este chat cuando esté listo.
 - Si crear_pedido devuelve "cobro", el pedido no va a cocina hasta que se pague: copie esos datos de pago tal cual, sin cambiarlos, y pida la foto del comprobante por este chat.
 - Nunca calcule ni invente precios, promociones ni descuentos: el total sale de crear_pedido o de los precios de ver_menu.
@@ -2250,8 +2250,8 @@ function armar() {
   ver(activa);
   guia();
 }
-// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=583bf470) and talks to this page by BroadcastChannel
-const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=583bf470";
+// the owner panel lives on its own link (con-sabor-a-pueblo-panel.html?v=dd313995) and talks to this page by BroadcastChannel
+const PANEL_URL = "con-sabor-a-pueblo-panel.html?v=dd313995";
 function abrirPanel() { SIN_LEER.panel = 0; marcas(); window.open(PANEL_URL, "panel-con-sabor"); }
 function ver(k) {
   if (k === "panel") return abrirPanel();

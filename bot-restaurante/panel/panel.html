@@ -268,7 +268,9 @@ const H = (t, k, r = "") => `<h2><span class="ct">${svg(k)}</span>${t}${r}</h2>`
 const ESTADO_TXT = { por_pagar: "Esperando pago", nuevo: "Nuevo", cocina: "En cocina", listo: "Listo", en_camino: "En camino", por_envio: "Esperando envío", entregado: "Entregado", no_vino: "No vino", cancelado: "Cancelado", atendido: "Atendido", por_confirmar: "Por confirmar", confirmada: "Confirmada", sin_cupo: "Sin cupo", en_espera: "Lista de espera" };
 let editRep = null, repError = "", repGuardando = false;
 // the last messages of the chat, saved with the order or the request (customer on the right, bot on the left)
-const chat = p => Array.isArray(p.convo) && p.convo.length ? `<details class="chat"><summary>Ver conversación (${p.convo.length} mensajes)</summary>${p.convo.map(([t, c]) => `<div class="burbuja ${c ? "cli" : "bot"}"><span>${c ? "Cliente" : "Bot"}</span>${esc(typeof t === "string" ? t : (t && t.text) || "")}</div>`).join("")}</details>` : "";
+const CHAT_ABIERTO = new Set();   // the panel repaints every few seconds: an open conversation stays open
+document.addEventListener("toggle", e => { const d = e.target; if (d.dataset && d.dataset.chat) d.open ? CHAT_ABIERTO.add(d.dataset.chat) : CHAT_ABIERTO.delete(d.dataset.chat); }, true);
+const chat = p => Array.isArray(p.convo) && p.convo.length ? `<details class="chat" data-chat="${esc(p.n)}"${CHAT_ABIERTO.has(p.n) ? " open" : ""}><summary>Ver conversación (${p.convo.length} mensajes)</summary>${p.convo.map(([t, c]) => `<div class="burbuja ${c ? "cli" : "bot"}"><span>${c ? "Cliente" : "Bot"}</span>${esc(typeof t === "string" ? t : (t && t.text) || "")}</div>`).join("")}</details>` : "";
 let AT = [];   // chats the owner is answering himself (the bot is quiet there)
 let N = null, P = [], vista = "hoy", vistos = null, sonido = false, modoPedidos = "tablero", busca = "";
 try { modoPedidos = localStorage.getItem("modoPedidos") || "tablero"; } catch {}
@@ -623,6 +625,7 @@ function ficha(n) {
       ${campo("Dirección", p.direccion ? esc(p.direccion) + (p.ubicacion ? ` · <a href="${mapaDe(p)}" target="_blank" rel="noopener">📍 Ver la ubicación exacta</a>` : p.entrega === "domicilio" ? ` <span class="tag">Sin ubicación de WhatsApp</span>` : "") : "", true)}</dl></div>
     <div class="card">${H("Productos", "ventas")}<table><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th></tr>${(p.lineas || []).map(l => `<tr><td>${esc(l.nombre)}${l.nota ? `<small class="tel">${esc(l.nota)}</small>` : ""}</td><td class="r">${l.cantidad}</td><td class="r">${L(l.subtotal != null ? l.subtotal : l.precio * l.cantidad)}</td></tr>`).join("")}
       <tfoot>${envio ? `<tr><td colspan="2">Comida</td><td class="r">${L(p.total)}</td></tr><tr><td colspan="2" style="font-weight:400">Envío <small class="tel">se le paga al repartidor</small></td><td class="r" style="font-weight:400">${L(p.envio)}</td></tr>` : ""}<tr><td colspan="2">Total</td><td class="r">${L(p.total + (envio ? p.envio : 0))}</td></tr></tfoot></table></div>
+    ${chat(p) ? `<div class="card">${H("Conversación", "personas")}${chat(p)}</div>` : ""}
     <div class="card">${H("Actividad", "actividad")}<ol class="linea-t">${hechos.map(([k, t]) => `<li><span>${t}</span><small>${fechaHora(p[k])}</small></li>`).join("")}</ol></div>`;
   botones(f);
   const ya = f.querySelector(".path .ahora, .path .fin"); if (ya) ya.parentNode.scrollLeft = ya.offsetLeft - 24;
