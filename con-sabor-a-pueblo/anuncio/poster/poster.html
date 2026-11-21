@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Con Sabor a Pueblo · póster pedidos por WhatsApp</title>
+<style>
+@font-face{font-family:"Bricolage";src:url(../src/bricolage.woff2) format("woff2-variations");font-weight:200 800;}
+@font-face{font-family:"Outfit";src:url(../src/outfit.woff2) format("woff2-variations");font-weight:100 900;}
+:root{--sol:#FEBE29;--tinta:#201E1E;--crema:#FFF7E4;--wa:#25D366;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1080px;height:1920px;overflow:hidden;}
+body{background:var(--sol);font-family:"Outfit",sans-serif;color:var(--tinta);-webkit-font-smoothing:antialiased;position:relative;}
+/* la tela de cuadros de sus videos, como franja arriba */
+.tela{position:absolute;left:0;right:0;top:0;height:28px;background:repeating-linear-gradient(90deg,#E63B2E 0 72px,#1D7BD8 72px 144px,#2BA84A 144px 216px,#F06EAA 216px 288px,#201E1E 288px 360px);}
+h1{position:absolute;left:70px;right:70px;top:120px;font-family:"Bricolage";font-weight:800;font-size:178px;line-height:.9;letter-spacing:-.045em;font-variation-settings:"wdth" 88;}
+h1 span{display:block;}
+h1 .wa{display:inline-block;background:var(--tinta);color:var(--sol);padding:6px 30px 22px;border-radius:30px;margin-top:22px;transform:rotate(-2deg);}
+.foto{position:absolute;left:90px;top:720px;width:900px;height:790px;border-radius:52px;overflow:hidden;transform:rotate(1.6deg);box-shadow:0 40px 80px -30px rgba(70,40,0,.55);outline:10px solid var(--crema);}
+.foto img{width:900px;height:790px;object-fit:cover;display:block;}
+.sello{position:absolute;left:46px;top:640px;width:210px;height:210px;transform:rotate(-10deg);filter:drop-shadow(0 16px 20px rgba(60,40,0,.35));}
+.sello img{width:100%;height:100%;display:block;}
+.plato{position:absolute;right:120px;top:1432px;background:var(--crema);border-radius:999px;padding:14px 30px;font-size:34px;font-weight:600;transform:rotate(1.6deg);}
+.num{position:absolute;left:0;right:0;top:1572px;display:flex;justify-content:center;align-items:center;gap:26px;}
+.num i{flex:none;width:118px;height:118px;border-radius:50%;background:var(--wa);display:grid;place-items:center;}
+.num b{font-family:"Bricolage";font-size:150px;font-weight:800;letter-spacing:-.04em;line-height:1;font-variation-settings:"wdth" 85;}
+.info{position:absolute;left:60px;right:60px;top:1714px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;}
+.pie{position:absolute;left:0;right:0;bottom:34px;display:flex;justify-content:center;align-items:center;gap:14px;font-size:30px;font-weight:550;color:rgba(32,30,30,.8);}
+.pie .c{width:38px;height:38px;border-radius:50%;background:var(--tinta);display:grid;place-items:center;}
+.pie .c img{width:17px;height:20px;}
+</style>
+</head>
+<body>
+<div class="tela"></div>
+<h1><span>Haz tu</span><span>pedido por</span><span class="wa">WhatsApp</span></h1>
+<div class="foto"><img src="foto-chicharron.jpg" alt=""></div>
+<div class="sello"><img src="../src/logo.svg" alt=""></div>
+<div class="plato">Chicharrones de panceta</div>
+<div class="num"><i><svg width="66" height="66" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.1-1.7-.1-1.6-.5-3.5-1.5-5.3-4.2-1.3-1.9-1.300-3.3-.4-4.3.3-.4.7-.5 1-.5h.7c.2 0 .5 0 .7.6l.9 2.2c.1.2.1.4 0 .6l-.8 1c.7 1.3 1.8 2.3 3.2 2.9l.9-1.1c.2-.3.4-.3.7-.2l2.1 1c.3.1.4.3.4.4 0 .2 0 .4-.1.5z"/></svg></i><b>3169-9031</b></div>
+<div class="info">Sábados en Col. Palmira, Tegucigalpa<br>A domicilio o para recoger</div>
+<div class="pie"><span>Con Sabor a Pueblo</span><span>×</span><span class="c"><img src="../src/clientia.svg" alt=""></span><span>Clientia Tech</span></div>
+</body>
+</html>
