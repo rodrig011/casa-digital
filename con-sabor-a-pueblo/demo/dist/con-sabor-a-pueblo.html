@@ -1129,8 +1129,7 @@ function fichaTexto(p, fmt = L) {
       ...(p.lineas || []).map(l => lineaTexto(l, fmt)),
       `💰 Total ${fmt(p.total)}`,
       p.entrega === "domicilio" ? `🛵 A domicilio: ${p.direccion}${p.envio != null ? ` · envío ${fmt(p.envio)} (total ${fmt(p.total + p.envio)})` : ""}` : p.tanda || espera || p.encargo ? "📍 Lo recoge" : p.hora ? `🕒 Recoge: ${p.hora}` : null,
-      `Responder: https://wa.me/${digits(p.tel)}`,
-      !porPagar && !espera && p.estado !== "por_envio" ? `👉 Cuando esté listo conteste *LISTO ${p.n.replace(/\D/g, "")}*` : null,
+      !porPagar && !espera && p.estado !== "por_envio" ? "👉 Cuando esté listo, conteste *listo*" : null,
     ].filter(Boolean),
   };
 }

@@ -211,6 +211,8 @@ test("webhook: pedido completo por WhatsApp, aviso al dueño y a la sucursal, co
     assert.equal(ctx.app.locals.store.getPedido("PED-1001").estado, "entregado");
     assert.match(await dueno("listo 1001"), /ya está entregado/);
     assert.match(await dueno("listo 9999"), /No encuentro el pedido 9999/);
+    assert.match(await dueno("Listo"), /No tiene pedidos para marcar listos/);
+    assert.match(await dueno("cancelar"), /¿Cuál pedido cancela\?/);
   } finally { ctx.srv.close(); }
 
   // after a restart the orders are still there and numbering continues
@@ -824,6 +826,14 @@ test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y li
     assert.equal(avisos[0].to, "50499990000"); assert.equal(avisos[0].template.name, "aviso_pedido");
     assert.match(avisos[0].template.components[0].parameters[0].text, /Nuevo pedido PED-1001/);
     assert.doesNotMatch(avisos[0].template.components[0].parameters[1].text, /\n/);
+
+    // once the owner wrote to the bot (inside 24 h), the next notice is a normal, readable message
+    await postMeta(ctx, [texto("pedidos", "50499990000")]);
+    const B = "50495551111";
+    for (const m of [texto("hola", B), boton("2", B), texto("un duo de mar", B), boton("1", B), boton("2", B), boton("1", B), boton("1", B), boton("1", B), texto("Luis Paz", B)]) await postMeta(ctx, [m]);
+    await ctx.app.locals.idle();
+    const alDueno = M.enviados().filter(b => b.to === "50499990000").at(-1);
+    assert.equal(alDueno.type, "text"); assert.match(alDueno.text.body, /Nuevo pedido PED-1002/); assert.match(alDueno.text.body, /\n/);
   } finally { ctx.srv.close(); }
 });
 
@@ -1066,7 +1076,7 @@ test("respaldo: se baja cifrado, se restaura en una carpeta nueva y el bot sigue
     const res = await fetch(ctx.base + "/api/respaldo", { headers: { Authorization: "Bearer secreto" } });
     assert.equal(res.status, 200);
     const texto = await res.text();
-    assert.doesNotMatch(texto, /Ana|50497770001/, "los datos van cifrados");
+    assert.doesNotMatch(texto, /"Ana\\?"|50497770001/, "los datos van cifrados");   // base64 can spell Ana by chance; the plain JSON would have "Ana" in quotes
     r = JSON.parse(texto);
   } finally { ctx.srv.close(); }
   assert.throws(() => comprobar(r, "otra-llave"), /DATA_KEY no es la correcta/);

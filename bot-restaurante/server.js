@@ -338,9 +338,20 @@ function createApp(cfg = loadConfig(), deps = {}) {
   }
   // the owner runs his orders from WhatsApp, without opening the panel: LISTO 1030, EN CAMINO 1030, ENTREGADO 1030, CANCELAR 1030
   function comandoDueno(from, text) {
-    const m = norm(text).match(/^(listo|lista|en camino|entregado|entregada|cancelar|cancelado|cancelada)\s*(?:ped-?\s*)?(\d{3,})$/);
+    const m = norm(text).match(/^(listo|lista|en camino|entregado|entregada|cancelar|cancelado|cancelada)[.!]*\s*(?:ped-?\s*)?(\d{3,})?[.!]*$/);
     if (!m) return null;
     const estado = { listo: "listo", lista: "listo", "en camino": "en_camino", entregado: "entregado", entregada: "entregado", cancelar: "cancelado", cancelado: "cancelado", cancelada: "cancelado" }[m[1]];
+    const palabra = m[1].replace("lista", "listo").replace(/entregada/, "entregado").replace(/cancelad[oa]/, "cancelar").toUpperCase();
+    if (!m[2]) {
+      // without a number: fine when only one order can take that step today; otherwise he says which
+      if (estado === "cancelado") return "¿Cuál pedido cancela? Conteste *CANCELAR* y el número, por ejemplo *CANCELAR 1030*.";
+      const desde = { listo: ["nuevo", "cocina"], en_camino: ["listo"], entregado: ["listo", "en_camino"] }[estado];
+      const hoy = new Date(now() - 6 * 3600e3).toISOString().slice(0, 10), desdeMs = now() - 18 * 3600e3;   // Honduras date
+      const c = store.pedidos.filter(x => x.tipo === "pedido" && desde.includes(x.estado) && (x.diaFecha ? x.diaFecha <= hoy : new Date(x.fecha) > desdeMs));
+      if (!c.length) return `No tiene pedidos para marcar ${estado === "listo" ? "listos" : estado === "en_camino" ? "en camino" : "entregados"} ahora.`;
+      if (c.length > 1) return `¿Cuál? Conteste ${c.slice(-6).map(x => `*${palabra} ${x.n.replace(/\D/g, "")}*`).join(" o ")}${c.length > 6 ? " (o escriba *pedidos* para ver todos)" : ""}.`;
+      m[2] = c[0].n.replace(/\D/g, "");
+    }
     const p = store.pedidos.findLast(x => x.tipo === "pedido" && x.n.replace(/\D/g, "").endsWith(m[2]));
     if (!p) return `No encuentro el pedido ${m[2]}.`;
     if (["cancelado", "entregado", "no_vino"].includes(p.estado)) return `${p.n} ya está ${{ cancelado: "cancelado", entregado: "entregado", no_vino: "marcado como no vino" }[p.estado]}.`;
@@ -465,6 +476,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
         for (const m of mensajesMeta(req.body)) {
           if (vistos.has(m.id)) continue;                 // Meta can deliver the same message twice
           vistos.add(m.id); if (vistos.size > 2000) vistos.delete(vistos.values().next().value);
+          meta.vio(m.from);                               // inside 24 h: notices to this number go as normal messages
           const hasta = callados.get(digits(m.from));
           if (hasta && hasta > Date.now()) { log(`[meta] ${m.from} escribió; lo atiende el dueño, el bot no contesta`); continue; }
           if (hasta) callados.delete(digits(m.from));
