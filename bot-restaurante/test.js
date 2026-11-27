@@ -204,6 +204,13 @@ test("webhook: pedido completo por WhatsApp, aviso al dueño y a la sucursal, co
     const pend = await post(ctx, "/whatsapp", { From: "whatsapp:+50499990000", Body: "pedidos" });
     assert.match(textoDe(pend.xml), /Pendientes/); assert.match(textoDe(pend.xml), /\+50433331111/);
     assert.equal(ctx.app.locals.store.pedidos[1].n, "AS-1002");
+
+    // the owner runs the order from WhatsApp, without the panel
+    const dueno = async Body => { const r = textoDe((await post(ctx, "/whatsapp", { From: "whatsapp:+50499990000", Body })).xml); await ctx.app.locals.idle(); return r; };
+    assert.match(await dueno("Entregado 1001"), /PED-1001 entregado/);
+    assert.equal(ctx.app.locals.store.getPedido("PED-1001").estado, "entregado");
+    assert.match(await dueno("listo 1001"), /ya está entregado/);
+    assert.match(await dueno("listo 9999"), /No encuentro el pedido 9999/);
   } finally { ctx.srv.close(); }
 
   // after a restart the orders are still there and numbering continues
