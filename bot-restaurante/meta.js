@@ -31,6 +31,11 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
     if (!r.ok) { const e = new Error((j.error && j.error.message) || `Meta ${r.status}`); e.code = j.error && j.error.code; throw e; }
     return j;
   }
+  // when each number last wrote to the bot: inside 24 h a notice goes as a normal message (readable, with line breaks);
+  // outside, or after a restart (this lives in memory), it goes as the approved template
+  const escribio = new Map();
+  const vio = n => { escribio.set(digits(n), Date.now()); if (escribio.size > 5000) escribio.delete(escribio.keys().next().value); };
+  const abierta = n => Date.now() - (escribio.get(digits(n)) || 0) < 23 * 3600e3;
   const mandar = (to, m) => llamar(`${phoneId}/messages`, { messaging_product: "whatsapp", to: digits(to), ...m });
 
   // one bot message: buttons when they fit, a list up to 10 options, plain text otherwise
@@ -55,7 +60,7 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
   // a notice (owner, branch, or a customer whose last message may be old). aviso = { titulo, lineas } for the template
   async function enviar(to, body, aviso, media) {
     try {
-      if (aviso && plantilla) return await conPlantilla(to, aviso.titulo, aviso.lineas.join(" · "));
+      if (aviso && plantilla && !abierta(to)) return await conPlantilla(to, aviso.titulo, aviso.lineas.join(" · "));
       const r = await mandar(to, { type: "text", text: { body: corta(body, 4096), preview_url: false } });
       const foto = typeof media === "function" ? await media() : media;
       if (foto) await mandar(to, { type: "image", image: { id: foto } }).catch(e => log(`[meta] la foto no salió a ${to}: ${e.message}`));
@@ -106,7 +111,7 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
 
   // the customer's pin, forwarded to the driver as a real WhatsApp location
   const ubicacion = (to, u) => mandar(to, { type: "location", location: { latitude: u.lat, longitude: u.lng, ...(u.nombre ? { name: u.nombre } : {}), ...(u.direccion ? { address: u.direccion } : {}) } }).catch(e => { log(`[meta] la ubicación no salió a ${to}: ${e.message}`); return null; });
-  return { responder, enviar, reenviable, firmaOk, formato, codigo, ubicacion };
+  return { responder, enviar, reenviable, firmaOk, formato, codigo, ubicacion, vio };
 }
 
 // the messages inside one webhook post: [{ id, from, nombre, text, foto, ubic }]; ubic = the customer's location pin
