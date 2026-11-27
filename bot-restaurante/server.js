@@ -312,10 +312,49 @@ function createApp(cfg = loadConfig(), deps = {}) {
     bitacora.anotar("estado", { correo: q.por, pedido: q.n, de: "por_pagar", a: "nuevo", ip: "whatsapp" });
     return `✅ ${q.n} aprobado. Al cliente ya le llegó que su ${q.encargo || q.diaFecha ? "apartado" : "pedido"} quedó confirmado.`;
   }
+  // a state change from the panel or from the owner's WhatsApp (LISTO 1030): the same notices either way
+  function cambiarEstado(n, estado, por, ip) {
+    const antes = store.getPedido(n);
+    const yaAvisado = antes.avisoListo, estadoAntes = antes.estado;
+    const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido";
+    if (pagoRecibido) confirmarPago(antes, { por: por, metodo: "manual" });
+    const p = store.updatePedido(n, { estado, [`t_${estado}`]: now().toISOString(), por: por });
+    const conRepartidor = repartos.activo && p.tipo === "pedido" && p.entrega === "domicilio";
+    if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) {
+      store.updatePedido(p.n, { avisoListo: true });
+      // own drivers: the bot picks one and tells him, the customer and the owner; otherwise the old notice
+      if (conRepartidor) repartos.listo(p); else track(avisos.listo(p));
+    }
+    if (conRepartidor && estado === "en_camino" && estadoAntes !== estado) track(repartos.enCamino(p));
+    if (conRepartidor && estado === "entregado" && estadoAntes !== estado && p.repartidor) track(repartos.entregado(p));
+    if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
+    if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) {
+      liberados(p);
+      if (p.tipo === "pedido") track(avisos.cancelado(p));     // the customer hears it from the restaurant, not by silence
+    }
+    log(`[${String(por).startsWith("whatsapp:") ? "whatsapp" : "panel"}] ${p.n} -> ${estado} (${p.por})`);
+    if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip });
+    return p;
+  }
+  // the owner runs his orders from WhatsApp, without opening the panel: LISTO 1030, EN CAMINO 1030, ENTREGADO 1030, CANCELAR 1030
+  function comandoDueno(from, text) {
+    const m = norm(text).match(/^(listo|lista|en camino|entregado|entregada|cancelar|cancelado|cancelada)\s*(?:ped-?\s*)?(\d{3,})$/);
+    if (!m) return null;
+    const estado = { listo: "listo", lista: "listo", "en camino": "en_camino", entregado: "entregado", entregada: "entregado", cancelar: "cancelado", cancelado: "cancelado", cancelada: "cancelado" }[m[1]];
+    const p = store.pedidos.findLast(x => x.tipo === "pedido" && x.n.replace(/\D/g, "").endsWith(m[2]));
+    if (!p) return `No encuentro el pedido ${m[2]}.`;
+    if (["cancelado", "entregado", "no_vino"].includes(p.estado)) return `${p.n} ya está ${{ cancelado: "cancelado", entregado: "entregado", no_vino: "marcado como no vino" }[p.estado]}.`;
+    if (p.estado === "por_pagar" && estado !== "cancelado") return `${p.n} todavía espera el pago. Cuando lo vea en su cuenta, conteste *OK ${m[2]}*.`;
+    if (p.estado === "por_envio" && estado !== "cancelado") return `${p.n} todavía espera el precio del envío. Conteste *ENVÍO 60 ${m[2]}* con el precio.`;
+    const q = cambiarEstado(p.n, estado, "whatsapp:+" + digits(from), "whatsapp");
+    const dom = q.entrega === "domicilio";
+    return { listo: `✅ ${q.n} listo. ${dom ? (q.repartidor ? `Ya le avisamos a ${q.repartidor.nombre} que pase por él.` : "Le avisamos al repartidor.") : "Al cliente ya le llegó que puede pasar por él."}`,
+      en_camino: `🛵 ${q.n} en camino. Al cliente ya le avisamos.`, entregado: `✅ ${q.n} entregado.`, cancelado: `❌ ${q.n} cancelado. Al cliente ya le avisamos.` }[estado];
+  }
   function pendientes() {
     const ls = store.pedidos.filter(p => ["por_pagar", "por_envio", "nuevo", "cocina", "por_confirmar"].includes(p.estado)).slice(-10).reverse();
     if (!ls.length) return "📋 No hay pedidos ni clientes pendientes.";
-    return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.slice(0, -1).join("\n")}`; }).join("\n\n");
+    return "📋 *Pendientes*\n\n" + ls.map(p => { const t = fichaTexto(p, negocio.L); return `*${t.titulo}*\n${t.lineas.filter(l => !l.startsWith("Responder:")).join("\n")}`; }).join("\n\n");
   }
 
   const baseDe = req => cfg.publicUrl || `${req.protocol}://${req.get("host")}`;
@@ -377,7 +416,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     // the owner paused WhatsApp orders from the panel: customers get his message, nothing is taken
     const pausa = !esNegocio(from) && textoPausa(negocio);
     if (pausa) return [{ text: pausa }];
-    if (esNegocio(from) && (reply = aprobar(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
+    if (esNegocio(from) && (reply = aprobar(from, text) || comandoDueno(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
     // outside every branch's hours (sucursales[].horas, Honduras time): the bot says when they open and takes nothing
@@ -493,27 +532,8 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (origen && origen !== `${req.protocol}://${req.get("host")}`) return res.status(403).json({ error: "origen no permitido" });
     const estado = String((req.body || {}).estado || "");
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: "estado inválido" });
-    const antes = store.getPedido(req.params.n);
-    if (!antes) return res.status(404).json({ error: "no existe" });
-    const yaAvisado = antes.avisoListo, estadoAntes = antes.estado;
-    const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido";
-    if (pagoRecibido) confirmarPago(antes, { por: panel.usuarioDe(req).correo, metodo: "manual" });
-    const p = store.updatePedido(req.params.n, { estado, [`t_${estado}`]: now().toISOString(), por: panel.usuarioDe(req).correo });
-    const conRepartidor = repartos.activo && p.tipo === "pedido" && p.entrega === "domicilio";
-    if (estado === "listo" && p.tipo === "pedido" && !yaAvisado) {
-      store.updatePedido(p.n, { avisoListo: true });
-      // own drivers: the bot picks one and tells him, the customer and the owner; otherwise the old notice
-      if (conRepartidor) repartos.listo(p); else track(avisos.listo(p));
-    }
-    if (conRepartidor && estado === "en_camino" && estadoAntes !== estado) track(repartos.enCamino(p));
-    if (conRepartidor && estado === "entregado" && estadoAntes !== estado && p.repartidor) track(repartos.entregado(p));
-    if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
-    if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) {
-      liberados(p);
-      if (p.tipo === "pedido") track(avisos.cancelado(p));     // the customer hears it from the restaurant, not by silence
-    }
-    log(`[panel] ${p.n} -> ${estado} (${p.por})`);
-    if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip: req.ip });
+    if (!store.getPedido(req.params.n)) return res.status(404).json({ error: "no existe" });
+    const p = cambiarEstado(req.params.n, estado, panel.usuarioDe(req).correo, req.ip);
     res.json(p);
   });
 
