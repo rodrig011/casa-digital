@@ -316,6 +316,9 @@ function acciones(p) {
   const reparto = p.entrega === "domicilio" && N.repartidores && N.repartidores.length;
   const sig = { por_pagar: [["nuevo", "Pago recibido"]], nuevo: [["cocina", "A cocina"]], cocina: [["listo", "Listo"]], listo: [reparto ? ["en_camino", "En camino"] : ["entregado", "Entregado"]], en_camino: [["entregado", "Entregado"]], por_envio: [["nuevo", "Pasar a cocina"]] }[p.estado] || [];
   const extra = { por_pagar: [["cancelado", "Cancelar"]], por_envio: [["cancelado", "Cancelar"]], nuevo: [["cancelado", "Cancelar"]], listo: [["no_vino", "No vino"]] }[p.estado] || [];
+  // an old order (more than 12 h) can be closed without writing to the customer
+  const viejo = !["entregado", "cancelado", "no_vino"].includes(p.estado) && Date.now() - new Date(p.fecha).getTime() > 12 * 3600e3;
+  if (viejo) extra.push(["_cerrar", "Cerrar sin avisar"]);
   return sig.concat(extra).concat(reparto && ["listo", "por_envio"].includes(p.estado) ? [["_rep", p.repartidor ? "Otro repartidor" : "Buscar repartidor"]] : []).map(([e, t], i) => `<button class="btn ${i === 0 ? "pri" : ""}" data-n="${esc(p.n)}" data-e="${e}">${t}</button>`).join("");
 }
 function tarjeta(p, grande) {
@@ -786,7 +789,7 @@ document.addEventListener("submit", async e => {
 async function cambiar(n, estado, b) {
   b.disabled = true;
   try {
-    const r = await fetch(`/api/pedidos/${encodeURIComponent(n)}/estado`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado }) });
+    const r = await fetch(`/api/pedidos/${encodeURIComponent(n)}/estado`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(estado === "_cerrar" ? { estado: "cancelado", avisar: false } : { estado }) });
     if (r.status === 401) return location.href = "/panel/entrar";
     if (!r.ok) throw new Error();
     const p = await r.json(); P = P.map(x => x.n === p.n ? p : x); pintar();
