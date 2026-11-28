@@ -41,6 +41,9 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
   // one bot message: buttons when they fit, a list up to 10 options, plain text otherwise
   function formato(m) {
     const text = m.text || "", bs = m.buttons || [];
+    // a button can be { id, title }: the id comes back as the text, e.g. "LISTO 1030" for the owner
+    if (bs.length && bs.every(b => typeof b === "object") && bs.length <= 3 && text.length <= 1024)
+      return { type: "interactive", interactive: { type: "button", body: { text }, action: { buttons: bs.map(b => ({ type: "reply", reply: { id: String(b.id).slice(0, 256), title: corta(b.title, 20) } })) } } };
     if (bs.length && bs.length <= 3 && bs.every(b => b.length <= 20) && text.length <= 1024)
       return { type: "interactive", interactive: { type: "button", body: { text }, action: { buttons: bs.map((b, i) => ({ type: "reply", reply: { id: String(i + 1), title: b } })) } } };
     if (bs.length && bs.length <= 10 && text.length <= 1024)
@@ -58,10 +61,11 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
   }
 
   // a notice (owner, branch, or a customer whose last message may be old). aviso = { titulo, lineas } for the template
-  async function enviar(to, body, aviso, media) {
+  // botones: [{ id, title }] for one-tap answers; only inside the 24 h (a template carries none)
+  async function enviar(to, body, aviso, media, botones) {
     try {
       if (aviso && plantilla && !abierta(to)) return await conPlantilla(to, aviso.titulo, aviso.lineas.join(" · "));
-      const r = await mandar(to, { type: "text", text: { body: corta(body, 4096), preview_url: false } });
+      const r = await mandar(to, botones && botones.length && body.length <= 1024 ? formato({ text: body, buttons: botones }) : { type: "text", text: { body: corta(body, 4096), preview_url: false } });
       const foto = typeof media === "function" ? await media() : media;
       if (foto) await mandar(to, { type: "image", image: { id: foto } }).catch(e => log(`[meta] la foto no salió a ${to}: ${e.message}`));
       return r;

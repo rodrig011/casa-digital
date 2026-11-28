@@ -152,7 +152,8 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       ? (q.pagaAntes
         ? `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*: se le paga al repartidor al recibir.\nLa comida (${negocio.L(q.total)}) se paga por transferencia antes de cocina.\n\n¿Lo confirmamos? Conteste *SÍ* y le mandamos los datos para pagar, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`
         : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* a ${q.direccion} cuesta *${negocio.L(precio)}*.\nTotal: *${total}* (comida ${negocio.L(q.total)} + envío), se paga al recibir.\n\n¿Lo confirmamos? Conteste *SÍ* para mandarlo a cocina, *RECOGER* si prefiere pasar por él, o *CANCELAR*.`)
-      : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${total}*.`));
+      : `🛵 ${nom(q)}, el envío de su pedido *${q.n}* cuesta *${negocio.L(precio)}*. Total a pagarle al repartidor: *${total}*.`,
+      null, null, cotiza ? [{ id: "si", title: "✅ Sí, confirmo" }, { id: "recoger", title: "🏠 Mejor recojo" }, { id: "cancelar", title: "❌ Cancelar" }] : null));
     log(`[${q.n}] envío ${precio} (${por})`);
     return q;
   }

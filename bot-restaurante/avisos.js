@@ -42,8 +42,8 @@ function fichaTexto(p, fmt = L) {
 // client: Twilio client (or a mock with messages.create). Without client, messages only go to the log.
 // canal: WhatsApp directo con Meta (meta.js); si está, los avisos salen por ahí y Twilio no se usa.
 function createNotifier({ client, canal, from, contentSid, sandbox, owner, negocio, log = console.log }) {
-  async function enviar(to, body, plantilla, media) {
-    if (canal) return canal.enviar(to, body, plantilla, media);
+  async function enviar(to, body, plantilla, media, botones) {
+    if (canal) return canal.enviar(to, body, plantilla, media, botones);
     if (typeof media === "function") media = null;
     if (!client || !from) { log(`[mensaje sin enviar a ${to}: faltan credenciales de Twilio]\n${body}`); return null; }
     const msg = plantilla && contentSid && !sandbox
@@ -68,7 +68,10 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
       const t = fichaTexto(p, negocio.L), to = destinos(p.sucursal);
       const body = `🔔 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
       if (!to.length) { log(`[aviso sin destino: falta OWNER_WHATSAPP]\n${body}`); return []; }
-      return Promise.all(to.map(n => enviar(n, body, t)));
+      // one tap instead of typing: the button's id comes back as the command
+      const num = String(p.n || "").replace(/\D/g, "");
+      const botones = p.tipo === "pedido" && ["nuevo", "cocina"].includes(p.estado) ? [{ id: `LISTO ${num}`, title: "✅ Listo" }, { id: "pedidos", title: "📋 Pendientes" }] : null;
+      return Promise.all(to.map(n => enviar(n, body, t, null, botones)));
     },
     // to the customer, when the kitchen marks the order as ready
     listo(p) {
@@ -82,7 +85,7 @@ function createNotifier({ client, canal, from, contentSid, sandbox, owner, negoc
       const to = destinos(p.sucursal);
       const body = `💳 *${t.titulo}*\n\n${t.lineas.join("\n")}`;
       if (!to.length) { log(`[aviso sin destino: falta OWNER_WHATSAPP]\n${body}`); return []; }
-      return Promise.all(to.map(n => enviar(n, body, t, mediaUrl)));
+      return Promise.all(to.map(n => enviar(n, body, t, mediaUrl, [{ id: `OK ${String(p.n).replace(/\D/g, "")}`, title: "✅ Pago recibido" }])));
     },
     // to the customer, when the restaurant confirms the table (or has no room) from the panel
     reservacion(p) {
