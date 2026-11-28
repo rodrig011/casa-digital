@@ -313,7 +313,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     return `✅ ${q.n} aprobado. Al cliente ya le llegó que su ${q.encargo || q.diaFecha ? "apartado" : "pedido"} quedó confirmado.`;
   }
   // a state change from the panel or from the owner's WhatsApp (LISTO 1030): the same notices either way
-  function cambiarEstado(n, estado, por, ip) {
+  function cambiarEstado(n, estado, por, ip, { avisar = true } = {}) {
     const antes = store.getPedido(n);
     const yaAvisado = antes.avisoListo, estadoAntes = antes.estado;
     const pagoRecibido = antes.estado === "por_pagar" && estado !== "cancelado" && !antes.pagado && antes.tipo === "pedido";
@@ -330,7 +330,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (p.tipo === "reservacion" && ["confirmada", "sin_cupo"].includes(estado) && estadoAntes !== estado) track(avisos.reservacion(p));
     if (estado === "cancelado" && !["cancelado", "en_espera"].includes(estadoAntes)) {
       liberados(p);
-      if (p.tipo === "pedido") track(avisos.cancelado(p));     // the customer hears it from the restaurant, not by silence
+      if (p.tipo === "pedido" && avisar) track(avisos.cancelado(p));     // the customer hears it from the restaurant, not by silence
     }
     log(`[${String(por).startsWith("whatsapp:") ? "whatsapp" : "panel"}] ${p.n} -> ${estado} (${p.por})`);
     if (estadoAntes !== estado) bitacora.anotar("estado", { correo: p.por, pedido: p.n, de: estadoAntes, a: estado, ip });
@@ -545,7 +545,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     const estado = String((req.body || {}).estado || "");
     if (!ESTADOS.includes(estado)) return res.status(400).json({ error: "estado inválido" });
     if (!store.getPedido(req.params.n)) return res.status(404).json({ error: "no existe" });
-    const p = cambiarEstado(req.params.n, estado, panel.usuarioDe(req).correo, req.ip);
+    // "Cerrar sin avisar": an old order is closed without a message to the customer
+    const avisar = !(estado === "cancelado" && (req.body || {}).avisar === false);
+    const p = cambiarEstado(req.params.n, estado, panel.usuarioDe(req).correo, req.ip, { avisar });
     res.json(p);
   });
 

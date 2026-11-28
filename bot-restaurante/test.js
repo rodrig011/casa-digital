@@ -1212,6 +1212,23 @@ test("ubicación: el cliente manda su pin de WhatsApp y le llega al repartidor c
   } finally { await new Promise(ok => ctx.srv.close(ok)); }
 });
 
+test("panel: Cerrar sin avisar cancela un pedido viejo sin escribirle al cliente", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" });
+  const ANA = "whatsapp:+50491114444";
+  try {
+    ctx.app.locals.store.addPedido({ n: "PED-1001", tipo: "pedido", estado: "nuevo", tel: "+50491114444", nombre: "Ana", sucursal: "Centro", total: 220, lineas: [], fecha: "2026-11-21T16:00:00Z" });
+    const cookie = await entrar(ctx);
+    const cerrar = (n, avisar) => fetch(ctx.base + `/api/pedidos/${n}/estado`, { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify({ estado: "cancelado", avisar }) }).then(x => x.json());
+    const r = await cerrar("PED-1001", false); await ctx.app.locals.idle();
+    assert.equal(r.estado, "cancelado");
+    assert.equal(ctx.sent.filter(m => m.to === ANA).length, 0, "al cliente no le llega nada");
+    ctx.app.locals.store.addPedido({ n: "PED-1002", tipo: "pedido", estado: "nuevo", tel: "+50491114444", nombre: "Ana", sucursal: "Centro", total: 220, lineas: [], fecha: "2026-11-21T16:00:00Z" });
+    await cerrar("PED-1002"); await ctx.app.locals.idle();
+    assert.match(ctx.sent.filter(m => m.to === ANA).map(m => m.body).join(), /canceló su pedido \*PED-1002\*/, "el Cancelar normal sí avisa");
+  } finally { ctx.srv.close(); }
+});
+
 test("meta: el repartidor recibe botones (Salgo, No puedo, Entregado) y un toque trae el número del pedido", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const M = metaFalsa();
