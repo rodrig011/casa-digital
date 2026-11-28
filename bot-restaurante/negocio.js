@@ -393,7 +393,8 @@ function ajustesDe(N) {
     cupos: C ? { porTanda: C.porTanda, porSucursal: C.porSucursal, topes: { ...C.topes }, dias: C.dias.map(d => DIAS[d]), cierre: C.cierre, anticipacion: C.anticipacion, verDias: C.verDias, cerrados: [...C.cerrados], nota: C.nota, tandas: C.tandas.length } : null,
     cobro: { anticipo: B.anticipo, desde: B.desde === Infinity ? "" : B.desde, domicilio: B.domicilio, faltas: B.faltas, transferencia: B.transferencia },
     sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", horario: s.horario || "" })),
-    zona: (N.domicilio && N.domicilio.zona) || "", tiempoPreparacion: N.tiempoPreparacion || "", domicilioPropio: !!(N.domicilio && N.domicilio.propio),
+    zona: (N.domicilio && N.domicilio.zona) || "", tiempoPreparacion: N.tiempoPreparacion || "", domicilioPropio: !!(N.domicilio && (N.domicilio.original != null ? N.domicilio.original : N.domicilio.propio)),
+    envios: !(N.domicilio && N.domicilio.hoyNo),   // off = "hoy no hay envíos": the bot only takes pickup orders until it is turned back on
   };
 }
 function aplicarAjustes(N, a) {
@@ -442,6 +443,11 @@ function aplicarAjustes(N, a) {
   if (Array.isArray(a.sucursales)) for (const x of a.sucursales) {
     const s = N.sucursales.find(y => y.id === x.id), c = (crudo.sucursales || []).find(y => y.id === x.id);
     for (const k of ["direccion", "horario"]) if (x[k] != null) { s[k] = texto(x[k], 200); if (c && c !== s) c[k] = s[k]; }
+  }
+  if (a.envios != null && N.domicilio) {
+    if (N.domicilio.original == null) N.domicilio.original = !!N.domicilio.propio;
+    N.domicilio.hoyNo = !a.envios;
+    N.domicilio.propio = N.domicilio.original && !N.domicilio.hoyNo;
   }
   if (a.zona != null && N.domicilio) N.domicilio.zona = texto(a.zona, 200);
   if (a.tiempoPreparacion != null) N.tiempoPreparacion = crudo.tiempoPreparacion = texto(a.tiempoPreparacion, 120);

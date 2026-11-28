@@ -1212,6 +1212,20 @@ test("ubicación: el cliente manda su pin de WhatsApp y le llega al repartidor c
   } finally { await new Promise(ok => ctx.srv.close(ok)); }
 });
 
+test("ajustes: apagar los envíos por un día deja solo pedidos para recoger, y se vuelven a prender", () => {
+  const { ajustesDe, aplicarAjustes } = require("./negocio"), { system } = require("./ia"), { createEngine } = require("./engine");
+  const N = preparar(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
+  assert.equal(ajustesDe(N).envios, true);
+  const a = aplicarAjustes(N, { envios: false });
+  assert.equal(a.envios, false); assert.equal(a.domicilioPropio, true, "el panel sigue mostrando el interruptor");
+  assert.equal(N.domicilio.propio, false);
+  assert.match(system(N), /HOY NO HAY ENVÍOS/); assert.doesNotMatch(system(N), /Hace envíos a domicilio/);
+  const r = createEngine(N).handle(null, "hacen envíos a domicilio?", new Date("2026-11-28T16:00:00Z"));
+  assert.match(r.messages.map(m => m.text).join(" "), /Hoy no tenemos envíos/);
+  aplicarAjustes(N, { envios: true });
+  assert.equal(N.domicilio.propio, true);
+});
+
 test("panel: Cerrar sin avisar cancela un pedido viejo sin escribirle al cliente", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" });

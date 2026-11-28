@@ -30,9 +30,9 @@ const HORAS = ["Lo antes posible", "En 30 minutos", "En 1 hora", "Otra hora"];
 
 function createEngine(negocio) {
   const N = negocio;
-  const PROPIO = !!N.domicilio.propio, RES = N.reservaciones, CUP = N.cupos;
+  const PROPIO_ = () => !!N.domicilio.propio, RES = N.reservaciones, CUP = N.cupos;
   const ESPERA = "Lista de espera";
-  const OP = { menu: "Ver el menú y precios", pedido: PROPIO ? "Hacer un pedido" : "Hacer un pedido para recoger", reservar: "Reservar una mesa",
+  const OP = { menu: "Ver el menú y precios", pedido: PROPIO_() ? "Hacer un pedido" : "Hacer un pedido para recoger", reservar: "Reservar una mesa",
     sucursales: N.variasSucursales ? "Sucursales y horario" : "Ubicación y horario", domicilio: "Pedir a domicilio", persona: "Hablar con una persona" };
   const MENU = [OP.menu, OP.pedido, ...(RES ? [OP.reservar] : []), OP.sucursales, OP.domicilio, OP.persona];
   const ENTREGA = ["Para recoger", "A domicilio"];
@@ -50,7 +50,8 @@ function createEngine(negocio) {
     return N.sucursales.map(s => [`📍 *${s.nombre}*`, s.direccion, s.telefono ? `Tel. ${s.telefono}` : null, `🕗 ${s.horario || "Horario: se lo confirma una persona de la sucursal."}`, s.mapa || null].filter(Boolean).join("\n")).join("\n\n");
   }
   function domicilioTexto() {
-    if (PROPIO) return `¡Sí! 🛵 Llevamos a domicilio${N.domicilio.zona ? ` ${N.domicilio.zona}` : ""}. El costo del envío depende de la distancia: ${N.repartidores && N.repartidores.length ? "el repartidor se lo dice por aquí y usted lo acepta antes de que preparemos su pedido" : "se lo confirmamos al tomar su pedido"}.`;
+    if (PROPIO_()) return `¡Sí! 🛵 Llevamos a domicilio${N.domicilio.zona ? ` ${N.domicilio.zona}` : ""}. El costo del envío depende de la distancia: ${N.repartidores && N.repartidores.length ? "el repartidor se lo dice por aquí y usted lo acepta antes de que preparemos su pedido" : "se lo confirmamos al tomar su pedido"}.`;
+    if (N.domicilio.hoyNo) return "Hoy no tenemos envíos a domicilio 🙏 Puede hacer su pedido aquí y pasar a recogerlo al local.";
     const apps = (N.domicilio.apps || []).filter(a => a.nombre);
     const lista = apps.map(a => `• ${a.nombre}${a.url ? `: ${a.url}` : ""}`).join("\n");
     return `Por ahora no tenemos envío propio.${apps.length ? ` A domicilio puede pedirnos por:\n${lista}` : ""}\n\nTambién puede hacer su pedido aquí y pasar a recogerlo sin hacer fila.`;
@@ -257,7 +258,7 @@ function createEngine(negocio) {
 
     if (!state || SALUDO.test(t)) {
       reset(); go("inicio");
-      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola${ctx.nombre ? `, ${String(ctx.nombre).split(" ")[0]}` : ""}! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
+      if (!/^(menu principal|inicio|0)$/.test(t)) say(`¡Hola${ctx.nombre ? `, ${String(ctx.nombre).split(" ")[0]}` : ""}! 👋 Gracias por escribirle a *${N.nombre}*. Le atiendo a cualquier hora: menú y precios, ${PROPIO_() ? "pedidos para recoger o a domicilio" : "pedidos para recoger"}${RES ? ", reservaciones" : ""} y ${N.variasSucursales ? "sucursales" : "ubicación"}.`);
       if (!(quiereDomicilio(t) || quiereMenu(t) || quierePedir(t) || quiereSucursal(t))) { menuInicio(); return done(); }
     }
 
@@ -266,9 +267,9 @@ function createEngine(negocio) {
         const o = pick(text, MENU);
         if (o === OP.persona || (!o && quierePersona(t))) { pasarPersona(); break; }
         if (RES && (o === OP.reservar || (!o && quiereReservar(t)))) { empezarReserva(); break; }
-        if (o === OP.domicilio && PROPIO) { empezarPedido([], true); break; }
-        if (!o && PROPIO && quiereDomicilio(t)) { const l = leerPedido(text); if (l.encontrados.length || quierePedir(t)) { empezarPedido(l.encontrados, true); break; } }
-        if (o === OP.domicilio || (!o && quiereDomicilio(t))) { reset(); go("post"); say({ text: domicilioTexto(), buttons: [PROPIO ? OP.domicilio : OP.pedido, OP.menu] }); break; }
+        if (o === OP.domicilio && PROPIO_()) { empezarPedido([], true); break; }
+        if (!o && PROPIO_() && quiereDomicilio(t)) { const l = leerPedido(text); if (l.encontrados.length || quierePedir(t)) { empezarPedido(l.encontrados, true); break; } }
+        if (o === OP.domicilio || (!o && quiereDomicilio(t))) { reset(); go("post"); say({ text: domicilioTexto(), buttons: [PROPIO_() ? OP.domicilio : OP.pedido, OP.menu] }); break; }
         if (o === OP.sucursales || (!o && quiereSucursal(t))) { reset(); go("post"); say(sucursalesTexto()); say({ text: "¿Algo más?", buttons: [OP.pedido, OP.menu] }); break; }
         if (o === OP.menu || (!o && quiereMenu(t) && !quierePedir(t))) { reset(); go("menu"); const mf = menuFotos(N); say(mf ? { ...mf, buttons: [OP.pedido, "Volver al inicio"] } : { text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}`, buttons: [OP.pedido, "Volver al inicio"] }); break; }
         const leido = o ? { encontrados: [] } : leerPedido(text);
@@ -287,7 +288,7 @@ function createEngine(negocio) {
 
       case "sucursal": {
         const b = N.sucursal(pick(text, N.sucursales.map(x => x.nombre)) || text);
-        if (!b && PROPIO && d.despues !== "persona" && d.despues !== "reserva" && quiereDomicilio(t)) { d.domicilio = true; say({ text: `${domicilioTexto()}\n\n¿De qué sucursal se lo mandamos?`, buttons: N.sucursales.map(x => x.nombre) }); break; }
+        if (!b && PROPIO_() && d.despues !== "persona" && d.despues !== "reserva" && quiereDomicilio(t)) { d.domicilio = true; say({ text: `${domicilioTexto()}\n\n¿De qué sucursal se lo mandamos?`, buttons: N.sucursales.map(x => x.nombre) }); break; }
         if (!b && quiereMenu(t)) { say({ text: `🍽️ *Menú de ${N.nombre}*\n\n${menuTexto(false)}\n\n¿En qué sucursal?`, buttons: N.sucursales.map(x => x.nombre) }); break; }
         if (!b) { say({ text: "¿Cuál de estas sucursales?", buttons: N.sucursales.map(x => x.nombre) }); break; }
         d.sucursal = SUC = b.id;
@@ -319,7 +320,7 @@ function createEngine(negocio) {
           }
           const encSolo = encargoDe(N, d.carrito);
           if (encSolo && encSolo.soloRecoger && d.domicilio !== false) { d.domicilio = false; say(`🏠 El *${encSolo.etiqueta}* no hay envíos: este encargo es para recoger.`); }
-          if (PROPIO && d.domicilio === null) { go("entrega"); say({ text: "¿Lo recoge o se lo llevamos?", buttons: ENTREGA }); break; }
+          if (PROPIO_() && d.domicilio === null) { go("entrega"); say({ text: "¿Lo recoge o se lo llevamos?", buttons: ENTREGA }); break; }
           if (d.domicilio) { go("direccion"); say("🛵 ¿A qué dirección se lo llevamos? Colonia, calle o pasaje y una seña para encontrar la casa."); break; }
           despuesDeEntrega(); break;
         }
@@ -478,7 +479,7 @@ function createEngine(negocio) {
         reset(); go("inicio");
         if (o === "Volver al inicio" || !t) { menuInicio(); break; }
         if (o === "Hacer otro pedido" || o === OP.pedido) { empezarPedido(); break; }
-        if (o === OP.domicilio && PROPIO) { empezarPedido([], true); break; }
+        if (o === OP.domicilio && PROPIO_()) { empezarPedido([], true); break; }
         if (o === OP.sucursales) return handle(s, String(MENU.indexOf(OP.sucursales) + 1), now, ctx);
         if (o === OP.menu) return handle(s, "1", now, ctx);
         return handle(s, text, now, ctx);

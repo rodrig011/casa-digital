@@ -687,7 +687,8 @@ function pintarAjustes(v) {
     ${sec("Sucursales", "La dirección y el horario que el bot le da a los clientes.",
       A.sucursales.map((su, i) => campo(esc(su.nombre), "", `<div style="display:grid;gap:8px"><input type="text" data-suc="${i}" data-k2="direccion" value="${esc(su.direccion)}" placeholder="Dirección con una seña" aria-label="Dirección de ${esc(su.nombre)}" maxlength="200"><input type="text" data-suc="${i}" data-k2="horario" value="${esc(su.horario)}" placeholder="Sábados, 10:00 a. m. a 4:00 p. m." aria-label="Horario de ${esc(su.nombre)}" maxlength="200"></div>`, null, true)).join(""))}
     ${sec("Entregas y cocina", "Lo que el bot le dice al cliente sobre el envío y el tiempo.",
-      (A.domicilioPropio ? campo("Zona de envío", "Opcional. Por ejemplo: dentro de la ciudad.", `<input type="text" id="aj-zona" data-k="zona" value="${esc(A.zona)}" maxlength="200" placeholder="Dentro de San Pedro Sula">`, "aj-zona") : "")
+      (A.domicilioPropio ? campo("Envíos a domicilio", "Apagado: el bot dice que hoy no hay envíos y solo toma pedidos para recoger. Vuelva a prenderlo cuando quiera.", sw("envios", A.envios, "Sí", "No hay envíos")) : "")
+      + (A.domicilioPropio ? campo("Zona de envío", "Opcional. Por ejemplo: dentro de la ciudad.", `<input type="text" id="aj-zona" data-k="zona" value="${esc(A.zona)}" maxlength="200" placeholder="Dentro de San Pedro Sula">`, "aj-zona") : "")
       + campo("Tiempo de preparación", "Opcional. Lo que el bot dice si preguntan cuánto tarda.", `<input type="text" id="aj-tiempo" data-k="tiempoPreparacion" value="${esc(A.tiempoPreparacion)}" maxlength="120" placeholder="20 a 30 minutos">`, "aj-tiempo"))}
     <div class="guardar-aj${cambios || ajGuardando ? " fijo" : ""}"><span class="${cambios ? "cambios" : ""}">${ajGuardando ? "Guardando…" : cambios ? "Tiene cambios sin guardar" : "Todo guardado. El bot usa esta configuración."}</span><button class="btn" id="aj-descartar" ${cambios && !ajGuardando ? "" : "disabled"}>Descartar</button><button class="btn pri" id="aj-guardar" ${cambios && !ajGuardando ? "" : "disabled"}>Guardar y aplicar</button></div>
   </div>`;
@@ -696,7 +697,7 @@ function pintarAjustes(v) {
   caja.querySelectorAll("[data-k]").forEach(el => el.oninput = el.onchange = () => {
     let val = el.type === "checkbox" ? (el.hasAttribute("data-inv") ? !el.checked : el.checked) : el.type === "number" ? (el.value === "" ? "" : +el.value) : el.value;
     poner(el.dataset.k, val);
-    if (el.type === "checkbox") { const em = el.parentNode.querySelector("em"); if (em) em.textContent = el.checked ? (el.dataset.k === "pausa.activo" ? "Abierto" : "Sí") : (el.dataset.k === "pausa.activo" ? "En pausa" : "No"); }
+    if (el.type === "checkbox") { const em = el.parentNode.querySelector("em"); if (em) em.textContent = el.checked ? (el.dataset.k === "pausa.activo" ? "Abierto" : "Sí") : (el.dataset.k === "pausa.activo" ? "En pausa" : el.dataset.k === "envios" ? "No hay envíos" : "No"); }
     marcar();
   });
   caja.querySelectorAll("[data-tope]").forEach(el => el.oninput = () => { if (el.value === "") delete aj.cupos.topes[el.dataset.tope]; else aj.cupos.topes[el.dataset.tope] = +el.value; marcar(); });
