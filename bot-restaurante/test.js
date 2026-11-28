@@ -1212,6 +1212,32 @@ test("ubicación: el cliente manda su pin de WhatsApp y le llega al repartidor c
   } finally { await new Promise(ok => ctx.srv.close(ok)); }
 });
 
+test("meta: el repartidor recibe botones (Salgo, No puedo, Entregado) y un toque trae el número del pedido", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
+  const M = metaFalsa();
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/libbys-cajun.json"), "utf8"));
+  const negocio = preparar({ ...base, repartidores: [{ id: "carlos", nombre: "Carlos", whatsapp: "9111-0001", sucursal: "sps" }] });
+  const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json", meta: { token: "EAAtoken", phoneId: "1234", appSecret: SECRETO, verifyToken: "v", plantilla: "", idioma: "es" } }, { metaFetch: M.fetch, negocio });
+  const CARLOS = "50491110001";
+  const ids = () => { const m = M.enviados().filter(x => x.to === CARLOS).at(-1); return m.type === "interactive" ? m.interactive.action.buttons.map(b => b.reply.id) : null; };
+  const toca = id => postMeta(ctx, [{ id: "wamid." + id.replace(/\W/g, ""), from: CARLOS, type: "interactive", interactive: { type: "button_reply", button_reply: { id, title: "x" } } }]);
+  try {
+    await postMeta(ctx, [texto("hola", CARLOS)]);
+    for (const b of ["hola", "2", "1 x1", "Confirmar pedido", "A domicilio", "Col. Trejo, 5 calle, casa blanca", "Marta López"]) await postMeta(ctx, [texto(b, "50491112222")]);
+    assert.deepEqual(ids(), ["NO PUEDO 1001"], "al cotizar solo el botón de no puedo; el precio lo escribe");
+    await postMeta(ctx, [texto("60", CARLOS)]);
+    await postMeta(ctx, [texto("si", "50491112222")]);
+    const cookie = await entrar(ctx);
+    for (const e of ["cocina", "listo"]) await fetch(ctx.base + "/api/pedidos/PED-1001/estado", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify({ estado: e }) });
+    await ctx.app.locals.idle();
+    assert.deepEqual(ids(), ["SALGO 1001", "NO PUEDO 1001"]);
+    await toca("SALGO 1001");
+    assert.deepEqual(ids(), ["ENTREGADO 1001"], "el botón de entregado lleva el número, no un 1 que se lee como salgo");
+    await toca("ENTREGADO 1001");
+    assert.match(JSON.stringify(M.enviados().filter(x => x.to === CARLOS).at(-1)), /PED-1001\* quedó entregado/);
+  } finally { await new Promise(ok => ctx.srv.close(ok)); }
+});
+
 test("meta: el pin del cliente le llega al repartidor como ubicación de WhatsApp", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const M = metaFalsa();
