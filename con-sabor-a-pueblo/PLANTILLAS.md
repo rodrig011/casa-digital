@@ -41,3 +41,22 @@ En Render > con-sabor-a-pueblo-bot > Environment:
 Save y **Manual Deploy**.
 
 Si Meta rechaza `aviso_pedido`, casi siempre es porque el cuerpo termina en {{2}} (por eso lleva "Gracias." al final) o porque falta el ejemplo. Deje el texto tal como está arriba.
+
+## 4. Botones aunque Ricardo no haya escrito en 24 h (opcional, recomendado)
+
+Dentro de las 24 h los botones salen solos. Para que también salgan fuera de las 24 h, cree estas dos plantillas.
+Son iguales a `aviso_pedido`, con la misma categoría Utilidad, el mismo idioma Español, el mismo cuerpo y los mismos ejemplos. La diferencia es que llevan botones de **respuesta rápida** (Quick reply):
+
+| Nombre | Botones (Quick reply, en este orden) |
+|---|---|
+| `aviso_listo` | `Listo` · `Pendientes` |
+| `aviso_pago` | `Pago recibido` |
+
+Cuerpo: `Actualización de un pedido en Con Sabor a Pueblo: {{1}}. Detalle: {{2}}. Responda a este mensaje si tiene alguna consulta.`
+
+Cuando Meta las apruebe, en Render > Environment:
+
+- `META_PLANTILLA_LISTO` = `aviso_listo`
+- `META_PLANTILLA_PAGO` = `aviso_pago`
+
+Save y **Manual Deploy**. Cada botón le dice al bot qué pedido es, así que Ricardo solo toca.

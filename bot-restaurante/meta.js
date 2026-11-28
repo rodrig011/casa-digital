@@ -23,7 +23,7 @@ const digits = n => String(n || "").replace(/\D/g, "");
 const param = s => String(s || "").replace(/[\n\t]+/g, " · ").replace(/ {4,}/g, "   ").trim().slice(0, 900) || "-";
 const corta = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
-function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaCodigo = "", idioma = "es", version = VERSION, apiUrl = "", fetch: f = globalThis.fetch, log = console.log } = {}) {
+function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaListo = "", plantillaPago = "", plantillaCodigo = "", idioma = "es", version = VERSION, apiUrl = "", fetch: f = globalThis.fetch, log = console.log } = {}) {
   const api = String(apiUrl || `https://graph.facebook.com/${version}`).replace(/\/+$/, "");
   async function llamar(ruta, cuerpo) {
     const r = await f(`${api}/${ruta}`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
@@ -50,6 +50,14 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
       return { type: "interactive", interactive: { type: "list", body: { text }, action: { button: "Ver opciones", sections: [{ title: "Opciones", rows: bs.map((b, i) => ({ id: String(i + 1), title: corta(b, 24), ...(b.length > 24 ? { description: corta(b, 72) } : {}) })) }] } } };
     return { type: "text", text: { body: corta(toText(m), 4096), preview_url: false } };
   }
+  // outside the 24 h the buttons ride on a template that has them: aviso_listo ([✅ Listo] [📋 Pendientes]) or aviso_pago ([✅ Pago recibido]);
+  // each quick reply carries its command as payload. Without that template, the plain one (no buttons).
+  const conBotones = (to, uno, dos, botones) => {
+    const nombre = /^LISTO /.test(botones[0].id) ? plantillaListo : /^OK /.test(botones[0].id) ? plantillaPago : "";
+    if (!nombre) return null;
+    return mandar(to, { type: "template", template: { name: nombre, language: { code: idioma }, components: [{ type: "body", parameters: [{ type: "text", text: param(uno) }, { type: "text", text: param(dos) }] },
+      ...botones.map((b, i) => ({ type: "button", sub_type: "quick_reply", index: String(i), parameters: [{ type: "payload", payload: String(b.id).slice(0, 256) }] }))] } });
+  };
   const conPlantilla = (to, uno, dos) => mandar(to, { type: "template", template: { name: plantilla, language: { code: idioma }, components: [{ type: "body", parameters: [{ type: "text", text: param(uno) }, { type: "text", text: param(dos) }] }] } });
 
   // a bot reply (just after the customer wrote: always inside the 24 h)
@@ -64,7 +72,10 @@ function createMeta({ token, phoneId, appSecret = "", plantilla = "", plantillaC
   // botones: [{ id, title }] for one-tap answers; only inside the 24 h (a template carries none)
   async function enviar(to, body, aviso, media, botones) {
     try {
-      if (aviso && plantilla && !abierta(to)) return await conPlantilla(to, aviso.titulo, aviso.lineas.join(" · "));
+      if (aviso && plantilla && !abierta(to)) {
+        const b = botones && botones.length ? conBotones(to, aviso.titulo, aviso.lineas.join(" · "), botones) : null;
+        return await (b || conPlantilla(to, aviso.titulo, aviso.lineas.join(" · ")));
+      }
       const r = await mandar(to, botones && botones.length && body.length <= 1024 ? formato({ text: body, buttons: botones }) : { type: "text", text: { body: corta(body, 4096), preview_url: false } });
       const foto = typeof media === "function" ? await media() : media;
       if (foto) await mandar(to, { type: "image", image: { id: foto } }).catch(e => log(`[meta] la foto no salió a ${to}: ${e.message}`));
@@ -129,7 +140,7 @@ function mensajes(body) {
       const i = m.interactive || {};
       const text = m.type === "text" ? m.text.body
         : m.type === "interactive" ? (i.button_reply || i.list_reply || {}).id || ""
-        : m.type === "button" ? (m.button || {}).text || ""
+        : m.type === "button" ? (m.button || {}).payload || (m.button || {}).text || ""   // a template's quick reply: its payload is the command
         : m.type === "image" ? (m.image && m.image.caption) || ""
         : "";
       const l = m.type === "location" && m.location;
