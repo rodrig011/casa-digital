@@ -14,7 +14,7 @@ const MAX_VUELTAS = 5;          // llamadas a la API por mensaje (herramientas i
 function system(N) {
   const apps = (N.domicilio.apps || []).map(a => a.nombre + (a.url ? ` (${a.url})` : "")).join(", ");
   return `Usted es el asistente de WhatsApp de ${N.nombre}, un restaurante en ${N.pais}. Atiende a clientes que preguntan por el menú, los precios, las sucursales, o que quieren hacer un pedido${N.domicilio.propio ? " para recoger o a domicilio" : " para recoger"}${N.reservaciones ? " o reservar una mesa" : ""}.
-
+${N.pausa && N.pausa.activo ? `\n\nHOY NO SE TOMAN PEDIDOS NI APARTADOS. Conteste con gusto preguntas de menú, precios, horario y ubicación, pero no tome pedidos ni apartados: si el cliente quiere pedir o apartar, dígale con amabilidad: «${N.pausa.mensaje || "Hoy no estamos tomando pedidos ni apartados por WhatsApp."}» y que puede llegar al local a comprar.` : ""}
 Cómo escribe:
 - Español de ${N.pais}, trato de usted, cálido y rápido.
 - Mensajes MUY cortos, como escribe una persona en WhatsApp: 1 a 3 líneas, unas 30 palabras como máximo. Una sola pregunta al final. No repita lo que el cliente ya sabe ni explique de más: si algo necesita detalle (pago, envío), dígalo en una frase y siga.
@@ -116,6 +116,7 @@ function ejecutar(N, name, input, ctx) {
     }
     case "sucursales": return { sucursales: N.sucursales.map(s => ({ id: s.id, nombre: s.nombre, direccion: s.direccion || "", telefono: s.telefono || "", horario: s.horario || "Por confirmar: una persona de la sucursal lo confirma.", ...(horasDe(s) ? { abierta_ahora: abierta(s, ctx.now), ...(abierta(s, ctx.now) ? {} : { abre: abre(s, ctx.now) || "por confirmar", nota: "Cerrada ahora: no se le toman pedidos para esta sucursal hasta que abra." }) } : {}), ...(s.mapa ? { mapa: s.mapa } : {}) })) };
     case "crear_pedido": {
+      if (N.pausa && N.pausa.activo) return { error: "Hoy no se toman pedidos ni apartados por WhatsApp. No cree nada: dígale al cliente el aviso del dueño.", aviso: N.pausa.mensaje || "Hoy no estamos tomando pedidos ni apartados por WhatsApp." };
       if (ctx.pedido) return { error: "Ya se creó el pedido en este mensaje.", numero: ctx.pedido.n };
       const malos = (input.productos || []).filter(p => !N.items.some(i => i.id === p.id)).map(p => p.id);
       if (malos.length) return { error: "Estos id no están en el menú: " + malos.join(", ") + ". Use ver_menu." };
