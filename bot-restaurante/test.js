@@ -1766,3 +1766,21 @@ test("panel: cada persona cambia su contraseña; la nueva gana a PANEL_USUARIOS 
     assert.equal((await login("OtraClave2026")).status, 303);
   } finally { ctx.srv.close(); }
 });
+
+test("meta: fuera de 24 h el aviso lleva botones con la plantilla que los tiene; tocar uno vuelve como el comando", async () => {
+  const { createMeta, mensajes: mensajesMeta } = require("./meta");
+  const M = metaFalsa();
+  const meta = createMeta({ token: "t", phoneId: "1234", appSecret: SECRETO, plantilla: "aviso_pedido", plantillaListo: "aviso_listo", plantillaPago: "aviso_pago", fetch: M.fetch, log: () => {} });
+  const aviso = { titulo: "Nuevo pedido PED-1030 · Tegucigalpa", lineas: ["👤 Betsabe", "💰 Total L 640"] };
+  await meta.enviar("whatsapp:+50499990000", "x", aviso, null, [{ id: "LISTO 1030", title: "✅ Listo" }, { id: "pedidos", title: "📋 Pendientes" }]);
+  await meta.enviar("whatsapp:+50499990000", "x", { titulo: "Comprobante de pago PED-1031", lineas: ["💰 L 220"] }, null, [{ id: "OK 1031", title: "✅ Pago recibido" }]);
+  await meta.enviar("whatsapp:+50491110001", "x", { titulo: "Entregas", lineas: ["PED-1030"] });
+  const [a, b, c] = M.enviados();
+  assert.equal(a.template.name, "aviso_listo");
+  assert.deepEqual(a.template.components.slice(1).map(x => [x.sub_type, x.index, x.parameters[0].payload]), [["quick_reply", "0", "LISTO 1030"], ["quick_reply", "1", "pedidos"]]);
+  assert.equal(b.template.name, "aviso_pago"); assert.equal(b.template.components[1].parameters[0].payload, "OK 1031");
+  assert.equal(c.template.name, "aviso_pedido", "sin botones, la plantilla de siempre");
+  // the owner taps the template's quick reply: it arrives as type "button" with the payload
+  const [m] = mensajesMeta({ entry: [{ changes: [{ value: { messages: [{ id: "w1", from: "50499990000", type: "button", button: { payload: "LISTO 1030", text: "✅ Listo" } }] } }] }] });
+  assert.equal(m.text, "LISTO 1030");
+});

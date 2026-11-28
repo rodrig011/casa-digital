@@ -54,7 +54,7 @@ function loadConfig(env = process.env) {
     sandbox,
     from: waAddr(env.TWILIO_WHATSAPP_FROM || env.META_NUMERO || (sandbox ? "+14155238886" : "")),
     // WhatsApp directo con Meta (Cloud API): con token e id del número, el bot habla por Meta y no usa Twilio
-    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", apiUrl: env.META_API_URL || "", claveWebhook: env.META_WEBHOOK_CLAVE || "", pausaDuenoMin: Math.max(0, Number(env.PAUSA_DUENO_MIN || 60)) || 0, plantilla: env.META_PLANTILLA || "", plantillaCodigo: env.META_PLANTILLA_CODIGO || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
+    meta: { token: env.META_TOKEN || "", phoneId: env.META_PHONE_ID || "", appSecret: env.META_APP_SECRET || "", verifyToken: env.META_VERIFY_TOKEN || "", apiUrl: env.META_API_URL || "", claveWebhook: env.META_WEBHOOK_CLAVE || "", pausaDuenoMin: Math.max(0, Number(env.PAUSA_DUENO_MIN || 60)) || 0, plantilla: env.META_PLANTILLA || "", plantillaListo: env.META_PLANTILLA_LISTO || "", plantillaPago: env.META_PLANTILLA_PAGO || "", plantillaCodigo: env.META_PLANTILLA_CODIGO || "", idioma: env.META_PLANTILLA_IDIOMA || "es" },
     contentSid: env.TWILIO_ALERT_CONTENT_SID || "",
     owner: env.OWNER_WHATSAPP || "",
     publicUrl: (env.PUBLIC_URL || "").replace(/\/$/, ""),
