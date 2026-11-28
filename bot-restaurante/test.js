@@ -833,7 +833,13 @@ test("meta: verifica el webhook, rechaza firmas malas, contesta con botones y li
     for (const m of [texto("hola", B), boton("2", B), texto("un duo de mar", B), boton("1", B), boton("2", B), boton("1", B), boton("1", B), boton("1", B), texto("Luis Paz", B)]) await postMeta(ctx, [m]);
     await ctx.app.locals.idle();
     const alDueno = M.enviados().filter(b => b.to === "50499990000").at(-1);
-    assert.equal(alDueno.type, "text"); assert.match(alDueno.text.body, /Nuevo pedido PED-1002/); assert.match(alDueno.text.body, /\n/);
+    assert.equal(alDueno.type, "interactive"); assert.match(alDueno.interactive.body.text, /Nuevo pedido PED-1002/); assert.match(alDueno.interactive.body.text, /\n/);
+    assert.deepEqual(alDueno.interactive.action.buttons.map(b => b.reply.id), ["LISTO 1002", "pedidos"], "un toque en vez de escribir");
+    // tapping "✅ Listo" comes back with the button's id as the text: the order is marked ready
+    await postMeta(ctx, [{ id: "wamid.btn1", from: "50499990000", type: "interactive", interactive: { type: "button_reply", button_reply: { id: "LISTO 1002", title: "✅ Listo" } } }]);
+    await ctx.app.locals.idle();
+    assert.equal(ctx.app.locals.store.getPedido("PED-1002").estado, "listo");
+    assert.match(M.enviados().filter(b => b.to === "50499990000").at(-1).text.body, /PED-1002 listo/);
   } finally { ctx.srv.close(); }
 });
 
