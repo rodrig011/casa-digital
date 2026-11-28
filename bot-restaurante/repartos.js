@@ -74,7 +74,9 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   const deRep = p => p.repartidor && lista.find(x => x.id === p.repartidor.id);
   const enCalle = r => store.pedidos.filter(p => p.repartidor && p.repartidor.id === r.id && EN_CALLE.includes(p.estado));
   const aDueno = (p, titulo, lineas) => Promise.all(avisos.destinos(p.sucursal).map(to => avisos.enviar(to, `🛵 *${titulo}*\n\n${lineas.join("\n")}`, { titulo, lineas })));
-  const aRep = (r, body) => r && track(avisos.enviar(waAddr(r.tel), body, { titulo: `Entregas · ${negocio.nombre}`, lineas: [body.replace(/\*/g, "").replace(/\n+/g, " · ")] }));
+  const aRep = (r, body, botones) => r && track(avisos.enviar(waAddr(r.tel), body, { titulo: `Entregas · ${negocio.nombre}`, lineas: [body.replace(/\*/g, "").replace(/\n+/g, " · ")] }, null, botones));
+  // buttons on the driver's notices: the id comes back as the text ("SALGO 1030"), so a tap names the order
+  const botonesRep = (p, cuales) => cuales.map(c => ({ id: `${c.toUpperCase()} ${num(p)}`, title: c === "salgo" ? "🛵 Salgo" : c === "entregado" ? "✅ Entregado" : "❌ No puedo" }));
 
   function fichaRepartidor(p, r) {
     const cotiza = p.estado === "por_envio";
@@ -91,7 +93,8 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
       ? `¿Cuánto es el envío? Conteste solo el precio, por ejemplo *60*. El cliente lo acepta y entonces pasa a cocina. Si no puede llevarlo, conteste *NO PUEDO*.`
       : `Conteste *SALGO* cuando salga, *ENTREGADO* cuando lo entregue o *NO PUEDO* para pasárselo a otro.`;
     const body = `🛵 *${r.nombre}, ${cotiza ? "nuevo envío" : "tiene una entrega"}: ${p.n}*\n\n${lineas.join("\n")}\n\n${pide}`;
-    return { titulo, lineas: [...lineas, cotiza ? "Conteste el precio del envío (por ejemplo 60) o NO PUEDO" : "Conteste SALGO, ENTREGADO o NO PUEDO"], body };
+    const botones = botonesRep(p, cotiza ? ["no puedo"] : p.estado === "listo" ? ["salgo", "no puedo"] : ["no puedo"]);
+    return { titulo, lineas: [...lineas, cotiza ? "Conteste el precio del envío (por ejemplo 60) o NO PUEDO" : "Conteste SALGO, ENTREGADO o NO PUEDO"], body, botones };
   }
 
   // the free-est driver of the order's branch; ties go to whoever waited longest for a delivery
@@ -118,7 +121,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const q = store.updatePedido(n, { repartidor: { id: r.id, nombre: r.nombre, tel: "+" + r.tel }, t_asignado: now().toISOString(), rechazos: excluir, asignadoPor: por });
     const f = fichaRepartidor(q, r);
     log(`[${n}] asignado a ${r.nombre}${antes ? ` (antes ${antes.nombre})` : ""}`);
-    track(avisos.enviar(waAddr(r.tel), f.body, f));
+    track(avisos.enviar(waAddr(r.tel), f.body, f, null, f.botones));
     if (q.ubicacion) track(avisos.ubicacion(waAddr(r.tel), q.ubicacion));
     const previo = antes && antes.id !== r.id && por !== "repartidor:" + antes.id && lista.find(x => x.id === antes.id);
     if (previo) aRep(previo, `ℹ️ ${previo.nombre}, la entrega *${q.n}* se le pasó a ${r.nombre}. Ya no tiene que llevarla.`);
@@ -234,7 +237,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
   function listo(p) {
     const r = deRep(p);
     if (!r) return asignar(p.n, { por: "cocina" });
-    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\nMapa: ${mapa(p, negocio)}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`);
+    aRep(r, `🍽️ *${p.n} ya está listo* en ${p.sucursal}. Pase a recogerlo.\n📍 Para: ${p.nombre || "el cliente"}, ${p.direccion}\nMapa: ${mapa(p, negocio)}\n💰 ${p.pagado ? `La comida ya está pagada: cobre solo el envío, ${negocio.L(p.envio || 0)}` : `Cobrar ${negocio.L(p.total + (p.envio || 0))}`}\n\nCuando salga, conteste *SALGO*.`, botonesRep(p, ["salgo", "no puedo"]));
     track(avisos.enviar(waAddr(p.tel), `✅ ¡${nom(p)}, su pedido *${p.n}* ya está listo! Lo lleva *${r.nombre}*; le avisamos por aquí cuando salga.`));
     return p;
   }
@@ -304,7 +307,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
     const p = ps[0];
     if (accion === "salgo") {
       const van = ps.filter(x => x.estado === "listo");
-      if (!van.length) return [{ text: p.estado === "en_camino" ? `${p.n} ya estaba en camino. Cuando lo entregue, conteste *ENTREGADO*.` : `${p.n} todavía no está listo. Le avisamos por aquí cuando lo esté.`, buttons: p.estado === "en_camino" ? ["Entregado"] : undefined }];
+      if (!van.length) return [{ text: p.estado === "en_camino" ? `${p.n} ya estaba en camino. Cuando lo entregue, conteste *ENTREGADO*.` : `${p.n} todavía no está listo. Le avisamos por aquí cuando lo esté.`, buttons: p.estado === "en_camino" ? botonesRep(p, ["entregado"]) : undefined }];
       for (const x of van) {
         let q = store.updatePedido(x.n, { estado: "en_camino", t_en_camino: t0, por: "repartidor:" + r.id });
         if (ubicacion) q = ubicacion.preparar(q);
@@ -312,7 +315,7 @@ function createRepartos({ negocio, store, avisos, now, log = console.log, track 
         log(`[${x.n}] en camino con ${r.nombre}`);
       }
       const det = van.map(x => { const l = links(store.getPedido(x.n)); return `*${x.n}* · ${x.nombre || "Sin nombre"}\n📍 ${x.direccion}\nMapa: ${mapa(x, negocio)}${l ? `\n📡 Compartir su ubicación con el cliente (deje la página abierta): ${l.rep}` : ""}`; }).join("\n\n");
-      return [{ text: `👍 Listo, ${r.nombre}. Le avisamos ${van.length > 1 ? "a los clientes" : "al cliente"} que va en camino.\n\n${det}\n\nCuando ${van.length > 1 ? "entregue cada uno, conteste *ENTREGADO* con el número" : "lo entregue, conteste *ENTREGADO*"}.`, buttons: ["Entregado"] }];
+      return [{ text: `👍 Listo, ${r.nombre}. Le avisamos ${van.length > 1 ? "a los clientes" : "al cliente"} que va en camino.\n\n${det}\n\nCuando ${van.length > 1 ? "entregue cada uno, conteste *ENTREGADO* con el número" : "lo entregue, conteste *ENTREGADO*"}.`, buttons: van.length > 3 ? undefined : van.map(x => ({ id: `ENTREGADO ${num(x)}`, title: van.length > 1 ? `✅ ${x.n}` : "✅ Entregado" })) }];
     }
     if (accion === "entregado") {
       if (!["listo", "en_camino"].includes(p.estado)) return [{ text: `${p.n} todavía no ha salido. Le avisamos cuando esté listo.` }];
