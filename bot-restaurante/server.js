@@ -425,8 +425,9 @@ function createApp(cfg = loadConfig(), deps = {}) {
     // the owner turned the bot off from the panel: he answers by hand from his own WhatsApp, the bot stays quiet
     if (!esNegocio(from) && negocio.modoBot === "apagado") return [];
     // the owner paused WhatsApp orders from the panel: customers get his message, nothing is taken
+    // with the AI on, a paused bot still answers questions (menu, prices, hours) and only refuses orders and apartados
     const pausa = !esNegocio(from) && textoPausa(negocio);
-    if (pausa) return [{ text: pausa }];
+    if (pausa && !(ia && negocio.modoBot !== "menu")) return [{ text: pausa }];
     if (esNegocio(from) && (reply = aprobar(from, text) || comandoDueno(from, text) || repartos.envioNegocio(text, "whatsapp:+" + digits(from)))) return [{ text: reply }];
     if (foto && (reply = comprobante(from, media))) return [{ text: reply }];
     if (ubic && !esNegocio(from) && (reply = repartos.ubicacionCliente(from, ubic))) return [{ text: reply }];
@@ -435,6 +436,7 @@ function createApp(cfg = loadConfig(), deps = {}) {
     if (cerrado) return [{ text: cerrado }];
     if (ubic) text = textoUbic(ubic);
     if (ia && negocio.modoBot !== "menu" && limiteIA.pasa(digits(from) || from) && (reply = await conversarIA(from, text, base, ubic))) return [...(reply.fotos ? [reply.fotos] : []), { text: String(reply).slice(0, 1590) }];
+    if (pausa) return [{ text: pausa }];
     const out = conversar(from, text, ubic);
     return Promise.all(out.mensajes.map(async m => ({ ...m, text: (out.pedido ? await conLink(m.text, out.pedido, base) : m.text).split(LINK).join("") })));
   }

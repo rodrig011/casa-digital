@@ -1226,6 +1226,16 @@ test("ajustes: apagar los envíos por un día deja solo pedidos para recoger, y 
   assert.equal(N.domicilio.propio, true);
 });
 
+test("pausa con IA: el bot sigue dando información pero no crea pedidos ni apartados", () => {
+  const { aplicarAjustes } = require("./negocio"), { system, ejecutar } = require("./ia");
+  const N = preparar(JSON.parse(fs.readFileSync(path.join(__dirname, "negocios/con-sabor-a-pueblo.json"), "utf8")));
+  assert.doesNotMatch(system(N), /HOY NO SE TOMAN PEDIDOS/);
+  aplicarAjustes(N, { pausa: { activo: true, mensaje: "Hoy no estamos haciendo apartados." } });
+  assert.match(system(N), /HOY NO SE TOMAN PEDIDOS NI APARTADOS/); assert.match(system(N), /Hoy no estamos haciendo apartados/);
+  const r = ejecutar(N, "crear_pedido", { productos: [{ id: N.items[0].id, cantidad: 1 }], nombre: "Ana", sucursal: N.sucursales[0].id }, {});
+  assert.match(r.error, /no se toman pedidos/); assert.equal(r.aviso, "Hoy no estamos haciendo apartados.");
+});
+
 test("panel: Cerrar sin avisar cancela un pedido viejo sin escribirle al cliente", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rest-bot-"));
   const ctx = await montar(dir, { negocio: "negocios/libbys-cajun.json" });
